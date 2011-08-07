@@ -1,10 +1,9 @@
 #!/usr/bin/env sh
 
 IZPACK=$HOME/Software/IzPack
-BUOY="$HOME/Software/Buoy"
 GAVROG=$PWD/..
 
-jar cmf "$GAVROG/SYSTRE.MF" Systre.jar -C "$BUOY" buoy -C "$GAVROG/bin" org
+jar cmf "$GAVROG/SYSTRE.MF" Systre.jar -C "$GAVROG/bin" org -C "$GAVROG/bin" buoy
 jar cf 3dt-Main.jar -C "$GAVROG/bin" org
 
 "$IZPACK/bin/compile" install.xml

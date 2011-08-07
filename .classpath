@@ -16,7 +16,6 @@
 	<classpathentry kind="lib" path="Deploy/sunflow/sunflow.jar"/>
 	<classpathentry kind="lib" path="Deploy/XStream/xpp3.jar"/>
 	<classpathentry kind="lib" path="Deploy/XStream/xstream.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/Buoy"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
