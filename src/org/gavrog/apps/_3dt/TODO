@@ -1,0 +1,32 @@
+=====================================================
+
+Open bugs:
+
+- Sometimes unit cells are very flat.
+- Disabling and enabling of menu items is missing or clumsily implemented.
+
+=====================================================
+
+Planned/requested features:
+
+- Report number of tiles per repeat unit / unit cell.
+- Undo/Redo.
+- Extend to support nets in all reasonable ways.
+- Allow separate colors and visibility for individual faces.
+- Recoloring and changing size of individual and kinds of vertices.
+- Option to keep the unit cell and coordinates used in the input.
+- Implement a balance/naturalize function.
+
+- Add some kind of safeguard against memory overflows.
+- Determine sequence of operations to turn given tiling into a self-dual one.
+- Function to revert to default settings.
+
+- More display list generators.
+- Options to change defaults for group setting on input (as in Systre.)
+- Draw tiles and dual tiles in one image.
+- Better Macintosh support (desktop shortcuts and such.)
+- Draw polyhedra.
+- Relax face shapes to approximate minimal surfaces.
+- Add transparency.
+
+=====================================================

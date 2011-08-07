@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="yes" ?>
+
+<!-- 
+Installation file for Gavrog, currently in particular for 3dt.
+-->
+
+<installation version="1.0">
+
+    <!-- 
+        The info section.
+        The meaning of the tags should be natural ...
+    -->
+    <info>
+        <appname>3dt / Systre</appname>
+        <appversion>versions 0.5.0 and 1.1.5</appversion>
+        <appsubpath>3dt-0.5.0</appsubpath>
+        <authors>
+            <author name="Olaf Delgado-Friedrichs"
+	     email="odf@gavrog.org"/>
+        </authors>
+        <url>http://www.gavrog.org/</url>
+	<uninstaller write="yes"/>
+	<javaversion>1.5</javaversion>
+    </info>
+    
+    <!-- 
+        The gui preferences indication.
+    -->
+    <guiprefs width="850" height="490" resizable="yes">
+        <modifier key="useHeadingPanel" value="yes"/>
+	<modifier key="headingLineCount" value="1"/>
+	<modifier key="headingFontSize" value="1.5"/>
+	<modifier key="headingBackgroundColor" value="0x00ffffff"/>
+	<modifier key="headingPanelCounter" value="text"/>
+	<modifier key="headingPanelCounterPos" value="inHeading"/>
+    </guiprefs>
+    
+    <!-- 
+        The locale section.
+        Asks here to include the English, French and German langpacks.
+    -->
+    <locale>
+        <langpack iso3="eng"/>
+        <langpack iso3="fra"/>
+        <langpack iso3="deu"/>
+    </locale>
+    
+    <!-- 
+        The resources section.
+        The ids must be these ones if you want to use the LicencePanel and/or the InfoPanel.
+    -->
+    <resources>
+        <res id="Installer.image" src="logo.jpg"/>
+        <res id="LicencePanel.licence" src="LICENSE"/>
+        <res id="InfoPanel.info" src="README"/>
+	<res src="shortcuts-default.xml" id="shortcutSpec.xml"/>
+	<res src="shortcuts-unix.xml" id="Unix_shortcutSpec.xml"/>
+    </resources>
+    
+    <!-- 
+        The panels section.
+        We indicate here which panels we want to use. The order will be respected.
+    -->
+    <panels>
+        <panel classname="HelloPanel"/>
+        <panel classname="InfoPanel"/>
+        <panel classname="LicencePanel"/>
+        <panel classname="TargetPanel"/> 
+        <panel classname="PacksPanel"/>
+	<panel classname="SummaryPanel"/>
+        <panel classname="InstallPanel"/>
+	<panel classname="ShortcutPanel"/>
+        <panel classname="SimpleFinishPanel"/>
+    </panels>
+    
+    <!-- 
+        The packs section.
+        We specify here our packs.
+    -->
+    <packs>
+        <pack name="Base" required="yes">
+            <description>The base files</description>
+            <file src="README" targetdir="$INSTALL_PATH"/>
+            <file src="LICENSE" targetdir="$INSTALL_PATH"/>
+	    <file src="Systre.jar" targetdir="$INSTALL_PATH"/>
+	    <file src="Icons" targetdir="$INSTALL_PATH"/>
+	    <file src="Data" targetdir="$INSTALL_PATH"/>
+
+	    <!-- Copy and parse command files for Windows -->
+	    <file src="bin/uninstall.bat" targetdir="$INSTALL_PATH/bin"
+		    os="windows"/>
+	    <parsable targetfile="$INSTALL_PATH/bin/uninstall.bat"
+	    	    os="windows"/>
+	    <file src="bin/Systre.bat" targetdir="$INSTALL_PATH/bin"
+		    os="windows"/>
+	    <parsable targetfile="$INSTALL_PATH/bin/Systre.bat"
+	    	    os="windows"/>
+	    <file src="bin/SystreBatch.bat" targetdir="$INSTALL_PATH/bin"
+		    os="windows"/>
+	    <parsable targetfile="$INSTALL_PATH/bin/SystreBatch.bat"
+	    	    os="windows"/>
+
+	    <!-- Copy and parse command files for Unix -->
+	    <file src="bin/uninstall" targetdir="$INSTALL_PATH/bin"
+	            os="unix"/>
+	    <parsable targetfile="$INSTALL_PATH/bin/uninstall"
+	    	    os="unix" type="shell"/>
+	    <executable targetfile="$INSTALL_PATH/bin/uninstall"
+	    	    os="unix"/>
+	    <file src="bin/Systre" targetdir="$INSTALL_PATH/bin"
+	    	    os="unix"/>
+	    <parsable targetfile="$INSTALL_PATH/bin/Systre"
+	    	    os="unix" type="shell"/>
+	    <executable targetfile="$INSTALL_PATH/bin/Systre"
+	    	    os="unix"/>
+	    <file src="bin/SystreBatch" targetdir="$INSTALL_PATH/bin"
+	    	    os="unix"/>
+	    <parsable targetfile="$INSTALL_PATH/bin/SystreBatch"
+	    	    os="unix" type="shell"/>
+	    <executable targetfile="$INSTALL_PATH/bin/SystreBatch"
+	    	    os="unix"/>
+
+	    <!-- Copy and parse command files for Mac -->
+	    <file src="bin/uninstall" targetdir="$INSTALL_PATH/bin"
+	            os="mac"/>
+	    <parsable targetfile="$INSTALL_PATH/bin/uninstall"
+	    	    os="mac" type="shell"/>
+	    <executable targetfile="$INSTALL_PATH/bin/uninstall"
+	    	    os="mac"/>
+	    <file src="bin/Systre" targetdir="$INSTALL_PATH/bin"
+	    	    os="mac"/>
+	    <parsable targetfile="$INSTALL_PATH/bin/Systre"
+	    	    os="mac" type="shell"/>
+	    <executable targetfile="$INSTALL_PATH/bin/Systre"
+	    	    os="mac"/>
+	    <file src="bin/SystreBatch" targetdir="$INSTALL_PATH/bin"
+	    	    os="mac"/>
+	    <parsable targetfile="$INSTALL_PATH/bin/SystreBatch"
+	    	    os="mac" type="shell"/>
+	    <executable targetfile="$INSTALL_PATH/bin/SystreBatch"
+	    	    os="mac"/>
+        </pack>
+        <pack name="3dt" required="yes">
+            <description>The Gavrog tiling viewer</description>
+	    <depends packname="jReality"/>
+	    <depends packname="XStream"/>
+	    <file src="3dt-Main.jar" targetdir="$INSTALL_PATH"/>
+
+	    <!-- Install command files for Windows -->
+	    <file src="bin/3dt.bat" targetdir="$INSTALL_PATH/bin"
+		    os="windows"/>
+	    <parsable targetfile="$INSTALL_PATH/bin/3dt.bat"
+	    	    os="windows"/>
+
+	    <!-- Install command files for Unix -->
+	    <file src="bin/3dt" targetdir="$INSTALL_PATH/bin"
+	    	    os="unix"/>
+	    <parsable targetfile="$INSTALL_PATH/bin/3dt" os="unix"
+	    	    type="shell"/>
+	    <executable targetfile="$INSTALL_PATH/bin/3dt" os="unix"/>
+
+	    <!-- Install command files for Mac -->
+	    <file src="bin/3dt" targetdir="$INSTALL_PATH/bin"
+	    	    os="mac"/>
+	    <parsable targetfile="$INSTALL_PATH/bin/3dt" os="mac"
+	    	    type="shell"/>
+	    <executable targetfile="$INSTALL_PATH/bin/3dt" os="mac"/>
+        </pack>
+        <pack name="jReality" required="yes">
+            <description>The 3d geometry viewer used by 3dt</description>
+	    <file src="jReality" targetdir="$INSTALL_PATH"/>
+	</pack>
+        <pack name="XStream" required="yes">
+            <description>A library to serialize objects to XML and back again.
+			</description>
+	    <file src="XStream" targetdir="$INSTALL_PATH"/>
+	</pack>
+	<pack name="jogl" required="no">
+	    <description>OpenGL support for faster viewing</description>
+	    <fileset dir="jogl" targetdir="$INSTALL_PATH/jogl" os="windows"/>
+	    <fileset dir="jogl-win" targetdir="$INSTALL_PATH/jogl" os="windows"/>
+	    <fileset dir="jogl" targetdir="$INSTALL_PATH/jogl" os="unix"/>
+	    <fileset dir="jogl-unix" targetdir="$INSTALL_PATH/jogl" os="unix"/>
+	    <fileset dir="jogl-mac" targetdir="$INSTALL_PATH/jogl" os="mac"/>
+	</pack>
+	<pack name="sunflow" required="no">
+	    <description>
+	        Adds global-illumination raytrace rendering
+	    </description>
+	    <file src="sunflow" targetdir="$INSTALL_PATH"/>
+	</pack>
+    </packs>
+
+    <!--
+        Needed for shortcut creation on Windows.
+    -->
+    <native type="izpack" name="ShellLink.dll"/>
+    
+</installation>

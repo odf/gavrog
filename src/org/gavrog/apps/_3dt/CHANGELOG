@@ -1,0 +1,88 @@
+3dt 0.5.1:
+
+2009-12-12: Two-dimensional periodic nets are allowed as input.
+2009-12-07: Delaney symbol files with the .tgs extension are now recognized.
+
+3dt 0.5.0:
+
+2009-09-11: Added an option for using primitive unit cells.
+2009-01-28: New export option for Wavefront/OBJ, including materials.
+2008-12-05: Hiding and recoloring facet classes now extends to facet outlines.
+2008-12-02: Re-established the U3D export item in the file menu.
+2008-11-17: The user can now specify a vector to point upward on the screen.
+2008-11-13: Tilings carrying nets in RCSR or the zeolite atlas are identified.
+2008-11-13: The space group lookup table is automatically loaded at startup.
+2008-11-13: Added a third light and a dialog for setting light properties.
+2008-11-12: The MacOS context menu workaround is now obsolete and was removed.
+2008-11-11: Made 3dt independent of jReality's ViewerApp class.
+
+3dt 0.4.0:
+
+- The software viewer is used automatically if OpenGL is not available.
+- BUG FIX: no more corrupted scenes when reading back '.gsl' files.
+- The random recoloring of tile classes is now 'more random'.
+- Removed the 'fullscreen' and 'maximal size' menu entries.
+- The search (<ctrl>-f) action now uses regular expressions.
+- Simple tiling properties are now displayed first before rendering the tiling.
+- The 'Dualize' and 'Max. Symmetry' actions now refuse to produce duplicates.
+- Unnamed tilings now receive default names of the form '#<n>'.
+- An arbitrary viewing direction can now be specified via a dialog box.
+- Users can now set the step size for rotations via the arrow keys.
+- Changed the maximum level of surface detail to 4 (previously 3).
+
+- The color pickers in the option dialogs no longer ignore the current colors.
+- In "Open" and "Save" actions, full file names are now remembered.
+- If no creasing is applied, edges now have constant width.
+- Some basic info on each tiling is now saved in .ds files.
+- I/O paths and other interface attributes are no longer stored in scene files.
+- The "Fill Space" pane (formerly "Unit Cells") can now work additively.
+- Added the ability to blend edge and tile colors.
+- For files with multiple tilings, the user now selects which to show first.
+- Improved the layout for the option dialogs.
+- A disabled unit cell no longer creeps up when reembedding.
+- A dialog is now shown before writing over an existing file.
+- All recoloring dialogs now show the current color as the default.
+- Changed filter settings for Sunflow (raytracer) to obtain crisper images.
+- Brought back the Sunflow preview option.
+- All net nodes now re-use the same geometry, thus saving process memory.
+- The controls window is positioned better with regard to the viewer.
+- The viewer size is now remembered between program runs.
+- Added keyboard controlled rotations (left, right, up, down etc.)
+- Restructured the "File" menu for easier image export.
+- The underlying net of a tiling can now be displayed.
+- BUG FIX: unit cell now shows up in Sunflow renders with small field of view.
+
+3dt 0.3.2:
+
+- For fitting the scene to the window, the '0' is now used instead of 'E'.
+- The range of unit cell copies to display can now be specified interactively.
+- Two-dimensional euclidean tilings are now supported (but displayed as 3d.)
+- The viewer menu is now displayed at the top of the screen on MacOS.
+- Diagnostic output and error messages are now displayed in the controls window.
+- Tiling names are no longer cut after 37 characters.
+- The size of the control window is no longer changed for each new tiling.
+- Introduced a workaround for the invisible context menu problem on MacOS.
+- Added a 'symmetrize' action to maximize symmetry in a tiling.
+- BUG FIX: the scene file output was broken in 0.3.1 and could not be read back.
+- Individual tiles can now be colored and uncolored (reverted to class color.)
+- Facet classes can now be colored, uncolored and hidden.
+- New tilings are viewed along the Z (a.k.a. 001) axis by default.
+- Menu items added to view along unit cell axes and diagonals.
+- Better automatic fitting of the scene to the viewing window.
+
+3dt 0.3.1:
+
+- The default scene for a new tiling is now a unit cell filled with tiles.
+- While processing a new tiling, its name and position in the file are now shown.
+- The viewing transformation is now saved to and restored from the scene file.
+- Added functionality to delete a whole orbit of tiles from the scene.
+- Switched to most current Buoy version.
+- BUG FIX: transitivity symbol repeated the number of vertex orbits.
+- BUG FIX: the shell scripts now work correctly on Mac and Linux.
+
+3dt 0.3.0:
+
+- An input file can now be given as a command line argument.
+- Added a 'dualize' function.
+- The current tiling, its net and the current scene can be saved to files.
+- Added an 'About' frame that shows the version number and such.

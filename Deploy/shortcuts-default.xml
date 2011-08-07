@@ -1,0 +1,46 @@
+<shortcuts>
+  <skipIfNotSupported/>
+  <programGroup defaultName="Gavrog" location="applications"/>
+  <shortcut
+    name="3dt"
+    target="$INSTALL_PATH\bin\3dt.bat"
+    description="3d tiling viewer"
+    iconFile="$INSTALL_PATH\Icons\3dt.ico"
+    iconIndex="0"
+    initialState="noShow"
+    programGroup="yes"
+    desktop="yes"
+    applications="no"
+    startMenu="no"
+    startup="no">
+    <createForPack name="3dt"/>
+  </shortcut>
+  <shortcut
+    name="Systre"
+    target="$INSTALL_PATH\bin\Systre.bat"
+    description="Periodic net analyzer and embedder"
+    iconFile="$INSTALL_PATH\Icons\Systre.ico"
+    iconIndex="0"
+    initialState="noShow"
+    programGroup="yes"
+    desktop="yes"
+    applications="no"
+    startMenu="no"
+    startup="no">
+  </shortcut>
+  <shortcut
+    name="Uninstall 3dt and Systre"
+    target="$INSTALL_PATH\bin\uninstall.bat"
+    commandLine=""
+    workingDirectory="$USER_HOME"
+    description="Uninstall Gavrog completely"
+    iconFile=""
+    iconIndex="0"
+    initialState="noShow"
+    programGroup="yes"
+    desktop="no"
+    applications="no"
+    startMenu="no"
+    startup="no">
+  </shortcut>
+</shortcuts>

@@ -1,0 +1,685 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+<!
+   Copyright 2008 Olaf Delgado-Friedrichs
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+>
+
+<head>
+  <title>Systre Help</title>
+  <link href="gavrog.css" rel="Stylesheet" type="text/css" />
+  <link href="gavrog-print.css" media=print rel="Stylesheet" type="text/css">
+  <link rel="SHORTCUT ICON" href="gavrog.ico" />
+</head>
+
+<body>
+<h1>Systre Help</h1>
+
+<p>
+<b>NOTE: The information in this document is based on the upcoming Systre 1.1.5
+release. Other versions of Systre may behave slightly differently.</b>
+</p>
+
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#usage">Usage</a></li>
+<li><a href="#file_formats">File Formats</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+<li><a href="#license">License</a></li>
+<li><a href="#publications">Publications</a></li>
+<li><a href="#acknowledgements">Acknowledgements</a></li>
+</ul>
+
+<h2><a name="introduction">Introduction</a></h2>
+
+<p>
+The program S<small>YSTRE</small> is designed to analyze periodic nets
+as they arise in the study of extended crystal structures (as opposed
+to molecular crystals). The acronym stands for <em>Symmetry, Structure
+and Refinement</em>. S<small>YSTRE</small> uses a method called
+<em>barycentric placement</em> to determine the ideal (i.e., maximal
+embeddable) symmetry of a crystal net and to analyze its topological
+structure. It then generates a unique "fingerprint" for the
+topological type of the given net and uses that to look up the
+structure in its built-in database (see below). Users can also create
+their own databases.
+</p>
+
+<p>
+S<small>YSTRE</small> also computes a refined embedding of the given
+net using a method based on simulated forces. The targeted embedding
+is one that minimizes the edge length variance (normalized to unit
+length) and maximizes the unit cell volume. The forces modeled are not
+physically realistic, but should in most cases result in viable input
+for molecular modeling software.
+</p>
+
+<p>
+Currently, S<small>YSTRE</small>'s built-in database contains all
+processable nets from the
+<a href="http://rcsr.anu.edu.au/rcsr_nets">RCSR online resource</a>
+  as well as all structures listed in the
+<a href="http://izasc.ethz.ch/fmi/xsl/IZA-SC/ft.xsl">Database of
+  Zeolite Framework Types</a> as of July 7, 2008.
+</p>
+
+<p>
+RCSR nets that Systre currently cannot handle are
+<tt>bad</tt>, <tt>bae</tt>, <tt>bai</tt>, <tt>bbu</tt>, <tt>bcr</tt>,
+<tt>cys</tt>, <tt>fco</tt>, <tt>lcw</tt>, <tt>nbo-g</tt>, <tt>uld</tt>
+and <tt>ulm</tt>.
+</p>
+
+<p>
+S<small>YSTRE</small> is part of <a href="http://www.gavrog.org">The
+Gavrog Project</a>.
+</p>
+
+<h2><a name="installation">Installation</a></h2>
+
+<p>
+S<small>YSTRE</small> requires a Java runtime environment (JRE) of
+version 1.4.2 or higher. Java is now a standard part of Mac OS X. On
+other systems, Java might already be installed as a prerequisite for
+other programs, such as a web browser. Otherwise, the most
+straightforward way to get a JRE is to download it from
+<tt>java.sun.com</tt> and follow the installation instructions given
+there. Set all path variables correctly for your system as instructed
+(this should be done automatically if you use a Windows installer), so
+that the <tt>java</tt> command can be recognized. If supported by your
+system, make sure that the file extension <tt>.jar</tt> is associated
+with the Java executable.
+</p>
+
+<p>
+Installing S<small>YSTRE</small> itself is very easy.  Just download
+the file <tt>Systre.jar</tt> and put it anywhere you like, for example
+on your desktop. A S<small>YSTRE</small> executable is also included
+in the 3dt distribution available from
+<a href="http://www.gavrog.org">http://www.gavrog.org</a>.
+</p>
+
+<h2><a name="usage">Usage</a></h2>
+<p>
+The 3dt installer automatically installs S<small>YSTRE</small> as well
+and creates a batch file <tt>Systre</tt> or <tt>Systre.bat</tt> in the
+<tt>bin</tt> subdirectory of your
+chosen installation location. Please refer to your operating system
+documentation on how to execute such files. On Windows and some Unix
+machines, the installer can also create desktop icons for both 3dt and
+S<small>YSTRE</small>.
+</p>
+
+<p>
+The simplest way to start S<small>YSTRE</small> is to double-click on
+its icon. If that does not work, and you are sure that Java is
+correctly installed and all path variables set correctly, open a
+console window and type the command
+</p>
+
+<pre>
+    java -jar Systre.jar
+</pre>
+
+<p>
+from the same folder that you put <tt>Systre.jar</tt>
+in. Alternatively, add the appropriate path. For example, if you
+downloaded <tt>Systre.jar</tt> to a folder named
+<tt>C:\Programs\Systre</tt> (on a Windows system), change the above to
+</p>
+
+<pre>
+    java -jar C:\Programs\Systre\Systre.jar
+</pre>
+
+<p>
+To make things easier, you can create a batch file (a.k.a. shell
+script) containing the command. Please refer to your operating system
+manual on how to create and execute such files.
+</p>
+
+<p>
+Using S<small>YSTRE</small> is very simple. Run S<small>YSTRE</small>,
+then use the [<tt>Open...</tt>] button to read in a file of net
+descriptions. S<small>YSTRE</small> will process the first net in the
+file and describe the results in an informal way. If there are more
+nets, use the [<tt>Next</tt>] button to step through them. When you
+are finished with a file, you can store the results in one of several
+formats using the [<tt>Save as...</tt>] button. The [<tt>Help</tt>]
+button displays this text and, finally, the [<tt>Options...</tt>]
+button lets you modify some of S<small>YSTRE</small>'s internal
+workings.
+</p>
+
+<h2><a name="file_formats">File Formats</a></h2>
+
+<p>
+S<small>YSTRE</small> uses three basic file types:
+</p>
+
+<ul>
+<li>Input files (containing definitions of nets) with the extension
+<tt>.cgd</tt></li>
+<li>Archive files (containing fingerprints for nets) with the
+extension <tt>.arc</tt></li>
+<li>Protocol files (to save S<small>YSTRE</small>'s onscreen output)
+with the extension <tt>.out</tt></li>
+</ul>
+
+<p>
+If you read or write a file from within S<small>YSTRE</small>, the
+extension will determine the format of the file and the extend of
+information in it. Typically, you would read an input file and save
+the output in a protocol file. But you might also want to produce a
+<tt>.cgd</tt> file with the new symmetry group and node positions
+as determined by S<small>YSTRE</small>.
+</p>
+
+<p>
+If you are dealing with a large number of nets that
+S<small>YSTRE</small> does not know of, you might want to read and
+write your own archive files. These contain fingerprints of nets
+processed by S<small>YSTRE</small>. If you read in an archive file
+after starting S<small>YSTRE</small>, it will temporarily add those
+fingerprints to its list of "known" nets and thus recognize
+them. There is of yet no sophisticated way of managing user
+archives. If you write an output file with the extension
+<tt>.arc</tt>, it will contain fingerprints of all the "new" nets so
+far encountered in the current file. Each block of lines in which the
+first line starts with the word <tt>key</tt> and the last line reads
+<tt>end</tt> constitutes one fingerprint. You can use a standard text
+editor to cut and paste those blocks and thus maintain your own
+private archives of nets.
+</p>
+
+<dt><b>Space Group Symbol</b></dt>
+
+<dd>
+<p>
+Enter the space group symbol as it appears in the International Tables,
+except that "bar 3", "bar 4" etc. are written as -3, -4 and so on and
+subscripts are written as regular numbers. Examples: <tt>Fd-3m</tt>,
+<tt>I41/amd</tt>, <tt>P212121</tt>.
+</p>
+</dd>
+
+<dt><b>Origin choice</b></dt>
+
+<dd>
+<p>
+If you specify a crystal without explicit edges as in the first and
+fourth example below, S<small>YSTRE</small> needs to compute edges
+based on nearest neighbors. This does not only depend on the correct
+cell parameters, but also on the origin choice. For groups that have
+two conventional choices as according to the international tables,
+S<small>YSTRE</small> uses the second one by default. This can be
+changed in the 'Options' dialog.
+</p>
+
+<p>
+Another way to make sure that the correct origin choice is used is to
+append <tt>:1</tt> or <tt>:2</tt>, respectively, to the group name as
+in Example 4 below.
+</p>
+</dd>
+
+<dt><b>Rhombohedral groups</b></dt>
+
+<dd>
+<p>
+Hexagonal versus rhombohedral settings for rhombohedral groups are
+handled analogously to the above. In this case, append <tt>:H</tt>
+(the default) or <tt>:R</tt>, accordingly.
+</p>
+</dd>
+
+<br>
+<p>
+Below are some examples of legal input for S<small>YSTRE</small>. You
+can cut and paste any of the following examples (or all of them) in a
+<tt>.cgd</tt> file using your favorite text editor (e.g. Notepad on
+Windows) and open it from within S<small>YSTRE</small>.
+</p>
+
+<p>
+The S<small>YSTRE</small> format allows comments,
+which start with a <tt>#</tt> character and continue until the end of
+the current line.
+</p>
+
+<p><b>Example 1</b>: Diamond, specified by space group, unit cell and
+positions. S<small>YSTRE</small> computes edges by finding nearest
+neighbors. Edge lengths have to be larger than 0.1. If any pair of
+nodes is closer than that, an error is reported. If this is the case
+for your data, you should try scaling the unit cell parameters
+accordingly. The keywords <tt>NODE</tt> and <tt>ATOM</tt> are
+equivalent, as are the keywords <tt>ID</tt> and <tt>NAME</tt>.</p>
+            
+<pre>
+# The type of data to expect
+CRYSTAL
+  # Structure id (optional; ID and NAME both work)
+  ID    diamond
+  # The space group
+  GROUP Fd-3m
+  # Cell parameters: a b c alpha beta gamma
+  CELL         2.3094 2.3094 2.3094  90.00000   90.00000   90.00000
+  # Atom specification: name coordination x y z
+  #   (decimal numbers or fractions can be used for coordinates)
+  ATOM  1  4   5/8 5/8 5/8
+# This ends the structure description
+END
+</pre>
+
+<p><b>Example 2</b>: Diamond, specified as a periodic graph. Here,
+only translational symmetries are assumed, and no coordinates are
+needed. Edges are given explicitly in the form <em>u v x y z</em>,
+where <em>u</em> and <em>v</em> are node numbers and <em>x y z</em>
+specifies the "address" of the unit cell to connect to as an integer
+vector. For example, the line <tt>1 1  0 1 0</tt> defines an edge
+between node 1 and its copy shifted one unit along the y axis.
+</p>
+
+<pre>
+PERIODIC_GRAPH
+ID diamond
+EDGES
+  1 2 0 0 0
+  1 2 1 0 0
+  1 2 0 1 0
+  1 2 0 0 1
+END
+</pre>
+
+<p><b>Example 3:</b> For <tt>CRYSTAL</tt> input, edges can be given
+explicitly, as well.</p>
+
+<pre>
+CRYSTAL
+  NAME  real CdSO4
+  GROUP Pmn21
+  CELL  6.558 4.698 4.719 90.0 90.0 90.0
+  # First kind of atom
+  ATOM  1 4  0.0000  0.6657  0.7306
+  # Edges can be specified by giving the names of the endpoints
+  EDGE  1 2
+  # or by giving a number for the first and coordinates for the second. 
+  EDGE  1    0.0000  0.1416  0.2500
+  # or by giving coordinates for both
+  EDGE  0.0000  0.6657  0.7306    0.0000  1.1416  1.2500
+  # The Keyword EDGE may be missing on consecutive lines.
+        1   -0.5000  0.8584  0.7500
+  # Second kind of atom.
+  ATOM  2 4  0.5000  0.8584  0.7500
+  # Second group of edge specifications.
+  EDGE  2    0.0000  0.6657  0.7306
+        2    1.0000  0.6657  0.7306
+        2    0.5000  1.3343  0.2306
+        2    0.5000  0.3343  1.2306
+END
+</pre>
+
+<p><b>Example 4</b>: This example describes a more complicated graph
+and will take S<small>YSTRE</small> significantly
+longer to complete. It shows two situations in which quotes are
+required.
+
+<pre>
+CRYSTAL
+  ID    LTN
+  # Group Fd-3m with first origin choice instead of second
+  #     (likewise, use ":R" for rhombohedral setting, where applicable)
+  GROUP "Fd-3m:1"
+  CELL  35.622 35.622 35.622 90.000 90.000 90.000
+  ATOM
+    # If the first field in a line starts with a letter, it is assumed
+    # to be a keyword, so in this example, the atom names need to be quoted.
+    "SI1" 4 0.3112 0.2500 0.3727
+    "SI2" 4 0.4345 0.2481 0.3721
+    "SI3" 4 0.3897 0.3285 0.4532
+    "SI4" 4 0.5396 0.3394 0.3996
+END
+</pre>
+
+<h2><a name="troubleshooting">Troubleshooting</a></h2>
+
+<p>
+If you encounter any problems, please check your input thoroughly.
+There are many opportunities for typos and S<small>YSTRE</small> is
+very sensitive to input errors, especially when edges are not given
+explicitly.
+</p>
+
+<p>
+There are some quirks and limitations, though, that you should be
+aware of when using S<small>YSTRE</small>.
+</p>
+
+<dl>
+
+<dt><b>Nets that don't work (yet)</b></dt>
+
+<dd>
+<p>
+S<small>YSTRE</small> identifies nodes by their barycentric positions,
+which is the key to its efficient algorithms. If different nodes
+<em>collide</em>, i.e., if they have identical barycentric positions,
+this method fails. The present version of S<small>YSTRE</small> is not
+able to handle some nets with collisions and will produce an error
+message.  This seems to be a fairly rare case, though, especially in
+nets that emerge from actual crystal structures.
+</p>
+
+<p>
+Furthermore, S<small>YSTRE</small> currently only works for nets of
+dimensions 2 (plane nets) and 3.
+</p>
+
+</dd>
+
+<dt><b>Java problems</b></dt>
+
+<dd>
+<p>
+With some versions of the Java runtime environment, occasional program
+crashes or miscalculations have been experienced.  S<small>YSTRE</small>
+double-checks its computations very thoroughly, though, so that erroneous
+results are highly unlikely
+to go undetected.  Much more likely, the program will terminate for no
+apparent reason or produce an "<tt>INTERNAL ERROR</tt>" message. In
+those cases, the best strategy is to restart S<small>YSTRE</small> or
+just to rerun the net that produced the problem.
+</p>
+</dd>
+
+<dt><b>Reporting bugs</b></dt>
+
+<dd>
+<p>
+For the moment, please report bugs to <tt>odf@gavrog.org</tt>.
+Make sure that your input is correct and that the problem is
+reproducible.  Enclose your input file and any output that
+S<small>YSTRE</small> produced, or, if that is not possible, describe
+the problem and any messages that you may have seen as detailed as
+possible. Tell me which operating system and which version of Java you
+were using.
+</p>
+</dd>
+
+</dl>
+
+<h2><a name="license">License</a></h2>
+
+S<small>YSTRE</small> is released under the Apache
+License, Version 2.0, as below.<br> <br>
+
+<hr />
+<p>
+<br />
+<b>
+Apache License<br />
+Version 2.0, January 2004<br />
+</b>
+<a href="http://www.apache.org/licenses/">http://www.apache.org/licenses/</a>
+</p>
+<p>
+<br />
+TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+</p>
+<p><b><a name="definitions">1. Definitions</a></b>.</p>
+<p>
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
+</p>
+<p>
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
+</p>
+<p>
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
+</p>
+
+<p>
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
+</p>
+<p>
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
+</p>
+<p>
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
+</p>
+<p>
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
+</p>
+<p>
+
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
+</p>
+<p>
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
+</p>
+<p>
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
+</p>
+<p><b><a name="copyright">2. Grant of Copyright License</a></b>.
+Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
+</p>
+<p><b><a name="patent">3. Grant of Patent License</a></b>.
+Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
+</p>
+
+<p><b><a name="redistribution">4. Redistribution</a></b>.
+You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
+<ol type="a">
+<li>You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
+<br /> <br /></li>
+
+<li>You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
+<br /> <br /></li>
+
+<li>You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
+<br /> <br /></li>
+
+<li>If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.</li>
+
+</ol>
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
+</p>
+<p><b><a name="contributions">5. Submission of Contributions</a></b>.
+Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
+</p>
+<p><b><a name="trademarks">6. Trademarks</a></b>.
+This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
+</p>
+<p><b><a name="no-warranty">7. Disclaimer of Warranty</a></b>.
+Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or redistributing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
+</p>
+<p><b><a name="no-liability">8. Limitation of Liability</a></b>.
+In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or consequential damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or any and all
+      other commercial damages or losses), even if such Contributor
+      has been advised of the possibility of such damages.
+</p>
+<p><b><a name="additional">9. Accepting Warranty or Additional Liability</a></b>.
+While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
+
+</p>
+<p>
+
+END OF TERMS AND CONDITIONS
+</p>
+<hr />
+
+<h2><a name="publications">Publications</a></h2>
+<ul>
+
+<li><b>O. Delgado-Friedrichs, M. O'Keeffe.</b> Identification of and
+symmetry computation for crystal nets. <em>Acta Crystallogr.</em>
+<b>A59,</b> 351-360 (2003).</li>
+
+<li><b>O. Delgado-Friedrichs.</b> Barycentric drawings of periodic
+graphs. <em>Lecture Notes Comp. Sci.</em> <b>2912,</b> 178-189
+(2004).</li>
+
+<li><b>O. Delgado-Friedrichs, M. O'Keeffe.</b> Crystal nets as graphs:
+terminology and definitions. <em>J. Solid State Chem.</em> <b>178,</b>
+2480-2485 (2005).</li>
+
+<li><b>O. Delgado-Friedrichs.</b> Equilibrium placement of periodic
+graphs and convexity of plane tilings. <em>Discr. Comput. Geom.</em>
+<b>33,</b> 67-81 (2005).
+
+</ul>
+
+<h2><a name="acknowledgements">Acknowledgements</a></h2>
+
+<p>
+Michael O'Keeffe made me aware of the problems that
+S<small>YSTRE</small> aims to solve and has supported and guided its
+development over many years. He also came up with the name.
+</p>
+
+<p>
+Michael Treacy, Davide Proserpio, Martin Foster, Martijn Zwijnenburg,
+Stuart Ramsden, Vladislav Blatov, Stephen Hyde and others helped a lot
+by testing, criticizing and discussing S<small>YSTRE</small>.
+</p>
+
+<p>
+My work on S<small>YSTRE</small> and its theoretical background was
+partially supported by grants from the Petroleum Research Foundation
+and the National Science Foundation.
+</p>
+
+</body>
+</html>

@@ -1,0 +1,142 @@
+INSTALLING GAVROG FROM ITS JAVA SOURCE CODE
+===========================================
+
+The file describes the compilation and installation of Gavrog from
+its Java sources. If all you need is a running copy of the most
+recent release, this is most definitely not what you want to do.
+Instead, you should go to http://www.gavrog.org and download the
+binary installer, which comes as a single, convenient JAR file.
+
+
+There are, however, a few good reasons to compile from scratch:
+
+- You want to study and modify the source code.
+
+- You need cutting edge features that are not yet included in the
+  official distribution.
+
+- You want to use a top notch optimizing Java compiler or have
+  other reasons why the binary distribution, which was made with
+  Sun's official compiler, does not work for you.
+
+
+The following instructions are for Unix-like system. On Windows,
+a few small adjustments have to be made, like changing slashes to
+backslashes in paths, using a different syntax to access shell
+variables, and so on.
+
+You will need a Java Development Kit (JDK) of version 1.4.2 or
+higher (version 1.5 or higher for 3dt).
+
+Gavrog is developed using Sun's original JDK (see java.sun.org).
+
+The instructions below are for compiling Systre. To compile the
+complete Gavrog library, you might have to change the compile
+command in step 3 to include extra sources that Systre does not
+use.
+
+To compile 3dt, you will need a bunch of additional libraries
+which are all included in the binary distribution. If you know
+what you're doing here (and you better), the shell scripts (a.k.a.
+batch files) in the 'bin' subdirectory created by the installer
+should show you what you need to modify in the instructions below.
+
+
+0) Using Eclipse
+   =============
+
+Gavrog is developed using Eclipse. If you are not familiar with
+Eclipse, it is save to skip the following and proceed to step 1.
+
+It is possible ot download the sources via anonymous CVS (see
+instructions on our SourceForge page) and import them as Eclipse
+projects. Note that there are two projects in the CVS tree, Gavrog
+and Gavrog-3dt. Note also that the projects are set up to depend
+on several other projects which contain necessary jar files. You
+will have to either set these up yourself or change the
+dependencies accordingly. If you are trying this, let me know if
+you need any additional information.
+
+
+1) Downloading Systre and Buoy
+   ===========================
+
+Systre uses Buoy, which is a simple GUI toolkit built on top of Swing.
+You can download Buoy from http://buoy.sourceforge.net. In the
+following, we will assume that you downloaded and extracted Buoy and
+set the shell variable BUOY to point to the top directory thus
+created.
+
+Systre itself can be downloaded from http://gavrog.org.
+
+
+
+2) Extracting the sources
+   ======================
+
+Extract all files from the ZIP file that you downloaded. Use
+
+	unzip Systre-1.0.0-src.zip
+
+or something equivalent. This creates a directory named Gavrog.
+
+
+3) Compiling Systre
+   ================
+
+Change into the directory that you just created:
+
+	cd Gavrog
+
+Copy the file Buoy.jar here for easier access:
+
+	cp $BUOY/Buoy.jar .
+
+Create a subdirectory for the compiler to place binaries in:
+
+	mkdir bin
+
+Compile:
+
+	javac -source 1.4 -classpath Buoy.jar:src \
+	      -d bin src/org/gavrog/apps/systre/SystreGUI.java
+
+
+4) Copying resource files
+   ======================
+
+Copy text and data files used by Systre from the source tree into the
+binary tree:
+
+	cp src/org/gavrog/apps/systre/*.arc bin/org/gavrog/apps/systre/
+	cp src/org/gavrog/apps/systre/*.html bin/org/gavrog/apps/systre/
+	cp src/org/gavrog/joss/geometry/sgtable.data \
+	   bin/org/gavrog/joss/geometry/
+
+
+5) Running Systre
+   ==============
+
+Here we assume that you run Systre from the Gavrog directory.
+
+	java -cp Buoy.jar:bin org.gavrog.apps.systre.SystreGUI &
+
+
+6) Creating an executable JAR file (optional)
+   ==========================================
+
+Change to the directory that holds the binaries:
+
+	cd bin
+
+Extract the class files for the Buoy toolkit:
+
+	jar xf ../Buoy.jar buoy
+
+Create the new JAR file:
+
+	jar cmf ../SYSTRE.MF Systre.jar *
+
+Run it:
+
+	java -jar Systre.jar &

@@ -1,0 +1,7 @@
+*~
+*.class
+*.orig
+/bin/
+/doc/
+/Deploy/install.jar
+/.manager/

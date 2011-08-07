@@ -1,0 +1,86 @@
+Systre 1.1.6:
+
+  Bug fixes:
+    - Archive output was empty with embedding disabled.
+
+- Structure names for RCSR and the zeolite database are reported separately.
+- The .tgs extension (from 2dtiler) is now supported for D-symbol files.
+- RCSR archive is current as of 2009-10-21.
+
+Systre 1.1.5:
+
+  Bug fixes:
+    - The smallest non-bonded distance reported was occasionally incorrect.
+    - The test for degenerate unit cells could miss certain degeneracies.
+    - The format of an output file is now determined by the file filter chosen.
+    - The file extension for an output file is now determined by the format.
+
+- Improved the layout for the option dialog.
+- Output can be saved to file after 'Cancel' even when the computation freezes.
+- Translational freedom, if any, is used to improve the output node positions.
+- The embedding step can now be skipped altogether.
+- A connectivity value of 0 for an atom is now read as 'undetermined'.
+- The GUI version now has an option to process whole files without stopping.
+- Integer numbers in input files may now start with a '+' character.
+- Made archives of RCSR nets and zeolite frameworks current as of 2008-07-07.
+- Abbreviated Herman-Mauguin symbols for monoclinic groups are now recognized.
+
+Systre 1.1.4:
+
+- Missing abbreviated Herman-Mauguin symbols are mentioned in the help file.
+
+Systre 1.1.3:
+
+- If edges are computed, vertex-degrees are no longer silently changed.
+- Better cell vectors are now found for monoclinic groups.
+- Bug fix: some monoclinic groups could produce invalid (and suppressed) output.
+
+Systre 1.1.2:
+
+- The program is now more responsive to the cancel button.
+
+
+Systre 1.1.1:
+
+- The computation of coordination sequences now stops at 10000 nodes.
+- Interlocking nets are now processed component-wise (EXPERIMENTAL).
+- Archives and Delaney symbol files as input now work in command line version.
+- The command line version now accepts most of the options available via GUI.
+- The output for nets with errors is no longer left out from the ".out" file.
+- Archive and Delaney symbol files can again be processed as regular input.
+- The default relaxation step limit is now 10000 (instead of 1000).
+- Locally stable crystallographic nets are now accepted (EXPERIMENTAL).
+
+
+Systre 1.1.0:
+
+- File name extensions are now case insensitive (so ".CGD" works like ".cgd").
+- Unit cell volumes are now reported.
+- The relaxation step limit (per phase) can now be set in the options dialog.
+- Error conditions, such as OutOfMemoryError, are now caught by the GUI version.
+- If explicit edges are given, no more are computed using nearest neighbors.
+- Importance of equal edge lengths can be set numerically in options dialog.
+
+
+Systre 1.0.0:
+
+- Show mapping of input nodes to output nodes.
+- Report coordinates of edge centers (optional).
+- Implement a status bar.
+- Include zeolite frameworks from Atlas.
+- Add an option for processing archive files as normal input.
+- Accept Delaney symbol files as input (.ds format).
+- Find a better strategy for handling duplicate names or keys in archives.
+- Make available input formats more transparent.
+- Look ahead to see if the current input file contains more structures.
+- Add "Next" button for multi-structure files.
+- Support "Description" and "Reference" entries in .cgd and .arc files.
+- Add option for writing complete unit cell data.
+- Revise cell vectors for monoclinic and triclinic nets after cell relaxation.
+- Add the "false" -z nets to the archive.
+- Default origin choice (1st vs. 2nd) and H vs. R setting are now options.
+- Pop up a message box in case of an exception.
+- Use node coordinates closest to origin (and positive). Solve tie by x < y < z.
+- Have all edges starting from one of the vertices listed.
+- Phrase "Structure is new" differently.
+- Give TD10 (weighted mean of cumulative cs numbers starting from 1).

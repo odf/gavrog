@@ -1,0 +1,22 @@
+#!/bin/sh
+
+JAVA=%JAVA_HOME/bin/java
+BASE=%INSTALL_PATH
+
+GAVROG=$BASE/Systre.jar:$BASE/3dt-Main.jar
+JREAL=$BASE/jReality/jReality.jar
+JREAL_PLUS=$BASE/jReality/bsh.jar:$BASE/jReality/jtem-beans.jar:$BASE/jReality/jTerm.jar
+XSTREAM=$BASE/XStream/xpp3.jar:$BASE/XStream/xstream.jar
+JOGL=$BASE/jogl/jogl.jar:$BASE/jogl/gluegen-rt.jar
+SUNFLOW=$BASE/sunflow/sunflow.jar:$BASE/sunflow/janino.jar
+
+CLASSPATH=$GAVROG:$JREAL:$JREAL_PLUS:$XSTREAM:$JOGL:$SUNFLOW
+
+if $JAVA -Xmx512m -D3dt.home="$BASE" -Djava.library.path="$BASE/jogl"\
+    -Dapple.laf.useScreenMenuBar=true\
+    -cp "$CLASSPATH" org.gavrog.apps._3dt.Main $*
+then
+    echo
+else
+    read -p "Hit Return to close this window"
+fi

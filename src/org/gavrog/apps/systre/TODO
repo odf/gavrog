@@ -1,0 +1,27 @@
+=====================================================
+
+Open bugs/issues:
+
+- Parser should issue warnings for missing or unrecognized statements.
+
+=====================================================
+
+Planned/requested features:
+
+- Better phrasing when component has multiple translates.
+- Command line version can write cgd files.
+- Option to simplify graphs with 1- or 2-coordinated nodes.
+- Check for edge intersections and similar problems.
+- Compute vertex symbols.
+- If graph has collisions, try to refine anyway.
+- Make choice of output formats more self-explanatory.
+
+- Print parametric positions for nodes and edge centers.
+- Make SystreGUI accept command line arguments.
+- Introduce keyboard shortcuts.
+- Link to online databases.
+- Support more output options (e.g. CrystalMaker).
+- Plot the quotient graph.
+- Report induced symmetries from "given" (or report none at all) for components.
+
+=====================================================

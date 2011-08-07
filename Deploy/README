@@ -1,0 +1,250 @@
+Thank you for downloading 3dt and Systre. This file contains some
+basic information and can be found under the name README in the folder
+you choose to install the program in.
+
+The following information applies to 3dt version 0.4.0 and Systre version
+1.1.5.
+
+===========================================================================
+
+Introduction:
+------------
+
+The following will serve as a very basic introduction into the
+3-dimensional tiler (3dt) program. Everything not mentioned here will
+hopefully be fairly self-explanatory. If enough people are interested
+in the program, there might some day be a proper manual.
+
+Information on Systre, which is also part of this distribution, can be
+accessed by simply clicking the "Help" button within the program.
+
+Both Systre and 3dt are part of the Gavrog project. For news and
+updates on these programs and the project in general, you can always
+check the project website http://www.gavrog.org.
+
+
+===========================================================================
+
+Installation and prerequisites:
+------------------------------
+
+Gavrog requires a Java runtime environment (JRE) of version 1.5 or higher.
+Java is now a standard part of Mac OS X. On other systems, Java might
+already be installed as a prerequisite for other programs, such as a web
+browser. If that is not the case, the most straightforward way to get a
+JRE is to download it from http://java.com and follow the installation
+instructions given there. Set all path variables correctly for your system
+as instructed (this should be done automatically if you use a Windows
+installer), so that the java command can be recognized. If supported on
+your system, make sure that the file extension '.jar' is associated with
+the Java executable.
+
+You should now be able to execute the installer by either double-clicking
+on it's icon or, if that does not work, type the command
+
+	java -jar <name-of-installer-file>
+	
+in a terminal window. In the latter case, make sure you're in the same
+directory as the installer file or else include the full path in the file
+name.
+
+
+===========================================================================
+
+Calling the programs:
+--------------------
+
+On Windows and Linux systems, the installer can produce desktop icons
+for Systre and 3dt. This is currently not possible on Macs, and may
+fail on some Linuxes or other Unixes. In that case, Systre and 3dt can
+be called by the following command lines:
+
+    for Systre:  java -jar <installation-path>/Systre.jar
+    ----------
+
+    for 3dt   :  <installation-path>/bin/3dt
+    -------
+
+where <installation-path> should be replaced with whatever location
+you choose to install the programs in when prompted by the installer.
+
+
+===========================================================================
+
+Interface basics:
+----------------
+
+When 3dt is started, two windows appear - "3dt Viewer" and "3dt Controls".
+
+The viewer window contains the main menu and displays the
+tilings. Most of the menu should be either self-explanatory or reveal itself
+after a bit of experimentation.
+
+The current scene can be rotated by dragging with the left mouse button
+pressed, moved around by dragging with the middle button and pulled or
+pushed by dragging with the middle mouse button while the <ctrl> key is
+pressed. Pressing the right mouse button over a face brings up a context
+menu that lets you add, remove and recolor tiles. There are also two
+shortcuts for quick scene manipulation: <shift>-<right-click> adds a tile
+at the face the mouse is over, whereas <ctrl>-<right-click> removes a tile.
+Right-clicking on a node or edge of the underlying net of a tiling invokes
+similar behavior.
+
+If the context menu does not show up, try to activeate the "MacOS context
+menu workaround" in the "GUI" tab on the controls window.
+
+If the controls window is in the way, you can close it and later re-open
+it by selecting "View/Show Controls" on the viewer window. Please note that
+closing the viewer window terminates the program.
+
+The controls window has three parts, which can be changed in size
+by dragging the separating bars. The top left one is used to modify
+settings for 3dt. These are saved to a file after a change and reloaded
+each time the program is started. Press the "Apply" button to make changes
+effective.
+
+The top right part of the controls window contains information about the
+current tile, and the bottom part shows any diagnostic output that might be
+produced.
+
+
+===========================================================================
+
+File formats I - Delaney symbols:
+--------------------------------
+
+The 3-dimensional tiler (3dt) is based on the theory of D-symbols (short
+for Delaney symbols or Delaney-Dress symbols), originally developed by
+Andreas Dress. Further information can be found on
+http://www.gavrog.org.
+
+Notation varies slightly between publications. Most papers published in
+mathematical journals denote the actions that assign to a chamber its d+1
+neighbors (where d is the dimension) by a suffix consisting of the greek
+letter "sigma" and an index between 0 and d. Others use the more familiar
+functional notation 's_0(t)', 's_1(t)' and so on, where 't' is the chamber
+in question. We will stick to the latter form. Also, the degree functions
+are sometimes written 'm_01(t)' and so on, sometimes, in older papers,
+using an 'r' instead of an 'm'. We will stick with the more recent
+notation.
+
+Delaney symbol files use the suffix '.ds'. Each Delaney symbol (which
+means: each tiling) is represented by a sequence of lines, the first one of
+which must start with an opening angular bracket '<', whereas the final one
+must end with a closing bracket '>'. Here is a simple example:
+
+    <1.1:2 3:1 2,1 2,1 2,2:3 3,3 4,4>
+
+Each entry consists of four sections separated by colons. Thus, ignoring
+the delimiting brackets, the example entry consists of the sections
+
+    '1.1', '2 3', '1 2,1 2,1 2,2' and '3 3,3 4,4'.
+
+The first section is just for bookkeeping. It must consist of two arbitrary
+positive integers, separated by a dot. The first number in the second
+section is the size of the D-symbol and the second one its dimension. If
+the dimension's missing, it's assumed to be 2.
+
+By convention, elements (chambers) are numbered from 1 up to the size n of
+the symbol, while indexes go from 0 to d.
+
+The third section consist of d+1 comma-separated parts, each defining one
+of the functions s_0 up to s_d (in this case, s_3). Here we have the parts
+
+    '1 2', '1 2', '1 2' and '2'.
+
+Within the i-th part, the values for the function s_i are given in order,
+starting from s_i(1) and going up to s_i(d). If s_i(a)=b for b>a, we omit
+the specification of s_i(b), because it is already clear that it must be
+a. Thus, the first part '1 2' defines s_0(1)=1 and s_0(2)=2, and similarly
+for the second and third part. The fourth part means that s_3(1)=2 and,
+consequently s_3(2)=1. If our example symbol had more than 2 elements, the
+next value would be s_3(3), not s_3(2).
+
+The fourth section consists of d parts, in this case
+
+    '3 3', '3 4' and '4'.
+
+These define the values of the functions m_01, m_12 and so on, up to (in
+this case) m_23. The number m_ij only appears once for each i,j-orbit. In
+particular, in the third part, m_23(2) is not specified because s_3(1)=2,
+thus m_23(1)=m_23(2) and m_23(1) has already been given. The complete
+D-symbol in tabular form thus looks like this:
+
+       | s_0 | s_1 | s_2 | s_3 || m_01 | m_12 | m_23
+    ---+-----+-----+-----+-----++------+------+------
+     1 |  1  |  1  |  1  |  2  ||   3  |   3  |   4
+     2 |  2  |  2  |  2  |  1  ||   3  |   4  |   4
+
+
+===========================================================================
+
+File formats II - face lists:
+----------------------------
+
+Writing Delaney symbols by hand is a nice excercise, but nothing you
+would want to do on a regular basis. If coordinates for a tiling are
+available, there is a more pleasant option, a face-list file. The
+suffix is '.cgd' (which stands for 'crystal geometry data'). The file
+'cube.cgd' in this distribution provides two examples, both defining
+the well-known face-to-face tiling by ordinary cubes. Let's look at
+the first entry:
+
+    TILING
+      NAME primitive-cubic
+      FACES
+        4  0 0 0  1 0 0  1 1 0  0 1 0
+        4  0 0 0  1 0 0  1 0 1  0 0 1
+        4  0 0 0  0 1 0  0 1 1  0 0 1
+    END
+
+The 'TILING' and 'END' lines are obligatory and serve as delimiters, just
+like the '<' and '>' in D-symbol files. The 'NAME' line is optional. Each
+line between 'FACES' and 'END' specifies one 2-dimensional face of the
+tiling. This is specified by a face size (the number of vertices or corners
+for this face), followed by the list of vertices, each given by three
+ordinary cartesian coordinates. So in this example, the faces given are
+three unit squares, one for each pair of opposite faces of a neatly aligned
+unit cube.
+
+All remaining faces of the tiling are generated by applying all the
+symmetries, which, in this case, are implied. The symmetry group is
+generated by the three unit translations along the x-, y- and z-axis. In
+effect, the "standard" tiling by unit cubes is produced.
+
+People familiar with crystallographic groups may save a fair amount of
+typing by specifying an appropriate group. For example, the second entry in
+'cube.cgd' looks like this:
+
+    TILING
+      NAME primitive-cubic
+      GROUP P432
+      FACES
+        4  0 0 0  1 0 0  1 1 0  0 1 0
+    END
+
+Here, the 'GROUP' line specifies a crystallographic space group by its
+conventional name, implying a set of extra symmetry generators as given in
+the "International Tables for Crystallography, Volume A" entry for that
+group. Because the three faces as given in the first example are really
+symmetric to each other, we only need to specify one of them now.
+
+In this notation, our example from the D-symbols section might look like
+this:
+
+    TILING
+      NAME   octa-tetra
+      GROUP  F432
+      FACES  3  0.5 0.5 0  0.5 0 0.5  0 0.5 0.5
+    END
+
+Without the extra symmetry, one would need to specify 32 triangles.
+
+
+===========================================================================
+
+That's all folks! Have fun with the program and please keep in touch.
+
+    Olaf Delgado
+
+===========================================================================
