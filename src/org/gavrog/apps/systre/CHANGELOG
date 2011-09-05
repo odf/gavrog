@@ -1,3 +1,7 @@
+Systre 1.1.7:
+
+2011-09-05: Fixed a bug in the embedder that made JVM 1.6 crash on OSX.
+
 Systre 1.1.6:
 
   Bug fixes:

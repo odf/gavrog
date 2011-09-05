@@ -541,7 +541,7 @@ public class Embedder {
 			System.out.println("edgeWeightSum is " + edgeWeightSum
 					+ ", but should be " + getGraph().numberOfEdges());
 		}
-		final double scaling = 1.01 / avg;
+		final double scaling = avg > 1e-12 ? 1.01 / avg : 1.01;
 
 		double edgeVariance = 0.0;
 		double edgePenalty = 0.0;

@@ -7,7 +7,11 @@
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="gavrog/Deploy/jogl-unix"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="Deploy/jogl/jogl.jar"/>
+	<classpathentry kind="lib" path="Deploy/jogl/jogl.jar">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="gavrog/Deploy/jogl-mac"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="lib" path="Deploy/jReality/bsh.jar"/>
 	<classpathentry kind="lib" path="Deploy/jReality/jReality.jar"/>
 	<classpathentry kind="lib" path="Deploy/jReality/jtem-beans.jar"/>
