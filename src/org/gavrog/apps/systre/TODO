@@ -8,6 +8,9 @@ Open bugs/issues:
 
 Planned/requested features:
 
+- Option to keep original embedding.
+- Support global node repulsion in embedder.
+
 - Better phrasing when component has multiple translates.
 - Command line version can write cgd files.
 - Option to simplify graphs with 1- or 2-coordinated nodes.
