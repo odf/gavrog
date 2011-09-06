@@ -2,8 +2,8 @@ Thank you for downloading 3dt and Systre. This file contains some
 basic information and can be found under the name README in the folder
 you choose to install the program in.
 
-The following information applies to 3dt version 0.4.0 and Systre version
-1.1.5.
+The following information applies to 3dt version 0.5.2 and Systre version
+1.1.7.
 
 ===========================================================================
 
@@ -28,7 +28,7 @@ check the project website http://www.gavrog.org.
 Installation and prerequisites:
 ------------------------------
 
-Gavrog requires a Java runtime environment (JRE) of version 1.5 or higher.
+Gavrog requires a Java runtime environment (JRE) of version 1.6 or higher.
 Java is now a standard part of Mac OS X. On other systems, Java might
 already be installed as a prerequisite for other programs, such as a web
 browser. If that is not the case, the most straightforward way to get a
