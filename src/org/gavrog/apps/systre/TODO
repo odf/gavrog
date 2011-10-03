@@ -9,6 +9,7 @@ Open bugs/issues:
 Planned/requested features:
 
 - Add 'point symbols' (shortest rings per angle) to output.
+- Issue warnings on unknown keywords and illegal unit cell parameters.
 
 - Better phrasing when component has multiple translates.
 - Command line version can write cgd files.
