@@ -3,13 +3,15 @@
 Open bugs/issues:
 
 - Parser should issue warnings for missing or unrecognized statements.
+- Issue warnings on illegal unit cell parameters.
 
 =====================================================
 
 Planned/requested features:
 
 - Add 'point symbols' (shortest rings per angle) to output.
-- Issue warnings on unknown keywords and illegal unit cell parameters.
+- Option to keep original embedding.
+- Support global node repulsion in embedder.
 
 - Better phrasing when component has multiple translates.
 - Command line version can write cgd files.

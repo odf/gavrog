@@ -12,8 +12,8 @@ Installation file for Gavrog, currently in particular for 3dt.
     -->
     <info>
         <appname>3dt / Systre</appname>
-        <appversion>versions 0.5.1 and 1.1.5</appversion>
-        <appsubpath>3dt-0.5.1</appsubpath>
+        <appversion>versions 0.5.2 and 1.1.7</appversion>
+        <appsubpath>3dt-0.5.2</appsubpath>
         <authors>
             <author name="Olaf Delgado-Friedrichs"
 	     email="odf@gavrog.org"/>
