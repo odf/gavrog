@@ -964,8 +964,8 @@ public class NetParser extends GenericParser {
 				final Point p = (Point) nodeToPosition.get(v);
 				// --- shift into Dirichlet domain
 				if (DEBUG) {
-					System.err.println("Shifting " + p
-							+ " into Dirichlet domain...");
+					System.err.println("Shifting " + p + " / " + p.times(from) +
+							" into Dirichlet domain...");
 				}
 				final Vector shift = Lattices.dirichletShifts(p,
 						dirichletVectors, cellGram, 1)[0];
@@ -1021,6 +1021,7 @@ public class NetParser extends GenericParser {
 				System.err.println();
 				System.err.println("Generated " + extended.size()
 						+ " nodes in extended Dirichlet domain.");
+				System.err.println();
 			}
 
 			// --- compute potential edges
@@ -1098,6 +1099,11 @@ public class NetParser extends GenericParser {
 					throw new DataFormatException(msg + minEdgeLength);
 				}
 				if (G.getEdge(v, w, s) == null) {
+					if (DEBUG) {
+						System.err.println("Adding edge from " + v + " to (" +
+								w + ", " + s +  ") of length " + dist);
+					}
+
 					G.newEdge(v, w, s);
 				}
 				if (v.degree() > descV.connectivity) {
