@@ -22,5 +22,7 @@
 	<classpathentry kind="lib" path="Deploy/XStream/xstream.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="clojure.jar" sourcepath="clojure-src.jar"/>
+	<classpathentry kind="lib" path="classes"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
