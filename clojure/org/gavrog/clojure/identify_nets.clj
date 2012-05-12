@@ -1,7 +1,8 @@
 (ns org.gavrog.clojure.identify_nets
   (:import (org.gavrog.joss.pgraphs.io Net Archive)
            (java.lang ClassLoader)
-           (java.io InputStreamReader BufferedReader)))
+           (java.io InputStreamReader BufferedReader))
+  (:gen-class))
 
 (defn add-to-archive [archive path]
   (let [stream (ClassLoader/getSystemResourceAsStream path)]
@@ -23,5 +24,14 @@
             (.getName found)
             :unknown)))
 
+(defn read-nets [path]
+  (-> path Net/iterator iterator-seq))
+
 (defn identify-all-from-file [archive path]
-  (map (partial identify archive) (-> path Net/iterator iterator-seq)))
+  (map (partial identify archive) (read-nets path)))
+
+(defn -main [path]
+  (let [archive (make-archive "1.0"
+                              "org/gavrog/apps/systre/rcsr.arc"
+                              "org/gavrog/apps/systre/zeolites.arc")]
+    (identify-all-from-file archive path)))
