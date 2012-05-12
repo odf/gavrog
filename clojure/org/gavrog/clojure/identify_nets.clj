@@ -34,4 +34,4 @@
   (let [archive (make-archive "1.0"
                               "org/gavrog/apps/systre/rcsr.arc"
                               "org/gavrog/apps/systre/zeolites.arc")]
-    (identify-all-from-file archive path)))
+    (println (identify-all-from-file archive path))))
