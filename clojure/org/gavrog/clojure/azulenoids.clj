@@ -1,4 +1,4 @@
-(ns org.gavrog.clojure.identify_nets
+(ns org.gavrog.clojure.azulenoids
   (:import (org.gavrog.jane.numbers Whole)
            (org.gavrog.joss.dsyms.basic DSymbol DynamicDSymbol)))
 
@@ -12,3 +12,7 @@
                     "29 0 0 0 0 42 41 0 0 48 47 0 0 54 53 0 0 60 59 0 0:"
                     "3 3 3 3 3 3 3 3 3 3,0 0 5 0 7 0 0 0 0 0")))
 
+(defn initial-symbol []
+  (new DynamicDSymbol
+       (str "1.1:16:2 4 6 8 10 12 14 16,16 3 5 7 9 11 13 15,"
+            "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0:8,0 0 0 0 0 0 0 0")))
