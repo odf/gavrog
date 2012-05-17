@@ -1,6 +1,7 @@
 (ns org.gavrog.clojure.azulenoids
   (:import (org.gavrog.jane.numbers Whole)
-           (org.gavrog.joss.dsyms.basic DSymbol DynamicDSymbol)))
+           (org.gavrog.joss.dsyms.basic DSymbol DynamicDSymbol)
+           (org.gavrog.joss.dsyms.generators CombineTiles DefineBranching2d)))
 
 (def template
   (new DSymbol (str "1.1:60:"
@@ -12,7 +13,24 @@
                     "29 0 0 0 0 42 41 0 0 48 47 0 0 54 53 0 0 60 59 0 0:"
                     "3 3 3 3 3 3 3 3 3 3,0 0 5 0 7 0 0 0 0 0")))
 
-(defn initial-symbol []
-  (new DynamicDSymbol
-       (str "1.1:16:2 4 6 8 10 12 14 16,16 3 5 7 9 11 13 15,"
-            "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0:8,0 0 0 0 0 0 0 0")))
+(def octagon
+  (new DSymbol "1.1:16 1:2 4 6 8 10 12 14 16,16 3 5 7 9 11 13 15:8"))
+
+(def sets (new CombineTiles octagon))
+
+(defn max-curvature [ds]
+  (let [dsx (.clone ds)]
+    (do (.setVDefaultToOne dsx true) (.curvature2D dsx))))
+
+(defn syms-for [ds]
+  (if (.isNegative (max-curvature ds))
+    []
+    (new DefineBranching2d ds 3 2 Whole/ZERO)))
+
+(def syms (mapcat syms-for sets))
+
+(defn subdiv [ds pos]
+  )
+
+(defn subdivs-for [ds]
+  (map (partial subdiv ds) (range 1 16 2)))
