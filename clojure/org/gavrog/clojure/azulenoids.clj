@@ -3,6 +3,27 @@
            (org.gavrog.joss.dsyms.basic DSymbol DynamicDSymbol)
            (org.gavrog.joss.dsyms.generators CombineTiles DefineBranching2d)))
 
+(defn walk [ds D & idxs]
+  (if (empty? idxs)
+    D
+    (recur ds (.op ds (first idxs) D) (rest idxs))))
+
+(defn max-curvature [ds]
+  (let [dsx (.clone ds)]
+    (do (.setVDefaultToOne dsx true) (.curvature2D dsx))))
+
+(defn syms-for [ds]
+  (if (.isNegative (max-curvature ds))
+    []
+    (new DefineBranching2d ds 3 2 Whole/ZERO)))
+
+(defn subdiv [ds pos]
+  )
+
+(defn subdivs-for [ds]
+  (map (partial subdiv ds) (range 1 16 2)))
+
+
 (def template
   (new DSymbol (str "1.1:60:"
                     "2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 "
@@ -18,19 +39,4 @@
 
 (def sets (new CombineTiles octagon))
 
-(defn max-curvature [ds]
-  (let [dsx (.clone ds)]
-    (do (.setVDefaultToOne dsx true) (.curvature2D dsx))))
-
-(defn syms-for [ds]
-  (if (.isNegative (max-curvature ds))
-    []
-    (new DefineBranching2d ds 3 2 Whole/ZERO)))
-
 (def syms (mapcat syms-for sets))
-
-(defn subdiv [ds pos]
-  )
-
-(defn subdivs-for [ds]
-  (map (partial subdiv ds) (range 1 16 2)))
