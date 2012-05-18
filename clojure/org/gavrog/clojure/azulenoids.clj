@@ -6,6 +6,12 @@
 (defn iterate-cycle [coll x]
   (reductions (fn [x f] (f x)) x (cycle coll)))
 
+(defn lazy-mapcat [f & colls]
+  (lazy-seq
+   (when (every? seq colls)
+     (concat (apply f (map first colls))
+             (apply lazy-mapcat f (map rest colls))))))
+
 (defn walk [ds D & idxs]
   (reduce (fn [D i] (.op ds i D)) D idxs))
 
@@ -31,8 +37,8 @@
 (defn syms-for [ds]
   (if (.isNegative (max-curvature ds))
     []
-    (filter (fn [ds] (= 0 (.curvature2D ds)))
-            (new DefineBranching2d ds 3 2 Whole/ZERO))))
+    (filter (fn [ds] (= Whole/ZERO (.curvature2D ds)))
+            (lazy-seq (new DefineBranching2d ds 3 2 Whole/ZERO)))))
 
 (def template
   (new DSymbol (str "1.1:60:"
@@ -67,11 +73,10 @@
     (doall (map finish (keys tmp2oct)))
     (-> tmp .dual .minimal .canonical)))
 
-(def octa-sets (new CombineTiles octagon))
+(defn octa-sets [] (lazy-seq (new CombineTiles octagon)))
 
-(def octa-syms (mapcat syms-for octa-sets))
+(defn octa-syms [] (lazy-mapcat syms-for (octa-sets)))
 
-(def azul-syms-raw
-  (mapcat (fn [ds] (map (partial apply-to-template ds) boundary-mappings))
-          octa-syms))
-  
+(defn azul-syms-raw []
+  (lazy-mapcat (fn [ds] (map (partial apply-to-template ds) boundary-mappings))
+               (octa-syms)))
