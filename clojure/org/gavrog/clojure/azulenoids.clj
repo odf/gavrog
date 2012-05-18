@@ -3,6 +3,9 @@
            (org.gavrog.joss.dsyms.basic DSymbol DynamicDSymbol)
            (org.gavrog.joss.dsyms.generators CombineTiles DefineBranching2d)))
 
+(defn iterate-cycle [coll x]
+  (reductions (fn [x f] (f x)) x (cycle coll)))
+
 (defn walk [ds D & idxs]
   (reduce (fn [D i] (.op ds i D)) D idxs))
 
@@ -15,6 +18,11 @@
                    (= D E*) nil
                    :else (recur (walk ds E j i)))))]
     (step (walk ds D i))))
+
+(defn boundary-chambers [ds D i j k]
+  (let [a (fn [D] (walk ds D i))
+        b (fn [D] (chain-end ds D j k))]
+    (iterate-cycle [a b] D)))
 
 (defn max-curvature [ds]
   (let [dsx (.clone ds)]
@@ -30,7 +38,6 @@
 
 (defn subdivs-for [ds]
   (map (partial subdiv ds) (range 1 16 2)))
-
 
 (def template
   (new DSymbol (str "1.1:60:"
