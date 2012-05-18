@@ -4,9 +4,17 @@
            (org.gavrog.joss.dsyms.generators CombineTiles DefineBranching2d)))
 
 (defn walk [ds D & idxs]
-  (if (empty? idxs)
-    D
-    (recur ds (.op ds (first idxs) D) (rest idxs))))
+  (reduce (fn [D i] (.op ds i D)) D idxs))
+
+(defn chain-end [ds D i j]
+  (let [step (fn [E]
+               (let [E* (walk ds E j)]
+                 (cond
+                   (nil? E*) E
+                   (= E E*) E
+                   (= D E*) nil
+                   :else (recur (walk ds E j i)))))]
+    (step (walk ds D i))))
 
 (defn max-curvature [ds]
   (let [dsx (.clone ds)]
