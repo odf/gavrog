@@ -31,7 +31,8 @@
 (defn syms-for [ds]
   (if (.isNegative (max-curvature ds))
     []
-    (new DefineBranching2d ds 3 2 Whole/ZERO)))
+    (filter (fn [ds] (= 0 (.curvature2D ds)))
+            (new DefineBranching2d ds 3 2 Whole/ZERO))))
 
 (def template
   (new DSymbol (str "1.1:60:"
@@ -46,14 +47,31 @@
 (def octagon
   (new DSymbol "1.1:16 1:2 4 6 8 10 12 14 16,16 3 5 7 9 11 13 15:8"))
 
-(def sets (new CombineTiles octagon))
-
-(def syms (mapcat syms-for sets))
-
 (def boundary-mappings
   (let [start (fn [p] (mod (- 20 p) 16))
-        template-boundary (boundary-chambers template (Integer. 1) 0 1 2)
-        octagon-boundary (cycle (range (Integer. 1) (Integer. 17)))
+        box (fn [i] (Integer. i))
+        template-boundary (boundary-chambers template (box 1) 0 1 2)
+        octagon-boundary (cycle (map box (range 1 17)))
         mapping (fn [p] (zipmap (drop (start p) octagon-boundary)
                                 (take 16 template-boundary)))]
     (map mapping (range 1 16 2))))
+
+(defn apply-to-template [ds oct2tmp]
+  (let [tmp2oct (clojure.set/map-invert oct2tmp)
+        tmp (DynamicDSymbol. template)
+        finish (fn [D]
+                 (if (not (.definesOp tmp 2 D))
+                   (.redefineOp tmp 2 D (oct2tmp (.op ds 2 (tmp2oct D)))))
+                 (if (not (.definesV tmp 1 2 D))
+                   (.redefineV tmp 1 2 D (.v ds 1 2 (tmp2oct D)))))]
+    (doall (map finish (keys tmp2oct)))
+    (-> tmp .dual .minimal .canonical)))
+
+(def octa-sets (new CombineTiles octagon))
+
+(def octa-syms (mapcat syms-for octa-sets))
+
+(def azul-syms-raw
+  (mapcat (fn [ds] (map (partial apply-to-template ds) boundary-mappings))
+          octa-syms))
+  
