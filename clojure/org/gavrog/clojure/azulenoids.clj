@@ -10,18 +10,18 @@
   (reduce (fn [D i] (.op ds i D)) D idxs))
 
 (defn chain-end [ds D i j]
-  (let [step (fn [E]
-               (let [E* (walk ds E j)]
-                 (cond
-                   (nil? E*) E
-                   (= E E*) E
-                   (= D E*) nil
-                   :else (recur (walk ds E j i)))))]
+  (letfn [(step [E]
+                (let [E* (walk ds E j)]
+                  (cond
+                    (nil? E*) E
+                    (= E E*) E
+                    (= D E*) nil
+                    :else (recur (walk ds E j i)))))]
     (step (walk ds D i))))
 
 (defn boundary-chambers [ds D i j k]
-  (let [a (fn [D] (walk ds D i))
-        b (fn [D] (chain-end ds D j k))]
+  (letfn [(a [D] (walk ds D i))
+          (b [D] (chain-end ds D j k))]
     (iterate-cycle [a b] D)))
 
 (defn max-curvature [ds]
@@ -32,12 +32,6 @@
   (if (.isNegative (max-curvature ds))
     []
     (new DefineBranching2d ds 3 2 Whole/ZERO)))
-
-(defn subdiv [ds pos]
-  )
-
-(defn subdivs-for [ds]
-  (map (partial subdiv ds) (range 1 16 2)))
 
 (def template
   (new DSymbol (str "1.1:60:"
@@ -55,3 +49,11 @@
 (def sets (new CombineTiles octagon))
 
 (def syms (mapcat syms-for sets))
+
+(def boundary-mappings
+  (let [start (fn [p] (mod (- 20 p) 16))
+        template-boundary (boundary-chambers template (Integer. 1) 0 1 2)
+        octagon-boundary (cycle (range (Integer. 1) (Integer. 17)))
+        mapping (fn [p] (zipmap (drop (start p) octagon-boundary)
+                                (take 16 template-boundary)))]
+    (map mapping (range 1 16 2))))
