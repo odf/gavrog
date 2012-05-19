@@ -81,3 +81,13 @@
 (defn azul-syms-raw []
   (lazy-mapcat (fn [ds] (map (partial apply-to-template ds) boundary-mappings))
                octa-syms))
+
+(defn azul-syms []
+  (letfn [(step [acc ds]
+                (let [[seen _] acc
+                      ds* (-> ds .dual .minimal)
+                      key (.invariant ds*)]
+                  (if (seen key)
+                    [seen false]
+                    [(conj seen key) (.canonical ds*)])))]
+         (reductions step [#{} false] (azul-syms-raw))))
