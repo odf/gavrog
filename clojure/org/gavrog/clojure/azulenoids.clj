@@ -52,23 +52,25 @@
   (new DSymbol "1.1:16 1:2 4 6 8 10 12 14 16,16 3 5 7 9 11 13 15:8"))
 
 (def boundary-mappings
-  (let [start (fn [p] (mod (- 20 p) 16))
+  (let [offset (fn [p] (mod (- 19 p) 16))
         box (fn [i] (Integer. i))
         template-boundary (boundary-chambers template (box 1) 0 1 2)
         octagon-boundary (cycle (map box (range 1 17)))
-        mapping (fn [p] (zipmap (drop (start p) octagon-boundary)
+        mapping (fn [p] (zipmap (drop (offset p) octagon-boundary)
                                 (take 16 template-boundary)))]
     (map mapping (range 1 16 2))))
 
 (defn apply-to-template [ds oct2tmp]
   (let [tmp2oct (clojure.set/map-invert oct2tmp)
         tmp (DynamicDSymbol. template)
-        finish (fn [D]
+        set-op (fn [D]
                  (if (not (.definesOp tmp 2 D))
-                   (.redefineOp tmp 2 D (oct2tmp (.op ds 2 (tmp2oct D)))))
-                 (if (not (.definesV tmp 1 2 D))
-                   (.redefineV tmp 1 2 D (.v ds 1 2 (tmp2oct D)))))]
-    (doall (map finish (keys tmp2oct)))
+                   (.redefineOp tmp 2 D (oct2tmp (.op ds 2 (tmp2oct D))))))
+        set-v (fn [D]
+                (if (not (.definesV tmp 1 2 D))
+                  (.redefineV tmp 1 2 D (.v ds 1 2 (tmp2oct D)))))]
+    (doall (map set-op (keys tmp2oct)))
+    (doall (map set-v (keys tmp2oct)))
     (-> tmp .dual .minimal .canonical)))
 
 (defn octa-sets [] (filter (fn [ds] (-> ds max-curvature .isNegative not))
