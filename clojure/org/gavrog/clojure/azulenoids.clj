@@ -73,11 +73,11 @@
     (doall (map set-v (keys tmp2oct)))
     (-> tmp .dual .minimal .canonical)))
 
-(defn octa-sets [] (filter (fn [ds] (-> ds max-curvature .isNegative not))
-                           (lazy-seq (new CombineTiles octagon))))
+(def octa-sets (filter (fn [ds] (-> ds max-curvature .isNegative not))
+                       (lazy-seq (new CombineTiles octagon))))
 
-(defn octa-syms [] (lazy-mapcat syms-for (octa-sets)))
+(def octa-syms (lazy-mapcat syms-for octa-sets))
 
 (defn azul-syms-raw []
   (lazy-mapcat (fn [ds] (map (partial apply-to-template ds) boundary-mappings))
-               (octa-syms)))
+               octa-syms))
