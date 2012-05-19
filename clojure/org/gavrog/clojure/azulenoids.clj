@@ -35,10 +35,8 @@
     (do (.setVDefaultToOne dsx true) (.curvature2D dsx))))
 
 (defn syms-for [ds]
-  (if (.isNegative (max-curvature ds))
-    []
-    (filter (fn [ds] (= Whole/ZERO (.curvature2D ds)))
-            (lazy-seq (new DefineBranching2d ds 3 2 Whole/ZERO)))))
+  (filter (fn [ds] (-> ds .curvature2D .isZero))
+          (lazy-seq (new DefineBranching2d ds 3 2 Whole/ZERO))))
 
 (def template
   (new DSymbol (str "1.1:60:"
@@ -73,7 +71,8 @@
     (doall (map finish (keys tmp2oct)))
     (-> tmp .dual .minimal .canonical)))
 
-(defn octa-sets [] (lazy-seq (new CombineTiles octagon)))
+(defn octa-sets [] (filter (fn [ds] (-> ds max-curvature .isNegative not))
+                           (lazy-seq (new CombineTiles octagon))))
 
 (defn octa-syms [] (lazy-mapcat syms-for (octa-sets)))
 
