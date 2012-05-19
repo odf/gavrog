@@ -1,7 +1,9 @@
 (ns org.gavrog.clojure.azulenoids
   (:import (org.gavrog.jane.numbers Whole)
            (org.gavrog.joss.dsyms.basic DSymbol DynamicDSymbol)
-           (org.gavrog.joss.dsyms.generators CombineTiles DefineBranching2d)))
+           (org.gavrog.joss.dsyms.generators CombineTiles DefineBranching2d))
+  (:require clojure.set)
+  (:gen-class))
 
 (defn iterate-cycle [coll x]
   (reductions (fn [x f] (f x)) x (cycle coll)))
@@ -82,12 +84,21 @@
   (lazy-mapcat (fn [ds] (map (partial apply-to-template ds) boundary-mappings))
                octa-syms))
 
-(defn azul-syms []
+(def azul-syms
   (letfn [(step [acc ds]
                 (let [[seen _] acc
-                      ds* (-> ds .dual .minimal)
-                      key (.invariant ds*)]
+                      key (.invariant ds)]
                   (if (seen key)
                     [seen false]
-                    [(conj seen key) (.canonical ds*)])))]
-         (reductions step [#{} false] (azul-syms-raw))))
+                    [(conj seen key) ds])))]
+         (filter identity
+                 (map second
+                      (reductions step [#{} false] (azul-syms-raw))))))
+
+(defn -main []
+  (do
+    (doall (map (fn [ds] (println (str ds))) azul-syms))
+    (println "#Generated:")
+    (println "#   " (count octa-sets) "octagonal D-sets.")
+    (println "#   " (count octa-syms) "octagonal D-symbols.")
+    (println "#   " (count azul-syms) "azulenoid D-symbols.")))
