@@ -8,6 +8,15 @@
 (defn iterate-cycle [coll x]
   (reductions #(%2 %1) x (cycle coll)))
 
+(defn unique [coll key-fun]
+  (letfn [(step [acc x]
+                (let [[seen _] acc
+                      key (key-fun x)]
+                  (if (seen key)
+                    [seen false]
+                    [(conj seen key) x])))]
+         (filter identity (map second (reductions step [#{} false] coll)))))
+
 (defn walk [ds D & idxs]
   (reduce #(.op ds %2 %1) D idxs))
 
@@ -48,7 +57,7 @@
       (zipmap (drop (mod (- 19 p) 16) octagon-boundary)
               (take 16 template-boundary)))))
 
-(defn apply-to-template [ds oct2tmp]
+(defn on-template [ds oct2tmp]
   (let [tmp2oct (clojure.set/map-invert oct2tmp)
         tmp (DynamicDSymbol. template)]
     (doseq [D (keys tmp2oct)]
@@ -57,7 +66,7 @@
     (doseq [D (keys tmp2oct)]
       (if (not (.definesV tmp 1 2 D))
         (.redefineV tmp 1 2 D (.v ds 1 2 (tmp2oct D)))))
-    (-> tmp .dual .minimal .canonical)))
+    tmp))
 
 (def octa-sets (filter #(-> %1 max-curvature .isNegative not)
                        (lazy-seq (new CombineTiles octagon))))
@@ -68,19 +77,10 @@
         :when (-> dsym .curvature2D .isZero)]
     dsym))
 
-(defn azul-syms-raw []
-  (for [ds octa-syms o2t boundary-mappings] (apply-to-template ds o2t)))
-
 (def azul-syms
-  (letfn [(step [acc ds]
-                (let [[seen _] acc
-                      key (.invariant ds)]
-                  (if (seen key)
-                    [seen false]
-                    [(conj seen key) ds])))]
-         (for [entry (reductions step [#{} false] (azul-syms-raw))
-               :when (second entry)]
-           (second entry))))
+  (let [raw (for [ds octa-syms o2t boundary-mappings] (on-template ds o2t))]
+    (for [ds (unique raw #(-> %1 .minimal .invariant))]
+      (-> ds .dual .minimal .canonical))))
 
 (defn -main []
   (do
