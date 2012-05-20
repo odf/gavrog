@@ -64,15 +64,13 @@
 
 (defn apply-to-template [ds oct2tmp]
   (let [tmp2oct (clojure.set/map-invert oct2tmp)
-        tmp (DynamicDSymbol. template)
-        set-op (fn [D]
-                 (if (not (.definesOp tmp 2 D))
-                   (.redefineOp tmp 2 D (oct2tmp (.op ds 2 (tmp2oct D))))))
-        set-v (fn [D]
-                (if (not (.definesV tmp 1 2 D))
-                  (.redefineV tmp 1 2 D (.v ds 1 2 (tmp2oct D)))))]
-    (doall (map set-op (keys tmp2oct)))
-    (doall (map set-v (keys tmp2oct)))
+        tmp (DynamicDSymbol. template)]
+    (doseq [D (keys tmp2oct)]
+      (if (not (.definesOp tmp 2 D))
+        (.redefineOp tmp 2 D (oct2tmp (.op ds 2 (tmp2oct D))))))
+    (doseq [D (keys tmp2oct)]
+      (if (not (.definesV tmp 1 2 D))
+        (.redefineV tmp 1 2 D (.v ds 1 2 (tmp2oct D)))))
     (-> tmp .dual .minimal .canonical)))
 
 (def octa-sets (filter (fn [ds] (-> ds max-curvature .isNegative not))
@@ -81,8 +79,7 @@
 (def octa-syms (lazy-mapcat syms-for octa-sets))
 
 (defn azul-syms-raw []
-  (lazy-mapcat (fn [ds] (map (partial apply-to-template ds) boundary-mappings))
-               octa-syms))
+  (for [ds octa-syms o2t boundary-mappings] (apply-to-template ds o2t)))
 
 (def azul-syms
   (letfn [(step [acc ds]
@@ -91,13 +88,13 @@
                   (if (seen key)
                     [seen false]
                     [(conj seen key) ds])))]
-         (filter identity
-                 (map second
-                      (reductions step [#{} false] (azul-syms-raw))))))
+         (for [entry (reductions step [#{} false] (azul-syms-raw))
+               :when (second entry)]
+           (second entry))))
 
 (defn -main []
   (do
-    (doall (map (fn [ds] (println (str ds))) azul-syms))
+    (doseq [ds azul-syms] (println (str ds)))
     (println "#Generated:")
     (println "#   " (count octa-sets) "octagonal D-sets.")
     (println "#   " (count octa-syms) "octagonal D-symbols.")
