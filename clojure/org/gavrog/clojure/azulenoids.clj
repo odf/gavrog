@@ -8,12 +8,6 @@
 (defn iterate-cycle [coll x]
   (reductions #(%2 %1) x (cycle coll)))
 
-(defn lazy-mapcat [f & colls]
-  (lazy-seq
-   (when (every? seq colls)
-     (concat (apply f (map first colls))
-             (apply lazy-mapcat f (map rest colls))))))
-
 (defn walk [ds D & idxs]
   (reduce #(.op ds %2 %1) D idxs))
 
@@ -34,10 +28,6 @@
   (let [dsx (.clone ds)]
     (do (.setVDefaultToOne dsx true) (.curvature2D dsx))))
 
-(defn syms-for [ds]
-  (filter #(-> %1 .curvature2D .isZero)
-          (lazy-seq (new DefineBranching2d ds 3 2 Whole/ZERO))))
-
 (def template
   (new DSymbol (str "1.1:60:"
                     "2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 "
@@ -53,10 +43,10 @@
 
 (def boundary-mappings
   (let [template-boundary (boundary-chambers template (Integer. 1) 0 1 2)
-        octagon-boundary (cycle (map #(Integer. %1) (range 1 17)))
-        mapping #(zipmap (drop (mod (- 19 %1) 16) octagon-boundary)
-                         (take 16 template-boundary))]
-    (map mapping (range 1 16 2))))
+        octagon-boundary (cycle (map #(Integer. %1) (range 1 17)))]
+    (for [p (range 1 16 2)]
+      (zipmap (drop (mod (- 19 p) 16) octagon-boundary)
+              (take 16 template-boundary)))))
 
 (defn apply-to-template [ds oct2tmp]
   (let [tmp2oct (clojure.set/map-invert oct2tmp)
@@ -69,10 +59,14 @@
         (.redefineV tmp 1 2 D (.v ds 1 2 (tmp2oct D)))))
     (-> tmp .dual .minimal .canonical)))
 
-(def octa-sets (filter (fn [ds] (-> ds max-curvature .isNegative not))
+(def octa-sets (filter #(-> %1 max-curvature .isNegative not)
                        (lazy-seq (new CombineTiles octagon))))
 
-(def octa-syms (lazy-mapcat syms-for octa-sets))
+(def octa-syms
+  (for [dset octa-sets
+        dsym (lazy-seq (new DefineBranching2d dset 3 2 Whole/ZERO))
+        :when (-> dsym .curvature2D .isZero)]
+    dsym))
 
 (defn azul-syms-raw []
   (for [ds octa-syms o2t boundary-mappings] (apply-to-template ds o2t)))
