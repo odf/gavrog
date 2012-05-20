@@ -6,7 +6,7 @@
   (:gen-class))
 
 (defn iterate-cycle [coll x]
-  (reductions (fn [x f] (f x)) x (cycle coll)))
+  (reductions #(%2 %1) x (cycle coll)))
 
 (defn lazy-mapcat [f & colls]
   (lazy-seq
@@ -15,7 +15,7 @@
              (apply lazy-mapcat f (map rest colls))))))
 
 (defn walk [ds D & idxs]
-  (reduce (fn [D i] (.op ds i D)) D idxs))
+  (reduce #(.op ds %2 %1) D idxs))
 
 (defn chain-end [ds D i j]
   (letfn [(step [E]
@@ -28,16 +28,14 @@
     (step (walk ds D i))))
 
 (defn boundary-chambers [ds D i j k]
-  (letfn [(a [D] (walk ds D i))
-          (b [D] (chain-end ds D j k))]
-    (iterate-cycle [a b] D)))
+  (iterate-cycle [#(walk ds %1 i) #(chain-end ds %1 j k)] D))
 
 (defn max-curvature [ds]
   (let [dsx (.clone ds)]
     (do (.setVDefaultToOne dsx true) (.curvature2D dsx))))
 
 (defn syms-for [ds]
-  (filter (fn [ds] (-> ds .curvature2D .isZero))
+  (filter #(-> %1 .curvature2D .isZero)
           (lazy-seq (new DefineBranching2d ds 3 2 Whole/ZERO))))
 
 (def template
@@ -54,12 +52,10 @@
   (new DSymbol "1.1:16 1:2 4 6 8 10 12 14 16,16 3 5 7 9 11 13 15:8"))
 
 (def boundary-mappings
-  (let [offset (fn [p] (mod (- 19 p) 16))
-        box (fn [i] (Integer. i))
-        template-boundary (boundary-chambers template (box 1) 0 1 2)
-        octagon-boundary (cycle (map box (range 1 17)))
-        mapping (fn [p] (zipmap (drop (offset p) octagon-boundary)
-                                (take 16 template-boundary)))]
+  (let [template-boundary (boundary-chambers template (Integer. 1) 0 1 2)
+        octagon-boundary (cycle (map #(Integer. %1) (range 1 17)))
+        mapping #(zipmap (drop (mod (- 19 %1) 16) octagon-boundary)
+                         (take 16 template-boundary))]
     (map mapping (range 1 16 2))))
 
 (defn apply-to-template [ds oct2tmp]
