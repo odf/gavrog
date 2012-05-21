@@ -1,14 +1,17 @@
 (ns org.gavrog.clojure.permutations)
 
-(defn positions [coll x]
-  (keep-indexed #(when (= %2 x) %1) coll))
-
 (defn permutations [degree]
-  (let [complete? #(empty? (positions %1 false))
+  (let [keys (range 1 (inc degree))
+        complete? (comp empty? :unused)
         branch? (comp not complete?)
-        children (fn [perm]
-                   (when-let [i (first (positions perm false))]
-                     (for [n (range degree) :when (empty? (positions perm n))]
-                       (assoc perm i n))))
-        root (into [] (repeat degree false))]
-    (filter complete? (tree-seq branch? children root))))
+        children (fn [node]
+                   (let [{:keys [perm unused unseen]} node]
+                     (when-let [i (first unused)]
+                       (for [n unseen]
+                         {:perm (assoc perm i n)
+                          :unused (disj unused i)
+                          :unseen (disj unseen n)}))))
+        root {:perm {}
+              :unused (into #{} keys)
+              :unseen (into #{} keys)}]
+    (map :perm (filter complete? (tree-seq branch? children root)))))
