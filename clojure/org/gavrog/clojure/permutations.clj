@@ -1,11 +1,14 @@
 (ns org.gavrog.clojure.permutations)
 
-;    def permutations(degree):
-;        def choices(perm):
-;            if 0 in perm:
-;                i = perm.index(0)
-;                return Seq.range(1, degree).select(lambda n: not n in perm).map(
-;                    lambda n: perm[:i] + [n] + perm[i+1:])
-;
-;        return Seq.tree_walk([0] * degree, choices).select(lambda p: not 0 in p)
+(defn positions [coll x]
+  (keep-indexed #(when (= %2 x) %1) coll))
 
+(defn permutations [degree]
+  (let [complete? #(empty? (positions %1 false))
+        branch? (comp not complete?)
+        children (fn [perm]
+                   (when-let [i (first (positions perm false))]
+                     (for [n (range degree) :when (empty? (positions perm n))]
+                       (assoc perm i n))))
+        root (into [] (repeat degree false))]
+    (filter complete? (tree-seq branch? children root))))
