@@ -21,14 +21,13 @@
   (reduce #(.op ds %2 %1) D idxs))
 
 (defn chain-end [ds D i j]
-  (letfn [(step [E]
-                (let [E* (walk ds E j)]
-                  (cond
-                    (nil? E*) E
-                    (= E E*) E
-                    (= D E*) nil
-                    :else (recur (walk ds E j i)))))]
-    (step (walk ds D i))))
+  (loop [E (walk ds D i)]
+    (let [E* (walk ds E j)]
+      (cond
+        (nil? E*) E
+        (= E E*) E
+        (= D E*) nil
+        :else (recur (walk ds E j i))))))
 
 (defn boundary-chambers [ds D i j k]
   (iterate-cycle [#(walk ds %1 i) #(chain-end ds %1 j k)] D))
