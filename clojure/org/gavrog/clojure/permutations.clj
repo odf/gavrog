@@ -3,7 +3,6 @@
 (defn permutations [degree]
   (let [keys (range 1 (inc degree))
         complete? (comp empty? :unused)
-        branch? (comp not complete?)
         children (fn [node]
                    (let [{:keys [perm unused unseen]} node]
                      (when-let [i (first unused)]
@@ -14,4 +13,6 @@
         root {:perm {}
               :unused (into #{} keys)
               :unseen (into #{} keys)}]
-    (map :perm (filter complete? (tree-seq branch? children root)))))
+    (map :perm
+         (filter complete?
+                 (tree-seq (comp not complete?) children root)))))
