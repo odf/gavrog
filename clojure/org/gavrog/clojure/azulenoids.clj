@@ -4,18 +4,33 @@
            (org.gavrog.joss.dsyms.generators CombineTiles DefineBranching2d))
   (:gen-class))
 
+;; General purpose functions
+
 (defn iterate-cycle [coll x]
+  "Returns a lazy sequence of intermediate results, starting at x, of
+   cycling through the functions in coll and applying each to the
+   previous result."
   (reductions #(%2 %1) x (cycle coll)))
 
-(defn unique [coll key-fun]
-  (letfn [(step [[seen _] x]
-                (let [key (key-fun x)]
-                  (if (seen key)
-                    [seen false]
-                    [(conj seen key) x])))]
-         (filter identity (map second (reductions step [#{} false] coll)))))
+(defn unique
+  "Returns a lazy sequence of values from coll with duplicates removed.
+   If key-fun is given, it is applied to the original values before
+   determining equality."
+  ([key-fun coll]
+    (letfn [(step [[seen _] x]
+                  (let [key (key-fun x)]
+                    (if (seen key)
+                      [seen false]
+                      [(conj seen key) x])))]
+           (filter identity (map second (reductions step [#{} false] coll)))))
+  ([coll]
+    (unique identity coll)))
+
+;; General D-symbol functions
 
 (defn walk [ds D & idxs]
+  "Returns the result of applying the D-symbol operators on ds with the
+   given indices in order, starting with the element D."
   (reduce #(.op ds %2 %1) D idxs))
 
 (defn chain-end [ds D i j]
@@ -42,6 +57,8 @@
               (/ (s D) (v D)))))
   ([ds]
     (curvature ds 0)))
+
+;; Azulenoid-specific functions
 
 (def template
   (DSymbol. (str "1.1:60:"
@@ -82,8 +99,10 @@
 
 (def azul-syms
   (let [raw (for [ds octa-syms o2t boundary-mappings] (on-template ds o2t))]
-    (for [ds (unique raw #(-> %1 .minimal .invariant))]
+    (for [ds (unique #(-> %1 .minimal .invariant) raw)]
       (-> ds .dual .minimal .canonical))))
+
+;; Main entry point when used as a script
 
 (defn -main []
   (do
