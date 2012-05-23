@@ -10,7 +10,7 @@
 
 (defn make-archive [version & paths]
   (let [archive (new Archive version)]
-    (doall (map add-to-archive (repeat archive) paths))
+    (doseq [p paths] (add-to-archive archive p))
     archive))
 
 (defn find-net [archive net]
@@ -34,4 +34,4 @@
   (let [archive (make-archive "1.0"
                               "org/gavrog/apps/systre/rcsr.arc"
                               "org/gavrog/apps/systre/zeolites.arc")]
-    (println (identify-all-from-file archive path))))
+    (doseq [s (identify-all-from-file archive path)] (println s))))
