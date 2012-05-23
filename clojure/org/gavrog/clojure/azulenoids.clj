@@ -1,6 +1,6 @@
 (ns org.gavrog.clojure.azulenoids
   (:import (org.gavrog.jane.numbers Whole)
-           (org.gavrog.joss.dsyms.basic DSymbol DynamicDSymbol)
+           (org.gavrog.joss.dsyms.basic DSymbol DynamicDSymbol IndexList)
            (org.gavrog.joss.dsyms.generators CombineTiles DefineBranching2d))
   (:gen-class))
 
@@ -30,9 +30,18 @@
 (defn boundary-chambers [ds D i j k]
   (iterate-cycle [#(walk ds %1 i) #(chain-end ds %1 j k)] D))
 
-(defn max-curvature [ds]
-  (let [dsx (.clone ds)]
-    (do (.setVDefaultToOne dsx true) (.curvature2D dsx))))
+(defn curvature
+  ([ds default-v]
+    (reduce +
+            (- (.size ds))
+            (for [[i j] [[0 1] [0 2] [1 2]]
+                  :let [idcs (IndexList. i j)
+                        s #(if (.orbitIsOriented ds idcs %) 2 1)
+                        v #(if (.definesV ds i j %) (.v ds i j %) default-v)]
+                  D (iterator-seq (.orbitReps ds idcs))]
+              (/ (s D) (v D)))))
+  ([ds]
+    (curvature ds 0)))
 
 (def template
   (DSymbol. (str "1.1:60:"
@@ -62,13 +71,13 @@
       (.redefineV result 1 2 D* (.v ds 1 2 D)))
     result))
 
-(def octa-sets (filter #(-> %1 max-curvature .isNegative not)
+(def octa-sets (filter #(-> % (curvature 1) (>= 0))
                        (lazy-seq (CombineTiles. octagon))))
 
 (def octa-syms
   (for [dset octa-sets
         dsym (lazy-seq (DefineBranching2d. dset 3 2 Whole/ZERO))
-        :when (-> dsym .curvature2D .isZero)]
+        :when (-> dsym curvature (= 0))]
     dsym))
 
 (def azul-syms
