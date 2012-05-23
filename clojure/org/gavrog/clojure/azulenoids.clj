@@ -2,16 +2,15 @@
   (:import (org.gavrog.jane.numbers Whole)
            (org.gavrog.joss.dsyms.basic DSymbol DynamicDSymbol)
            (org.gavrog.joss.dsyms.generators CombineTiles DefineBranching2d))
-  (:require clojure.set)
+  (:use [clojure.set :only [map-invert]])
   (:gen-class))
 
 (defn iterate-cycle [coll x]
   (reductions #(%2 %1) x (cycle coll)))
 
 (defn unique [coll key-fun]
-  (letfn [(step [acc x]
-                (let [[seen _] acc
-                      key (key-fun x)]
+  (letfn [(step [[seen _] x]
+                (let [key (key-fun x)]
                   (if (seen key)
                     [seen false]
                     [(conj seen key) x])))]
@@ -57,14 +56,12 @@
               (take 16 template-boundary)))))
 
 (defn on-template [ds oct2tmp]
-  (let [tmp2oct (clojure.set/map-invert oct2tmp)
+  (let [tmp2oct (map-invert oct2tmp)
         tmp (DynamicDSymbol. template)]
-    (doseq [D (keys tmp2oct)]
-      (if (not (.definesOp tmp 2 D))
-        (.redefineOp tmp 2 D (oct2tmp (.op ds 2 (tmp2oct D))))))
-    (doseq [D (keys tmp2oct)]
-      (if (not (.definesV tmp 1 2 D))
-        (.redefineV tmp 1 2 D (.v ds 1 2 (tmp2oct D)))))
+    (doseq [D (keys tmp2oct) :when (not (.definesOp tmp 2 D))]
+      (.redefineOp tmp 2 D (oct2tmp (.op ds 2 (tmp2oct D)))))
+    (doseq [D (keys tmp2oct) :when (not (.definesV tmp 1 2 D))]
+      (.redefineV tmp 1 2 D (.v ds 1 2 (tmp2oct D))))
     tmp))
 
 (def octa-sets (filter #(-> %1 max-curvature .isNegative not)
