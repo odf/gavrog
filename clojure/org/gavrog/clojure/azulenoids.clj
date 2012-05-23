@@ -58,6 +58,29 @@
   ([ds]
     (curvature ds 0)))
 
+(defn traversal [ds indices seeds]
+  (let [stacks (map (fn [i] [i ()]) (take 2 indices))
+        queues (map (fn [i] [i []]) (drop 2 indices))
+        op (fn [i D] (if D (.op ds i D) nil))]
+    ((fn collect [seeds-left next seen]
+       (let [tmp (map (fn [[k d]] [k (drop-while #(seen [% k]) d)]) next)
+             r (first (filter (comp seq second) tmp))]
+         (if r
+           (let [[i [D & s]] r
+                 new-next (map (fn [[k x]]
+                                 [k (if (= k i) s (conj x (op k D)))])
+                               tmp)
+                 new-seen (into seen [[D] [D i] [(op i D) i]])]
+             (lazy-seq
+               (conj (collect seeds-left new-next new-seen) [D i])))
+           (if-let [D (first (filter (comp not seen) seeds-left))]
+             (let [new-next (map (fn [[k x]] [k (conj x (op k D))]) tmp)
+                   new-seen (conj seen D)]
+               (lazy-seq
+                 (conj (collect (rest seeds-left) new-next new-seen) [D])))
+             ()))))
+      (seq seeds) (doall (concat stacks queues)) #{})))
+
 ;; Azulenoid-specific functions
 
 (def template
