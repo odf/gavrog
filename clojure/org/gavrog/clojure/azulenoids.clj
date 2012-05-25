@@ -4,7 +4,16 @@
            (org.gavrog.joss.dsyms.generators CombineTiles DefineBranching2d))
   (:gen-class))
 
-;; General purpose functions
+;; General purpose definitions and entities
+
+(def empty-queue clojure.lang.PersistentQueue/EMPTY)
+
+(defn pop-while [pred coll]
+  "Like drop-while, but with pop."
+  (cond
+    (empty? coll) coll
+    (pred (first coll)) (recur pred (pop coll))
+    :else coll))
 
 (defn iterate-cycle [coll x]
   "Returns a lazy sequence of intermediate results, starting at x, of
@@ -59,26 +68,32 @@
     (curvature ds 0)))
 
 (defn traversal [ds indices seeds]
-  (let [stacks (map (fn [i] [i ()]) (take 2 indices))
-        queues (map (fn [i] [i []]) (drop 2 indices))
-        op (fn [i D] (if D (.op ds i D) nil))]
-    ((fn collect [seeds-left next seen]
-       (let [tmp (map (fn [[k d]] [k (drop-while #(seen [% k]) d)]) next)
-             r (first (filter (comp seq second) tmp))]
-         (if r
-           (let [[i [D & s]] r
-                 new-next (map (fn [[k x]]
-                                 [k (if (= k i) s (conj x (op k D)))])
-                               tmp)
-                 new-seen (into seen [[D] [D i] [(op i D) i]])]
+  (let [op (fn [i D] (if D (.op ds i D) nil))
+        stacks (map #(vector % ()) (take 2 indices))
+        queues (map #(vector % empty-queue) (drop 2 indices))
+        as-root #(vector % :root)
+        pop-seen (fn [xs seen]
+                   (for [[i ys] xs]
+                     (vector i (pop-while #(or (nil? %) (seen [% i])) ys))))
+        push-neighbors #(for [[i ys] %1] (vector i (conj ys (op i %2))))]
+    ((fn collect [seeds-left todo seen]
+       (let [seeds-left (drop-while (comp seen as-root) seeds-left)
+             todo (pop-seen todo seen)
+             [i todo-for-i] (first (filter (comp seq second) todo))]
+         (cond
+           (seq todo-for-i)
+           (let [D (first todo-for-i)
+                 todo (doall (push-neighbors todo D))
+                 seen (conj seen (as-root D) [D i] [(op i D) i])]
+             (lazy-seq (conj (collect seeds-left todo seen) [D i])))
+           (seq seeds-left)
+           (let [D (first seeds-left)
+                 todo (doall (push-neighbors todo D))
+                 seen (conj seen (as-root D))]
              (lazy-seq
-               (conj (collect seeds-left new-next new-seen) [D i])))
-           (if-let [D (first (filter (comp not seen) seeds-left))]
-             (let [new-next (map (fn [[k x]] [k (conj x (op k D))]) tmp)
-                   new-seen (conj seen D)]
-               (lazy-seq
-                 (conj (collect (rest seeds-left) new-next new-seen) [D])))
-             ()))))
+               (conj (collect (rest seeds-left) todo seen) (as-root D))))
+           :else
+           ())))
       (seq seeds) (doall (concat stacks queues)) #{})))
 
 ;; Azulenoid-specific functions
