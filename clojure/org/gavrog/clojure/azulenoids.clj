@@ -54,25 +54,12 @@
 (defn boundary-chambers [ds D i j k]
   (iterate-cycle [#(walk ds %1 i) #(chain-end ds %1 j k)] D))
 
-(defn curvature
-  ([ds default-v]
-    (reduce +
-            (- (.size ds))
-            (for [[i j] [[0 1] [0 2] [1 2]]
-                  :let [idcs (IndexList. i j)
-                        s #(if (.orbitIsOriented ds idcs %) 2 1)
-                        v #(if (.definesV ds i j %) (.v ds i j %) default-v)]
-                  D (iterator-seq (.orbitReps ds idcs))]
-              (/ (s D) (v D)))))
-  ([ds]
-    (curvature ds 0)))
-
 (defn traversal [ds indices seeds]
   (let [op (fn [i D] (when D (.op ds i D)))
         stacks (map #(vector % ()) (take 2 indices))
         queues (map #(vector % empty-queue) (drop 2 indices))
         as-root #(vector % :root)
-        unseen (fn [i seen bag] (pop-while #(or (nil? %) (seen [% i])) bag))
+        unseen (fn [i seen bag] (pop-while #(seen [% i]) bag))
         pop-seen #(for [[i ys] %1] (vector i (unseen i %2 ys)))
         push-neighbors #(for [[i ys] %1] (vector i (conj ys (op i %2))))]
     ((fn collect [seeds-left todo seen]
@@ -94,6 +81,29 @@
            :else
            ())))
       (seq seeds) (doall (concat stacks queues)) #{})))
+
+(defn orbit-reps
+  ([ds indices seeds]
+    (for [[D i] (traversal ds indices seeds) :when (= :root i)] D))
+  ([ds indices]
+    (orbit-reps ds indices (iterator-seq (.elements ds)))))
+
+(defn orbit-loopless? [ds indices D]
+  (empty? (for [[D i] (traversal ds indices [D])
+                :when (and (not= i :root) (or (nil? D) (= D (walk ds D i))))]
+            D)))
+
+(defn curvature
+  ([ds default-v]
+    (reduce +
+            (- (.size ds))
+            (for [[i j] [[0 1] [0 2] [1 2]]
+                  :let [s #(if (orbit-loopless? ds [i j] %) 2 1)
+                        v #(if (.definesV ds i j %) (.v ds i j %) default-v)]
+                  D (orbit-reps ds [i j])]
+              (/ (s D) (v D)))))
+  ([ds]
+    (curvature ds 0)))
 
 ;; Azulenoid-specific functions
 
