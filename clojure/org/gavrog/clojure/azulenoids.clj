@@ -68,18 +68,17 @@
     (curvature ds 0)))
 
 (defn traversal [ds indices seeds]
-  (let [op (fn [i D] (if D (.op ds i D) nil))
+  (let [op (fn [i D] (when D (.op ds i D)))
         stacks (map #(vector % ()) (take 2 indices))
         queues (map #(vector % empty-queue) (drop 2 indices))
         as-root #(vector % :root)
-        pop-seen (fn [xs seen]
-                   (for [[i ys] xs]
-                     (vector i (pop-while #(or (nil? %) (seen [% i])) ys))))
+        unseen (fn [i seen bag] (pop-while #(or (nil? %) (seen [% i])) bag))
+        pop-seen #(for [[i ys] %1] (vector i (unseen i %2 ys)))
         push-neighbors #(for [[i ys] %1] (vector i (conj ys (op i %2))))]
     ((fn collect [seeds-left todo seen]
        (let [seeds-left (drop-while (comp seen as-root) seeds-left)
              todo (pop-seen todo seen)
-             [i todo-for-i] (first (filter (comp seq second) todo))]
+             [i todo-for-i] (->> todo (filter (comp seq second)) first)]
          (cond
            (seq todo-for-i)
            (let [D (first todo-for-i)
