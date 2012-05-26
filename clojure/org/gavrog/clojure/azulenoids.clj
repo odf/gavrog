@@ -39,8 +39,9 @@
 
 (defn walk [ds D & idxs]
   "Returns the result of applying the D-symbol operators on ds with the
-   given indices in order, starting with the element D."
-  (reduce #(.op ds %2 %1) D idxs))
+   given indices in order, starting with the element D. If the result of
+   any step is undefined, nil is returned."
+  (reduce #(when %1 (.op ds %2 %1)) D idxs))
 
 (defn chain-end [ds D i j]
   (loop [E (walk ds D i)]
@@ -55,13 +56,12 @@
   (iterate-cycle [#(walk ds %1 i) #(chain-end ds %1 j k)] D))
 
 (defn traversal [ds indices seeds]
-  (let [op (fn [i D] (when D (.op ds i D)))
-        stacks (map #(vector % ()) (take 2 indices))
+  (let [stacks (map #(vector % ()) (take 2 indices))
         queues (map #(vector % empty-queue) (drop 2 indices))
         as-root #(vector % :root)
         unseen (fn [i seen bag] (pop-while #(seen [% i]) bag))
         pop-seen #(for [[i ys] %1] (vector i (unseen i %2 ys)))
-        push-neighbors #(for [[i ys] %1] (vector i (conj ys (op i %2))))]
+        push-neighbors #(for [[i ys] %1] (vector i (conj ys (walk ds %2 i))))]
     ((fn collect [seeds-left todo seen]
        (let [seeds-left (drop-while (comp seen as-root) seeds-left)
              todo (pop-seen todo seen)
@@ -70,7 +70,7 @@
            (seq todo-for-i)
            (let [D (first todo-for-i)
                  todo (doall (push-neighbors todo D))
-                 seen (conj seen (as-root D) [D i] [(op i D) i])]
+                 seen (conj seen (as-root D) [D i] [(walk ds D i) i])]
              (lazy-seq (conj (collect seeds-left todo seen) [D i])))
            (seq seeds-left)
            (let [D (first seeds-left)
