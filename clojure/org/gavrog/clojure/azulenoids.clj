@@ -61,7 +61,7 @@
         as-root #(vector % :root)
         unseen (fn [i seen bag] (pop-while #(seen [% i]) bag))
         pop-seen #(for [[i ys] %1] (vector i (unseen i %2 ys)))
-        push-neighbors #(for [[i ys] %1] (vector i (conj ys (walk ds %2 i))))]
+        push-neighbors #(for [[i ys] %1] (vector i (conj ys %2)))]
     ((fn collect [seeds-left todo seen]
        (let [seeds-left (drop-while (comp seen as-root) seeds-left)
              todo (pop-seen todo seen)
@@ -69,9 +69,10 @@
          (cond
            (seq todo-for-i)
            (let [D (first todo-for-i)
-                 todo (doall (push-neighbors todo D))
-                 seen (conj seen (as-root D) [D i] [(walk ds D i) i])]
-             (lazy-seq (conj (collect seeds-left todo seen) [D i])))
+                 Di (walk ds D i)
+                 todo (if Di (doall (push-neighbors todo Di)) todo)
+                 seen (conj seen (as-root Di) [D i] [Di i])]
+             (lazy-seq (conj (collect seeds-left todo seen) [D i Di])))
            (seq seeds-left)
            (let [D (first seeds-left)
                  todo (doall (push-neighbors todo D))
