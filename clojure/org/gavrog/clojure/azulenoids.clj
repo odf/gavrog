@@ -72,13 +72,13 @@
                  Di (walk ds D i)
                  todo (if Di (doall (push-neighbors todo Di)) todo)
                  seen (conj seen (as-root Di) [D i] [Di i])]
-             (lazy-seq (conj (collect seeds-left todo seen) [D i Di])))
+             (lazy-seq (cons [D i Di] (collect seeds-left todo seen))))
            (seq seeds-left)
            (let [D (first seeds-left)
                  todo (doall (push-neighbors todo D))
                  seen (conj seen (as-root D))]
              (lazy-seq
-               (conj (collect (rest seeds-left) todo seen) (as-root D))))
+               (cons (as-root D) (collect (rest seeds-left) todo seen))))
            :else
            ())))
       (seq seeds) (doall (concat stacks queues)) #{})))

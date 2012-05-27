@@ -1,3 +1,7 @@
+Systre 1.1.8:
+
+2012-05-27: Reverted generated class files to version 49.0 (Java 1.5).
+
 Systre 1.1.7:
 
 2011-09-05: Fixed a bug in the embedder that made JVM 1.6 crash on OSX.
