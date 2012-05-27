@@ -3530,7 +3530,7 @@ public class Main extends EventSource {
 					"hideAbout");
 			final BLabel label = new BLabel("<html><center><h2>Gavrog 3dt</h2>"
 					+ "<p>Version " + Version.full + "</p>"
-					+ "<p>by Olaf Delgado-Friedrichs 1997-2009<p>"
+					+ "<p>by Olaf Delgado-Friedrichs 1997-2012<p>"
 					+ "<p>For further information visit<br>"
 					+ "<em>http://gavrog.org</em><p>"
 					+ "</center></html>");

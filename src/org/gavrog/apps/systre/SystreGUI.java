@@ -84,7 +84,7 @@ public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
 			+ "<html><h1><font color=#202060>Gavrog Systre</font></h1>"
 			+ "<font color=#202060>Version " + Version.full + "<br>"
-			+ "by Olaf Delgado-Friedrichs, 2001-2010</font></html>";
+			+ "by Olaf Delgado-Friedrichs, 2001-2012</font></html>";
 	
 	// --- some constants used in the GUI
     final private static Color textColor = new Color(255, 250, 240);
