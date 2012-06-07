@@ -45,6 +45,9 @@
   (reduce #(when %1 (.op ds %2 %1)) D idxs))
 
 (defn chain-end [ds D i j]
+  "Returns the result of alternately applying operators indexed i and j,
+   starting with the element D, until the end of the chain is reached.
+   In case of a cycle, nil is returned."
   (loop [E (walk ds D i)]
     (let [E* (walk ds E j)]
       (cond
@@ -53,10 +56,7 @@
         (= D E*) nil
         :else (recur (walk ds E j i))))))
 
-(defn boundary-chambers [ds D i j k]
-  (iterate-cycle [#(walk ds %1 i) #(chain-end ds %1 j k)] D))
-
-(defn traversal [ds indices seeds]
+(defn pretty-traversal [ds indices seeds]
   (let [stacks (map #(vector % ()) (take 2 indices))
         queues (map #(vector % empty-queue) (drop 2 indices))
         as-root #(vector % :root)
@@ -86,12 +86,12 @@
 
 (defn orbit-reps
   ([ds indices seeds]
-    (for [[D i] (traversal ds indices seeds) :when (= :root i)] D))
+    (for [[D i] (pretty-traversal ds indices seeds) :when (= :root i)] D))
   ([ds indices]
     (orbit-reps ds indices (iterator-seq (.elements ds)))))
 
 (defn orbit-loopless? [ds indices D]
-  (empty? (for [[D i] (traversal ds indices [D])
+  (empty? (for [[D i] (pretty-traversal ds indices [D])
                 :when (and (not= i :root) (or (nil? D) (= D (walk ds D i))))]
             D)))
 
@@ -121,6 +121,9 @@
 
 (def octagon
   (DSymbol. "1.1:16 1:2 4 6 8 10 12 14 16,16 3 5 7 9 11 13 15:8"))
+
+(defn boundary-chambers [ds D i j k]
+  (iterate-cycle [#(walk ds %1 i) #(chain-end ds %1 j k)] D))
 
 (def boundary-mappings
   (let [template-boundary (boundary-chambers template (Integer. 1) 0 1 2)
