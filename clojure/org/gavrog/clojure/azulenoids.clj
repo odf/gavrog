@@ -29,9 +29,10 @@
     (letfn [(step [[seen _] x]
                   (let [key (key-fun x)]
                     (if (seen key)
-                      [seen false]
-                      [(conj seen key) x])))]
-           (filter identity (map second (reductions step [#{} false] coll)))))
+                      [seen nil false]
+                      [(conj seen key) x true])))]
+           (map second
+                (filter #(nth % 2) (reductions step [#{} nil false] coll)))))
   ([coll]
     (unique identity coll)))
 
