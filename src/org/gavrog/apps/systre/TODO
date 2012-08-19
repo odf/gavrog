@@ -9,7 +9,12 @@ Open bugs/issues:
 
 Planned/requested features:
 
-- Add 'point symbols' (shortest rings per angle) to output.
+- Optionally add 'point symbols' (shortest rings per angle) to output.
+- Keep order of vertices.
+- Optionally merge vertices with identical neighbor sets.
+- Option to stop on error.
+- Produce a log file when using GUI version non-step mode.
+
 - Option to keep original embedding.
 - Support global node repulsion in embedder.
 
