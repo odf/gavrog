@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -91,7 +91,7 @@ public class UndirectedGraph implements IGraph {
     /**
      * Implements node objects for this graph.
      */
-    protected class Node implements INode {
+    protected class Node implements INode, Comparable {
         private final Object id;
 
         /**
@@ -176,6 +176,11 @@ public class UndirectedGraph implements IGraph {
          */
         public String toString() {
             return "Node " + id;
+        }
+
+        public int compareTo(Object arg0) {
+            return ((Long) this.id()).intValue()
+                    - ((Long) ((Node) arg0).id()).intValue();
         }
     }
 

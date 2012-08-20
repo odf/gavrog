@@ -1,5 +1,5 @@
 /*
-Copyright 2006 Olaf Delgado-Friedrichs
+Copyright 2012 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,6 +24,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.collections.Partition;
@@ -271,12 +274,12 @@ public class Cover extends PeriodicGraph {
         final Map imageToRep = P.representativeMap();
         
         // --- determine sets of preimages for each node orbit of the image graph
-    	final Map preImages = new HashMap();
+    	final SortedMap preImages = new TreeMap();
     	for (final Iterator nodes = nodes(); nodes.hasNext();) {
     		final INode v = (INode) nodes.next();
     		final INode w = (INode) imageToRep.get(image(v));
     		if (!preImages.containsKey(w)) {
-    			preImages.put(w, new HashSet());
+    			preImages.put(w, new TreeSet());
     		}
     		((Set) preImages.get(w)).add(v);
     	}

@@ -1,5 +1,6 @@
 Systre 1.1.8:
 
+2012-08-20: The order of input vertices is now normally preserved.
 2012-05-27: Reverted generated class files to version 49.0 (Java 1.5).
 
 Systre 1.1.7:

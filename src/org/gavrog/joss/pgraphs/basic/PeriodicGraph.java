@@ -1,5 +1,5 @@
 /*
-   Copyright 2007 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -102,18 +102,18 @@ public class PeriodicGraph extends UndirectedGraph {
      * @param src the graph to copy.
      */
     public PeriodicGraph(final PeriodicGraph src) {
-    	this(src.getDimension());
-    	final Map old2new = new HashMap();
-    	for (final Iterator nodes = src.nodes(); nodes.hasNext();) {
-    		final INode v = (INode) nodes.next();
-    		old2new.put(v, newNode());
-    	}
-    	for (final Iterator edges = src.edges(); edges.hasNext();) {
-    		final IEdge e = (IEdge) edges.next();
-    		final INode v = (INode) old2new.get(e.source());
-    		final INode w = (INode) old2new.get(e.target());
-    		newEdge(v, w, src.getShift(e));
-    	}
+        this(src.getDimension());
+        final Map old2new = new HashMap();
+        for (final Iterator nodes = src.nodes(); nodes.hasNext();) {
+            final INode v = (INode) nodes.next();
+            old2new.put(v, newNode());
+        }
+        for (final Iterator edges = src.edges(); edges.hasNext();) {
+            final IEdge e = (IEdge) edges.next();
+            final INode v = (INode) old2new.get(e.source());
+            final INode w = (INode) old2new.get(e.target());
+            newEdge(v, w, src.getShift(e));
+        }
     }
     
     /**
@@ -445,13 +445,13 @@ public class PeriodicGraph extends UndirectedGraph {
             this.graph = graph;
             this.basis = basis;
             if (graph.getDimension() == PeriodicGraph.this.getDimension()) {
-            	if (graph.getDimension() == 0) {
-            		this.multiplicity = Whole.ONE;
-            	} else {
-            		this.multiplicity = (Whole) basis.determinant();
-            	}
+                if (graph.getDimension() == 0) {
+                    this.multiplicity = Whole.ONE;
+                } else {
+                    this.multiplicity = (Whole) basis.determinant();
+                }
             } else {
-            	this.multiplicity = Whole.ZERO;
+                this.multiplicity = Whole.ZERO;
             }
         }
     
@@ -816,7 +816,7 @@ public class PeriodicGraph extends UndirectedGraph {
                 final Vector aw = (Vector) adjustment.get(e.target());
                 final Vector t = (Vector) (Vector) s.plus(aw).minus(av).times(C);
                 final Matrix c = t.getCoordinates().getSubMatrix(0, 0, 1,
-						thisDim);
+                        thisDim);
                 thisGraph.newEdge(v, w, new Vector(c));
             }
             components.add(new Component(thisGraph, thisBasis));
@@ -832,33 +832,33 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return true if the periodic graph is connected.
      */
     public boolean isConnected() {
-		final List components = connectedComponents();
-		final int n = components.size();
-		return n == 0
+        final List components = connectedComponents();
+        final int n = components.size();
+        return n == 0
                 || (n == 1 && ((Component) components.get(0)).getMultiplicity()
                         .equals(Whole.ONE));
-	}
+    }
     
     /**
-	 * Computes a barycentric placement for the nodes. Nodes are in barycentric
-	 * positions if each node is in the center of gravity of its neighbors. In
-	 * other words, each coordinate for its position is the average of the
-	 * corresponding coordinates for its neighbors. The barycentric positions
-	 * are, of course, with respect to the periodic graph. In particular, shifts
-	 * are taken into account. The returned map, however, contains only the
-	 * positions for the node representatives.
-	 * 
-	 * The barycentric placement of connected graph are unique up to affine
-	 * transformations, i.e., general basis and origin changes. This method
-	 * computes coordinates expressed in terms of the basis used for edge shift
-	 * vectors in this graph. Moreover, the first vertex, as produced by the
-	 * iterator returned by nodes(), is placed at the origin.
-	 * 
-	 * The graph in question must, for now, be connected as for multiple
-	 * components the barycentric placement is no longer unique.
-	 * 
-	 * @return a map giving barycentric positions for the node representatives.
-	 */
+     * Computes a barycentric placement for the nodes. Nodes are in barycentric
+     * positions if each node is in the center of gravity of its neighbors. In
+     * other words, each coordinate for its position is the average of the
+     * corresponding coordinates for its neighbors. The barycentric positions
+     * are, of course, with respect to the periodic graph. In particular, shifts
+     * are taken into account. The returned map, however, contains only the
+     * positions for the node representatives.
+     * 
+     * The barycentric placement of connected graph are unique up to affine
+     * transformations, i.e., general basis and origin changes. This method
+     * computes coordinates expressed in terms of the basis used for edge shift
+     * vectors in this graph. Moreover, the first vertex, as produced by the
+     * iterator returned by nodes(), is placed at the origin.
+     * 
+     * The graph in question must, for now, be connected as for multiple
+     * components the barycentric placement is no longer unique.
+     * 
+     * @return a map giving barycentric positions for the node representatives.
+     */
     public Map barycentricPlacement() {
         if (!isConnected()) {
             throw new UnsupportedOperationException("graph must be connected");
@@ -1118,15 +1118,15 @@ public class PeriodicGraph extends UndirectedGraph {
     }
     
     /**
-	 * Computes a minimal image of the representation graph. This corresponds to
-	 * a maximal extension of the translation group of the periodic graph
-	 * consisting of topological translations of infinite order.
-	 * 
-	 * Currently, this only works for graphs with no nontrivial translations of
-	 * finite order.
-	 * 
-	 * @return a morphism from the original graph to its minimal image.
-	 */
+     * Computes a minimal image of the representation graph. This corresponds to
+     * a maximal extension of the translation group of the periodic graph
+     * consisting of topological translations of infinite order.
+     * 
+     * Currently, this only works for graphs with no nontrivial translations of
+     * finite order.
+     * 
+     * @return a morphism from the original graph to its minimal image.
+     */
     public Morphism minimalImageMap() {
         try {
             return (Morphism) this.cache.get(MINIMAL_IMAGE_MAP);
@@ -1141,9 +1141,9 @@ public class PeriodicGraph extends UndirectedGraph {
         final List classes = Iterators.asList(translationalEquivalenceClasses());
         if (classes.size() == 0) {
             // --- no extra translations, graph is minimal
-        	final INode v0 = (INode) nodes().next();
-        	final Morphism result = new Morphism(v0, v0, Operator.identity(d));
-        	return (Morphism) cache.put(MINIMAL_IMAGE_MAP, result);
+            final INode v0 = (INode) nodes().next();
+            final Morphism result = new Morphism(v0, v0, Operator.identity(d));
+            return (Morphism) cache.put(MINIMAL_IMAGE_MAP, result);
         }
         
         // --- collect the translation vectors
@@ -1226,17 +1226,17 @@ public class PeriodicGraph extends UndirectedGraph {
     }
     
     /**
-	 * Computes a minimal image of the representation graph. This corresponds to
-	 * a maximal extension of the translation group of the periodic graph
-	 * consisting of topological translations of infinite order.
-	 * 
-	 * Currently, this only works for graphs with no nontrivial translations of
-	 * finite order.
-	 * 
-	 * @return the minimal image.
-	 */
+     * Computes a minimal image of the representation graph. This corresponds to
+     * a maximal extension of the translation group of the periodic graph
+     * consisting of topological translations of infinite order.
+     * 
+     * Currently, this only works for graphs with no nontrivial translations of
+     * finite order.
+     * 
+     * @return the minimal image.
+     */
     public PeriodicGraph minimalImage() {
-    	return minimalImageMap().getImageGraph();
+        return minimalImageMap().getImageGraph();
     }
     
     /**
@@ -1476,8 +1476,8 @@ public class PeriodicGraph extends UndirectedGraph {
         final Matrix B0 = differenceMatrix(basis0);
         
         for (int i = 0; i < bases.size(); ++i) {
-        	taskController.bailOutIfCancelled();
-        	
+            taskController.bailOutIfCancelled();
+            
             final List b = (List) bases.get(i);
             final INode v = ((IEdge) b.get(0)).source();
             final Matrix B = differenceMatrix(b);
@@ -1618,16 +1618,39 @@ public class PeriodicGraph extends UndirectedGraph {
      * 
      * @return an iterator over the set of orbits.
      */
-    public Iterator nodeOrbits() {
-        final Partition P = new Partition();
-        for (final Iterator syms = symmetries().iterator(); syms.hasNext();) {
-            final Morphism a = (Morphism) syms.next();
-            for (final Iterator nodes = nodes(); nodes.hasNext();) {
-                final INode v = (INode) nodes.next();
-                P.unite(v, a.get(v));
+//    public Iterator nodeOrbits() {
+//        final Partition P = new Partition();
+//        for (final Iterator syms = symmetries().iterator(); syms.hasNext();) {
+//            final Morphism a = (Morphism) syms.next();
+//            for (final Iterator nodes = nodes(); nodes.hasNext();) {
+//                final INode v = (INode) nodes.next();
+//                P.unite(v, a.get(v));
+//            }
+//        }
+//        return P.classes();
+//    }
+    public Iterator<Set<INode>> nodeOrbits() {
+        final Set<INode> seen = new HashSet<INode>();
+        final List<Set<INode>> orbits = new ArrayList<Set<INode>>();
+
+        for (final Iterator nodes = nodes(); nodes.hasNext();) {
+            final INode v = (INode) nodes.next();
+            if (!seen.contains(v)) {
+                final Set<INode> orbit = new HashSet<INode>();
+                orbit.add(v);
+                seen.add(v);
+                for (final Iterator syms = symmetries().iterator();
+                        syms.hasNext();)
+                {
+                    final Morphism a = (Morphism) syms.next();
+                    final INode w = (INode) a.get(v);
+                    orbit.add(w);
+                    seen.add(w);
+                }
+                orbits.add(orbit);
             }
         }
-        return P.classes();
+        return orbits.iterator();
     }
     
     /**
@@ -1755,8 +1778,8 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         
         for (int i = 0; i < bases.size(); ++i) {
-        	taskController.bailOutIfCancelled();
-        	
+            taskController.bailOutIfCancelled();
+            
             final List b = (List) bases.get(i);
             if (DEBUG) {
                 System.out.println("  Checking basis " + b);
@@ -1949,15 +1972,15 @@ public class PeriodicGraph extends UndirectedGraph {
         
         // --- consistency test
         if (bestBasis != null) {
-			final Matrix B1 = (Matrix) bestBasis.inverse().times(
-					basisChange.getBasis().inverse());
-			try {
-				new Morphism(bestStart, nodes[1], B1);
-			} catch (Morphism.NoSuchMorphismException ex) {
-				throw new RuntimeException(
-						"internal error - please contact author");
-			}
-		}
+            final Matrix B1 = (Matrix) bestBasis.inverse().times(
+                    basisChange.getBasis().inverse());
+            try {
+                new Morphism(bestStart, nodes[1], B1);
+            } catch (Morphism.NoSuchMorphismException ex) {
+                throw new RuntimeException(
+                        "internal error - please contact author");
+            }
+        }
 
         // --- cache the results
         return (NiftyList) cache.put(INVARIANT, new NiftyList(invariant));
@@ -1990,7 +2013,7 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return the canonical form.
      */
     public PeriodicGraph canonical() {
-    	return fromInvariantString(getSystreKey());
+        return fromInvariantString(getSystreKey());
     }
     
     /* (non-Javadoc)
