@@ -10,7 +10,7 @@ Open bugs/issues:
 
 Planned/requested features:
 
-- Optionally add 'point symbols' (shortest rings per angle) to output.
+- Optionally add 'point symbols' (shortest cycles per angle) to output.
 - Optionally merge vertices with identical neighbor sets.
 - Option to stop on error.
 - Produce a log file when using GUI version in non-step mode.
