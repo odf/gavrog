@@ -1,5 +1,5 @@
 /*
-   Copyright 2007 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -868,7 +868,6 @@ public class NetParser extends GenericParser {
                     // --- also store some permanent information
                     G.setNodeInfo(v, CONNECTIVITY, new Integer(desc.connectivity));
                     G.setNodeInfo(v, COORDINATION_SEQUENCE, name2cs.get(desc.name));
-                    G.setNodeInfo(v, POSITION, p);
                     // --- mark operators that should not be used anymore
                     for (final Iterator iter = stabilizer.iterator(); iter.hasNext();) {
                         final Operator a = (Operator) ((Operator) iter.next()).times(op);
@@ -1160,7 +1159,14 @@ public class NetParser extends GenericParser {
         if (DEBUG) {
             System.err.println("--------------------");
         }
-        
+
+        // Store the original positions for all nodes.
+        for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
+            final INode v = (INode) nodes.next();
+            G.setNodeInfo(v, POSITION, nodeToPosition.get(v));
+        }
+
+        // Return the result.
         return G;
     }
     

@@ -413,6 +413,8 @@ public class SystreGUI extends BFrame {
 			column.add(new BSeparator());
 			column.add(new OptionCheckBox("Compute an Embedding", this.systre,
 					"computeEmbedding"));
+            column.add(new OptionCheckBox("Start from given Embedding", this.systre,
+                    "useOriginalEmbedding"));
 			column.add(new OptionCheckBox("Relax Node Positions", this.systre,
 					"relaxPositions"));
 			column.add(new OptionInputBox("Importance Of Equal Edge Lengths",

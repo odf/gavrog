@@ -408,7 +408,7 @@ public class Document extends DisplayList {
         try {
             return (Embedder) cache.get(EMBEDDER);
         } catch (Cache.NotFoundException ex) {
-            return (Embedder) cache.put(EMBEDDER, new Embedder(getNet()));
+            return (Embedder) cache.put(EMBEDDER, new Embedder(getNet(), null));
         }
     }
 

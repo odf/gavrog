@@ -130,17 +130,24 @@ public class Embedder {
 	// --- Options:
 	private int passes = 3;
 	private boolean optimizePositions = true;
+    private Map<INode, Point> initialPlacement;
 
 	/**
 	 * Constructs an instance.
 	 * 
 	 * @param graph the periodic graph to embed.
 	 */
-	public Embedder(final PeriodicGraph graph) {
+	public Embedder(final PeriodicGraph graph,
+	        final Map<INode, Point> initialPlacement) {
 		this.graph = graph;
 		this.dimGraph = graph.getDimension();
 		final int dim = this.dimGraph;
 
+		if (initialPlacement == null)
+		    this.initialPlacement = this.graph.barycentricPlacement();
+		else
+		    this.initialPlacement = initialPlacement;
+		
 		this.node2sym = nodeSymmetrizations();
 
 		this.node2images = new HashMap<INode, Map<INode, Operator>>();
@@ -148,8 +155,7 @@ public class Embedder {
 		for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
 			final INode v = (INode) nodes.next();
 			if (!seen.contains(v)) {
-				final Point bv = (Point) getGraph().barycentricPlacement().get(
-						v);
+				final Point bv = (Point) getGraph().barycentricPlacement().get(v);
 				final Map<INode, Operator> img2sym =
 					new HashMap<INode, Operator>();
 				img2sym.put(v, new Operator(Matrix.one(dim + 1)));
@@ -159,8 +165,7 @@ public class Embedder {
 					final Morphism a = (Morphism) syms.next();
 					final INode va = (INode) a.get(v);
 					if (!seen.contains(va)) {
-						final Point bva = (Point) getGraph()
-								.barycentricPlacement().get(va);
+						final Point bva = (Point) getGraph().barycentricPlacement().get(va);
 						final Operator opa = a.getAffineOperator();
 						final Vector shift = (Vector) bva.minus(bv.times(opa));
 						final Operator op = (Operator) opa.times(shift);
@@ -247,7 +252,7 @@ public class Embedder {
 		this.p = new double[this.dimParSpace];
 
 		// --- set initial positions and cell parameters
-		setPositions(null);
+		setPositions(this.initialPlacement);
 		setGramMatrix(null);
 	}
 
@@ -339,7 +344,7 @@ public class Embedder {
 		}
 
 		final Partition P = new Partition();
-		final Map pos = getGraph().barycentricPlacement();
+		final Map<INode, Point> pos = getGraph().barycentricPlacement();
 		for (final Iterator syms = getGraph().symmetries().iterator(); syms
 				.hasNext();) {
 			final Morphism phi = (Morphism) syms.next();
@@ -348,11 +353,11 @@ public class Embedder {
 				final Angle a = (Angle) iter.next();
 
 				final INode vphi = (INode) phi.get(a.v);
-				final Point pv = (Point) pos.get(a.v);
+				final Point pv = pos.get(a.v);
 				final Vector dv = (Vector) pv.times(A).minus(pos.get(vphi));
 
 				final INode wphi = (INode) phi.get(a.w);
-				final Point pw = (Point) pos.get(a.w);
+				final Point pw = pos.get(a.w);
 				final Vector dw = (Vector) pw.times(A).minus(pos.get(wphi));
 
 				final Vector s = (Vector) a.s.times(A).plus(dw).minus(dv);
@@ -588,7 +593,7 @@ public class Embedder {
 		for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
 			final INode v = (INode) nodes.next();
 			final List stab = this.graph.nodeStabilizer(v);
-			final Point p = (Point) this.graph.barycentricPlacement().get(v);
+			final Point p = (Point) getGraph().barycentricPlacement().get(v);
 			final int dim = p.getDimension();
 			Matrix s = Matrix.zero(dim + 1, dim + 1);
 			for (final Iterator syms = stab.iterator(); syms.hasNext();) {
@@ -705,9 +710,6 @@ public class Embedder {
 	}
 
 	public void setPositions(Map map) {
-		if (map == null) {
-			map = this.graph.barycentricPlacement();
-		}
 		for (final Iterator nodes = map.keySet().iterator(); nodes.hasNext();) {
 			final INode v = (INode) nodes.next();
 			setPosition(v, (Point) map.get(v));

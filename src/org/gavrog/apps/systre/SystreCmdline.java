@@ -97,6 +97,7 @@ public class SystreCmdline extends EventSource {
     
     // --- options
     private boolean computeEmbedding = true;
+    private boolean useOriginalEmbedding = false;    
     private boolean relaxPositions = true;
     private int relaxPasses = 3;
     private int relaxSteps = 10000;
@@ -114,7 +115,7 @@ public class SystreCmdline extends EventSource {
 
     // --- text of the last status reported
 	private String lastStatus;
-    
+
     /**
      * Constructs an instance.
      */
@@ -533,7 +534,24 @@ public class SystreCmdline extends EventSource {
         
         // --- compute an embedding
         if (getComputeEmbedding()) {
-        	embedGraph(G, name, node2name, finder);
+            if (getUseOriginalEmbedding() && G.nodes().hasNext() &&
+                    graph.getNodeInfo((INode) G.nodes().next(),
+                            NetParser.POSITION) != null)
+            {
+                Map<INode, Point> pos = new HashMap<INode, Point>();
+                final Point z = (Point) graph.getNodeInfo((INode) G.nodes().next(),
+                        NetParser.POSITION);
+                final Vector shift = new Vector(z.getCoordinates());
+                for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
+                    final INode v = (INode) nodes.next();
+                    pos.put(v, (Point) ((Point) graph.getNodeInfo(v,
+                            NetParser.POSITION)).minus(shift));
+                    embedGraph(G, name, node2name, finder, pos);
+                }
+            }
+            else {
+                embedGraph(G, name, node2name, finder, null);
+            }
         } else {
         	setLastStructure(new ProcessedNet(G, name, node2name, finder, null));
         }
@@ -584,13 +602,14 @@ public class SystreCmdline extends EventSource {
     }
     
     private void embedGraph(final PeriodicGraph G, final String name,
-			final Map node2name, final SpaceGroupFinder finder) {
+			final Map node2name, final SpaceGroupFinder finder,
+			final Map<INode, Point> initialPlacement) {
 
     	for (int pass = 0; pass <= 1; ++pass) {
         	status("Computing an embedding...");
         	
             // --- relax the structure from the barycentric embedding
-            Embedder embedder = new Embedder(G);
+            Embedder embedder = new Embedder(G, initialPlacement);
             try {
                 embedder.setRelaxPositions(false);
                 embedder.go(500);
@@ -622,7 +641,7 @@ public class SystreCmdline extends EventSource {
                 embedder.reset();
                 embedder.normalize();
             }
-            if (!embedder.positionsRelaxed()) {
+            if (!embedder.positionsRelaxed() && initialPlacement == null) {
                 final Map pos = embedder.getPositions();
                 final Map bari = G.barycentricPlacement();
                 int problems = 0;
@@ -1087,6 +1106,14 @@ public class SystreCmdline extends EventSource {
 		this.computeEmbedding = computeEmbedding;
 	}
 
+	public boolean getUseOriginalEmbedding() {
+	    return this.useOriginalEmbedding;
+	}
+	
+	public void setUseOriginalEmbedding(boolean val) {
+	    this.useOriginalEmbedding = val;
+	}
+	
 	public boolean getRelaxPositions() {
 		return relaxPositions;
 	}
