@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.gavrog.box.collections.Partition;
 import org.gavrog.jane.algorithms.Amoeba;
@@ -48,7 +49,9 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * @version $Id: Embedder.java,v 1.9 2008/07/09 01:09:24 odf Exp $
  */
 public class Embedder {
-	final private static int EDGE = 1;
+    final static boolean DEBUG = false;
+
+    final private static int EDGE = 1;
 	final private static int ANGLE = 2;
 
 	// --- temporary helper class
@@ -130,23 +133,35 @@ public class Embedder {
 	// --- Options:
 	private int passes = 3;
 	private boolean optimizePositions = true;
+	private boolean checkPositions = false;
     private Map<INode, Point> initialPlacement;
 
 	/**
 	 * Constructs an instance.
 	 * 
 	 * @param graph the periodic graph to embed.
+	 * @param checkPositions TODO
 	 */
 	public Embedder(final PeriodicGraph graph,
-	        final Map<INode, Point> initialPlacement) {
+	        final Map<INode, Point> initialPlacement,
+	        final boolean checkPositions) {
 		this.graph = graph;
 		this.dimGraph = graph.getDimension();
 		final int dim = this.dimGraph;
-
+		this.checkPositions = checkPositions;
+		
 		if (initialPlacement == null)
 		    this.initialPlacement = this.graph.barycentricPlacement();
 		else
 		    this.initialPlacement = initialPlacement;
+		if (DEBUG)
+		{
+		    System.err.println("Embedder: initial placement: ");
+		    Map<INode, Point> tmp =
+		            new TreeMap<INode, Point>(this.initialPlacement);
+		    for (INode node: tmp.keySet())
+		        System.err.println("  " + node + ": " + tmp.get(node));
+		}
 		
 		this.node2sym = nodeSymmetrizations();
 
@@ -394,10 +409,14 @@ public class Embedder {
 				state[offset + i] = ((Real) s.get(0, i)).doubleValue();
 			}
 		}
-		final Vector diff = (Vector) getPosition(v).minus(pos);
-		if (((Real) Vector.dot(diff, diff)).sqrt().doubleValue() > 1e-12) {
-			throw new RuntimeException("Position mismatch:" + v + " set to "
-					+ pos + ", but turned up as " + getPosition(v));
+		if (this.checkPositions)
+		{
+		    final Vector diff = (Vector) getPosition(v).minus(pos);
+		    if (((Real) Vector.dot(diff, diff)).sqrt().doubleValue() > 1e-12) {
+		        throw new RuntimeException("Position mismatch:"
+		                + v + " set to " + pos
+		                + ", but turned up as " + getPosition(v));
+		    }
 		}
 	}
 

@@ -152,7 +152,7 @@ public class ProcessedNet {
     }
 
     public void writeEmbedding(final Writer stream, final boolean cgdFormat,
-			boolean fullCell) {
+			final boolean fullCell, final String posType) {
 		final PrintWriter out = new PrintWriter(stream);
         
         // --- extract some data from the arguments
@@ -227,8 +227,7 @@ public class ProcessedNet {
         
         // --- print the node positions
         if (!cgdFormat) {
-			out.println("   " + (posRelaxed ? "Relaxed" : "Barycentric")
-					+ " positions:");
+			out.println("   " + posType	+ " positions:");
 		}
         if (DEBUG) {
         	System.out.println("\t\t@@@ Printing node positions...");

@@ -383,7 +383,7 @@ public class SystreGUI extends BFrame {
 				writer.write("\n");
             } else if ("cgd".equals(extension)) {
             	// --- write embedding structure with full symmetry
-                net.writeEmbedding(writer, true, systre.getOutputFullCell());
+                net.writeEmbedding(writer, true, systre.getOutputFullCell(), "");
             } else if ("pgr".equals(extension)) {
             	// --- write abstract, unembedded periodic graph
                 Output.writePGR(writer, net.getGraph().canonical(), net.getName());

@@ -1,5 +1,5 @@
 /*
-Copyright 2010 Olaf Delgado-Friedrichs
+Copyright 2012 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -546,11 +546,13 @@ public class SystreCmdline extends EventSource {
                     final INode v = (INode) nodes.next();
                     pos.put(v, (Point) ((Point) graph.getNodeInfo(v,
                             NetParser.POSITION)).minus(shift));
-                    embedGraph(G, name, node2name, finder, pos);
                 }
+                embedGraph(G, name, node2name, finder, pos, false,
+                        "adjusted");
             }
             else {
-                embedGraph(G, name, node2name, finder, null);
+                embedGraph(G, name, node2name, finder, null, true,
+                        "barycentric");
             }
         } else {
         	setLastStructure(new ProcessedNet(G, name, node2name, finder, null));
@@ -601,15 +603,21 @@ public class SystreCmdline extends EventSource {
         }
     }
     
-    private void embedGraph(final PeriodicGraph G, final String name,
-			final Map node2name, final SpaceGroupFinder finder,
-			final Map<INode, Point> initialPlacement) {
+    private void embedGraph(
+            final PeriodicGraph G,
+            final String name,
+			final Map node2name,
+			final SpaceGroupFinder finder,
+			final Map<INode, Point> initialPlacement,
+			final boolean checkPositions,
+			final String posType) {
 
     	for (int pass = 0; pass <= 1; ++pass) {
         	status("Computing an embedding...");
         	
-            // --- relax the structure from the barycentric embedding
-            Embedder embedder = new Embedder(G, initialPlacement);
+            // --- relax the structure from the initial embedding
+            Embedder embedder =
+                    new Embedder(G, initialPlacement, checkPositions);
             try {
                 embedder.setRelaxPositions(false);
                 embedder.go(500);
@@ -641,7 +649,7 @@ public class SystreCmdline extends EventSource {
                 embedder.reset();
                 embedder.normalize();
             }
-            if (!embedder.positionsRelaxed() && initialPlacement == null) {
+            if (!embedder.positionsRelaxed() && checkPositions) {
                 final Map pos = embedder.getPositions();
                 final Map bari = G.barycentricPlacement();
                 int problems = 0;
@@ -674,7 +682,7 @@ public class SystreCmdline extends EventSource {
             final ProcessedNet net = new ProcessedNet(G, name, node2name, finder,
 					embedder);
             setLastStructure(net);
-            net.writeEmbedding(cgd, true, getOutputFullCell());
+            net.writeEmbedding(cgd, true, getOutputFullCell(), "");
 
             final String cgdString = cgdStringWriter.toString();
 			boolean success = false;
@@ -703,7 +711,8 @@ public class SystreCmdline extends EventSource {
                 }
                 if (pass == 0) {
                     if (relaxPositions) {
-                        out.println("   Falling back to barycentric positions.");
+                        out.println("   Falling back to "
+                                + posType + " positions.");
                     }
                 } else {
                     out.println("Could not verify output:");
@@ -717,7 +726,10 @@ public class SystreCmdline extends EventSource {
             // --- now write the actual output
             if (success) {
             	status("Writing output...");
-                net.writeEmbedding(new PrintWriter(out), false, getOutputFullCell());
+                net.writeEmbedding(new PrintWriter(out), false,
+                        getOutputFullCell(),
+                        embedder.positionsRelaxed() ?
+                                "Relaxed" : Strings.capitalized(posType));
                 net.setVerified(true);
                 status("Done!");
                 break;

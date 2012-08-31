@@ -76,7 +76,7 @@ public class EvolverExporter {
 		this.net = til.getSkeleton();
 		
 		// --- compute an embedding
-		this.embedder = new Embedder(this.net, null);
+		this.embedder = new Embedder(this.net, null, false);
         this.embedder.reset();
         this.embedder.setPasses(1);
         if (this.net.isStable()) {
