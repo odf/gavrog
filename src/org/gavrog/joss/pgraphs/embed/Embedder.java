@@ -787,7 +787,7 @@ public class Embedder {
 	}
 
 	public void reset() {
-		setPositions(null);
+		setPositions(this.initialPlacement);
 		setGramMatrix(null);
 		this._positionsRelaxed = false;
 		this._cellRelaxed = false;

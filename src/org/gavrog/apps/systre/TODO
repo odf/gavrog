@@ -15,7 +15,6 @@ Planned/requested features:
 - Option to stop on error.
 - Produce a log file when using GUI version in non-step mode.
 
-- Option to keep original embedding.
 - Support global node repulsion in embedder.
 
 - Better phrasing when component has multiple translates.
