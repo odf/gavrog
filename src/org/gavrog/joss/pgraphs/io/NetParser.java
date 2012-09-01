@@ -583,6 +583,7 @@ public class NetParser extends GenericParser {
         final Map nameToDesc = new HashMap();
         final List edgeDescriptors = new LinkedList();
         final List coordinationSeqs = new LinkedList();
+        final List<String> warnings = new ArrayList<String>();
         
         // --- collect data from the input
         for (int i = 0; i < block.length; ++i) {
@@ -696,7 +697,7 @@ public class NetParser extends GenericParser {
             } else if (key.equals("coordination_sequence")) {
             	coordinationSeqs.add(row);
             } else {
-                // TODO store additional entrys
+                warnings.add("unknown keyword '" + key + "'");
             }
             seen.add(key);
         }
@@ -1167,6 +1168,8 @@ public class NetParser extends GenericParser {
         }
 
         // Return the result.
+        for (Iterator<String> iter = warnings.iterator(); iter.hasNext();)
+        	G.addWarning(iter.next());
         return G;
     }
     

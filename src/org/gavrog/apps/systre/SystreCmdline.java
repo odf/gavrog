@@ -804,6 +804,17 @@ public class SystreCmdline extends EventSource {
             
             out.println("Structure #" + count + " - " + displayName + ".");
             out.println();
+            
+            if (G.getWarnings().hasNext())
+            {
+            	out.println("==================================================");
+            	for (Iterator<String> iter = G.getWarnings(); iter.hasNext();)
+            		out.println("!!! WARNING (INPUT) - " + iter.next());
+            	reportErrorLocation(count, displayName);
+                out.println("==================================================");
+                out.println();
+            }
+            
             if (problem != null) {
             	if (problem instanceof DataFormatException) {
                     out.println("==================================================");

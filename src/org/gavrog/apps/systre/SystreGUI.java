@@ -542,6 +542,16 @@ public class SystreGUI extends BFrame {
             }
             out.println("Structure #" + this.count + displayName + ".");
             out.println();
+  
+            if (G.getWarnings().hasNext())
+            {
+            	out.println("==================================================");
+            	for (Iterator<String> iter = G.getWarnings(); iter.hasNext();)
+            		out.println("!!! WARNING (INPUT) - " + iter.next());
+                out.println("==================================================");
+                out.println();
+            }
+                        
             boolean success = false;
             if (problem != null) {
                 reportException(problem, "INPUT", null, false);

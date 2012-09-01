@@ -30,6 +30,7 @@ public class Net extends PeriodicGraph {
 	final private Map nodeToName = new HashMap();
 	final private Map nodeInfo = new HashMap();
 	final private List errors = new ArrayList();
+	final private List<String> warnings = new ArrayList<String>();
 	
 	public Net(final int dim, final String name, final String group) {
 		super(dim);
@@ -118,7 +119,15 @@ public class Net extends PeriodicGraph {
     	this.errors.add(ex);
     }
     
-    public static Iterator iterator(final String filePath)
+	public Iterator<String> getWarnings() {
+		return warnings.iterator();
+	}
+
+    public void addWarning(final String text) {
+    	warnings.add(text);
+    }
+    
+   public static Iterator iterator(final String filePath)
             throws FileNotFoundException {
         
         final String extension = filePath
