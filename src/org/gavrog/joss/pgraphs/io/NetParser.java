@@ -268,6 +268,16 @@ public class NetParser extends GenericParser {
     }
     
     /**
+     * Generates a warning message indicating .
+     * @param entry
+     * @return
+     */
+    private String keywordWarning(final Entry entry) {
+    	return "Unknown keyword '" + entry.key
+    			+ "' at line " + entry.lineNumber;
+    }
+    
+    /**
      * Parses a specification for a raw periodic net. In this format, each line
      * specifies a translational equivalence class of edges of the net, given by
      * the names for the translational equivalence classes of the source and
@@ -291,6 +301,7 @@ public class NetParser extends GenericParser {
     private Net parsePeriodicGraph(final Entry block[]) {
         Net G = null;
         final Map nameToNode = new HashMap();
+        final List<String> warnings = new ArrayList<String>();
         
         for (int i = 0; i < block.length; ++i) {
             if (block[i].key.equals("edge")) {
@@ -320,8 +331,15 @@ public class NetParser extends GenericParser {
                     s[k] = ((Whole) row.get(k+2)).intValue();
                 }
                 G.newEdge(v, w, s);
+            } else {
+            	warnings.add(keywordWarning(block[i]));
             }
         }
+        if (G == null)
+            throw new DataFormatException("Empty graph");
+        	
+        for (Iterator<String> iter = warnings.iterator(); iter.hasNext();)
+        	G.addWarning(iter.next());
         return G;
     }
 
@@ -381,11 +399,13 @@ public class NetParser extends GenericParser {
         List nodeDescriptors = new LinkedList();
         List edgeDescriptors = new LinkedList();
         final Map nodeNameToDesc = new HashMap();
+        final List<String> warnings = new ArrayList<String>();
         
         // --- collect data from the input
         for (int i = 0; i < block.length; ++i) {
             final List row = block[i].values;
-            if (block[i].key.equals("group")) {
+            final String key = block[i].key;
+            if (key.equals("group")) {
                 if (groupName == null) {
                     if (row.size() < 1) {
                         final String msg = "Missing argument at line ";
@@ -404,7 +424,7 @@ public class NetParser extends GenericParser {
                     final String msg = "Group specified twice at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
                 }
-            } else if (block[i].key.equals("node")) {
+            } else if (key.equals("node")) {
                 if (row.size() < 1) {
                     final String msg = "Missing argument at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
@@ -418,7 +438,7 @@ public class NetParser extends GenericParser {
                 final NodeDescriptor node = new NodeDescriptor(name, -1, position, false);
                 nodeDescriptors.add(node);
                 nodeNameToDesc.put(name, node);
-            } else if (block[i].key.equals("edge")) {
+            } else if (key.equals("edge")) {
                 if (row.size() < 2) {
                     final String msg = "Not enough arguments at line ";
                     throw new DataFormatException(msg + block[i].lineNumber);
@@ -433,6 +453,8 @@ public class NetParser extends GenericParser {
                 final EdgeDescriptor edge = new EdgeDescriptor(sourceName, targetName,
                         shift);
                 edgeDescriptors.add(edge);
+            } else {
+                warnings.add(keywordWarning(block[i]));
             }
         }
         
@@ -523,6 +545,9 @@ public class NetParser extends GenericParser {
         if (DEBUG) {
             System.err.println("generated " + G);
         }
+
+        for (Iterator<String> iter = warnings.iterator(); iter.hasNext();)
+        	G.addWarning(iter.next());
         return G;
     }
 
@@ -697,7 +722,7 @@ public class NetParser extends GenericParser {
             } else if (key.equals("coordination_sequence")) {
             	coordinationSeqs.add(row);
             } else {
-                warnings.add("unknown keyword '" + key + "'");
+                warnings.add(keywordWarning(block[i]));
             }
             seen.add(key);
         }
