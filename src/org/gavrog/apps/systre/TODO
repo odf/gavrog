@@ -2,7 +2,6 @@
 
 Open bugs/issues:
 
-- Parser should issue warnings for missing or unrecognized statements.
 - Issue warnings on illegal unit cell parameters.
 - Support graphs/components of periodicities 0 and 1
 

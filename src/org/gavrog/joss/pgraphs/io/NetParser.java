@@ -736,12 +736,14 @@ public class NetParser extends GenericParser {
         
         // --- use reasonable default for missing data
         if (group == null) {
+            warnings.add("Space group missing; assuming P1");
             groupName = "P1";
             group = parseSpaceGroupName(groupName);
             dim = group.getDimension();
             ops.addAll(group.getOperators());
         }
         if (cellGram == null) {
+            warnings.add("Unit cell parameters missing; using defaults");
         	if (dim == 2) {
         		final char c = groupName.charAt(1);
         		if (c == '3' || c == '6') {

@@ -1,5 +1,6 @@
 Systre 1.1.8:
 
+2012-09-03: Warnings for unknown keywords and missing space group information.
 2012-08-31: Added option to embed based on vertex positions from input.
 2012-08-20: The order of input vertices is now normally preserved.
 2012-05-27: Reverted generated class files to version 49.0 (Java 1.5).
