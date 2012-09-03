@@ -1,5 +1,5 @@
 /*
-   Copyright 2007 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -48,11 +48,14 @@ public class GenericParser {
 
     public class Entry {
         public final int lineNumber;
+        public final String originalKey;
         public final String key;
         public final List values;
         
-        public Entry(final int lineNumber, final String key, final List values) {
+        public Entry(final int lineNumber, final String originalKey,
+                final String key, final List values) {
             this.lineNumber = lineNumber;
+            this.originalKey = originalKey;
             this.key = key;
             this.values = values;
         }
@@ -227,6 +230,7 @@ public class GenericParser {
         final String type = ((String) fields0.getFirst()).toLowerCase();
         final List result = new LinkedList();
         final Map byKey = new HashMap();
+        String originalKey = this.defaultKey;
         String key = this.defaultKey;
         
         while (true) {
@@ -239,7 +243,7 @@ public class GenericParser {
                 if (first.equalsIgnoreCase("END")) {
                     break;
                 }
-                key = first.toLowerCase();
+                key = originalKey = first.toLowerCase();
                 if (this.synonyms != null) {
                     while (this.synonyms.containsKey(key)) {
                         key = (String) this.synonyms.get(key);
@@ -295,7 +299,8 @@ public class GenericParser {
             }
             if (key != null) {
                 if (row.size() > 0) {
-                    final Entry entry = new Entry(this.lineno, key, row);
+                    final Entry entry =
+                            new Entry(this.lineno, originalKey, key, row);
                     result.add(entry);
                     if (!byKey.containsKey(key)) {
                         byKey.put(key, new LinkedList());

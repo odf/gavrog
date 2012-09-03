@@ -273,7 +273,7 @@ public class NetParser extends GenericParser {
      * @return
      */
     private String keywordWarning(final Entry entry) {
-    	return "Unknown keyword '" + entry.key
+    	return "Unknown keyword '" + entry.originalKey
     			+ "' at line " + entry.lineNumber;
     }
     
@@ -331,7 +331,7 @@ public class NetParser extends GenericParser {
                     s[k] = ((Whole) row.get(k+2)).intValue();
                 }
                 G.newEdge(v, w, s);
-            } else {
+            } else if (!block[i].key.equals("name")){
             	warnings.add(keywordWarning(block[i]));
             }
         }
@@ -453,7 +453,7 @@ public class NetParser extends GenericParser {
                 final EdgeDescriptor edge = new EdgeDescriptor(sourceName, targetName,
                         shift);
                 edgeDescriptors.add(edge);
-            } else {
+            } else if (!key.equals("name")){
                 warnings.add(keywordWarning(block[i]));
             }
         }
@@ -721,7 +721,7 @@ public class NetParser extends GenericParser {
                 edgeDescriptors.add(edge);
             } else if (key.equals("coordination_sequence")) {
             	coordinationSeqs.add(row);
-            } else {
+            } else if (!key.equals("name")){
                 warnings.add(keywordWarning(block[i]));
             }
             seen.add(key);
