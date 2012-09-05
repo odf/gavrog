@@ -804,6 +804,10 @@ public class NetParser extends GenericParser {
             }
         }
         
+        // --- warn about illegal cell parameters
+        if (gramMatrixError(dim, group, cellGram) > 0.01)
+                warnings.add("Unit cell parameters illegal for this group");
+        
         // --- get info for converting to a primitive setting
         final Matrix primitiveCell = group.primitiveCell();
         final Operator to = group.transformationToPrimitive();
@@ -1198,6 +1202,22 @@ public class NetParser extends GenericParser {
         for (Iterator<String> iter = warnings.iterator(); iter.hasNext();)
         	G.addWarning(iter.next());
         return G;
+    }
+
+    private double gramMatrixError(int dim, SpaceGroup group, Matrix cellGram) {
+        final double g[] = new double[dim * (dim + 1) / 2];
+        int k = 0;
+        for (int i = 0; i < dim; ++i) {
+            for (int j = i; j < dim; ++j) {
+                g[k] = ((Real) cellGram.get(i, j)).doubleValue();
+                ++k;
+            }
+        }
+        final Matrix S = group.configurationSpaceForGramMatrix();
+        final Matrix A = new Matrix(new double[][] { g });
+        final Matrix M = LinearAlgebra.solutionInRows(S, A, false);
+        final Matrix D = (Matrix) ((Matrix) M.times(S)).minus(A);
+        return ((Real) D.norm()).doubleValue();
     }
     
     public static class Face implements Comparable {
