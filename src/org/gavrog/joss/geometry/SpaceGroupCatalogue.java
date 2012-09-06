@@ -250,7 +250,7 @@ public class SpaceGroupCatalogue {
             load();
         }
         final Table table = groupTables[dim];
-    
+
         final String parts[] = name.split(":");
         final String base = normalizedName(name);
         final String ext = parts.length > 1 ? Strings.capitalized(parts[1]) : "";
@@ -277,13 +277,13 @@ public class SpaceGroupCatalogue {
         }
         
         for (int i = 0; i < candidates.length; ++i) {
-			final String key = candidates[i];
-			if (table.nameToOps.containsKey(key)) {
-				return new Entry(key, (List) table.nameToOps.get(key),
-						(CoordinateChange) table.nameToTransform.get(key));
-			}
-		}
-    
+            final String key = candidates[i];
+            if (table.nameToOps.containsKey(key)) {
+                return new Entry(key, (List) table.nameToOps.get(key),
+                        (CoordinateChange) table.nameToTransform.get(key));
+            }
+        }
+        
         return null;
     }
 

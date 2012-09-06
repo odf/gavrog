@@ -353,7 +353,10 @@ public class NetParser extends GenericParser {
     private static SpaceGroup parseSpaceGroupName(final String name) {
         final int dim;
         if (Character.isLowerCase(name.charAt(0))) {
-            dim = 2;
+            if (name.charAt(0) == 'o')
+                dim = 1;
+            else
+                dim = 2;
         } else {
             dim = 3;
         }
@@ -688,19 +691,7 @@ public class NetParser extends GenericParser {
             } else if (key.equals("edge")) {
                 final Object source;
                 final Object target;
-                if (row.size() == 2) {
-                    // --- two node names given
-                    source = row.get(0);
-                    target = row.get(1);
-                } else if (row.size() == dim + 1) {
-                    // --- a node name and a neighbor position
-                    source = row.get(0);
-                    final double a[] = new double[dim];
-                    for (int k = 0; k < dim; ++k) {
-                        a[k] = ((Real) row.get(k + 1)).doubleValue();
-                    }
-                    target = new Point(a);
-                } else if (row.size() == 2 * dim) {
+                if (row.size() == 2 * dim) {
                     // --- two node positions
                     final double a[] = new double[dim];
                     for (int k = 0; k < dim; ++k) {
@@ -712,7 +703,19 @@ public class NetParser extends GenericParser {
                         b[k] = ((Real) row.get(k + dim)).doubleValue();
                     }
                     target = new Point(b);
-                } else {
+                } else if (row.size() == dim + 1) {
+                    // --- a node name and a neighbor position
+                    source = row.get(0);
+                    final double a[] = new double[dim];
+                    for (int k = 0; k < dim; ++k) {
+                        a[k] = ((Real) row.get(k + 1)).doubleValue();
+                    }
+                    target = new Point(a);
+                } else if (row.size() == 2) {
+                    // --- two node names given
+                    source = row.get(0);
+                    target = row.get(1);
+                } else  {
                     final String msg = "Expected 2, " + (dim + 1) + " or " + 2 * dim
                             + " arguments at line";
                     throw new DataFormatException(msg + lineNr);
@@ -744,7 +747,9 @@ public class NetParser extends GenericParser {
         }
         if (cellGram == null) {
             warnings.add("Unit cell parameters missing; using defaults");
-        	if (dim == 2) {
+            if (dim == 1) {
+                cellGram = new Matrix(new double[][] { { 1.0 } });
+            } else if (dim == 2) {
         		final char c = groupName.charAt(1);
         		if (c == '3' || c == '6') {
         			cellGram = new Matrix(new double[][] {
