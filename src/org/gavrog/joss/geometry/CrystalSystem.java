@@ -27,6 +27,9 @@ import org.gavrog.box.simple.NamedConstant;
  * @version $Id: CrystalSystem.java,v 1.3 2006/09/12 23:01:35 odf Exp $
  */
 public class CrystalSystem extends NamedConstant {
+    final public static CrystalSystem ZERO_D = new CrystalSystem("0d");
+    final public static CrystalSystem ONE_D = new CrystalSystem("1d");
+    
 	final public static CrystalSystem OBLIQUE = new CrystalSystem("Oblique");
 	final public static CrystalSystem RECTANGULAR = new CrystalSystem("Rectangular");
 	final public static CrystalSystem SQUARE = new CrystalSystem("Square");

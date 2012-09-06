@@ -575,6 +575,22 @@ public class ProcessedNet {
 						+ fmtReal5.format(b) + ", gamma = "
 						+ fmtReal4.format(gamma));
 			}
+		} else if (d == 1) {
+            correction = new CoordinateChange(Operator.identity(d));
+
+            if (DEBUG) {
+                System.out.println("\t\t@@@ Writing header...");
+            }
+            
+            if (cgdFormat) {
+                out.println("CRYSTAL");
+                out.println("  NAME " + Strings.parsable(name, false));
+                if (fullCell) {
+                    out.println("  GROUP op1");
+                } else {
+                    out.println("  GROUP " + extendedGroupName);
+                }
+            }
 		} else {
 			throw new RuntimeException("dimension must be 2 or 3");
 		}

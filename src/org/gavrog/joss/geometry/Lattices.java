@@ -148,17 +148,23 @@ public class Lattices {
 	        final String msg = "second argument must be symmetric, but was " + M;
 	        throw new IllegalArgumentException(msg);
 	    }
-	
-	    if (dim == 2) {
-	        final Vector t[] = gaussReduced(b, M);
+
+	    final Vector t[];
+	    switch (dim) {
+	    case 0:
+	        return new Vector[] {};
+	    case 1:
+	        return new Vector[] { b[0] };
+	    case 2:
+	        t = gaussReduced(b, M);
 	        return new Vector[] { t[0], t[1], (Vector) t[0].plus(t[1]) };
-	    } else if (dim == 3) {
-	        final Vector t[] = sellingReduced(b, M);
+	    case 3:
+	        t = sellingReduced(b, M);
 	        return new Vector[] { t[0], t[1], t[2], (Vector) t[0].plus(t[1]),
 	                (Vector) t[0].plus(t[2]), (Vector) t[1].plus(t[2]),
 	                (Vector) t[0].plus(t[1]).plus(t[2]) };
-	    } else {
-	        throw new UnsupportedOperationException("only dimensions 2 and 3 work");
+	    default:
+	        throw new UnsupportedOperationException("only dimensions up to 3 work");
 	    }
 	}
 

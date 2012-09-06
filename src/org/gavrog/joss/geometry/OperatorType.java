@@ -48,6 +48,12 @@ public class OperatorType {
         this.clockwise = cw;
     }
     
+    public String toString()
+    {
+        return "OperatorType(" + dimension + ", " + orientationPreserving
+                + ", " + order + ", " + clockwise + ")";
+    }
+    
     /**
      * Creates a new instance by analysing an actual operator.
      * 
@@ -64,7 +70,11 @@ public class OperatorType {
         }
         this.order = matrixOrder(M, 6);
         
-        if (d == 2) {
+        switch (d) {
+        case 1:
+            this.clockwise = true;
+            break;
+        case 2:
             if (!this.isOrientationPreserving()) {
                 this.clockwise = false;
             } else {
@@ -78,7 +88,8 @@ public class OperatorType {
                     this.clockwise = true;
                 }
             }
-        } else if (d == 3) {
+            break;
+        case 3:
             if ((this.order == 0 || this.order > 2) && axis != null) {
                 final Matrix a = axis.getCoordinates();
                 final Matrix v;
@@ -95,8 +106,9 @@ public class OperatorType {
             } else {
                 this.clockwise = true;
             }
-        } else {
-            final String msg = "operator dimension is " + d + ", must be 2 or 3";
+            break;
+        default:
+            final String msg = "operator dimension is " + d + ", must be <=3";
             throw new UnsupportedOperationException(msg);
         }
     }

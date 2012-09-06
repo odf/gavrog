@@ -61,96 +61,119 @@ public class SpaceGroupFinder {
     public SpaceGroupFinder(final SpaceGroup G) {
         final int d = this.dimension = G.getDimension();
         this.G = G;
-        
-        if (d == 3 || d == 2) {
-            // --- first step of analysis
-            Object res[];
-            if (d == 2) {
-            	res = analyzePointGroup2D();
-            } else {
-            	res = analyzePointGroup3D();            	
-            }
-            this.crystalSystem = (CrystalSystem) res[0];
-            final Matrix preliminaryBasis = (Matrix) res[1];
-            if (DEBUG > 0) {
-                System.err.println("preliminary basis: " + preliminaryBasis);
-            }
-            
-            // --- compute the coordinate change to the preliminary basis
-            final CoordinateChange toPreliminary = new CoordinateChange(preliminaryBasis);
-            
-            // --- get primitive cell vectors and convert to preliminary basis
-            final Vector primitiveCell[] = Vector.fromMatrix(G.primitiveCell());
-            for (int i = 0; i < primitiveCell.length; ++i) {
-                primitiveCell[i] = (Vector) primitiveCell[i].times(toPreliminary);
-            }
-            
-            // --- compute the centering and a normalized basis
-            res = normalizedBasis(primitiveCell);
-            final Matrix normalizedBasis = (Matrix) res[0];
-            final char centering = ((Character) res[1]).charValue();
-            
-            // --- compute coordinate change to normalized basis
-            final CoordinateChange pre2Normal = new CoordinateChange(normalizedBasis);
-            final CoordinateChange toNormalized = (CoordinateChange) toPreliminary
-                    .times(pre2Normal);
-            if (DEBUG > 0) {
-                System.err.println("to normalized basis: " + toNormalized);
-            }
-            
-            // --- convert a primitive set of group operators to the normalized basis
-            final List ops = toNormalized.applyTo(G.primitiveOperators());
-            
-            // --- determine the coordinate variations the matching process needs to consider
-            final CoordinateChange variations[] = makeVariations(this.dimension,
-					this.crystalSystem, centering);
-            
-            // --- convert primitive cell vectors to normalized basis
-            for (int i = 0; i < primitiveCell.length; ++i) {
-                primitiveCell[i] = (Vector) primitiveCell[i].times(pre2Normal).abs();
-            }
-            Arrays.sort(primitiveCell, new Comparator() {
-                public int compare(final Object o1, final Object o2) {
-                    final Vector v1 = (Vector) o1;
-                    final Vector v2 = (Vector) o2;
-                    return v2.abs().compareTo(v1.abs());
-                }
-            });
-            
-            // --- compute the coordinate change operator to the primitive setting
-            final Matrix M = Vector.toMatrix(primitiveCell);
-            final CoordinateChange C = new CoordinateChange(M);
-            if (DEBUG > 0) {
-                System.err.println("normalized to primitive: " + C);
-            }
-            
-            // --- compare with lookup setting for all the 3d space groups
-            final Pair match = matchOperators(ops, C, centering, variations);
-            
-            // --- postprocess the output of the lookup
-            if (match == null) {
-                this.groupName = null;
-                this.extension = null;
-                this.toStd = null;
-                this.fromStd = null;
-            } else {
-                final String nameParts[] = ((String) match.getFirst()).split(":");
-                this.groupName = nameParts[0];
-                if (nameParts.length > 1) {
-                    this.extension = nameParts[1];
-                } else {
-                    this.extension = null;
-                }
-                final CoordinateChange c = (CoordinateChange) match.getSecond();
-                if (DEBUG > 0) {
-                    System.err.println("final coordinate change: " + c);
-                }
-                this.toStd = (CoordinateChange) toNormalized.times(c);
-                this.fromStd = (CoordinateChange) this.toStd.inverse();
-            }
-        } else {
-            final String msg = "group dimension is " + d + ", must be 2 or 3";
+
+        // --- first step of analysis
+        Object res[];
+        switch (d) {
+        case 0:
+            this.crystalSystem = CrystalSystem.ZERO_D;
+            this.groupName = null;
+            this.extension = null;
+            this.toStd = null;
+            this.fromStd = null;
+            return;
+        case 1:
+            final Map type2ops = G.primitiveOperatorsByType();
+            final Set mirrors =
+                    (Set) type2ops.get(new OperatorType(1, false, 2, true));
+            this.crystalSystem = CrystalSystem.ONE_D;
+            this.groupName = mirrors.size() > 0 ? "opm" : "op1";
+            this.extension = null;
+            this.toStd = new CoordinateChange(Matrix.one(1));
+            this.fromStd = new CoordinateChange(Matrix.one(1));
+            return;
+        case 2:
+            res = analyzePointGroup2D();
+            break;
+        case 3:
+            res = analyzePointGroup3D();
+            break;
+        default:
+            final String msg = "group dimension is " + d + ", must be <= 3";
             throw new UnsupportedOperationException(msg);
+        }
+        this.crystalSystem = (CrystalSystem) res[0];
+        final Matrix preliminaryBasis = (Matrix) res[1];
+        if (DEBUG > 0) {
+            System.err.println("preliminary basis: " + preliminaryBasis);
+        }
+
+        // --- compute the coordinate change to the preliminary basis
+        final CoordinateChange toPreliminary = new CoordinateChange(
+                preliminaryBasis);
+
+        // --- get primitive cell vectors and convert to preliminary basis
+        final Vector primitiveCell[] = Vector.fromMatrix(G.primitiveCell());
+        for (int i = 0; i < primitiveCell.length; ++i) {
+            primitiveCell[i] = (Vector) primitiveCell[i].times(toPreliminary);
+        }
+
+        // --- compute the centering and a normalized basis
+        res = normalizedBasis(primitiveCell);
+        final Matrix normalizedBasis = (Matrix) res[0];
+        final char centering = ((Character) res[1]).charValue();
+
+        // --- compute coordinate change to normalized basis
+        final CoordinateChange pre2Normal = new CoordinateChange(
+                normalizedBasis);
+        final CoordinateChange toNormalized = (CoordinateChange) toPreliminary
+                .times(pre2Normal);
+        if (DEBUG > 0) {
+            System.err.println("to normalized basis: " + toNormalized);
+        }
+
+        // --- convert a primitive set of group operators to the normalized
+        // basis
+        final List ops = toNormalized.applyTo(G.primitiveOperators());
+
+        // --- determine the coordinate variations the matching process needs to
+        // consider
+        final CoordinateChange variations[] = makeVariations(this.dimension,
+                this.crystalSystem, centering);
+
+        // --- convert primitive cell vectors to normalized basis
+        for (int i = 0; i < primitiveCell.length; ++i) {
+            primitiveCell[i] = (Vector) primitiveCell[i].times(pre2Normal)
+                    .abs();
+        }
+        Arrays.sort(primitiveCell, new Comparator() {
+            public int compare(final Object o1, final Object o2) {
+                final Vector v1 = (Vector) o1;
+                final Vector v2 = (Vector) o2;
+                return v2.abs().compareTo(v1.abs());
+            }
+        });
+
+        // --- compute the coordinate change operator to the primitive setting
+        final Matrix M = Vector.toMatrix(primitiveCell);
+        final CoordinateChange C = new CoordinateChange(M);
+        if (DEBUG > 0) {
+            System.err.println("normalized to primitive: " + C);
+        }
+
+        // --- compare with lookup setting for all the 3d space groups
+        final Pair match = matchOperators(ops, C, centering, variations);
+
+        // --- postprocess the output of the lookup
+        if (match == null) {
+            this.groupName = null;
+            this.extension = null;
+            this.toStd = null;
+            this.fromStd = null;
+        } else {
+            final String nameParts[] = ((String) match.getFirst()).split(":");
+            this.groupName = nameParts[0];
+            if (nameParts.length > 1) {
+                this.extension = nameParts[1];
+            } else {
+                this.extension = null;
+            }
+            final CoordinateChange c = (CoordinateChange) match.getSecond();
+            if (DEBUG > 0) {
+                System.err.println("final coordinate change: " + c);
+            }
+            this.toStd = (CoordinateChange) toNormalized.times(c);
+            this.fromStd = (CoordinateChange) this.toStd.inverse();
         }
     }
     

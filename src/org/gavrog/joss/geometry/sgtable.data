@@ -14,6 +14,15 @@
 #   limitations under the License.
 #
 
+# The table of 1-dimensional space groups
+
+op1 x
+    x
+opm x
+    x
+   -x
+
+
 # The table of 2-dimensional space groups, aka plane groups, aka wallpaper groups.
 
 p1 x,y
