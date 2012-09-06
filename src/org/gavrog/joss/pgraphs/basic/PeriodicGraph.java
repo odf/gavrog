@@ -30,6 +30,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.gavrog.box.collections.Cache;
+import org.gavrog.box.collections.FilteredIterator;
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.NiftyList;
@@ -1392,6 +1393,15 @@ public class PeriodicGraph extends UndirectedGraph {
         final int n = edges.size();
         if (n < d || d == 0) {
             return Iterators.empty();
+        } else if (d == 1) {
+            return new FilteredIterator(edges.iterator()) {
+                @Override
+                public Object filter(Object x) {
+                    List a = new ArrayList();
+                    a.add(x);
+                    return a;
+                }
+            };
         }
 
         return new IteratorAdapter() {
