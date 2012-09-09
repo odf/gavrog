@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.Stack;
 
 import org.gavrog.box.collections.Cache;
 import org.gavrog.box.collections.FilteredIterator;
@@ -739,6 +740,63 @@ public class PeriodicGraph extends UndirectedGraph {
         };
     }
     
+    public List<CoverNode> shortestCycleAtAngle(
+    		final CoverNode u, final CoverNode v, final CoverNode w,
+    		final int limit)
+    {
+    	final Set<CoverNode> previousShell = new HashSet<CoverNode>();
+    	final Set<CoverNode> currentShell = new HashSet<CoverNode>();
+    	final Map<CoverNode, CoverNode> back =
+    			new HashMap<CoverNode, CoverNode>();
+    	
+    	if (u == v || u == w || v == w)
+    		throw new IllegalArgumentException("Must be pairwise distinct.");
+    	
+    	previousShell.add(v);
+    	currentShell.add(u);
+    	currentShell.add(w);
+    	back.put(u, v);
+    	back.put(w, v);
+    	
+    	while (currentShell.size() < limit) {
+    		final Set<CoverNode> nextShell = new HashSet<CoverNode>();
+    		for (CoverNode s: currentShell) {
+    			for (Iterator<CoverEdge> edges = s.incidences();
+    					edges.hasNext();) {
+    				final CoverEdge e = edges.next();
+    				final CoverNode t = (CoverNode) e.target();
+    				if (nextShell.contains(t) || currentShell.contains(t)) {
+    					final Stack<CoverNode> tmp = new Stack<CoverNode>();
+    					CoverNode x = t;
+    					while (x != v) {
+    						tmp.push(x);
+    						x = back.get(x);
+    					}
+    					final List<CoverNode> res = new ArrayList<CoverNode>();
+    					res.add(v);
+    					while (tmp.size() > 0) {
+    						res.add(tmp.pop());
+    					}
+    					x = s;
+    					while (x != v) {
+    						res.add(x);
+    						x = back.get(x);
+    					}
+    					return res;
+    				} else if (!previousShell.contains(t)) {
+    					nextShell.add(t);
+    					back.put(t, s);
+    				}
+    			}
+    		}
+            previousShell.clear();
+            previousShell.addAll(currentShell);
+            currentShell.clear();
+            currentShell.addAll(nextShell);
+    	}
+    	return null;
+    }
+
     /**
      * Determines the connected components of the periodic graph.
      * @return the list of components.
