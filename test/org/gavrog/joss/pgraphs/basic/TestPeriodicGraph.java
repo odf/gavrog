@@ -325,6 +325,26 @@ public class TestPeriodicGraph extends TestCase {
         assertEquals(new Integer(252), cs.next());
     }
     
+    public void testShortestCycleAtAngle() {
+    	Iterator<INode> diaNodes = dia.nodes();
+    	final INode a = (INode) diaNodes.next();
+    	final INode b = (INode) diaNodes.next();
+    	final PeriodicGraph.CoverNode u = dia.new CoverNode(b);
+    	final PeriodicGraph.CoverNode v = dia.new CoverNode(a);
+    	final PeriodicGraph.CoverNode w =
+    			dia.new CoverNode(b, new Vector(-1, 0, 0));
+    	List<PeriodicGraph.CoverNode> cycle =
+    			dia.shortestCycleAtAngle(u, v, w, 1000);
+    	
+    	assertEquals(6, cycle.size());
+    	assertEquals(v, cycle.get(0));
+    	assertTrue(cycle.get(1).equals(u) || cycle.get(1).equals(w));
+    	if (cycle.get(1).equals(u))
+    		assertEquals(w, cycle.get(5));
+    	else
+    		assertEquals(u, cycle.get(5));
+    }
+    
     public void testIsConnected() {
         final PeriodicGraph H = new PeriodicGraph(3);
         final INode v1 = H.newNode();
