@@ -28,7 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.Stack;
+import java.util.TreeMap;
 
 import org.gavrog.box.collections.Cache;
 import org.gavrog.box.collections.FilteredIterator;
@@ -740,63 +742,127 @@ public class PeriodicGraph extends UndirectedGraph {
         };
     }
     
+    /**
+     * Return the shortest cycle at a given angle.
+     * 
+     * @param u the first leg of the angle.
+     * @param v the apex of the angle.
+     * @param w the second leg of the angle.
+     * @param limit Maximal number of nodes to explore in total.
+     * @return The cycle as a list of CoverNodes.
+     */
     public List<CoverNode> shortestCycleAtAngle(
     		final CoverNode u, final CoverNode v, final CoverNode w,
     		final int limit)
     {
-    	final Set<CoverNode> previousShell = new HashSet<CoverNode>();
-    	final Set<CoverNode> currentShell = new HashSet<CoverNode>();
-    	final Map<CoverNode, CoverNode> back =
-    			new HashMap<CoverNode, CoverNode>();
-    	
-    	if (u == v || u == w || v == w)
-    		throw new IllegalArgumentException("Must be pairwise distinct.");
-    	
-    	previousShell.add(v);
-    	currentShell.add(u);
-    	currentShell.add(w);
-    	back.put(u, v);
-    	back.put(w, v);
-    	
-    	while (currentShell.size() < limit) {
-    		final Set<CoverNode> nextShell = new HashSet<CoverNode>();
-    		for (CoverNode s: currentShell) {
-    			for (Iterator<CoverEdge> edges = s.incidences();
-    					edges.hasNext();) {
-    				final CoverEdge e = edges.next();
-    				final CoverNode t = (CoverNode) e.target();
-    				if (nextShell.contains(t) || currentShell.contains(t)) {
-    					final Stack<CoverNode> tmp = new Stack<CoverNode>();
-    					CoverNode x = t;
-    					while (x != v) {
-    						tmp.push(x);
-    						x = back.get(x);
-    					}
-    					final List<CoverNode> res = new ArrayList<CoverNode>();
-    					res.add(v);
-    					while (tmp.size() > 0) {
-    						res.add(tmp.pop());
-    					}
-    					x = s;
-    					while (x != v) {
-    						res.add(x);
-    						x = back.get(x);
-    					}
-    					return res;
-    				} else if (!previousShell.contains(t)) {
-    					nextShell.add(t);
-    					back.put(t, s);
-    				}
-    			}
-    		}
-            previousShell.clear();
-            previousShell.addAll(currentShell);
-            currentShell.clear();
-            currentShell.addAll(nextShell);
-    	}
+        if (u == v || u == w || v == w)
+            throw new IllegalArgumentException("Must be pairwise distinct.");
+
+        final Map<CoverNode, CoverNode> back =
+                new HashMap<CoverNode, CoverNode>();
+        final List<CoverNode> queue = new LinkedList<CoverNode>();
+        
+        back.put(v, v);
+        back.put(w, v);
+        queue.add(w);
+        
+        while (!queue.isEmpty() && back.size() < limit) {
+            final CoverNode s = queue.remove(0);
+            for (final Iterator<CoverEdge> edges = s.incidences();
+                    edges.hasNext();) {
+                final CoverEdge e = edges.next();
+                final CoverNode t = (CoverNode) e.target();
+                if (t.equals(u)) {
+                    final List<CoverNode> res = new ArrayList<CoverNode>();
+                    res.add(v);
+                    res.add(u);
+                    CoverNode x = s;
+                    while (x != v) {
+                        res.add(x);
+                        x = back.get(x);
+                    }
+                    return res;
+                } else if (!back.containsKey(t)) {
+                    back.put(t, s);
+                    queue.add(t);
+                }
+            }
+        }
+        
     	return null;
     }
 
+    /**
+     * Return the shortest cycle at a given angle.
+     * 
+     * @param u the first leg of the angle.
+     * @param v the apex of the angle.
+     * @param w the second leg of the angle.
+     * @return The cycle as a list of CoverNodes.
+     */
+    public List<CoverNode> shortestCycleAtAngle(
+            final CoverNode u, final CoverNode v, final CoverNode w)
+    {
+        return shortestCycleAtAngle(u, v, w, 1000000);
+    }
+    
+    /**
+     * Returns the point symbol at a given node, as used by Wells.
+     * 
+     * For an n-coordinated node there are n(n-1)/2 angles, given by the node
+     * itself together with a pair of its neighbors. The point symbol is then
+     * of the form A^a.B^b…,indicating that there are a angles with shortest
+     * cycles of length A, b angles with shortest cycles of length B,
+     * etc., where A < B, < … and a + b +.. = n(n-1)/2.
+     * 
+     * @param node the node.
+     * @param limit the maximum number of nodes to be explored at each angle.
+     * @return
+     */
+    public String pointSymbol(final INode node, final int limit) {
+        final CoverNode v = new CoverNode(node);
+        final SortedMap<Integer, Integer> counts =
+                new TreeMap<Integer, Integer>();
+        final List<CoverEdge> edges = new ArrayList<CoverEdge>();
+        Iterators.addAll(edges, v.incidences());
+        
+        for (int i = 0; i < edges.size(); ++i) {
+            final CoverNode u = (CoverNode) edges.get(i).target();
+            for (int j = i + 1; j < edges.size(); ++j) {
+                final CoverNode w = (CoverNode) edges.get(j).target();
+                final int n = shortestCycleAtAngle(u, v, w, limit).size();
+                if (counts.containsKey(n)) {
+                    counts.put(n, counts.get(n) + 1);
+                } else {
+                    counts.put(n, 1);
+                }
+            }
+        }
+        StringBuffer tmp = new StringBuffer();
+        for (int n: counts.keySet()) {
+            int m = counts.get(n);
+            if (tmp.length() > 0)
+                tmp.append('.');
+            tmp.append(n);
+            if (m > 1) {
+                tmp.append('^');
+                tmp.append(m);
+            }
+        }
+        
+        return tmp.toString();
+    }
+    
+    /**
+     * Returns the point symbol at a given node.
+     * 
+     * @param node the node.
+     * @return
+     */
+    public String pointSymbol(final INode v) {
+        return pointSymbol(v, 1000000);
+    }
+    
     /**
      * Determines the connected components of the periodic graph.
      * @return the list of components.

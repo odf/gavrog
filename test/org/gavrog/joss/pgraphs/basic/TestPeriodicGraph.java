@@ -43,6 +43,8 @@ import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.io.Archive;
 import org.gavrog.joss.pgraphs.io.NetParser;
 
+import de.jreality.math.CubicBSpline.Periodic;
+
 /**
  * Tests class PeriodicGraph.
  * 
@@ -333,8 +335,7 @@ public class TestPeriodicGraph extends TestCase {
     	final PeriodicGraph.CoverNode v = dia.new CoverNode(a);
     	final PeriodicGraph.CoverNode w =
     			dia.new CoverNode(b, new Vector(-1, 0, 0));
-    	List<PeriodicGraph.CoverNode> cycle =
-    			dia.shortestCycleAtAngle(u, v, w, 1000);
+    	List<PeriodicGraph.CoverNode> cycle = dia.shortestCycleAtAngle(u, v, w);
     	
     	assertEquals(6, cycle.size());
     	assertEquals(v, cycle.get(0));
@@ -343,6 +344,20 @@ public class TestPeriodicGraph extends TestCase {
     		assertEquals(w, cycle.get(5));
     	else
     		assertEquals(u, cycle.get(5));
+    }
+    
+    private INode firstNode(PeriodicGraph g) {
+        return (INode) g.nodes().next();
+    }
+    
+    public void testPointSymbol() {
+        PeriodicGraph hex = hexGrid();
+        PeriodicGraph hexd = doubleHexGrid();
+        
+        assertEquals("6^6", dia.pointSymbol(firstNode(dia)));
+        assertEquals("6^5.8", cds.pointSymbol(firstNode(cds)));
+        assertEquals("6^3", hex.pointSymbol(firstNode(hex)));
+        assertEquals("6^6", hexd.pointSymbol(firstNode(hexd)));
     }
     
     public void testIsConnected() {
