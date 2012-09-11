@@ -278,62 +278,21 @@ public class SystreCmdline extends EventSource {
         
         // --- name node orbits according to input names
         status("Mapping node names...");
-        
-        final Map node2orbit = new HashMap();
-        for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
-        	final Set orbit = (Set) orbits.next();
-        	for (final Iterator inOrbit = orbit.iterator(); inOrbit.hasNext();) {
-        		node2orbit.put(inOrbit.next(), orbit);
-        	}
-        }
-        
-        final Map orbit2name = new HashMap();
-        final Map orbit2cs = new HashMap();
-        final Map name2orbit = new HashMap();
-        final Map node2name = new HashMap();
-        final Set mergedNames = new LinkedHashSet();
-        final Net G0 = (Net) M.getSourceGraph();
-        for (final Iterator nodes = G0.nodes(); nodes.hasNext();) {
-        	final INode v = (INode) nodes.next();
-        	final String nodeName = G0.getNodeName(v);
-        	final INode w = (INode) M.get(v);
-        	final Set orbit = (Set) node2orbit.get(w);
-        	if (orbit2name.containsKey(orbit) && !nodeName.equals(orbit2name.get(orbit))) {
-				mergedNames.add(new Pair(nodeName, orbit2name.get(orbit)));
-			} else {
-        		orbit2name.put(orbit, nodeName);
-        		final Integer conn = (Integer) G0.getNodeInfo(v, NetParser.CONNECTIVITY);
-        		if (conn != null && conn.intValue() != 0 && conn.intValue() != v.degree()) {
-        			String msg = "Node " + v + " has connectivity " + v.degree()
-        				+ ", where " + conn + " was expected";
-    				throw new SystreException(SystreException.INPUT, msg);
-        		}
-        		orbit2cs.put(orbit, G0.getNodeInfo(v, NetParser.COORDINATION_SEQUENCE));
-        	}
-    		node2name.put(w, orbit2name.get(orbit));
-        	if (!name2orbit.containsKey(nodeName)) {
-				name2orbit.put(nodeName, orbit);
-			} else if (name2orbit.get(nodeName) != orbit) {
-				final String msg = "Some input symmetries were lost";
-				throw new SystreException(SystreException.INTERNAL, msg);
-			}
-		}
-        
-        if (mergedNames.size() > 0) {
-			out.println("   Equivalences for non-unique nodes:");
-			for (final Iterator items = mergedNames.iterator(); items.hasNext();) {
-				final Pair item = (Pair) items.next();
-				final String old = Strings.parsable((String) item.getFirst(), false);
-				final String nu = Strings.parsable((String) item.getSecond(), false);
-				out.println("      " + old + " --> " + nu);
-			}
-			out.println();
-		}
-        
+        final Map node2name = nodeNameMapping(G, M);
         quitIfCancelled();
         
         // --- determine the coordination sequences
     	status("Computing coordination sequences...");
+
+        final Net N = (Net) M.getSourceGraph();
+    	final Map orbit2cs = new HashMap();
+        for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
+            final Set orbit = (Set) orbits.next();
+            final INode v = (INode) orbit.iterator().next();
+            orbit2cs.put(orbit, N.getNodeInfo(v,
+                    NetParser.COORDINATION_SEQUENCE));
+        }
+        
         doCoordinationSequences(G, orbit2cs, node2name);        
         quitIfCancelled();
         
@@ -521,6 +480,65 @@ public class SystreCmdline extends EventSource {
         } else {
         	setLastStructure(new ProcessedNet(G, name, node2name, finder, null));
         }
+    }
+
+    /**
+     * @param G
+     * @param M
+     * @return
+     */
+    private Map<INode, String> nodeNameMapping(PeriodicGraph G,
+            final Morphism M) {
+        final Map<INode, Set<INode>> node2orbit =
+                new HashMap<INode, Set<INode>>();
+        for (Iterator<Set<INode>> orbits = G.nodeOrbits(); orbits.hasNext();) {
+        	final Set<INode> orbit = orbits.next();
+        	for (INode v: orbit) {
+        		node2orbit.put(v, orbit);
+        	}
+        }
+        
+        final Map orbit2name = new HashMap();
+        final Map name2orbit = new HashMap();
+        final Map node2name = new HashMap();
+        final Set mergedNames = new LinkedHashSet();
+        final Net G0 = (Net) M.getSourceGraph();
+        for (final Iterator nodes = G0.nodes(); nodes.hasNext();) {
+        	final INode v = (INode) nodes.next();
+        	final String nodeName = G0.getNodeName(v);
+        	final INode w = (INode) M.get(v);
+        	final Set orbit = (Set) node2orbit.get(w);
+        	if (orbit2name.containsKey(orbit) && !nodeName.equals(orbit2name.get(orbit))) {
+				mergedNames.add(new Pair(nodeName, orbit2name.get(orbit)));
+			} else {
+        		orbit2name.put(orbit, nodeName);
+        		final Integer conn = (Integer) G0.getNodeInfo(v, NetParser.CONNECTIVITY);
+        		if (conn != null && conn.intValue() != 0 && conn.intValue() != v.degree()) {
+        			String msg = "Node " + v + " has connectivity " + v.degree()
+        				+ ", where " + conn + " was expected";
+    				throw new SystreException(SystreException.INPUT, msg);
+        		}
+        	}
+    		node2name.put(w, orbit2name.get(orbit));
+        	if (!name2orbit.containsKey(nodeName)) {
+				name2orbit.put(nodeName, orbit);
+			} else if (name2orbit.get(nodeName) != orbit) {
+				final String msg = "Some input symmetries were lost";
+				throw new SystreException(SystreException.INTERNAL, msg);
+			}
+		}
+        
+        if (mergedNames.size() > 0) {
+			out.println("   Equivalences for non-unique nodes:");
+			for (final Iterator items = mergedNames.iterator(); items.hasNext();) {
+				final Pair item = (Pair) items.next();
+				final String old = Strings.parsable((String) item.getFirst(), false);
+				final String nu = Strings.parsable((String) item.getSecond(), false);
+				out.println("      " + old + " --> " + nu);
+			}
+			out.println();
+		}
+        return node2name;
     }
 
     /**
