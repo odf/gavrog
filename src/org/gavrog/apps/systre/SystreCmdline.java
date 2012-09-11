@@ -101,6 +101,7 @@ public class SystreCmdline extends EventSource {
     private boolean relaxPositions = true;
     private int relaxPasses = 3;
     private int relaxSteps = 10000;
+    private boolean computePointSymbols = false;
     private boolean useBuiltinArchive = true;
     private boolean outputFullCell = false;
     private boolean outputSystreKey = false;
@@ -333,52 +334,15 @@ public class SystreCmdline extends EventSource {
         
         // --- determine the coordination sequences
     	status("Computing coordination sequences...");
-    	
-        out.println("   Coordination sequences:");
-        int cum = 0;
-        boolean cs_complete = true;
-        for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
-            final Set orbit = (Set) orbits.next();
-            final INode v = (INode) orbit.iterator().next();
-            out.print("      Node " + Strings.parsable((String) node2name.get(v), false)
-					+ ":   ");
-            final List givenCS = (List) orbit2cs.get(orbit);
-            final Iterator cs = G.coordinationSequence(v);
-            cs.next();
-            int sum = 1;
-            boolean mismatch = false;
-            for (int i = 0; i < 10; ++i) {
-            	final int x = ((Integer) cs.next()).intValue();
-                out.print(" " + x);
-                out.flush();
-                sum += x;
-                if (givenCS != null && i < givenCS.size()) {
-                	final int y = ((Whole) givenCS.get(i)).intValue();
-                	if (x != y) {
-                		mismatch = true;
-                	}
-                }
-                if (sum > 10000) {
-                    cs_complete = false;
-                    break;
-                }
-            }
-            out.println();
-            cum += orbit.size() * sum;
-            if (mismatch) {
-        		final String msg = "Computed CS does not match input";
-				throw new SystreException(SystreException.INPUT, msg);
-            }
-        }
-        out.println();
-        if (cs_complete) {
-            out.println("   TD10 = "
-                    + fmtReal4.format(((double) cum) / G.numberOfNodes()));
-            out.println();
-        }
-        out.flush();
-        
+        doCoordinationSequences(G, orbit2cs, node2name);        
         quitIfCancelled();
+        
+        // --- determine the point symbols if requested
+        if (getComputePointSymbols()) {
+            status("Computing Wells point symbols...");
+            doPointSymbols(G, node2name);
+            quitIfCancelled();
+        }
         
         // --- find the space group name and conventional settings
     	status("Looking up the space group and transforming to a standard setting...");
@@ -557,6 +521,74 @@ public class SystreCmdline extends EventSource {
         } else {
         	setLastStructure(new ProcessedNet(G, name, node2name, finder, null));
         }
+    }
+
+    /**
+     * @param G
+     * @param orbit2cs
+     * @param node2name
+     */
+    private void doCoordinationSequences(PeriodicGraph G, final Map orbit2cs,
+            final Map node2name) {
+        out.println("   Coordination sequences:");
+        int cum = 0;
+        boolean cs_complete = true;
+        for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
+            final Set orbit = (Set) orbits.next();
+            final INode v = (INode) orbit.iterator().next();
+            out.print("      Node " + Strings.parsable((String) node2name.get(v), false)
+					+ ":   ");
+            final List givenCS = (List) orbit2cs.get(orbit);
+            final Iterator cs = G.coordinationSequence(v);
+            cs.next();
+            int sum = 1;
+            boolean mismatch = false;
+            for (int i = 0; i < 10; ++i) {
+            	final int x = ((Integer) cs.next()).intValue();
+                out.print(" " + x);
+                out.flush();
+                sum += x;
+                if (givenCS != null && i < givenCS.size()) {
+                	final int y = ((Whole) givenCS.get(i)).intValue();
+                	if (x != y) {
+                		mismatch = true;
+                	}
+                }
+                if (sum > 10000) {
+                    cs_complete = false;
+                    break;
+                }
+            }
+            out.println();
+            cum += orbit.size() * sum;
+            if (mismatch) {
+        		final String msg = "Computed CS does not match input";
+				throw new SystreException(SystreException.INPUT, msg);
+            }
+        }
+        out.println();
+        if (cs_complete) {
+            out.println("   TD10 = "
+                    + fmtReal4.format(((double) cum) / G.numberOfNodes()));
+            out.println();
+        }
+        out.flush();
+    }
+
+    /**
+     * @param G
+     * @param node2name
+     */
+    private void doPointSymbols(final PeriodicGraph G, final Map node2name) {
+        out.println("   Wells point symbols:");
+        for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
+            final Set orbit = (Set) orbits.next();
+            final INode v = (INode) orbit.iterator().next();
+            out.println("      Node " + Strings.parsable((String) node2name.get(v), false)
+                    + ":   " + G.pointSymbol(v));
+        }
+        out.println();
+        out.flush();
     }
 
     /**
@@ -1161,7 +1193,15 @@ public class SystreCmdline extends EventSource {
 		this.relaxSteps = relaxSteps;
 	}
 
-	public boolean getDuplicateIsError() {
+	public boolean getComputePointSymbols() {
+        return computePointSymbols;
+    }
+
+    public void setComputePointSymbols(boolean computePointSymbols) {
+        this.computePointSymbols = computePointSymbols;
+    }
+
+    public boolean getDuplicateIsError() {
 		return duplicateIsError;
 	}
 

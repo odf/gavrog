@@ -410,6 +410,9 @@ public class SystreGUI extends BFrame {
 					SpaceGroupCatalogue.class, "preferSecondOrigin"));
 			column.add(new OptionCheckBox("Prefer Hexagonal Setting On Input",
 					SpaceGroupCatalogue.class, "preferHexagonal"));
+            column.add(new BSeparator());
+            column.add(new OptionCheckBox("Compute Wells point symbols",
+                    this.systre, "computePointSymbols"));
 			column.add(new BSeparator());
 			column.add(new OptionCheckBox("Compute an Embedding", this.systre,
 					"computeEmbedding"));

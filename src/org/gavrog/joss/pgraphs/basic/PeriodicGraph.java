@@ -817,7 +817,7 @@ public class PeriodicGraph extends UndirectedGraph {
      * 
      * @param node the node.
      * @param limit the maximum number of nodes to be explored at each angle.
-     * @return
+     * @return the point symbol as a string.
      */
     public String pointSymbol(final INode node, final int limit) {
         final CoverNode v = new CoverNode(node);
@@ -857,7 +857,7 @@ public class PeriodicGraph extends UndirectedGraph {
      * Returns the point symbol at a given node.
      * 
      * @param node the node.
-     * @return
+     * @return the point symbol as a string.
      */
     public String pointSymbol(final INode v) {
         return pointSymbol(v, 1000000);
