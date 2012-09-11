@@ -1,7 +1,8 @@
 Systre 1.1.8:
 
-2012-09-06: Added some support for 1d structures
-2012-09-05: Warnings on unit cell parameters that don't fit the space group
+2012-09-11: The Wells point symbols for vertices are displayed on request.
+2012-09-06: Added some support for 1d structures.
+2012-09-05: Warnings on unit cell parameters that don't fit the space group.
 2012-09-03: Warnings for unknown keywords and missing space group information.
 2012-08-31: Added option to embed based on vertex positions from input.
 2012-08-20: The order of input vertices is now normally preserved.
