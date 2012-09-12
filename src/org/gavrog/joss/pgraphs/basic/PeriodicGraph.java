@@ -710,7 +710,7 @@ public class PeriodicGraph extends UndirectedGraph {
      * @param start the start vertex.
      * @return an iterator for the coordination sequence.
      */
-    public Iterator coordinationSequence(final INode start) {
+    public Iterator<Integer> coordinationSequence(final INode start) {
         final Set previousShell = new HashSet();
         final Set currentShell = new HashSet();
         
@@ -1585,7 +1585,7 @@ public class PeriodicGraph extends UndirectedGraph {
      * 
      * @return the set of automorphisms, each expressed as a map between nodes
      */
-    public Set symmetries() {
+    public Set<Morphism> symmetries() {
         try {
             return (Set) this.cache.get(SYMMETRIES);
         } catch (Cache.NotFoundException ex) {
@@ -1657,10 +1657,10 @@ public class PeriodicGraph extends UndirectedGraph {
      * 
      * @return the list of operators.
      */
-    public List symmetryOperators() {
-        final List res = new ArrayList();
-        for (final Iterator iter = symmetries().iterator(); iter.hasNext();) {
-            res.add(((Morphism) iter.next()).getAffineOperator());
+    public List<Operator> symmetryOperators() {
+        final List<Operator> res = new ArrayList<Operator>();
+        for (Morphism m: symmetries()) {
+            res.add(m.getAffineOperator());
         }
         return res;
     }

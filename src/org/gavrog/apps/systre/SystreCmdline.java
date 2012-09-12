@@ -92,7 +92,8 @@ public class SystreCmdline extends EventSource {
     // --- the various archives
     private final Archive builtinArchive;
     private final Archive zeoliteArchive;
-    private final Map name2archive = new HashMap();
+    private final Map<String, Archive> name2archive =
+            new HashMap<String, Archive>();
     private final Archive internalArchive = new Archive("1.0");
     
     // --- options
@@ -241,133 +242,39 @@ public class SystreCmdline extends EventSource {
 
         // --- determine a minimal repeat unit
     	status("Computing ideal repeat unit...");
-    	
     	final Morphism M = G.minimalImageMap();
         G = M.getImageGraph();
-        final int r = n / G.numberOfNodes();
-        if (r > 1) {
-            out.println("   Ideal repeat unit smaller than given ("
-                    + G.numberOfEdges() + " vs " + m + " edges).");
-            if (DEBUG) {
-                out.println("\t\t@@@ minimal graph is " + G);
-            }
-        } else {
-            out.println("   Given repeat unit is accurate.");
-        }
-        
+        showRepeatUnit(G, n, m);
         quitIfCancelled();
 
         // --- determine the ideal symmetries
     	status("Computing ideal symmetry group...");
-    	
-        final List ops = G.symmetryOperators();
-        if (DEBUG) {
-            out.println("\t\t@@@ symmetry operators:");
-            for (final Iterator iter = ops.iterator(); iter.hasNext();) {
-                out.println("\t\t@@@    " + iter.next());
-            }
-        }
-        out.println("   Point group has " + ops.size() + " elements.");
-        out.flush();
-        final int k = Iterators.size(G.nodeOrbits());
-        out.println("   " + k + " kind" + (k > 1 ? "s" : "") + " of node.");
-        out.println();
-        out.flush();
-        
+        final List<Operator> ops = G.symmetryOperators();
+        showSymmetryOperators(G, ops);        
         quitIfCancelled();
         
         // --- name node orbits according to input names
         status("Mapping node names...");
-        final Map node2name = nodeNameMapping(G, M);
+        final Map<INode, String> node2name = nodeNameMapping(G, M);
         quitIfCancelled();
         
         // --- determine the coordination sequences
     	status("Computing coordination sequences...");
-
-        final Net N = (Net) M.getSourceGraph();
-    	final Map orbit2cs = new HashMap();
-        for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
-            final Set orbit = (Set) orbits.next();
-            final INode v = (INode) orbit.iterator().next();
-            orbit2cs.put(orbit, N.getNodeInfo(v,
-                    NetParser.COORDINATION_SEQUENCE));
-        }
-        
-        doCoordinationSequences(G, orbit2cs, node2name);        
+        showCoordinationSequences(G, (Net) M.getSourceGraph(), node2name);
         quitIfCancelled();
         
         // --- determine the point symbols if requested
         if (getComputePointSymbols()) {
             status("Computing Wells point symbols...");
-            doPointSymbols(G, node2name);
+            showPointSymbols(G, node2name);
             quitIfCancelled();
         }
         
         // --- find the space group name and conventional settings
-    	status("Looking up the space group and transforming to a standard setting...");
-    	
-        final SpaceGroup group = new SpaceGroup(d, ops);
-        final SpaceGroupFinder finder = new SpaceGroupFinder(group);
-        final String groupName = finder.getGroupName();
-        final String extendedGroupName = finder.getExtendedGroupName();
-        final CoordinateChange toStd = finder.getToStd();
-        out.println("   Ideal space group is " + groupName + ".");
-        final String givenName = SpaceGroupCatalogue.normalizedName(givenGroup);
-        if (!givenName.equals(groupName)) {
-            out.println("   Ideal group differs from given (" + groupName
-                    + " vs " + givenName + ").");
-        }
-        final String ext = finder.getExtension();
-        if ("1".equals(ext)) {
-        	out.println("     (using first origin choice)");
-        } else if ("2".equals(ext)) {
-        	out.println("     (using second origin choice)");
-        } else if ("H".equals(ext)) {
-        	out.println("     (using hexagonal setting)");
-        } else if ("R".equals(ext)) {
-        	out.println("     (using rhombohedral setting)");
-        }
-        if (DEBUG) {
-            out.println("\t\t@@@ transformed operators:");
-            for (final Iterator iter = toStd.applyTo(ops).iterator(); iter.hasNext();) {
-                out.println("\t\t@@@    " + iter.next());
-            }
-        }
-        out.println();
-        out.flush();
-        
-        quitIfCancelled();
-        
-        // --- verify the output of the spacegroup finder
-    	status("Verifying the space group setting...");
-    	
-        final CoordinateChange trans = SpaceGroupCatalogue
-				.transform(d, extendedGroupName);
-        if (!trans.isOne()) {
-            final String msg = "Produced non-conventional space group setting.";
-            throw new RuntimeException(msg);
-        }
-        final Set conventionalOps = new SpaceGroup(d, extendedGroupName)
-				.primitiveOperators();
-        final Set opsFound = new HashSet();
-        opsFound.addAll(ops);
-        for (int i = 0; i < d; ++i) {
-            opsFound.add(new Operator(Vector.unit(d, i)));
-        }
-        final Set probes = new SpaceGroup(d, toStd.applyTo(opsFound)).primitiveOperators();
-        if (!probes.equals(conventionalOps)) {
-            out.println("Problem with space group operators - should be:");
-            for (final Iterator iter = conventionalOps.iterator(); iter.hasNext();) {
-                out.println(iter.next());
-            }
-            out.println("but was:");
-            for (final Iterator iter = toStd.applyTo(opsFound).iterator(); iter.hasNext();) {
-                out.println(iter.next());
-            }
-            final String msg = "Spacegroup finder messed up operators.";
-            throw new RuntimeException(msg);
-        }
-        
+    	status("Determining and verifying the space group...");
+        final SpaceGroupFinder finder =
+                new SpaceGroupFinder(new SpaceGroup(d, ops));
+        showSpaceGroup(d, givenGroup, ops, finder);
         quitIfCancelled();
         
         // --- determine the Systre key and look it up in the archives
@@ -380,76 +287,10 @@ public class SystreCmdline extends EventSource {
 
         status("Looking for isomorphic nets...");
     	
-        int countMatches = 0;
-        Archive.Entry found = null;
-        if (this.useBuiltinArchive) {
-            found = builtinArchive.getByKey(invariant);
-            if (found != null) {
-                ++countMatches;
-                out.println("   Structure was identified with RCSR symbol:");
-                writeEntry(out, found);
-                out.println();
-            }
-            found = zeoliteArchive.getByKey(invariant);
-            if (found != null) {
-                ++countMatches;
-                out.println("   Structure was identified as zoelite framework type:");
-                writeEntry(out, found);
-                out.println();
-            }
-        }
-        for (Iterator iter = this.name2archive.keySet().iterator(); iter.hasNext();) {
-            final String arcName = (String) iter.next();
-            final Archive arc = (Archive) this.name2archive.get(arcName);
-            found = arc.getByKey(invariant);
-            if (found != null) {
-                ++countMatches;
-                out.println("   Structure was found in archive \"" + arcName + "\":");
-                writeEntry(out, found);
-                out.println();
-            }
-        }
-        found = this.internalArchive.getByKey(invariant);
-        if (found != null) {
-            if (this.duplicateIsError) {
-				final String msg = "Duplicates structure "
-						+ Strings.parsable(found.getName(), true);
-				throw new SystreException(SystreException.INPUT, msg);
-			}
-            ++countMatches;
-            out.println("   Structure already seen in this run.");
-            writeEntry(out, found);
-            out.println();
-        }
-        final String arcName = name == null ? "nameless" : name;
+        int countMatches = lookupGraphAndShowMatches(invariant);
         if (countMatches == 0) {
         	status("Storing the Systre key for this net...");
-        	
-            out.println("   Structure is new for this run.");
-            out.println();
-			if (this.internalArchive.get(invariant) != null) {
-                final String msg = "!!! WARNING (ARCHIVE) - "
-                	+ "Overwriting previous isomorphic net.";
-                out.println(msg);
-                out.println();
-			}
-			if (this.internalArchive.get(arcName) != null) {
-                final String msg = "!!! WARNING (ARCHIVE) - "
-                	+ "Overwriting previous net with the same name";
-                out.println(msg);
-                out.println();
-			}
-            final Archive.Entry entry = this.internalArchive.add(G, arcName);
-            if (this.outputArchive != null) {
-                try {
-                    this.outputArchive.write(entry.toString());
-                    this.outputArchive.write("\n");
-				this.outputArchive.flush();
-                } catch (IOException ex) {
-					final String msg = "Could not write to archive";
-					throw new SystreException(SystreException.FILE, msg);
-				}
-            }
+            doStoreGraph(G, invariant, name == null ? "nameless" : name);
         }
         out.flush();
         
@@ -483,6 +324,195 @@ public class SystreCmdline extends EventSource {
     }
 
     /**
+     * @param invariant
+     * @return
+     */
+    private int lookupGraphAndShowMatches(final String invariant) {
+        int countMatches = 0;
+        Archive.Entry found = null;
+        if (this.useBuiltinArchive) {
+            found = builtinArchive.getByKey(invariant);
+            if (found != null) {
+                ++countMatches;
+                out.println("   Structure was identified with RCSR symbol:");
+                writeEntry(out, found);
+                out.println();
+            }
+            found = zeoliteArchive.getByKey(invariant);
+            if (found != null) {
+                ++countMatches;
+                out.println("   Structure was identified as "
+                        + "zeolite framework type:");
+                writeEntry(out, found);
+                out.println();
+            }
+        }
+        for (String arcName: this.name2archive.keySet()) {
+            final Archive arc = this.name2archive.get(arcName);
+            found = arc.getByKey(invariant);
+            if (found != null) {
+                ++countMatches;
+                out.println("   Structure was found in archive \""
+                        + arcName + "\":");
+                writeEntry(out, found);
+                out.println();
+            }
+        }
+        found = this.internalArchive.getByKey(invariant);
+        if (found != null) {
+            if (this.duplicateIsError) {
+				final String msg = "Duplicates structure "
+						+ Strings.parsable(found.getName(), true);
+				throw new SystreException(SystreException.INPUT, msg);
+			}
+            ++countMatches;
+            out.println("   Structure already seen in this run.");
+            writeEntry(out, found);
+            out.println();
+        }
+        return countMatches;
+    }
+
+    /**
+     * @param G
+     * @param invariant
+     * @param arcName
+     */
+    private void doStoreGraph(final PeriodicGraph G, final String invariant,
+            final String arcName) {
+        out.println("   Structure is new for this run.");
+        out.println();
+        if (this.internalArchive.get(invariant) != null) {
+            final String msg = "!!! WARNING (ARCHIVE) - "
+            	+ "Overwriting previous isomorphic net.";
+            out.println(msg);
+            out.println();
+        }
+        if (this.internalArchive.get(arcName) != null) {
+            final String msg = "!!! WARNING (ARCHIVE) - "
+            	+ "Overwriting previous net with the same name";
+            out.println(msg);
+            out.println();
+        }
+        final Archive.Entry entry = this.internalArchive.add(G, arcName);
+        if (this.outputArchive != null) {
+            try {
+                this.outputArchive.write(entry.toString());
+                this.outputArchive.write("\n");
+        	this.outputArchive.flush();
+            } catch (IOException ex) {
+        		final String msg = "Could not write to archive";
+        		throw new SystreException(SystreException.FILE, msg);
+        	}
+        }
+    }
+
+    /**
+     * @param G
+     * @param n
+     * @param m
+     */
+    private void showRepeatUnit(final PeriodicGraph G,
+            final int n, final int m) {
+        final int r = n / G.numberOfNodes();
+        if (r > 1) {
+            out.println("   Ideal repeat unit smaller than given ("
+                    + G.numberOfEdges() + " vs " + m + " edges).");
+            if (DEBUG) {
+                out.println("\t\t@@@ minimal graph is " + G);
+            }
+        } else {
+            out.println("   Given repeat unit is accurate.");
+        }
+    }
+
+    /**
+     * @param G
+     * @param ops
+     */
+    private void showSymmetryOperators(final PeriodicGraph G,
+            final List<Operator> ops) {
+        if (DEBUG) {
+            out.println("\t\t@@@ symmetry operators:");
+            for (Operator op: ops) {
+                out.println("\t\t@@@    " + op);
+            }
+        }
+        out.println("   Point group has " + ops.size() + " elements.");
+        out.flush();
+        final int k = Iterators.size(G.nodeOrbits());
+        out.println("   " + k + " kind" + (k > 1 ? "s" : "") + " of node.");
+        out.println();
+        out.flush();
+    }
+
+    /**
+     * @param d
+     * @param givenGroup
+     * @param ops
+     * @param finder
+     */
+    private void showSpaceGroup(final int d, final String givenGroup,
+            final List<Operator> ops, final SpaceGroupFinder finder) {
+        final String extendedGroupName = finder.getExtendedGroupName();
+        final CoordinateChange toStd = finder.getToStd();
+
+        final String groupName = finder.getGroupName();
+        out.println("   Ideal space group is " + groupName + ".");
+        final String givenName = SpaceGroupCatalogue.normalizedName(givenGroup);
+        if (!givenName.equals(groupName)) {
+            out.println("   Ideal group differs from given (" + groupName
+                    + " vs " + givenName + ").");
+        }
+        final String ext = finder.getExtension();
+        if ("1".equals(ext)) {
+        	out.println("     (using first origin choice)");
+        } else if ("2".equals(ext)) {
+        	out.println("     (using second origin choice)");
+        } else if ("H".equals(ext)) {
+        	out.println("     (using hexagonal setting)");
+        } else if ("R".equals(ext)) {
+        	out.println("     (using rhombohedral setting)");
+        }
+        if (DEBUG) {
+            out.println("\t\t@@@ transformed operators:");
+            for (Operator op: toStd.applyTo(ops)) {
+                out.println("\t\t@@@    " + op);
+            }
+        }
+        out.println();
+        out.flush();
+        
+        final CoordinateChange trans = SpaceGroupCatalogue
+				.transform(d, extendedGroupName);
+        if (!trans.isOne()) {
+            final String msg = "Produced non-conventional space group setting.";
+            throw new RuntimeException(msg);
+        }
+        final Set<Operator> conventionalOps =
+                new SpaceGroup(d, extendedGroupName).primitiveOperators();
+        final Set<Operator> opsFound = new HashSet<Operator>();
+        opsFound.addAll(ops);
+        for (int i = 0; i < d; ++i) {
+            opsFound.add(new Operator(Vector.unit(d, i)));
+        }
+        final Set<Operator> probes =
+                new SpaceGroup(d, toStd.applyTo(opsFound)).primitiveOperators();
+        if (!probes.equals(conventionalOps)) {
+            out.println("Problem with space group operators - should be:");
+            for (Operator op: conventionalOps) {
+                out.println(op);
+            }
+            out.println("but was:");
+            for (Operator op: toStd.applyTo(opsFound)) {
+                out.println(op);
+            }
+            final String msg = "Spacegroup finder messed up operators.";
+            throw new RuntimeException(msg);
+        }
+    }
+
+    /**
      * @param G
      * @param M
      * @return
@@ -498,22 +528,28 @@ public class SystreCmdline extends EventSource {
         	}
         }
         
-        final Map orbit2name = new HashMap();
-        final Map name2orbit = new HashMap();
-        final Map node2name = new HashMap();
-        final Set mergedNames = new LinkedHashSet();
+        final Map<Set<INode>, String> orbit2name =
+                new HashMap<Set<INode>, String>();
+        final Map<String, Set<INode>> name2orbit =
+                new HashMap<String, Set<INode>>();
+        final Map<INode, String> node2name = new HashMap<INode, String>();
+        final Set<Pair> mergedNames = new LinkedHashSet<Pair>();
         final Net G0 = (Net) M.getSourceGraph();
-        for (final Iterator nodes = G0.nodes(); nodes.hasNext();) {
-        	final INode v = (INode) nodes.next();
+        
+        for (final Iterator<INode> nodes = G0.nodes(); nodes.hasNext();) {
+        	final INode v = nodes.next();
         	final String nodeName = G0.getNodeName(v);
         	final INode w = (INode) M.get(v);
-        	final Set orbit = (Set) node2orbit.get(w);
-        	if (orbit2name.containsKey(orbit) && !nodeName.equals(orbit2name.get(orbit))) {
+        	final Set<INode> orbit = node2orbit.get(w);
+        	if (orbit2name.containsKey(orbit) &&
+        	        !nodeName.equals(orbit2name.get(orbit))) {
 				mergedNames.add(new Pair(nodeName, orbit2name.get(orbit)));
 			} else {
         		orbit2name.put(orbit, nodeName);
-        		final Integer conn = (Integer) G0.getNodeInfo(v, NetParser.CONNECTIVITY);
-        		if (conn != null && conn.intValue() != 0 && conn.intValue() != v.degree()) {
+        		final Integer conn =
+        		        (Integer) G0.getNodeInfo(v, NetParser.CONNECTIVITY);
+        		if (conn != null && conn.intValue() != 0 &&
+        		        conn.intValue() != v.degree()) {
         			String msg = "Node " + v + " has connectivity " + v.degree()
         				+ ", where " + conn + " was expected";
     				throw new SystreException(SystreException.INPUT, msg);
@@ -530,10 +566,11 @@ public class SystreCmdline extends EventSource {
         
         if (mergedNames.size() > 0) {
 			out.println("   Equivalences for non-unique nodes:");
-			for (final Iterator items = mergedNames.iterator(); items.hasNext();) {
-				final Pair item = (Pair) items.next();
-				final String old = Strings.parsable((String) item.getFirst(), false);
-				final String nu = Strings.parsable((String) item.getSecond(), false);
+			for (Pair item: mergedNames) {
+				final String old =
+				        Strings.parsable((String) item.getFirst(), false);
+				final String nu =
+				        Strings.parsable((String) item.getSecond(), false);
 				out.println("      " + old + " --> " + nu);
 			}
 			out.println();
@@ -543,31 +580,35 @@ public class SystreCmdline extends EventSource {
 
     /**
      * @param G
-     * @param orbit2cs
+     * @param N
      * @param node2name
      */
-    private void doCoordinationSequences(PeriodicGraph G, final Map orbit2cs,
-            final Map node2name) {
+    private void showCoordinationSequences(final PeriodicGraph G,
+            final Net N, final Map<INode, String> node2name) {
         out.println("   Coordination sequences:");
+
         int cum = 0;
         boolean cs_complete = true;
-        for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
-            final Set orbit = (Set) orbits.next();
-            final INode v = (INode) orbit.iterator().next();
-            out.print("      Node " + Strings.parsable((String) node2name.get(v), false)
+        for (final Iterator<Set<INode>> orbits = G.nodeOrbits();
+                orbits.hasNext();) {
+            final Set<INode> orbit = orbits.next();
+            final INode v = orbit.iterator().next();
+            out.print("      Node "
+                    + Strings.parsable((String) node2name.get(v), false)
 					+ ":   ");
-            final List givenCS = (List) orbit2cs.get(orbit);
-            final Iterator cs = G.coordinationSequence(v);
+            final List<Whole> givenCS = (List<Whole>) N.getNodeInfo(v,
+                    NetParser.COORDINATION_SEQUENCE);
+            final Iterator<Integer> cs = G.coordinationSequence(v);
             cs.next();
             int sum = 1;
             boolean mismatch = false;
             for (int i = 0; i < 10; ++i) {
-            	final int x = ((Integer) cs.next()).intValue();
+            	final int x = cs.next();
                 out.print(" " + x);
                 out.flush();
                 sum += x;
                 if (givenCS != null && i < givenCS.size()) {
-                	final int y = ((Whole) givenCS.get(i)).intValue();
+                	final int y = givenCS.get(i).intValue();
                 	if (x != y) {
                 		mismatch = true;
                 	}
@@ -597,12 +638,15 @@ public class SystreCmdline extends EventSource {
      * @param G
      * @param node2name
      */
-    private void doPointSymbols(final PeriodicGraph G, final Map node2name) {
+    private void showPointSymbols(final PeriodicGraph G,
+            final Map<INode, String> node2name) {
         out.println("   Wells point symbols:");
-        for (final Iterator orbits = G.nodeOrbits(); orbits.hasNext();) {
-            final Set orbit = (Set) orbits.next();
-            final INode v = (INode) orbit.iterator().next();
-            out.println("      Node " + Strings.parsable((String) node2name.get(v), false)
+        for (final Iterator<Set<INode>> orbits = G.nodeOrbits();
+                orbits.hasNext();) {
+            final Set<INode> orbit = orbits.next();
+            final INode v = orbit.iterator().next();
+            out.println("      Node "
+                    + Strings.parsable(node2name.get(v), false)
                     + ":   " + G.pointSymbol(v));
         }
         out.println();

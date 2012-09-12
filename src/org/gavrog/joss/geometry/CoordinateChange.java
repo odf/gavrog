@@ -1,5 +1,5 @@
 /*
-Copyright 2005 Olaf Delgado-Friedrichs
+Copyright 2012 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.gavrog.joss.geometry;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.gavrog.jane.compounds.Matrix;
@@ -300,10 +299,10 @@ public class CoordinateChange extends ArithmeticBase implements IArithmetic {
      * @param gens the objects to convert to the new basis.
      * @return the list of converted objects.
      */
-    public List applyTo(final Collection gens) {
-        final List tmp = new ArrayList();
-        for (final Iterator iter = gens.iterator(); iter.hasNext();) {
-            tmp.add(((IArithmetic) iter.next()).times(this));
+    public List<Operator> applyTo(final Collection<Operator> gens) {
+        final List<Operator> tmp = new ArrayList<Operator>();
+        for (Operator gen: gens) {
+            tmp.add((Operator) gen.times(this));
         }
         return tmp;
     }

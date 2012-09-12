@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -71,7 +71,7 @@ import org.gavrog.jane.numbers.Whole;
  */
 public class SpaceGroup {
     private final int dimension;
-    private final Set operators;
+    private final Set<Operator> operators;
     
     /**
      * Constructs a new instance.
@@ -217,7 +217,7 @@ public class SpaceGroup {
      * Retrieves the set of operators modulo unit cell.
      * @return the set of operators.
      */
-    public Set getOperators() {
+    public Set<Operator> getOperators() {
         return operators;
     }
     
@@ -288,13 +288,12 @@ public class SpaceGroup {
      * 
      * @return a full set of operators for a primitive setting.
      */
-    public Set primitiveOperators() {
-        final Set result = new HashSet();
+    public Set<Operator> primitiveOperators() {
+        final Set<Operator> result = new HashSet<Operator>();
         final Operator T_1 = transformationToPrimitive();
         final Operator T = (Operator) T_1.inverse();
         
-        for (final Iterator iter = getOperators().iterator(); iter.hasNext();) {
-            final Operator op = (Operator) iter.next();
+        for (Operator op: getOperators()) {
             final Operator tmp = ((Operator) T.times(op).times(T_1)).modZ();
             final Operator out = ((Operator) T_1.times(tmp).times(T)).modZ();
             result.add(out);
