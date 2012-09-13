@@ -52,7 +52,7 @@ public class Cache<K, V> {
                 return result;
             }
         }
-        throw new NotFoundException();
+        throw new CacheMissException();
     }
 
     /**
@@ -71,7 +71,7 @@ public class Cache<K, V> {
         V value = null;
         try {
             value = this.get(key);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
         }
         this.content.remove(key);
         return value;

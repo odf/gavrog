@@ -37,7 +37,7 @@ import org.gavrog.box.collections.FilteredIterator;
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.NiftyList;
-import org.gavrog.box.collections.NotFoundException;
+import org.gavrog.box.collections.CacheMissException;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.collections.Partition;
 import org.gavrog.box.simple.Tag;
@@ -650,7 +650,7 @@ public class PeriodicGraph extends UndirectedGraph {
             tmp.putAll(placement);
             tmp.put(node, ((Point) tmp.get(node)).plus(amount));
             cache.put(BARYCENTRIC_PLACEMENT, Collections.unmodifiableMap(tmp));
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
         }
     }
     
@@ -871,7 +871,7 @@ public class PeriodicGraph extends UndirectedGraph {
     public List connectedComponents() {
         try {
             return (List) this.cache.get(CONNECTED_COMPONENTS);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
         }
         
         final int dim = getDimension();
@@ -993,7 +993,7 @@ public class PeriodicGraph extends UndirectedGraph {
         // --- see if placement has already been computed
         try {
             return (Map) this.cache.get(BARYCENTRIC_PLACEMENT);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
         }
         
         // --- assign an integer index to each node representative
@@ -1105,7 +1105,7 @@ public class PeriodicGraph extends UndirectedGraph {
     public boolean isLocallyStable() {
         try {
             return (Boolean) this.cache.get(IS_LOCALLY_STABLE);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
             final Map positions = barycentricPlacement();
             for (final Iterator iter = nodes(); iter.hasNext();) {
                 final INode v = (INode) iter.next();
@@ -1139,7 +1139,7 @@ public class PeriodicGraph extends UndirectedGraph {
     public boolean isLadder() {
         try {
             return (Boolean) this.cache.get(IS_LADDER);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
         }
         
         // --- check prerequisites
@@ -1213,7 +1213,7 @@ public class PeriodicGraph extends UndirectedGraph {
         
         try {
             return (Partition) this.cache.get(TRANSLATIONAL_EQUIVALENCES);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
             final Operator I = Operator.identity(getDimension());
             final Partition P = new Partition();
             final Iterator iter = nodes();
@@ -1261,7 +1261,7 @@ public class PeriodicGraph extends UndirectedGraph {
     public Morphism minimalImageMap() {
         try {
             return (Morphism) this.cache.get(MINIMAL_IMAGE_MAP);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
         }
         
         // --- some preparations
@@ -1393,7 +1393,7 @@ public class PeriodicGraph extends UndirectedGraph {
     public List characteristicBases() {
         try {
             return (List) this.cache.get(CHARACTERISTIC_BASES);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
         }
         
         final List result = new LinkedList();
@@ -1594,7 +1594,7 @@ public class PeriodicGraph extends UndirectedGraph {
     public Set<Morphism> symmetries() {
         try {
             return (Set) this.cache.get(SYMMETRIES);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
         }
         
         // --- check prerequisites
@@ -1847,7 +1847,7 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         try {
             return (NiftyList) this.cache.get(INVARIANT);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
         }
         
         // --- check prerequisites
@@ -2245,7 +2245,7 @@ public class PeriodicGraph extends UndirectedGraph {
 
         try {
             return (Cover) this.cache.get(CONVENTIONAL_CELL);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
             // --- construct a SpaceGroupFinder object for the symmetry group
             final SpaceGroupFinder finder = new SpaceGroupFinder(
                     getSpaceGroup());

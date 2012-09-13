@@ -39,7 +39,7 @@ import java.util.Set;
 
 import org.gavrog.box.collections.Cache;
 import org.gavrog.box.collections.Iterators;
-import org.gavrog.box.collections.NotFoundException;
+import org.gavrog.box.collections.CacheMissException;
 import org.gavrog.box.simple.NamedConstant;
 import org.gavrog.box.simple.Tag;
 import org.gavrog.jane.compounds.LinearAlgebra;
@@ -372,7 +372,7 @@ public class Document extends DisplayList {
     public Tiling getTiling() {
         try {
             return (Tiling) cache.get(TILING);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
             return (Tiling) cache.put(TILING, new Tiling(getEffectiveSymbol(),
 					given_cover));
         }
@@ -386,7 +386,7 @@ public class Document extends DisplayList {
 	public List<Tiling.Tile> getTiles() {
 		try {
 			return (List) cache.get(TILES);
-		} catch (NotFoundException ex) {
+		} catch (CacheMissException ex) {
 			return (List) cache.put(TILES, getTiling()
 					.getTiles());
 		}
@@ -399,7 +399,7 @@ public class Document extends DisplayList {
     private SpaceGroupFinder getFinder() {
 		try {
 			return (SpaceGroupFinder) cache.get(FINDER);
-		} catch (NotFoundException ex) {
+		} catch (CacheMissException ex) {
 			return (SpaceGroupFinder) cache.put(FINDER, new SpaceGroupFinder(
 					getTiling().getSpaceGroup()));
 		}
@@ -408,7 +408,7 @@ public class Document extends DisplayList {
     private Embedder getEmbedder() {
         try {
             return (Embedder) cache.get(EMBEDDER);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
             return (Embedder) cache.put(EMBEDDER, new Embedder(getNet(), null, false));
         }
     }
@@ -434,7 +434,7 @@ public class Document extends DisplayList {
     private EmbedderOutput getEmbedderOutput() {
         try {
             return (EmbedderOutput) cache.get(EMBEDDER_OUTPUT);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
             final Embedder embedder = getEmbedder();
             embedder.reset();
             embedder.setPasses(getEqualEdgePriority());
@@ -675,7 +675,7 @@ public class Document extends DisplayList {
     public String getSignature() {
         try {
             return (String) cache.get(SIGNATURE);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
         	final int dim = getSymbol().dim();
         	final String sig;
         	if (dim == 2) {
@@ -690,7 +690,7 @@ public class Document extends DisplayList {
     public String getGroupName() {
     	try {
     		return (String) cache.get(SPACEGROUP);
-    	} catch (NotFoundException ex) {
+    	} catch (CacheMissException ex) {
     		final int dim = getSymbol().dim();
     		final SpaceGroupFinder finder;
     		if (dim == 2) {
@@ -706,7 +706,7 @@ public class Document extends DisplayList {
     public CoordinateChange getCellToEmbedder() {
         try {
             return (CoordinateChange) cache.get(CELL_TO_EMBEDDER);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
             final CoordinateChange cc = getFinder().getToStd();
             return (CoordinateChange) cache.put(CELL_TO_EMBEDDER, cc.inverse());
         }
@@ -715,7 +715,7 @@ public class Document extends DisplayList {
     public CoordinateChange getCellToWorld() {
 		try {
 			return (CoordinateChange) cache.get(CELL_TO_WORLD);
-		} catch (NotFoundException ex) {
+		} catch (CacheMissException ex) {
 		    return (CoordinateChange) cache.put(
 		        CELL_TO_WORLD, getCellToEmbedder().times(getEmbedderToWorld()));
 		}
@@ -724,7 +724,7 @@ public class Document extends DisplayList {
     public CoordinateChange getWorldToCell() {
     	try {
     		return (CoordinateChange) cache.get(WORLD_TO_CELL);
-    	} catch (NotFoundException ex) {
+    	} catch (CacheMissException ex) {
     		return (CoordinateChange) cache.put(
     		    WORLD_TO_CELL, getCellToWorld().inverse());
     	}
@@ -767,7 +767,7 @@ public class Document extends DisplayList {
     private List<Vector> getCenteringVectors() {
         try {
             return (List<Vector>) cache.get(CENTERING_VECTORS);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
             final List<Vector> result = new ArrayList<Vector>();
             final CoordinateChange fromStd = getFinder().getFromStd();
             final int dim = getEffectiveSymbol().dim();

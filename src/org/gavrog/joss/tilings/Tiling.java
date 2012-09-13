@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.box.collections.Cache;
-import org.gavrog.box.collections.NotFoundException;
+import org.gavrog.box.collections.CacheMissException;
 import org.gavrog.box.simple.Tag;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
@@ -156,7 +156,7 @@ public class Tiling {
     public Map getCoverOrientation() {
     	try {
     		return (Map) this.cache.get(COVER_ORIENTATION);
-    	} catch (NotFoundException ex) {
+    	} catch (CacheMissException ex) {
     		final DSCover cover = getCover();
     		final Map ori = cover.partialOrientation();
     		return (Map) this.cache.put(COVER_ORIENTATION, ori);
@@ -177,7 +177,7 @@ public class Tiling {
     public FundamentalGroup getTranslationGroup() {
         try {
             return (FundamentalGroup) this.cache.get(TRANSLATION_GROUP);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
             final FundamentalGroup fg = new FundamentalGroup(getCover());
             return (FundamentalGroup) this.cache.put(TRANSLATION_GROUP, fg);
         }
@@ -189,7 +189,7 @@ public class Tiling {
     private Vector[] getTranslationVectors() {
         try {
             return (Vector[]) this.cache.get(TRANSLATION_VECTORS);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
             final Matrix N = LinearAlgebra.columnNullSpace(
                     getTranslationGroup().getPresentation().relatorMatrix(),
                     true);
@@ -208,7 +208,7 @@ public class Tiling {
     public Map getEdgeTranslations() {
         try {
             return (Map) this.cache.get(EDGE_TRANSLATIONS);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
             final int dim = getCover().dim();
             final Vector[] t = getTranslationVectors();
             final Map e2w = (Map) getTranslationGroup().getEdgeToWord();
@@ -251,7 +251,7 @@ public class Tiling {
     public Map getCornerShifts() {
         try {
             return (Map) this.cache.get(CORNER_SHIFTS);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
             final int dim = getCover().dim();
             final HashMap<DSPair, Vector> c2s = new HashMap<DSPair, Vector>();
             for (int i = 0; i <= dim; ++i) {
@@ -374,7 +374,7 @@ public class Tiling {
         public Set symmetries() {
             try {
                 return (Set) this.cache.get(SYMMETRIES);
-            } catch (NotFoundException ex) {
+            } catch (CacheMissException ex) {
                 // --- get the toroidal cover of the base symbol
                 final DSCover cover = getCover();
 
@@ -508,7 +508,7 @@ public class Tiling {
 	public Skeleton getSkeleton() {
         try {
             return (Skeleton) this.cache.get(SKELETON);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
             return (Skeleton) this.cache.put(SKELETON, makeSkeleton(false));
         }
     }
@@ -519,7 +519,7 @@ public class Tiling {
 	public Skeleton getDualSkeleton() {
         try {
             return (Skeleton) this.cache.get(DUAL_SKELETON);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
             return (Skeleton) this.cache.put(DUAL_SKELETON, makeSkeleton(true));
         }
     }
@@ -572,7 +572,7 @@ public class Tiling {
     public Map getVertexBarycentricPositions() {
         try {
             return (Map) this.cache.get(BARYCENTRIC_POS_BY_VERTEX);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
             final Map p = cornerPositions(getSkeleton().barycentricPlacement());
             return (Map) cache.put(BARYCENTRIC_POS_BY_VERTEX, p);
         }
@@ -847,7 +847,7 @@ public class Tiling {
 	public List<Tile> getTiles() {
         try {
             return (List<Tile>) this.cache.get(TILES);
-        } catch (NotFoundException ex) {
+        } catch (CacheMissException ex) {
         }
         
         final DelaneySymbol cover = getCover();
