@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -19,11 +19,10 @@ package org.gavrog.box.simple;
 /**
  * Exception thrown if some parsing method encounters an ill-formatted input
  * string.
- * 
- * @author Olaf Delgado
- * @version $Id: DataFormatException.java,v 1.1 2005/10/24 05:17:57 odf Exp $
  */
 public class DataFormatException extends IllegalArgumentException {
+    private static final long serialVersionUID = -1772708999706042300L;
+
     public DataFormatException(final String msg) {
         super(msg);
     }

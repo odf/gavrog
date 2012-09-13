@@ -37,6 +37,7 @@ import org.gavrog.box.collections.FilteredIterator;
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.NiftyList;
+import org.gavrog.box.collections.NotFoundException;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.collections.Partition;
 import org.gavrog.box.simple.Tag;
@@ -67,21 +68,21 @@ public class PeriodicGraph extends UndirectedGraph {
     final protected static boolean DEBUG = false;
     
     // --- the cache keys
-    final protected static Object CONNECTED_COMPONENTS = new Tag();
-    final protected static Object BARYCENTRIC_PLACEMENT = new Tag();
-    final protected static Object IS_LOCALLY_STABLE = new Tag();
-    final protected static Object IS_LADDER = new Tag();
-    final protected static Object CHARACTERISTIC_BASES = new Tag();
-    final protected static Object SYMMETRIES = new Tag();
-    final protected static Object INVARIANT = new Tag();
-    final protected static Object CONVENTIONAL_CELL = new Tag();
-    final protected static Object TRANSLATIONAL_EQUIVALENCE_CLASSES = new Tag();
-    final protected static Object MINIMAL_IMAGE_MAP = new Tag();
+    final protected static Tag CONNECTED_COMPONENTS = new Tag();
+    final protected static Tag BARYCENTRIC_PLACEMENT = new Tag();
+    final protected static Tag IS_LOCALLY_STABLE = new Tag();
+    final protected static Tag IS_LADDER = new Tag();
+    final protected static Tag CHARACTERISTIC_BASES = new Tag();
+    final protected static Tag SYMMETRIES = new Tag();
+    final protected static Tag INVARIANT = new Tag();
+    final protected static Tag CONVENTIONAL_CELL = new Tag();
+    final protected static Tag TRANSLATIONAL_EQUIVALENCE_CLASSES = new Tag();
+    final protected static Tag MINIMAL_IMAGE_MAP = new Tag();
 
-    private static final Object TRANSLATIONAL_EQUIVALENCES = null;
+    private static final Tag TRANSLATIONAL_EQUIVALENCES = null;
 
     // --- cache for this instance
-    final protected Cache cache = new Cache();
+    final protected Cache<Tag, Object> cache = new Cache<Tag, Object>();
 
     // --- the Systre key version used
     final public String invariantVersion = "1.0";
@@ -649,7 +650,7 @@ public class PeriodicGraph extends UndirectedGraph {
             tmp.putAll(placement);
             tmp.put(node, ((Point) tmp.get(node)).plus(amount));
             cache.put(BARYCENTRIC_PLACEMENT, Collections.unmodifiableMap(tmp));
-        } catch (Cache.NotFoundException ex) {
+        } catch (NotFoundException ex) {
         }
     }
     
@@ -870,7 +871,7 @@ public class PeriodicGraph extends UndirectedGraph {
     public List connectedComponents() {
         try {
             return (List) this.cache.get(CONNECTED_COMPONENTS);
-        } catch (Cache.NotFoundException ex) {
+        } catch (NotFoundException ex) {
         }
         
         final int dim = getDimension();
@@ -992,7 +993,7 @@ public class PeriodicGraph extends UndirectedGraph {
         // --- see if placement has already been computed
         try {
             return (Map) this.cache.get(BARYCENTRIC_PLACEMENT);
-        } catch (Cache.NotFoundException ex) {
+        } catch (NotFoundException ex) {
         }
         
         // --- assign an integer index to each node representative
@@ -1103,8 +1104,8 @@ public class PeriodicGraph extends UndirectedGraph {
      */
     public boolean isLocallyStable() {
         try {
-            return this.cache.getBoolean(IS_LOCALLY_STABLE);
-        } catch (Cache.NotFoundException ex) {
+            return (Boolean) this.cache.get(IS_LOCALLY_STABLE);
+        } catch (NotFoundException ex) {
             final Map positions = barycentricPlacement();
             for (final Iterator iter = nodes(); iter.hasNext();) {
                 final INode v = (INode) iter.next();
@@ -1116,13 +1117,15 @@ public class PeriodicGraph extends UndirectedGraph {
                     final Point p0 = (Point) positions.get(e.target());
                     final Point p = (Point) p0.plus(s);
                     if (positionsSeen.contains(p)) {
-                        return this.cache.put(IS_LOCALLY_STABLE, false);
+                        this.cache.put(IS_LOCALLY_STABLE, false);
+                        return false;
                     } else {
                         positionsSeen.add(p);
                     }
                 }
             }
-            return this.cache.put(IS_LOCALLY_STABLE, true);
+            this.cache.put(IS_LOCALLY_STABLE, true);
+            return true;
         }
     }
     
@@ -1135,8 +1138,8 @@ public class PeriodicGraph extends UndirectedGraph {
      */
     public boolean isLadder() {
         try {
-            return this.cache.getBoolean(IS_LADDER);
-        } catch (Cache.NotFoundException ex) {
+            return (Boolean) this.cache.get(IS_LADDER);
+        } catch (NotFoundException ex) {
         }
         
         // --- check prerequisites
@@ -1144,7 +1147,8 @@ public class PeriodicGraph extends UndirectedGraph {
             throw new UnsupportedOperationException("graph must be connected");
         }
         if (isStable() || !isLocallyStable()) {
-            return cache.put(IS_LADDER, false);
+            cache.put(IS_LADDER, false);
+            return false;
         }
         
         // --- find equivalence classes w.r.t. ladder translations
@@ -1160,12 +1164,14 @@ public class PeriodicGraph extends UndirectedGraph {
             if (((Vector) posv.minus(pos0)).modZ().isZero()) {
                 try {
                     new Morphism(start, v, I);
-                    return cache.put(IS_LADDER, true);
+                    cache.put(IS_LADDER, true);
+                    return true;
                 } catch (Morphism.NoSuchMorphismException ex) {
                 }
             }
         }
-        return cache.put(IS_LADDER, false);
+        cache.put(IS_LADDER, false);
+        return false;
     }
     
     /**
@@ -1207,7 +1213,7 @@ public class PeriodicGraph extends UndirectedGraph {
         
         try {
             return (Partition) this.cache.get(TRANSLATIONAL_EQUIVALENCES);
-        } catch (Cache.NotFoundException ex) {
+        } catch (NotFoundException ex) {
             final Operator I = Operator.identity(getDimension());
             final Partition P = new Partition();
             final Iterator iter = nodes();
@@ -1255,7 +1261,7 @@ public class PeriodicGraph extends UndirectedGraph {
     public Morphism minimalImageMap() {
         try {
             return (Morphism) this.cache.get(MINIMAL_IMAGE_MAP);
-        } catch (Cache.NotFoundException ex) {
+        } catch (NotFoundException ex) {
         }
         
         // --- some preparations
@@ -1387,7 +1393,7 @@ public class PeriodicGraph extends UndirectedGraph {
     public List characteristicBases() {
         try {
             return (List) this.cache.get(CHARACTERISTIC_BASES);
-        } catch (Cache.NotFoundException ex) {
+        } catch (NotFoundException ex) {
         }
         
         final List result = new LinkedList();
@@ -1588,7 +1594,7 @@ public class PeriodicGraph extends UndirectedGraph {
     public Set<Morphism> symmetries() {
         try {
             return (Set) this.cache.get(SYMMETRIES);
-        } catch (Cache.NotFoundException ex) {
+        } catch (NotFoundException ex) {
         }
         
         // --- check prerequisites
@@ -1841,7 +1847,7 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         try {
             return (NiftyList) this.cache.get(INVARIANT);
-        } catch (Cache.NotFoundException ex) {
+        } catch (NotFoundException ex) {
         }
         
         // --- check prerequisites
@@ -2239,7 +2245,7 @@ public class PeriodicGraph extends UndirectedGraph {
 
         try {
             return (Cover) this.cache.get(CONVENTIONAL_CELL);
-        } catch (Cache.NotFoundException ex) {
+        } catch (NotFoundException ex) {
             // --- construct a SpaceGroupFinder object for the symmetry group
             final SpaceGroupFinder finder = new SpaceGroupFinder(
                     getSpaceGroup());

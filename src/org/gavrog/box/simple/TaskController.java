@@ -1,5 +1,5 @@
 /*
- Copyright 2007 Olaf Delgado-Friedrichs
+ Copyright 2012 Olaf Delgado-Friedrichs
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -17,17 +17,16 @@
 package org.gavrog.box.simple;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 /**
- * @author Olaf Delgado
- * @version $Id: TaskController.java,v 1.2 2007/03/27 06:54:32 odf Exp $
+ * 
  */
 public class TaskController {
-	final static private Map controllers = new HashMap();
+	final static private Map<Thread, TaskController> controllers =
+	        new HashMap<Thread, TaskController>();
 
 	final private Thread thread;
 	private boolean cancelled = false;
@@ -50,15 +49,14 @@ public class TaskController {
 	}
 
 	public static void cleanup() {
-		final List dead = new LinkedList();
-		for (Iterator keys = controllers.keySet().iterator(); keys.hasNext();) {
-			final Thread thread = (Thread) keys.next();
+		final List<Thread> dead = new LinkedList<Thread>();
+		for (final Thread thread: controllers.keySet()) {
 			if (!thread.isAlive()) {
 				dead.add(thread);
 			}
 		}
-		for (final Iterator trash = dead.iterator(); trash.hasNext();) {
-			controllers.remove(trash.next());
+		for (final Thread trash: dead) {
+			controllers.remove(trash);
 		}
 	}
 

@@ -1,5 +1,5 @@
 /*
-   Copyright 2007 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,11 +17,9 @@
 
 package org.gavrog.box.simple;
 
-/**
- * @author Olaf Delgado
- * @version $Id: TaskStoppedException.java,v 1.1 2007/03/26 23:49:22 odf Exp $
- */
 public class TaskStoppedException extends RuntimeException {
+    private static final long serialVersionUID = -3953029346088655108L;
+
     /**
      * Constructs an instance.
      * @param thread
