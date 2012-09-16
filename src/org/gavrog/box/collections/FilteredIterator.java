@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,22 +20,19 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
- * Provides a framework for modify an iterator on the fly. This is done by passing the
- * iterator in question to the constructor of a derived class (possibly anonymous) which
- * implements the {@link #filter(Object)} method.
- * 
- * @author Olaf Delgado
- * @version $Id: FilteredIterator.java,v 1.2 2005/08/23 20:04:57 odf Exp $
+ * Provides a framework for modify an iterator on the fly. This is done by
+ * passing the iterator in question to the constructor of a derived class
+ * (possibly anonymous) which implements the {@link #filter(Object)} method.
  */
-public abstract class FilteredIterator extends IteratorAdapter {
+public abstract class FilteredIterator<E> extends IteratorAdapter<E> {
 
-	Iterator original;
+	Iterator<? extends E> original;
 	
 	/**
 	 * Constructs a FilteredIterator instance.
 	 * @param original
 	 */
-	public FilteredIterator(Iterator original) {
+	public FilteredIterator(Iterator<? extends E> original) {
 		this.original = original;
 	}
 
@@ -46,16 +43,16 @@ public abstract class FilteredIterator extends IteratorAdapter {
 	 * @param x the object to inspect.
 	 * @return true if the object should be passed through.
 	 */
-	public abstract Object filter(Object x);
+	public abstract E filter(E item);
 	
     /**
      * This methods finds and caches the next result of the traversal, unless
      * there is already a result cached.
      */
-	protected Object findNext() throws NoSuchElementException {
+	protected E findNext() throws NoSuchElementException {
         while (original.hasNext()) {
-            Object x = original.next();
-            Object y = filter(x);
+            E x = original.next();
+            E y = filter(x);
             if (y != null) {
                 return y;
             }

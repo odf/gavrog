@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,67 +18,48 @@ package org.gavrog.box.collections;
 
 /**
  * A class for hashable pairs of objects.
- * @author delgado
- * @version $Id: Pair.java,v 1.2 2005/07/22 19:51:48 odf Exp $
  */
-public class Pair implements Comparable {
-	private Object first, second;
+public class Pair<F, S> {
+	private F first;
+	private S second;
 	
-	public Pair(Object first, Object second) {
+	public Pair(F first, S second) {
 		this.first = first;
 		this.second = second;
 	}
 	
-	public Object getFirst() {
+	public F getFirst() {
 		return first;
 	}
 	
-	public Object getSecond() {
+	public S getSecond() {
 		return second;
 	}
 	
-	public boolean equals(Object other) {
-		boolean good = false;
-		if (other instanceof Pair) {
-			Pair p = (Pair) other;
-			if (first == null) {
-				good = (p.first == null);
-			} else {
-				good = first.equals(p.first);
-			}
-			if (good) {
-				if (second == null) {
-					good = (p.second == null);
-				} else {
-					good = second.equals(p.second);
-				}
-			}
-		}
-		return good;
+	private boolean equal(final Object a, final Object b) {
+	    return ((a == null) ? (b == null) : a.equals(b));
+	}
+	
+	public boolean equals(Pair<?, ?> other) {
+	    return equal(first, other.first) && equal(second, other.second);
+	}
+	
+    public boolean equals(Object other) {
+        if (other instanceof Pair<?, ?>)
+            return equals((Pair<?, ?>) other);
+        else
+            return false;
+    }
+    
+	private <T> int hash(final T x) {
+	    return x == null ? 0 : x.hashCode();
 	}
 	
 	public int hashCode() {
-	    int a = first == null ? 0 : first.hashCode();
-	    int b = second == null ? 0 : second.hashCode();
-	    return a * 37 + b;
+	    return hash(first) * 37 + hash(second);
 	}
 	
 	public String toString() {
 		return "("  + first + ", " + second + ")";
 	}
-
-    /* (non-Javadoc)
-     * @see java.lang.Comparable#compareTo(java.lang.Object)
-     */
-    public int compareTo(final Object arg) {
-        if (!(arg instanceof Pair)) {
-            throw new IllegalArgumentException("argument must be of type Pair");
-        }
-        final Pair other = (Pair) arg;
-        int d = ((Comparable) this.getFirst()).compareTo(other.getFirst());
-        if (d == 0) {
-            d = ((Comparable) this.getSecond()).compareTo(other.getSecond());
-        }
-        return d;
-    }
 }

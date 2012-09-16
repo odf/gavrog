@@ -1091,7 +1091,18 @@ public class NetParser extends GenericParser {
 							cellGram);
 					distances.add(new Pair(dist, new Integer(i)));
 				}
-				Collections.sort(distances);
+				Collections.sort(distances,
+				        new Comparator<Pair<IArithmetic, Integer>>() {
+				            public int compare(
+				                    Pair<IArithmetic, Integer> p,
+				                    Pair<IArithmetic, Integer> q)
+				            {
+				                int d = p.getFirst().compareTo(q.getFirst());
+				                if (d == 0)
+				                    d = p.getSecond().compareTo(q.getSecond());
+				                return d;
+				            }
+				});
 
 				for (int i = 0; i < descV.connectivity; ++i) {
 					final Pair entry = (Pair) distances.get(i);

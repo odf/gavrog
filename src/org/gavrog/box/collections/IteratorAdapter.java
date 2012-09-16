@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,25 +16,24 @@
 
 package org.gavrog.box.collections;
 
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 
 /**
- * An abstract base class for iterators with single element cacheing. Derived
+ * An abstract base class for iterators with single element caching. Derived
  * classes need only implement the method <code>findNext</code>.
- * @author Olaf Delgado
- * @version $Id: IteratorAdapter.java,v 1.3 2007/06/14 12:07:02 odf Exp $
  */
-public abstract class IteratorAdapter implements Iterator {
-    private LinkedList cache = new LinkedList();
+public abstract class IteratorAdapter<E> implements Iterator<E>, Iterable<E> {
+    private Deque<E> cache = new LinkedList<E>();
 
     /**
      * Returns the next available element or throws an exception.
      * @return the next element.
      * @throws NoSuchElementException if no more elements are available.
      */
-    protected abstract Object findNext() throws NoSuchElementException;
+    protected abstract E findNext() throws NoSuchElementException;
     
     /* (non-Javadoc)
      * @see java.util.Iterator#hasNext()
@@ -53,7 +52,7 @@ public abstract class IteratorAdapter implements Iterator {
     /* (non-Javadoc)
      * @see java.util.Iterator#next()
      */
-    public Object next() {
+    public E next() {
         if (cache.size() == 0) {
             return findNext();
         } else {
@@ -71,7 +70,7 @@ public abstract class IteratorAdapter implements Iterator {
     /* (non-Javadoc)
      * @see java.lang.Iterable#iterator()
      */
-    public Iterator iterator() {
+    public Iterator<E> iterator() {
         return this;
     }
 }

@@ -44,7 +44,7 @@ public class Cache<K, V> {
     /**
      * @param key
      */
-    public <T extends K> V get(final T key) {
+    public V get(final K key) {
         final SoftReference<V> entry = content.get(key);
         if (entry != null) {
             final V result = entry.get();
@@ -59,7 +59,7 @@ public class Cache<K, V> {
      * @param key
      * @param value
      */
-    public <K1 extends K, V1 extends V> V put(final K1 key, final V1 value) {
+    public V put(final K key, final V value) {
         this.content.put(key, new SoftReference<V>(value));
         return value;
     }
@@ -67,7 +67,7 @@ public class Cache<K, V> {
     /**
      * @param key
      */
-    public <T extends K> V remove(final T key) {
+    public V remove(final K key) {
         V value = null;
         try {
             value = this.get(key);

@@ -84,11 +84,4 @@ public class TestPair extends TestCase {
         Assert.assertEquals(p1.toString(), "(babel, 17)");
         with_null.toString();
     }
-    
-    public void testCompareTo() {
-        assertTrue(p1.compareTo(equals_p1) == 0);
-        assertTrue(p1.compareTo(p2) < 0);
-        assertTrue(p1.compareTo(p3) > 0);
-        assertTrue(p2.compareTo(equals_p1) > 0);
-    }
 }

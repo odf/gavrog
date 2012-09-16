@@ -28,21 +28,25 @@ import java.util.HashMap;
  * @author Olaf Delgado
  * @version $Id: HashMapWithDefault.java,v 1.1 2005/09/22 05:34:36 odf Exp $
  */
-public abstract class HashMapWithDefault extends HashMap {
+public abstract class HashMapWithDefault<K, V> extends HashMap<K, V> {
+    private static final long serialVersionUID = 7052189915318242676L;
+
     /**
-     * This method must be overriden to produce a default value.
+     * This method must be overridden to produce a default value.
      * 
      * @return the default value.
      */
-    public abstract Object makeDefault();
+    public abstract V makeDefault();
     
     /* (non-Javadoc)
      * @see java.util.Map#get(java.lang.Object)
      */
-    public Object get(final Object key) {
+    public V get(final Object key) {
         if (!containsKey(key)) {
             try {
-                put(key, makeDefault());
+                @SuppressWarnings("unchecked")
+                K k = (K) key;
+                put(k, makeDefault());
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }

@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,9 +25,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.gavrog.box.collections.FilteredIterator;
-import org.gavrog.box.collections.IntPair;
 import org.gavrog.box.collections.IntPartition;
 import org.gavrog.box.collections.Iterators;
+import org.gavrog.box.collections.Pair;
 
 
 /**
@@ -355,7 +355,8 @@ public class CosetAction implements GroupAction {
             tailRow[this.idx2invidx[g]] = head;
         } else if (tailPos < headPos && head != tail) {
             // --- identify start and end rows
-            final IntPair pair = new IntPair(head, tail);
+            final Pair<Integer, Integer> pair =
+                    new Pair<Integer, Integer>(head, tail);
             identify.addLast(pair);
         }
     }
@@ -373,7 +374,8 @@ public class CosetAction implements GroupAction {
     private int performIdentifications(final LinkedList Q, final IntPartition P) {
         int count = 0;
         while (Q.size() > 0) {
-            final IntPair pair = (IntPair) Q.removeFirst();
+            final Pair<Integer, Integer> pair =
+                    (Pair<Integer, Integer>) Q.removeFirst();
             final int a = P.find(pair.getFirst());
             final int b = P.find(pair.getSecond());
             if (a == b) {
@@ -392,7 +394,7 @@ public class CosetAction implements GroupAction {
                 } else if (bg == 0) {
                     row_b[g] = ag;
                 } else if (!P.areEquivalent(ag, bg)) {
-                    Q.addLast(new IntPair(ag, bg));
+                    Q.addLast(new Pair<Integer, Integer>(ag, bg));
                 }
             }
             this.table.set(b, row_a);
