@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,59 +25,45 @@ import java.util.Set;
 
 /**
  * Represents a partition of some finite set into equivalence classes.
- * @author Olaf Delgado
- * @version $Id: Partition.java,v 1.2 2006/09/20 22:36:12 odf Exp $
  */
-public class Partition {
-	private class IntList extends ArrayList implements Cloneable {
-		public int getInt(int i) {
-			return ((Integer) get(i)).intValue();
-		}
-		public void addInt(int x) {
-			add(new Integer(x));
-		}
-		public void setInt(int i, int x) {
-			set(i, new Integer(x));
-		}
-	}
+public class Partition<E> {
+	private HashMap<E, Integer> index = new HashMap<E, Integer>();
+	private ArrayList<E> value = new ArrayList<E>();
+	private ArrayList<Integer> dad = new ArrayList<Integer>();
+	private ArrayList<Integer> rnk = new ArrayList<Integer>();
 	
-	private HashMap index = new HashMap();
-	private ArrayList value = new ArrayList();
-	private IntList dad = new IntList();
-	private IntList rnk = new IntList();
-	
-	public Object clone() {
-		Partition result = new Partition();
-		result.index = (HashMap) this.index.clone();
-		result.value = (ArrayList) this.value.clone();
-		result.dad = (IntList) this.dad.clone();
-		result.rnk = (IntList) this.rnk.clone();
+    public Object clone() {
+		Partition<E> result = new Partition<E>();
+		result.index = new HashMap<E, Integer>(this.index);
+		result.value = new ArrayList<E>(this.value);
+		result.dad = new ArrayList<Integer>(this.dad);
+		result.rnk = new ArrayList<Integer>(this.rnk);
 		return result;
 	}
 	
-	private int repIndex(Object a) {
+	private int repIndex(E a) {
 		int i, x;
 		if (index.containsKey(a)) {
-			i = x = ((Integer) index.get(a)).intValue();
+			i = x = index.get(a);
 			while (dad.get(i) != null) {
-				i = dad.getInt(i);
+				i = dad.get(i);
 			}
 			while (dad.get(x) != null) {
-				int t = dad.getInt(x);
-				dad.setInt(x, i);
+				int t = dad.get(x);
+				dad.set(x, i);
 				x = t;
 			}
 		} else {
 			x = value.size();
-			index.put(a, new Integer(x));
+			index.put(a, x);
 			value.add(a);
 			dad.add(null);
-			rnk.addInt(0);
+			rnk.add(0);
 		}
 		return x;
 	}
 	
-	public Object find(Object a) {
+	public E find(E a) {
 		if (index.containsKey(a)) {
 			return value.get(repIndex(a));
 		} else {
@@ -85,43 +71,40 @@ public class Partition {
 		}
 	}
 	
-	public boolean areEquivalent(Object a, Object b) {
+	public boolean areEquivalent(E a, E b) {
 		return find(a) == find(b);
 	}
 	
-	public void unite(Object a, Object b) {
+	public void unite(E a, E b) {
 		int i = repIndex(a);
 		int j = repIndex(b);
 		
 		if (i != j) {
-			if (rnk.getInt(j) > rnk.getInt(i)) {
+			if (rnk.get(j) > rnk.get(i)) {
 				int t = i; i = j; j = t;
 			}
-			dad.setInt(j, i);
-			rnk.setInt(i, rnk.getInt(i) + rnk.getInt(j) + 1);
-			rnk.setInt(j, 0);
+			dad.set(j, i);
+			rnk.set(i, rnk.get(i) + rnk.get(j) + 1);
+			rnk.set(j, 0);
 		}
 	}
 
-	public Map representativeMap() {
-		HashMap result = new HashMap();
-		Iterator iter = value.iterator();
-		while (iter.hasNext()) {
-			Object a = iter.next();
-			result.put(a, find(a));
+	public Map<E, E> representativeMap() {
+		Map<E, E> result = new HashMap<E, E>();
+		for (final E a: value) {
+		    result.put(a, find(a));
 		}
 		return result;
 	}
     
-    public Iterator classes() {
-        final Map rep2class = new HashMap();
-        for (final Iterator iter = value.iterator(); iter.hasNext();) {
-            final Object a = iter.next();
-            final Object rep = find(a);
+    public Iterator<Set<E>> classes() {
+        final Map<E, Set<E>> rep2class = new HashMap<E, Set<E>>();
+        for (final E a: value) {
+            final E rep = find(a);
             if (!rep2class.containsKey(rep)) {
-                rep2class.put(rep, new HashSet());
+                rep2class.put(rep, new HashSet<E>());
             }
-            ((Set) rep2class.get(rep)).add(a);
+            rep2class.get(rep).add(a);
         }
         return rep2class.values().iterator();
     }
@@ -129,12 +112,11 @@ public class Partition {
     public String toString() {
     	final StringBuffer tmp = new StringBuffer(100);
     	tmp.append("{\n");
-    	for (final Iterator sets = this.classes(); sets.hasNext();) {
-    		final Set cl = (Set) sets.next();
+    	for (final Iterator<Set<E>> sets = this.classes(); sets.hasNext();) {
+    		final Set<E> cl = sets.next();
     		tmp.append("  {");
     		boolean first = true;
-    		for (final Iterator elms = cl.iterator(); elms.hasNext();) {
-    			final Object x = elms.next();
+    		for (final E x: cl) {
     			if (first) {
     				first = false;
     			} else {

@@ -25,9 +25,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.gavrog.box.collections.FilteredIterator;
-import org.gavrog.box.collections.IntPartition;
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.Pair;
+import org.gavrog.box.collections.Partition;
 
 
 /**
@@ -173,7 +173,7 @@ public class CosetAction implements GroupAction {
         this.table.add(new int[this.ngens]);
         
         // --- holds classes of rows known to correspond to the same coset
-        IntPartition equivalences = new IntPartition();
+        Partition<Integer> equivalences = new Partition<Integer>();
         
         // --- number of rows made invalid but not yet deleted
         int invalidRows = 0;
@@ -248,7 +248,7 @@ public class CosetAction implements GroupAction {
                 // --- compress the table if necessary
                 if (invalidRows > n / 2) {
                     final int old2new[] = compressTable(equivalences);
-                    equivalences = new IntPartition();
+                    equivalences = new Partition<Integer>();
                     i = old2new[i];
                     invalidRows = 0;
                     if (LOGGING) {
@@ -371,7 +371,7 @@ public class CosetAction implements GroupAction {
      * @param P the row equivalence classes (modified by this method).
      * @return the number of individual merges performed.
      */
-    private int performIdentifications(final LinkedList Q, final IntPartition P) {
+    private int performIdentifications(final LinkedList Q, final Partition<Integer> P) {
         int count = 0;
         while (Q.size() > 0) {
             final Pair<Integer, Integer> pair =
@@ -407,12 +407,12 @@ public class CosetAction implements GroupAction {
      * Compresses the table by collapsing each set of rows tagged as equivalent,
      * i.e., representing the same coset, into a single row. At this stage,
      * equivalent rows are expected to have equal contents, as should have been
-     * established by {@link #performIdentifications(LinkedList, IntPartition)}.
+     * established by {@link #performIdentifications(LinkedList, Partition<Integer>)}.
      * 
      * @param P a partition of the row set into equivalence classes.
      * @return a mapping of old to new row numbers.
      */
-    private int[] compressTable(final IntPartition P) {
+    private int[] compressTable(final Partition<Integer> P) {
         // --- initialize the mapping from old to new row numbers
         final int old2new[] = new int[this.table.size()];
         // --- initlalize the new coset table

@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -28,9 +28,6 @@ import java.util.NoSuchElementException;
 
 /**
  * A collection of methods that return special iterators.
- * 
- * @author Olaf Delgado
- * @version $Id: Iterators.java,v 1.4 2007/04/29 21:34:04 odf Exp $
  */
 final public class Iterators {
     /**
@@ -43,9 +40,9 @@ final public class Iterators {
      * 
      * @return the newly constructed iterator.
      */
-    public static Iterator empty() {
-        return new IteratorAdapter() {
-            protected Object findNext() throws NoSuchElementException {
+    public static <E> Iterator<E> empty() {
+        return new IteratorAdapter<E>() {
+            protected E findNext() throws NoSuchElementException {
                 throw new NoSuchElementException("at end");
             }
         };
@@ -56,11 +53,11 @@ final public class Iterators {
      * @param x the object.
      * @return the newly constructed iterator.
      */
-    public static Iterator singleton(final Object x) {
-        return new IteratorAdapter() {
+    public static <E> Iterator<E> singleton(final E x) {
+        return new IteratorAdapter<E>() {
             private boolean done = false;
             
-            protected Object findNext() throws NoSuchElementException {
+            protected E findNext() throws NoSuchElementException {
                 if (done) {
                     throw new NoSuchElementException("at end");
                 } else {
@@ -78,15 +75,15 @@ final public class Iterators {
      * @param end the smallest element above the range.
      * @return the newly constructed iterator.
      */
-    public static Iterator range(final int start, final int end) {
-        return new IteratorAdapter() {
+    public static Iterator<Integer> range(final int start, final int end) {
+        return new IteratorAdapter<Integer>() {
             private int next = start;
 
-            protected Object findNext() throws NoSuchElementException {
+            protected Integer findNext() throws NoSuchElementException {
                 if (next >= end) {
                     throw new NoSuchElementException("at end");
                 } else {
-                    return new Integer(next++);
+                    return next++;
                 }
             }           
         };
@@ -108,18 +105,20 @@ final public class Iterators {
      * @param b the second source iterator.
      * @return the newly constructed iterator.
      */
-    public static Iterator cantorProduct(final Iterator a, final Iterator b) {
+    public static <A, B> Iterator<Pair<A, B>>
+    cantorProduct(final Iterator<A> a, final Iterator<B> b)
+    {
         if (a == b) {
             throw new UnsupportedOperationException("identical iterators");
         }
         
-        return new IteratorAdapter() {
-            final LinkedList cacheA = new LinkedList();
-            final LinkedList cacheB = new LinkedList();
-            Iterator iterA = empty();
-            Iterator iterB = empty();
+        return new IteratorAdapter<Pair<A, B>>() {
+            final LinkedList<A> cacheA = new LinkedList<A>();
+            final LinkedList<B> cacheB = new LinkedList<B>();
+            Iterator<A> iterA = empty();
+            Iterator<B> iterB = empty();
 
-            protected Object findNext() throws NoSuchElementException {
+            protected Pair<A, B> findNext() throws NoSuchElementException {
                 if (!iterA.hasNext()) {
                     if (a.hasNext()) {
                         cacheA.addLast(a.next());
@@ -135,7 +134,7 @@ final public class Iterators {
                     iterB = cacheB.iterator();
                 }
                 if (iterA.hasNext() && iterB.hasNext()) {
-                    return new Pair(iterA.next(), iterB.next());
+                    return new Pair<A, B>(iterA.next(), iterB.next());
                 } else {
                     throw new NoSuchElementException("at end");
                 }

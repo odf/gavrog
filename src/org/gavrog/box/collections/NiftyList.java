@@ -1,5 +1,5 @@
 /*
-   Copyright 2007 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,11 +21,12 @@ import java.util.List;
 
 /**
  * Nifty lists are hashable, comparable and printable in a nice useful way.
- * 
- * @author Olaf Delgado
- * @version $Id: NiftyList.java,v 1.2 2007/05/30 23:28:32 odf Exp $
  */
-public class NiftyList extends ArrayList implements Comparable {
+public class NiftyList<E extends Comparable<? super E>> extends ArrayList<E>
+    implements Comparable<List<E>>
+{
+    private static final long serialVersionUID = -8961300535697662494L;
+
     /**
      * Construct an empty instance.
      */
@@ -37,25 +38,21 @@ public class NiftyList extends ArrayList implements Comparable {
      * Construct an instance.
      * @param model the contents of the new instance.
      */
-    public NiftyList(final List model) {
+    public NiftyList(final List<E> model) {
         super(model);
     }
     
     /* (non-Javadoc)
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
-    public int compareTo(final Object arg) {
-        if (!(arg instanceof List)) {
-            throw new IllegalArgumentException("argument must be of type List");
-        }
-        final List other = (List) arg;
-        for (int i = 0; i < Math.min(this.size(), other.size()); ++i) {
-            final int d = ((Comparable) this.get(i)).compareTo(other.get(i));
+    public int compareTo(final List<E> arg) {
+        for (int i = 0; i < Math.min(this.size(), arg.size()); ++i) {
+            final int d = this.get(i).compareTo(arg.get(i));
             if (d != 0) {
             	return d;
             }
         }
-        return this.size() - other.size();
+        return this.size() - arg.size();
     }
     
     /* (non-Javadoc)
