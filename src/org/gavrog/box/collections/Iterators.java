@@ -20,7 +20,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -148,13 +147,13 @@ final public class Iterators {
      * @param things the things to permute.
      * @return the newly constructed iterator.
      */
-    public static Iterator permutations(final Object things[]) {
+    public static <E> Iterator<List<E>> permutations(final E things[]) {
         final int n = things.length;
         
-        return new IteratorAdapter() {
+        return new IteratorAdapter<List<E>>() {
             private int a[] = null;
             
-            protected Object findNext() throws NoSuchElementException {
+            protected List<E> findNext() throws NoSuchElementException {
                 if (a == null) {
                     // --- construct the first (trivial) permutation of indices
                     a = new int[n];
@@ -176,7 +175,7 @@ final public class Iterators {
                 }
                 
                 // --- construct the result
-                final List result = new ArrayList(n);
+                final List<E> result = new ArrayList<E>(n);
                 for (int i = 0; i < n; ++i) {
                     result.add(things[a[i]]);
                 }
@@ -192,17 +191,19 @@ final public class Iterators {
      * @param things the set of objects to pick from.
      * @return the newly constructed iterator.
      */
-    public static Iterator combinations(final Object things[], final int m) {
+    public static <E> Iterator<List<E>> combinations(final E things[],
+                                                     final int m)
+    {
         final int n = things.length;
         if (n < m) {
             throw new IllegalArgumentException("not enough objects to pick from");
         }
 
-        return new IteratorAdapter() {
-            private Iterator perms = Iterators.empty();
+        return new IteratorAdapter<List<E>>() {
+            private Iterator<List<Object>> perms = Iterators.empty();
             private final int a[] = new int[m];
 
-            protected Object findNext() throws NoSuchElementException {
+            protected List<E> findNext() throws NoSuchElementException {
                 if (!perms.hasNext()) {
                     if (a[1] == 0) {
                         for (int i = 0; i < m; ++i) {
@@ -228,7 +229,9 @@ final public class Iterators {
                     }
                     perms = permutations(picks);
                 }
-                return perms.next();
+                @SuppressWarnings("unchecked")
+                List<E> result = (List<E>) perms.next();
+                return result;
             }
         };
     }
@@ -242,13 +245,15 @@ final public class Iterators {
      * @param k the size of selections to produce.
      * @return the newly constructed iterator.
      */
-    public static Iterator selections(final Object things[], final int k) {
+    public static <E> Iterator<List<E>> selections(final E things[],
+                                                   final int k)
+    {
         final int n = things.length;
         
-        return new IteratorAdapter() {
+        return new IteratorAdapter<List<E>>() {
             int a[] = null;
             
-            protected Object findNext() throws NoSuchElementException {
+            protected List<E> findNext() throws NoSuchElementException {
                 if (a == null) {
                     // --- the first selection uses the first available object k times
                     a = new int[k];
@@ -273,11 +278,12 @@ final public class Iterators {
                 }
                 
                 // --- construct the result
-                final Object result[] = new Object[k];
+                final List<E> result = new ArrayList<E>();
+                
                 for (int i = 0; i < k; ++i) {
-                    result[i] = things[a[i]];
+                    result.add(things[a[i]]);
                 }
-                return Arrays.asList(result);
+                return result;
             }
         };
     }
@@ -291,7 +297,7 @@ final public class Iterators {
      * @param b the second iterator.
      * @return true if the iterators produce equal sequences.
      */
-    public static boolean equal(final Iterator a, final Iterator b) {
+    public static <E> boolean equal(final Iterator<E> a, final Iterator<?> b) {
 		while (true) {
 			if (a.hasNext() != b.hasNext()) {
 			    return false;
@@ -313,7 +319,7 @@ final public class Iterators {
      * @param iter the iterator.
      * @return the number of objects.
      */
-    public static int size(final Iterator iter) {
+    public static <E> int size(final Iterator<E> iter) {
         int count = 0;
         while (iter.hasNext()) {
             iter.next();
@@ -330,7 +336,7 @@ final public class Iterators {
      * @param x the object to look for.
      * @return true if the given object is generated by the iterator.
      */
-    public static boolean contains(final Iterator iter, final Object x) {
+    public static <E> boolean contains(final Iterator<E> iter, final E x) {
     	if (x == null) {
     		while (iter.hasNext()) {
     			if (iter.next() == null) {
@@ -354,8 +360,8 @@ final public class Iterators {
      * @param iter the iterator.
      * @return the list of objects covered.
      */
-    public static List asList(final Iterator iter) {
-        final List result = new LinkedList();
+    public static <E> List<E> asList(final Iterator<E> iter) {
+        final List<E> result = new LinkedList<E>();
         while (iter.hasNext()) {
             result.add(iter.next());
         }
@@ -369,7 +375,8 @@ final public class Iterators {
      * @param list the list to add to.
      * @param iter the iterator.
      */
-    public static void addAll(final List list, final Iterator iter) {
+    public static <E> void addAll(final List<E> list,
+            final Iterator<? extends E> iter) {
         while (iter.hasNext()) {
             list.add(iter.next());
         }
@@ -384,8 +391,9 @@ final public class Iterators {
      * @return the number of item written.
      * @throws IOException if writing to the output stream does not work.
      */
-    public static int write(final BufferedWriter out, final Iterator iter,
-            final String separator) throws IOException {
+    public static <E> int write(final BufferedWriter out,
+            final Iterator<E> iter, final String separator)
+                    throws IOException {
         int count = 0;
         if (iter.hasNext()) {
             out.write(String.valueOf(iter.next()));
@@ -410,7 +418,7 @@ final public class Iterators {
      * @param separator written after each entry.
      * @return the number of items written.
      */
-    public static int print(final PrintStream out, final Iterator iter,
+    public static <E> int print(final PrintStream out, final Iterator<E> iter,
             final String separator) {
         int count = 0;
         while (iter.hasNext()) {
