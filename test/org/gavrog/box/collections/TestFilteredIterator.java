@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -26,24 +26,21 @@ import junit.framework.TestCase;
 
 /**
  * Unit test for class FilteredIterator, also using class IntegerInterator.
- * @author Olaf Delgado
- * @version $Id: TestFilteredIterator.java,v 1.1 2005/07/22 19:44:34 odf Exp $
  */
 public class TestFilteredIterator extends TestCase {
-    FilteredIterator iter;
+    FilteredIterator<Integer> iter;
 
     /*
      * @see TestCase#setUp()
      */
     protected void setUp() throws Exception {
         super.setUp();
-        iter = new FilteredIterator(Iterators.range(0, 7)) {
-            public Object filter(Object x) {
-                if (((Integer) x).intValue() % 2 != 0) {
+        iter = new FilteredIterator<Integer>(Iterators.range(0, 7)) {
+            public Integer filter(Integer x) {
+                if (x % 2 != 0)
                     return x;
-                } else {
+                else
                     return null;
-                }
             }
         };
     }

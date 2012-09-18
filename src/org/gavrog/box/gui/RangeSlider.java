@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -93,7 +93,6 @@ public class RangeSlider extends SliderBase {
 		return getBounds().width - 7 - (showValue ? 60 : 0);
 	}
 	
-	@SuppressWarnings("unused")
 	protected void mousePressed(MousePressedEvent ev) {
 		draggingLo = draggingHi = false;
 		oldLo = lo;

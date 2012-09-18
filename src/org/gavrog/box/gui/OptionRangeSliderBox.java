@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ public class OptionRangeSliderBox extends BorderContainer {
 				LayoutInfo.WEST, LayoutInfo.NONE, new Insets(2, 10, 2, 10),
 				null));
 		
-		final Class<?> klazz = (target instanceof Class ? (Class) target
+		final Class<?> klazz = (target instanceof Class ? (Class<?>) target
 				: target.getClass());
 
 		final String optionLoCap = Strings.capitalized(optionLo);

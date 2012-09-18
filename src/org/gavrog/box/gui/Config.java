@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -27,12 +27,10 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * @author Olaf Delgado
- * @version $Id: Config.java,v 1.4 2007/05/24 23:17:51 odf Exp $
  */
 public class Config {
-	final private static Map<Class, Class> mappedTypes =
-		new HashMap<Class, Class>();
+	final private static Map<Class<?>, Class<?>> mappedTypes =
+		new HashMap<Class<?>, Class<?>>();
 	static {
 		mappedTypes.put(int.class, Integer.class);
 		mappedTypes.put(long.class, Long.class);
@@ -42,7 +40,7 @@ public class Config {
 		mappedTypes.put(Color.class, ColorWrapper.class);
 	}
 	
-	public static Class<?> wrapperType(final Class type) {
+	public static Class<?> wrapperType(final Class<?> type) {
 		if (mappedTypes.containsKey(type)) {
 			return mappedTypes.get(type);
 		} else {
@@ -50,16 +48,17 @@ public class Config {
 		}
 	}
 	
-	public static Object construct(final Class type, final String value)
+	public static Object construct(final Class<?> type, final String value)
 			throws Exception {
-		return wrapperType(type).getConstructor(String.class).newInstance(value);
+		return wrapperType(type).getConstructor(String.class)
+		        .newInstance(value);
 	}
 
 	public static String asString(final Object value) throws Exception {
 		if (value == null) {
 			return "";
 		} else {
-			final Class type = value.getClass();
+			final Class<?> type = value.getClass();
 			if (wrapperType(type).equals(type)) {
 				return String.valueOf(value);
 			} else {
@@ -71,7 +70,7 @@ public class Config {
 	
 	public static void pushProperties(final Properties props, final Object obj)
 			throws Exception {
-		final Class type = obj.getClass();
+		final Class<? extends Object> type = obj.getClass();
 		final String prefix = type.getCanonicalName() + ".";
 		final BeanInfo info = Introspector.getBeanInfo(type);
 		final PropertyDescriptor desc[] = info.getPropertyDescriptors();
@@ -85,14 +84,14 @@ public class Config {
 				continue;
 			}
 			final Method setter = desc[i].getWriteMethod();
-            final Class valueType = setter.getParameterTypes()[0];
+            final Class<?> valueType = setter.getParameterTypes()[0];
 			setter.invoke(obj, construct(valueType, value));
 		}
 	}
 	
 	public static void pullProperties(final Properties props, final Object obj)
 			throws Exception {
-		final Class type = obj.getClass();
+		final Class<? extends Object> type = obj.getClass();
 		final String prefix = type.getCanonicalName() + ".";
 		final PropertyDescriptor desc[] =
 			Introspector.getBeanInfo(type).getPropertyDescriptors();
@@ -115,8 +114,8 @@ public class Config {
 	
 	public static PropertyDescriptor namedProperty(final Object source,
 			final String name) throws Exception {
-		final Class type = (source instanceof Class ? (Class) source : source
-				.getClass());
+		final Class<?> type = (source instanceof Class ?
+		                (Class<?>) source : source.getClass());
 		final BeanInfo info = Introspector.getBeanInfo(type);
 		final PropertyDescriptor props[] = info.getPropertyDescriptors();
 		PropertyDescriptor prop = null;

@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -32,14 +32,14 @@ import junit.framework.TestCase;
  * @version $Id: TestPartition.java,v 1.1 2005/07/22 19:44:34 odf Exp $
  */
 public class TestPartition extends TestCase {
-    private Partition P;
+    private Partition<String> P;
     
     /*
      * @see TestCase#setUp()
      */
     protected void setUp() throws Exception {
         super.setUp();
-        P = new Partition();
+        P = new Partition<String>();
         P.unite("apfel", "birne");
         P.unite("gurke", "zucchini");
         P.unite("kirsche", "birne");
@@ -59,7 +59,7 @@ public class TestPartition extends TestCase {
      * Class under test for Object clone()
      */
     public void testClone() {
-        Partition Q = (Partition) P.clone();
+        Partition<String> Q = (Partition<String>) P.clone();
         Assert.assertEquals(P.representativeMap(), Q.representativeMap());
     }
 
@@ -80,7 +80,7 @@ public class TestPartition extends TestCase {
     public void testRepresentativeMap() {
         String entries[] = {"apfel", "birne", "gurke", "zucchini", "kirsche",
                 "pfirsich", "paprika"};
-        Map M = P.representativeMap();
+        Map<String, String> M = P.representativeMap();
         for (int i = 0; i < entries.length; ++i) {
             String key = entries[i];
             Assert.assertTrue(M.containsKey(key));
@@ -97,16 +97,16 @@ public class TestPartition extends TestCase {
     }
     
     public void testClasses() {
-        final List classes = Iterators.asList(P.classes());
+        final List<Set<String>> classes = Iterators.asList(P.classes());
         assertEquals(2, classes.size());
-        final Set class1;
-        final Set class2;
-        if (((Set) classes.get(0)).contains("apfel")) {
-            class1 = (Set) classes.get(0);
-            class2 = (Set) classes.get(1);
+        final Set<String> class1;
+        final Set<String> class2;
+        if ((classes.get(0)).contains("apfel")) {
+            class1 = classes.get(0);
+            class2 = classes.get(1);
         } else {
-            class1 = (Set) classes.get(1);
-            class2 = (Set) classes.get(0);
+            class1 = classes.get(1);
+            class2 = classes.get(0);
         }
         assertEquals(4, class1.size());
         assertTrue(class1.contains("apfel"));

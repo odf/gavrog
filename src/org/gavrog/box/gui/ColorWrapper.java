@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -23,11 +23,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author Olaf Delgado
- * @version $Id: ColorWrapper.java,v 1.2 2007/05/22 05:03:08 odf Exp $
  */
 public class ColorWrapper extends Color {
-	final private static Map<String, Color> name2color =
+    private static final long serialVersionUID = 7656257584537188197L;
+
+    final private static Map<String, Color> name2color =
 		new HashMap<String, Color>();
 	final private static Map<Color, String> color2name =
 		new HashMap<Color, String>();
@@ -59,7 +59,7 @@ public class ColorWrapper extends Color {
 
 	public static int parseColor(String spec) {
 		spec = spec.trim();
-		final Color c = (Color) name2color.get(spec);
+		final Color c = name2color.get(spec);
 		if (c != null) {
 			return c.getRGB();
 		} else {
@@ -81,7 +81,7 @@ public class ColorWrapper extends Color {
 	}
 	
 	public String toString() {
-		final String name = (String) color2name.get(this);
+		final String name = color2name.get(this);
 		if (name != null) {
 			return name;
 		} else {

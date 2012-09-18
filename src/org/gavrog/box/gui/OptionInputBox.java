@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ public class OptionInputBox extends BorderContainer {
 		}
 		final Method getter = prop.getReadMethod();
 		final Method setter = prop.getWriteMethod();
-		final Class optionType = setter.getParameterTypes()[0];
+		final Class<?> optionType = setter.getParameterTypes()[0];
 
 		this.input.setText(Config.asString(getter.invoke(target)));
 		this.input.addEventLink(ValueChangedEvent.class, new EventProcessor() {

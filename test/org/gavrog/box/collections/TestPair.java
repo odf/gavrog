@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -23,26 +23,23 @@ import junit.framework.TestCase;
 
 /**
  * Unit test for class javaDSym.util.Pair
- * @author Olaf Delgado
- * @version $Id: TestPair.java,v 1.2 2005/07/22 19:51:47 odf Exp $
  */
 public class TestPair extends TestCase {
-    private Pair p1;
-    private Pair equals_p1;
-    private Pair p2;
-    private Pair p3;
-    private Pair with_null;
+    private Pair<String, Integer> p1;
+    private Pair<String, Integer> equals_p1;
+    private Pair<String, Integer> p2;
+    private Pair<String, Integer> with_null;
 
     /*
      * @see TestCase#setUp()
      */
     protected void setUp() throws Exception {
         super.setUp();
-        p1 = new Pair("babel", new Integer(17));
-        equals_p1 = new Pair("babel", new Integer(17));
-        p2 = new Pair("ocean's", new Integer(11));
-        p3 = new Pair("babel", new Integer(9));
-        with_null = new Pair("babel", null);
+        p1 = new Pair<String, Integer>("babel", 17);
+        equals_p1 = new Pair<String, Integer>("babel", 17);
+        p2 = new Pair<String, Integer>("ocean's", 11);
+        new Pair<String, Integer>("babel", 9);
+        with_null = new Pair<String, Integer>("babel", null);
     }
 
     /*
@@ -52,7 +49,6 @@ public class TestPair extends TestCase {
         p1 = null;
         equals_p1 = null;
         p2 = null;
-        p3 = null;
         with_null = null;
         super.tearDown();
     }
@@ -72,7 +68,7 @@ public class TestPair extends TestCase {
      */
     public void testEqualsObject() {
         Assert.assertTrue(p1.equals(equals_p1));
-        Assert.assertTrue(with_null.equals(new Pair("babel", null)));
+        Assert.assertTrue(with_null.equals(new Pair<String, Integer>("babel", null)));
         Assert.assertFalse(p1.equals(p2));
         Assert.assertFalse(p1.equals(with_null));
     }

@@ -32,7 +32,7 @@ public class Partition<E> {
 	private ArrayList<Integer> dad = new ArrayList<Integer>();
 	private ArrayList<Integer> rnk = new ArrayList<Integer>();
 	
-    public Object clone() {
+    public Partition<E> clone() {
 		Partition<E> result = new Partition<E>();
 		result.index = new HashMap<E, Integer>(this.index);
 		result.value = new ArrayList<E>(this.value);
