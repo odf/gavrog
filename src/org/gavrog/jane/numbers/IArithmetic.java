@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -22,11 +22,8 @@ package org.gavrog.jane.numbers;
  * the least general common superclass of all arguments, if any, in which the
  * operation is defined. If the operation is not defined in any common
  * superclass, an exception is thrown.
- * 
- * @author delgado
- * @version $Id: IArithmetic.java,v 1.6 2005/11/03 22:29:28 odf Exp $
  */
-public interface IArithmetic extends Comparable {
+public interface IArithmetic extends Comparable<Object> {
     
     // --- Testing special properties.
     

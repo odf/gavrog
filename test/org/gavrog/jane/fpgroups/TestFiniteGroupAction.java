@@ -93,9 +93,9 @@ public class TestFiniteGroupAction extends TestCase {
     }
     
     public void testApply() {
-        final FreeWord w1 = new FreeWord(A, "a*b*a^-1*b^-1");
-        final FreeWord w2 = new FreeWord(A, "a*b*a*b");
-        final FreeWord w3 = new FreeWord(A, "a^3*b^2");
+        final FreeWord w1 = FreeWord.parsedWord(A, "a*b*a^-1*b^-1");
+        final FreeWord w2 = FreeWord.parsedWord(A, "a*b*a*b");
+        final FreeWord w3 = FreeWord.parsedWord(A, "a^3*b^2");
         for (int i = 0; i < 6; ++i) {
             final Integer I = new Integer(i);
             final Integer J = new Integer((i + 1) % 6);

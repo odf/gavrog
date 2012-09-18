@@ -71,28 +71,28 @@ public class TestCosetAction extends TestCase {
         List sgens;
         
         sgens = new LinkedList();
-        sgens.add(new FreeWord(A, "a"));
-        sgens.add(new FreeWord(A, "b^3"));
+        sgens.add(FreeWord.parsedWord(A, "a"));
+        sgens.add(FreeWord.parsedWord(A, "b^3"));
         ActionT4 = new CosetAction(T, sgens, 10);
         
         ActionG = new CosetAction(G);
         ActionH = new CosetAction(H);
 
         sgens = new LinkedList();
-        sgens.add(new FreeWord(A, "a*b"));
+        sgens.add(FreeWord.parsedWord(A, "a*b"));
         ActionG5 = new CosetAction(G, sgens);
         
-        a = new FreeWord(A, "a");
-        a_1 = new FreeWord(A, "a^-1");
-        b = new FreeWord(A, "b");
-        b_1 = new FreeWord(A, "b^-1");
+        a = FreeWord.parsedWord(A, "a");
+        a_1 = FreeWord.parsedWord(A, "a^-1");
+        b = FreeWord.parsedWord(A, "b");
+        b_1 = FreeWord.parsedWord(A, "b^-1");
 
         C_0 = ActionH.getTrivialCoset();
-        C_a = ActionH.getCoset(new FreeWord(A, "a"));
-        C_aa = ActionH.getCoset(new FreeWord(A, "a*a"));
-        C_b = ActionH.getCoset(new FreeWord(A, "b"));
-        C_ab = ActionH.getCoset(new FreeWord(A, "a*b"));
-        C_aab = ActionH.getCoset(new FreeWord(A, "a*a*b"));
+        C_a = ActionH.getCoset(FreeWord.parsedWord(A, "a"));
+        C_aa = ActionH.getCoset(FreeWord.parsedWord(A, "a*a"));
+        C_b = ActionH.getCoset(FreeWord.parsedWord(A, "b"));
+        C_ab = ActionH.getCoset(FreeWord.parsedWord(A, "a*b"));
+        C_aab = ActionH.getCoset(FreeWord.parsedWord(A, "a*a*b"));
     }
 
     /*
@@ -144,8 +144,8 @@ public class TestCosetAction extends TestCase {
         final CosetAction.Coset c2 = ActionG.getCoset("*");
         Assert.assertSame(ActionG, c1.getAction());
         Assert.assertSame(ActionG, c2.getAction());
-        Assert.assertEquals(new FreeWord(A, "*"), c1.getRepresentative());
-        Assert.assertEquals(new FreeWord(A, "*"), c2.getRepresentative());
+        Assert.assertEquals(FreeWord.parsedWord(A, "*"), c1.getRepresentative());
+        Assert.assertEquals(FreeWord.parsedWord(A, "*"), c2.getRepresentative());
         Assert.assertEquals("*", c1.toString());
         Assert.assertEquals("*", c2.toString());
         Assert.assertEquals(c1, c2);
@@ -157,8 +157,8 @@ public class TestCosetAction extends TestCase {
         final CosetAction.Coset ab2 = ActionG.getCoset("a^4*b^-1");
         Assert.assertSame(ActionG, ab1.getAction());
         Assert.assertSame(ActionG, ab2.getAction());
-        Assert.assertEquals(new FreeWord(A, "a*b"), ab1.getRepresentative());
-        Assert.assertEquals(new FreeWord(A, "a*b"), ab2.getRepresentative());
+        Assert.assertEquals(FreeWord.parsedWord(A, "a*b"), ab1.getRepresentative());
+        Assert.assertEquals(FreeWord.parsedWord(A, "a*b"), ab2.getRepresentative());
         Assert.assertEquals("a*b", ab1.toString());
         Assert.assertEquals("a*b", ab2.toString());
         Assert.assertEquals(ab1, ab2);
@@ -218,6 +218,6 @@ public class TestCosetAction extends TestCase {
         Assert.assertNull(ActionH.apply(a, b));
         Assert.assertNull(ActionH.apply(a, b_1));
         
-        Assert.assertEquals(C_ab, ActionH.apply(C_0, new FreeWord(A, "a^2*b^-1*a^-1")));
+        Assert.assertEquals(C_ab, ActionH.apply(C_0, FreeWord.parsedWord(A, "a^2*b^-1*a^-1")));
     }
 }

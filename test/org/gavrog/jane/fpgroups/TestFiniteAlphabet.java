@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ public class TestFiniteAlphabet extends TestCase {
 	 */
 	protected void setUp() throws Exception {
 		super.setUp();
-		A = new FiniteAlphabet("s", 5);
+		A = FiniteAlphabet.fromPrefix("s", 5);
 		sameAsA = new FiniteAlphabet(new String[] { "s1", "s2", "s3", "s4",
                 "s5" });
 		otherThanA = new FiniteAlphabet(new String[] { "s1", "s2", "s3", "s4",

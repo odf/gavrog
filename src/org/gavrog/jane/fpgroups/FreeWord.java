@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -24,15 +24,15 @@ package org.gavrog.jane.fpgroups;
  * @author Olaf Delgado
  * @version $Id: FreeWord.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
-public class FreeWord implements Comparable {
+public class FreeWord<E> implements Comparable<FreeWord<E>> {
 
-	final private Alphabet alphabet;
+	final private Alphabet<E> alphabet;
 	final private int[] data;
 	
 	/**
 	 * Makes an identical copy of a free word.
 	 */
-	public FreeWord(final FreeWord word) {
+	public FreeWord(final FreeWord<? extends E> word) {
 	    this(word.getAlphabet(), word.data, false);
 	}
 	
@@ -40,7 +40,7 @@ public class FreeWord implements Comparable {
 	 * Translates a free word into a new alphabet.
 	 * @param A the alphabet.
 	 */
-	public FreeWord(final Alphabet A, final FreeWord word) {
+	public FreeWord(final Alphabet<? extends E> A, final FreeWord<?> word) {
 	    this(A, word.data, true);
 	}
 	
@@ -48,7 +48,7 @@ public class FreeWord implements Comparable {
 	 * Constructs a FreeWord instance of length 0.
 	 * @param A the alphabet.
 	 */
-	public FreeWord(final Alphabet A) {
+	public FreeWord(final Alphabet<? extends E> A) {
 		this(A, null, false);
 	}
 	
@@ -57,7 +57,7 @@ public class FreeWord implements Comparable {
 	 * @param A the alphabet.
 	 * @param i the single letter.
 	 */
-	public FreeWord(final Alphabet A, final int i) {
+	public FreeWord(final Alphabet<? extends E> A, final int i) {
 		this(A, new int[] { i });
 	}
 
@@ -66,7 +66,7 @@ public class FreeWord implements Comparable {
 	 * @param A the underlying alphabet.
 	 * @param data an array of integers describing the word.
 	 */
-	public FreeWord(final Alphabet A, final int[] data) {
+	public FreeWord(final Alphabet<? extends E> A, final int[] data) {
 		this(A, data, true);
 	}
 	
@@ -79,9 +79,9 @@ public class FreeWord implements Comparable {
 	 * @param A the underlying alphabet.
 	 * @param word a string representation of the word.
 	 */
-	public FreeWord(final Alphabet A, final String word) {
-	    this(new Parser(A, word).getWord());
-	}
+    public static FreeWord<String> parsedWord(Alphabet<String> A, String word) {
+        return new FreeWord<String>(new Parser(A, word).getWord());
+    }
 	
 	/**
 	 * Constructs a FreeWord instance.
@@ -89,10 +89,12 @@ public class FreeWord implements Comparable {
 	 * @param data an array of integers describing the word.
 	 * @param check if true, reduce the word first and check for junk.
 	 */
-	protected FreeWord(final Alphabet alphabet, final int[] data,
-            final boolean check) {
+	protected <X extends E> FreeWord(final Alphabet<X> alphabet,
+	                                 final int[] data, final boolean check) {
 	    
-		this.alphabet = alphabet;
+	    @SuppressWarnings("unchecked")
+        final Alphabet<E> a = (Alphabet<E>) alphabet;
+		this.alphabet = a;
 		if (data == null) {
 			this.data = new int[0];
 		} else if (check) {
@@ -129,7 +131,8 @@ public class FreeWord implements Comparable {
 	 * @param letters an array of letters
 	 * @return the array of corresponding indices.
 	 */
-	protected static int[] translate (final Alphabet A, final Object[] letters) {
+	protected static <X> int[] translate (final Alphabet<X> A,
+	                                      final X[] letters) {
 		final int[] res = new int[letters.length];
 		for (int i = 0; i < letters.length; ++i) {
 			res[i] = A.nameToLetter(letters[i]);
@@ -137,17 +140,19 @@ public class FreeWord implements Comparable {
 		return res;
 	}
 
-	/**
+    /**
 	 * A tiny recursive descent parser for abstract free word expressions.
 	 */
 	protected static class Parser {
-	    final private Alphabet alphabet;
+	    final private Alphabet<String> alphabet;
 	    final private String wordAsString;
 	    final private int n;
 	    private int pos;
-	    final private FreeWord word;
+	    final private FreeWord<String> word;
 	    
-	    public Parser(final Alphabet alphabet, final String wordAsString) {
+	    public Parser(final Alphabet<String> alphabet,
+	            final String wordAsString)
+	    {
 	        if (alphabet == null) {
 	            throw new NullPointerException("null argument for aphabet");
 	        }
@@ -158,7 +163,7 @@ public class FreeWord implements Comparable {
 	        this.wordAsString = wordAsString;
 	        this.n = wordAsString.length();
 	        if (this.n == 0 || wordAsString.equals("*")) {
-	            this.word = new FreeWord(alphabet);
+	            this.word = new FreeWord<String>(alphabet);
 	            this.pos = this.n;
 	        } else {
 	            this.pos = 0;
@@ -170,7 +175,7 @@ public class FreeWord implements Comparable {
 	        }
 	    }
 	    
-	    public FreeWord getWord() {
+	    public FreeWord<String> getWord() {
 	        return this.word;
 	    }
 	    
@@ -179,7 +184,9 @@ public class FreeWord implements Comparable {
 	    }
 	    
 	    protected void skipBlanks() {
-	        while (!atEnd() && Character.isWhitespace(this.wordAsString.charAt(this.pos))) {
+	        while (!atEnd() &&
+	                Character.isWhitespace(this.wordAsString.charAt(this.pos)))
+	        {
 	            advance();
 	        }
 	    }
@@ -196,19 +203,19 @@ public class FreeWord implements Comparable {
 	        ++this.pos;
 	    }
 	    
-	    protected FreeWord parseWord() {
-            FreeWord tmp = parseFactor();
+	    protected FreeWord<String> parseWord() {
+            FreeWord<String> tmp = parseFactor();
             skipBlanks();
             while (nextChar() == '*') {
                 advance();
-                final FreeWord factor = parseFactor();
+                final FreeWord<String> factor = parseFactor();
                 tmp = tmp.times(factor);
             }
             return tmp;
         }
 	    
-	    protected FreeWord parseFactor() {
-	        final FreeWord arg;
+	    protected FreeWord<String> parseFactor() {
+	        final FreeWord<String> arg;
 	        skipBlanks();
 	        if (nextChar() == '(') {
 	            advance();
@@ -220,14 +227,14 @@ public class FreeWord implements Comparable {
 	            advance();
 	        } else if (nextChar() == '[') {
 	            advance();
-	            final FreeWord arg1 = parseWord();
+	            final FreeWord<String> arg1 = parseWord();
 	            skipBlanks();
 	            if (nextChar() != ',') {
 	                final String s = "missing comma in commutator expression";
 	                throw new IllegalArgumentException(s);
 	            }
 	            advance();
-	            final FreeWord arg2 = parseWord();
+	            final FreeWord<String> arg2 = parseWord();
 	            skipBlanks();
 	            if (nextChar() != ']') {
 	                throw new IllegalArgumentException("unmatched '['");
@@ -258,7 +265,7 @@ public class FreeWord implements Comparable {
 	        }
 	    }
 	    
-	    protected FreeWord parseLetter() {
+	    protected FreeWord<String> parseLetter() {
 	        skipBlanks();
 	        final StringBuffer letter = new StringBuffer(10);
 	        while (Character.isLetterOrDigit(nextChar()) || nextChar() == '_') {
@@ -271,7 +278,7 @@ public class FreeWord implements Comparable {
 	        } catch (Exception ex) {
 	            throw new IllegalArgumentException();
 	        }
-	        return new FreeWord(this.alphabet, i);
+	        return new FreeWord<String>(this.alphabet, i);
 	    }
 	}
 	
@@ -287,7 +294,7 @@ public class FreeWord implements Comparable {
 	 * Returns the value of alphabet.
 	 * @return the current value of alphabet.
 	 */
-	public Alphabet getAlphabet() {
+	public Alphabet<E> getAlphabet() {
 		return alphabet;
 	}
 	
@@ -336,7 +343,7 @@ public class FreeWord implements Comparable {
 	 * @param end the smallest index after the end of the subword.
 	 * @return the specified subword.
 	 */
-	public FreeWord subword(final int start, final int end) {
+	public FreeWord<E> subword(final int start, final int end) {
 	    if (start < 0 || start >= length()) {
 	        throw new IllegalArgumentException("start index out of bounds");
 	    }
@@ -344,14 +351,14 @@ public class FreeWord implements Comparable {
 	        throw new IllegalArgumentException("end index out of bounds");
 	    }
 	    if (end == start) {
-	        return new FreeWord(getAlphabet());
+	        return new FreeWord<E>(getAlphabet());
 	    } else {
 	        final int len = end - start;
 	        final int tmp[] = new int[len];
 	        for (int i = 0; i < len; ++i) {
 	            tmp[i] = this.data[i+start];
 	        }
-	        return new FreeWord(getAlphabet(), tmp, false);
+	        return new FreeWord<E>(getAlphabet(), tmp, false);
 	    }
 	}
 	
@@ -361,7 +368,7 @@ public class FreeWord implements Comparable {
 	 * @param other the other word.
 	 * @return the free product of the two words.
 	 */
-	public FreeWord times(final FreeWord other) {
+	public FreeWord<E> times(final FreeWord<? extends E> other) {
 	    
 		if (!this.getAlphabet().equals(other.getAlphabet())) {
 			throw new IllegalArgumentException("must have equal alphabets");
@@ -380,20 +387,20 @@ public class FreeWord implements Comparable {
 		for (int i = 0; i < n2 - k; ++i) {
 			out[n1 - k + i] = other.data[k + i];
 		}
-		return new FreeWord(this.getAlphabet(), out, false);
+		return new FreeWord<E>(this.getAlphabet(), out, false);
 	}
 	
 	/**
 	 * Returns the inverse of this word.
 	 * @return the inverse.
 	 */
-	public FreeWord inverse() {
+	public FreeWord<E> inverse() {
 	    final int n = length();
 	    final int out[] = new int[n];
 	    for (int i = 0; i < n; ++i) {
 	        out[i] = -data[n-1-i];
 	    }
-	    return new FreeWord(getAlphabet(), out, false);
+	    return new FreeWord<E>(getAlphabet(), out, false);
 	}
 	
     /**
@@ -401,7 +408,7 @@ public class FreeWord implements Comparable {
      * @param n the exponent.
      * @return this word raised to the ith power.
      */
-    public FreeWord raisedTo(final int n) {
+    public FreeWord<E> raisedTo(final int n) {
         final int out[];
         final int m = size();
         
@@ -430,7 +437,7 @@ public class FreeWord implements Comparable {
     		    }
     		}
         }
-        return new FreeWord(this.getAlphabet(), out, false);
+        return new FreeWord<E>(this.getAlphabet(), out, false);
     }
 
 	/*
@@ -459,25 +466,19 @@ public class FreeWord implements Comparable {
      * comparison is done lexicographically, first by sign (negative is
      * considered larger), then by index.
      */
-    public int compareTo(final Object other) {
-        if (other instanceof FreeWord) {
-            final FreeWord w = (FreeWord) other;
-            final int n = Math.min(this.length(), w.length());
-            for (int i = 0; i < n; ++i) {
-                int d = w.getSign(i) - this.getSign(i);
-                if (d != 0) {
-                    return d;
-                }
-                d = this.getLetter(i) - w.getLetter(i);
-                if (d != 0) {
-                    return d;
-                }
+    public int compareTo(final FreeWord<E> w) {
+        final int n = Math.min(this.length(), w.length());
+        for (int i = 0; i < n; ++i) {
+            int d = w.getSign(i) - this.getSign(i);
+            if (d != 0) {
+                return d;
             }
-            return this.length() - w.length();
-        } else {
-            final String complaint = "argument must be a FreeWord";
-            throw new UnsupportedOperationException(complaint);
+            d = this.getLetter(i) - w.getLetter(i);
+            if (d != 0) {
+                return d;
+            }
         }
+        return this.length() - w.length();
     }
 
     /**
@@ -485,9 +486,10 @@ public class FreeWord implements Comparable {
      */
     public boolean equals(final Object other) {
         if (other instanceof FreeWord) {
-            final FreeWord w = (FreeWord) other;
+            @SuppressWarnings("unchecked")
+            final FreeWord<E> w = (FreeWord<E>) other;
             return this.getAlphabet().equals(w.getAlphabet())
-                    && this.compareTo(other) == 0;
+                    && this.compareTo(w) == 0;
         } else {
             return false;
         }

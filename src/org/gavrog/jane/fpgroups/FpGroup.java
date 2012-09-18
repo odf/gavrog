@@ -80,7 +80,7 @@ public class FpGroup {
 
         final List results = new LinkedList();
         for (int i = 0; i < relators.length; ++i) {
-            results.add(new FreeWord(alphabet, relators[i]));
+            results.add(FreeWord.parsedWord(alphabet, relators[i]));
         }
         return results;
     }
@@ -155,7 +155,7 @@ public class FpGroup {
         final FiniteAlphabet A = getAlphabet();
         final List res = new ArrayList();
         for (final Iterator iter = A.getNameList().iterator(); iter.hasNext();) {
-            res.add(new FreeWord(A, (String) iter.next()));
+            res.add(FreeWord.parsedWord(A, (String) iter.next()));
         }
         return Collections.unmodifiableList(res);
     }

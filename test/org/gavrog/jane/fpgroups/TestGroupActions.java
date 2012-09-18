@@ -103,10 +103,8 @@ public class TestGroupActions extends TestCase {
                 .iterator(), domain.iterator()), product.domain()));
         Assert.assertTrue(product.isDefinedOn(pair(1,4)));
         Assert.assertFalse(product.isDefinedOn(pair(1,5)));
-        Assert.assertEquals(pair(3, 4), product.apply(pair(1, 1), new FreeWord(
-                A, "a^2")));
-        Assert.assertEquals(pair(0, 0), product.apply(pair(0, 0), new FreeWord(
-                A, "a^5")));
+        Assert.assertEquals(pair(3, 4), product.apply(pair(1, 1), FreeWord.parsedWord(A, "a^2")));
+        Assert.assertEquals(pair(0, 0), product.apply(pair(0, 0), FreeWord.parsedWord(A, "a^5")));
     }
 
     public void testFlat() {
@@ -118,9 +116,9 @@ public class TestGroupActions extends TestCase {
         Assert.assertTrue(flat.isDefinedOn(new Integer(15)));
         Assert.assertFalse(flat.isDefinedOn(new Integer(25)));
         Assert.assertEquals(new Integer(0), flat.apply(new Integer(0),
-                new FreeWord(A, "a^5")));
+                FreeWord.parsedWord(A, "a^5")));
         Assert.assertEquals(new Integer(22), flat.apply(new Integer(4),
-                new FreeWord(A, "a^2")));
+                FreeWord.parsedWord(A, "a^2")));
     }
 
     private List perm(final int a, final int b, final int c, final int d,
@@ -146,9 +144,9 @@ public class TestGroupActions extends TestCase {
         Assert.assertTrue(cover.isDefinedOn(perm(0,1,2,3,4)));
         Assert.assertFalse(cover.isDefinedOn(perm(1,2,3,4,5)));
         Assert.assertEquals(perm(0, 4, 3, 2, 1), cover.apply(
-                perm(0, 1, 2, 3, 4), new FreeWord(A, "a^2")));
+                perm(0, 1, 2, 3, 4), FreeWord.parsedWord(A, "a^2")));
         Assert.assertEquals(perm(0, 2, 4, 1, 3), cover.apply(
-                perm(0, 1, 2, 3, 4), new FreeWord(A, "a^5")));
+                perm(0, 1, 2, 3, 4), FreeWord.parsedWord(A, "a^5")));
     }
     
     public void testOrbit() {

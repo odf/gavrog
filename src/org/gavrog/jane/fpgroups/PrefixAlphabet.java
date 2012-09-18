@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -19,10 +19,8 @@ package org.gavrog.jane.fpgroups;
 /**
  * An infinite alphabet in which letters names consist of a common prefix and a
  * number.
- * @author Olaf Delgado
- * @version $Id: PrefixAlphabet.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
-public class PrefixAlphabet implements Alphabet {
+public class PrefixAlphabet implements Alphabet<String> {
     
     final String prefix;
     
@@ -34,7 +32,7 @@ public class PrefixAlphabet implements Alphabet {
         this.prefix = prefix;
     }
 
-    public Object letterToName(final int i) {
+    public String letterToName(final int i) {
         if (i > 0) {
             return prefix + i;
         } else {
@@ -42,7 +40,7 @@ public class PrefixAlphabet implements Alphabet {
         }
     }
 
-    public int nameToLetter(final Object name) {
+    public int nameToLetter(final String name) {
         if (name instanceof String) {
             final String s = (String) name;
             if (s.startsWith(this.prefix)) {

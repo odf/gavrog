@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -82,29 +82,29 @@ public class TestFundamentalGroup extends TestCase {
     }
 
     public void testGetAlphabet() {
-        Assert.assertEquals(new FiniteAlphabet("g_", 4), al1);
-        Assert.assertEquals(new FiniteAlphabet("g_", 3), al2);
+        Assert.assertEquals(FiniteAlphabet.fromPrefix("g_", 4), al1);
+        Assert.assertEquals(FiniteAlphabet.fromPrefix("g_", 3), al2);
     }
     
     public void testGetRelators() {
         final List rels1 = fg1.getPresentation().getRelators();
         Assert.assertEquals(10, rels1.size());
-        Assert.assertTrue(rels1.contains(new FreeWord(al1, "g_1^2")));
-        Assert.assertTrue(rels1.contains(new FreeWord(al1, "g_2^2")));
-        Assert.assertTrue(rels1.contains(new FreeWord(al1, "g_3^2")));
-        Assert.assertTrue(rels1.contains(new FreeWord(al1, "g_4^2")));
-        Assert.assertTrue(rels1.contains(new FreeWord(al1, "(g_1*g_2)^4")));
-        Assert.assertTrue(rels1.contains(new FreeWord(al1, "(g_1*g_3)^2")));
-        Assert.assertTrue(rels1.contains(new FreeWord(al1, "(g_1*g_4)^2")));
-        Assert.assertTrue(rels1.contains(new FreeWord(al1, "(g_2*g_3)^3")));
-        Assert.assertTrue(rels1.contains(new FreeWord(al1, "(g_2*g_4)^2")));
-        Assert.assertTrue(rels1.contains(new FreeWord(al1, "(g_3*g_4)^4")));
+        Assert.assertTrue(rels1.contains(FreeWord.parsedWord(al1, "g_1^2")));
+        Assert.assertTrue(rels1.contains(FreeWord.parsedWord(al1, "g_2^2")));
+        Assert.assertTrue(rels1.contains(FreeWord.parsedWord(al1, "g_3^2")));
+        Assert.assertTrue(rels1.contains(FreeWord.parsedWord(al1, "g_4^2")));
+        Assert.assertTrue(rels1.contains(FreeWord.parsedWord(al1, "(g_1*g_2)^4")));
+        Assert.assertTrue(rels1.contains(FreeWord.parsedWord(al1, "(g_1*g_3)^2")));
+        Assert.assertTrue(rels1.contains(FreeWord.parsedWord(al1, "(g_1*g_4)^2")));
+        Assert.assertTrue(rels1.contains(FreeWord.parsedWord(al1, "(g_2*g_3)^3")));
+        Assert.assertTrue(rels1.contains(FreeWord.parsedWord(al1, "(g_2*g_4)^2")));
+        Assert.assertTrue(rels1.contains(FreeWord.parsedWord(al1, "(g_3*g_4)^4")));
         
         final List rels2 = fg2.getPresentation().getRelators();
         Assert.assertTrue(rels2.size() == 3);
-        Assert.assertTrue(rels2.contains(new FreeWord(al2, "g_1*g_2*g_1^-1*g_2^-1")));
-        Assert.assertTrue(rels2.contains(new FreeWord(al2, "g_1*g_3*g_1^-1*g_3^-1")));
-        Assert.assertTrue(rels2.contains(new FreeWord(al2, "g_2*g_3*g_2^-1*g_3^-1")));
+        Assert.assertTrue(rels2.contains(FreeWord.parsedWord(al2, "g_1*g_2*g_1^-1*g_2^-1")));
+        Assert.assertTrue(rels2.contains(FreeWord.parsedWord(al2, "g_1*g_3*g_1^-1*g_3^-1")));
+        Assert.assertTrue(rels2.contains(FreeWord.parsedWord(al2, "g_2*g_3*g_2^-1*g_3^-1")));
     }
     
     public void testGetSymbol() {
@@ -121,17 +121,17 @@ public class TestFundamentalGroup extends TestCase {
         final DSPair e3 = new DSPair(3, D1);
         
         final Map e2w1 = fg1.getEdgeToWord();
-        Assert.assertEquals(new FreeWord(al1, "g_1"), e2w1.get(e0));
-        Assert.assertEquals(new FreeWord(al1, "g_2"), e2w1.get(e1));
-        Assert.assertEquals(new FreeWord(al1, "g_3"), e2w1.get(e2));
-        Assert.assertEquals(new FreeWord(al1, "g_4"), e2w1.get(e3));
+        Assert.assertEquals(FreeWord.parsedWord(al1, "g_1"), e2w1.get(e0));
+        Assert.assertEquals(FreeWord.parsedWord(al1, "g_2"), e2w1.get(e1));
+        Assert.assertEquals(FreeWord.parsedWord(al1, "g_3"), e2w1.get(e2));
+        Assert.assertEquals(FreeWord.parsedWord(al1, "g_4"), e2w1.get(e3));
         
         final Map e2w2 = fg2.getEdgeToWord();
-        final FreeWord al2g1 = new FreeWord(al2, "g_1");
-        Assert.assertEquals(new FreeWord(al2, ""), e2w2.get(e0));
+        final FreeWord al2g1 = FreeWord.parsedWord(al2, "g_1");
+        Assert.assertEquals(FreeWord.parsedWord(al2, ""), e2w2.get(e0));
         Assert.assertEquals(al2g1, e2w2.get(e3));
         Assert.assertEquals(al2g1.inverse(), e2w2.get(e3.reverse(ds2)));
-        Assert.assertEquals(new FreeWord(al2, "g_2"), e2w2.get(new DSPair(3, D9)));
+        Assert.assertEquals(FreeWord.parsedWord(al2, "g_2"), e2w2.get(new DSPair(3, D9)));
     }
     
     public void testGetGeneratorToEdge() {
@@ -142,16 +142,16 @@ public class TestFundamentalGroup extends TestCase {
         final DSPair e3 = new DSPair(3, D1);
         
         final Map g2e1 = fg1.getGeneratorToEdge();
-        Assert.assertEquals(e0, g2e1.get(new FreeWord(al1, "g_1")));
-        Assert.assertEquals(e1, g2e1.get(new FreeWord(al1, "g_2")));
-        Assert.assertEquals(e2, g2e1.get(new FreeWord(al1, "g_3")));
-        Assert.assertEquals(e3, g2e1.get(new FreeWord(al1, "g_4")));
+        Assert.assertEquals(e0, g2e1.get(FreeWord.parsedWord(al1, "g_1")));
+        Assert.assertEquals(e1, g2e1.get(FreeWord.parsedWord(al1, "g_2")));
+        Assert.assertEquals(e2, g2e1.get(FreeWord.parsedWord(al1, "g_3")));
+        Assert.assertEquals(e3, g2e1.get(FreeWord.parsedWord(al1, "g_4")));
         
         final Map e2w2 = fg2.getEdgeToWord();
         final Map g2e2 = fg2.getGeneratorToEdge();
-        final FreeWord g1 = new FreeWord(al2, "g_1");
-        final FreeWord g2 = new FreeWord(al2, "g_2");
-        final FreeWord g3 = new FreeWord(al2, "g_3");
+        final FreeWord g1 = FreeWord.parsedWord(al2, "g_1");
+        final FreeWord g2 = FreeWord.parsedWord(al2, "g_2");
+        final FreeWord g3 = FreeWord.parsedWord(al2, "g_3");
         Assert.assertEquals(g1, e2w2.get(g2e2.get(g1)));
         Assert.assertEquals(g2, e2w2.get(g2e2.get(g2)));
         Assert.assertEquals(g3, e2w2.get(g2e2.get(g3)));
@@ -164,17 +164,17 @@ public class TestFundamentalGroup extends TestCase {
         
         final Set ax1 = fg1.getAxes();
         Assert.assertEquals(6, ax1.size());
-        Assert.assertTrue(ax1.contains(new Pair(new FreeWord(al1, "g_1*g_2"),
+        Assert.assertTrue(ax1.contains(new Pair(FreeWord.parsedWord(al1, "g_1*g_2"),
                 four)));
-        Assert.assertTrue(ax1.contains(new Pair(new FreeWord(al1, "g_1*g_3"),
+        Assert.assertTrue(ax1.contains(new Pair(FreeWord.parsedWord(al1, "g_1*g_3"),
                 two)));
-        Assert.assertTrue(ax1.contains(new Pair(new FreeWord(al1, "g_1*g_4"),
+        Assert.assertTrue(ax1.contains(new Pair(FreeWord.parsedWord(al1, "g_1*g_4"),
                 two)));
-        Assert.assertTrue(ax1.contains(new Pair(new FreeWord(al1, "g_2*g_3"),
+        Assert.assertTrue(ax1.contains(new Pair(FreeWord.parsedWord(al1, "g_2*g_3"),
                 three)));
-        Assert.assertTrue(ax1.contains(new Pair(new FreeWord(al1, "g_2*g_4"),
+        Assert.assertTrue(ax1.contains(new Pair(FreeWord.parsedWord(al1, "g_2*g_4"),
                 two)));
-        Assert.assertTrue(ax1.contains(new Pair(new FreeWord(al1, "g_3*g_4"),
+        Assert.assertTrue(ax1.contains(new Pair(FreeWord.parsedWord(al1, "g_3*g_4"),
                 four)));
         
         Assert.assertEquals(0, fg2.getAxes().size());

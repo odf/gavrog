@@ -39,7 +39,7 @@ public class TestFreeWord extends TestCase {
 		super.setUp();
 		A = new FiniteAlphabet(new String[] { "a", "b", "c" });
 		w1 = new FreeWord(A, new int[] { 2, -3, 2, -2, -1, -2 });
-		w2 = new FreeWord(A, "b*a*c*b*a");
+		w2 = FreeWord.parsedWord(A, "b*a*c*b*a");
 	}
 
 	/*
@@ -54,20 +54,20 @@ public class TestFreeWord extends TestCase {
 	public void testSmallWords() {
 		Assert.assertEquals("*", new FreeWord(A).toString());
 		Assert.assertEquals("a", new FreeWord(A, 1).toString());
-		Assert.assertEquals("b", new FreeWord(A, "b").toString());
+		Assert.assertEquals("b", FreeWord.parsedWord(A, "b").toString());
 	}
 	
 	public void testParser() {
 	    Assert.assertEquals("a*b*c*b*c*b*b*c*b*c*b",
-	            new FreeWord(A, "a * (c*( c ^ -1*b^-1 )^3 ) ^-2").toString());
-	    Assert.assertEquals(new FreeWord(A, "[a,c*b]"),
-	            new FreeWord(A, "a*c * b*a^-1*b^-1* c ^ -1"));
+	            FreeWord.parsedWord(A, "a * (c*( c ^ -1*b^-1 )^3 ) ^-2").toString());
+	    Assert.assertEquals(FreeWord.parsedWord(A, "[a,c*b]"),
+	            FreeWord.parsedWord(A, "a*c * b*a^-1*b^-1* c ^ -1"));
 	}
 	
 	public void testCompare() {
 	    Assert.assertTrue(w1.compareTo(w2) > 0);
 	    Assert.assertTrue(w1.compareTo(w1) == 0);
-	    Assert.assertTrue(w1.compareTo(new FreeWord(A, "b*(b*a*c)^-1*a")) < 0);
+	    Assert.assertTrue(w1.compareTo(FreeWord.parsedWord(A, "b*(b*a*c)^-1*a")) < 0);
 	}
 	
 	public void testSize() {

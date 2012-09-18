@@ -122,7 +122,7 @@ public class Stabilizer {
 		this.edgeLabelling = new HashMap();
 
 		final Alphabet A = new PrefixAlphabet("s_");
-		final FreeWord id = new FreeWord(A, "*");
+		final FreeWord id = FreeWord.parsedWord(A, "*");
 		final Map point2word = new HashMap();
 		final LinkedList queue = new LinkedList();
 		queue.addLast(this.basepoint);
@@ -176,7 +176,7 @@ public class Stabilizer {
 
 		// --- convert edge labels to a finite alphabet
 		final int nrGens = this.generators.size();
-		final FiniteAlphabet B = new FiniteAlphabet("s_", nrGens);
+		final FiniteAlphabet B = FiniteAlphabet.fromPrefix("s_", nrGens);
 		final Set edges = this.edgeLabelling.keySet();
 		for (Iterator iter = edges.iterator(); iter.hasNext();) {
 			final Object edge = iter.next();

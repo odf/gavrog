@@ -1,5 +1,5 @@
 /*
-Copyright 2005 Olaf Delgado-Friedrichs
+Copyright 2012 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,9 +21,6 @@ import java.util.Arrays;
 /**
  * Implements the downhill simplex (a.k.a. amoeba) method for multidimensional
  * function minimization as described in Numerical Recipes.
- * 
- * @author Olaf Delgado
- * @version $Id: Amoeba.java,v 1.2 2006/03/02 00:17:17 odf Exp $
  */
 public class Amoeba {
     final static double TINY = 1e-10;
@@ -34,7 +31,7 @@ public class Amoeba {
         public int dim();
     }
     
-    private class Point implements Comparable {
+    private class Point implements Comparable<Point> {
         public final double arg[];
         public final double value;
         
@@ -49,8 +46,8 @@ public class Amoeba {
             ++Amoeba.this.steps;
         }
 
-        public int compareTo(final Object other) {
-            return Double.compare(this.value, ((Point) other).value);
+        public int compareTo(final Point other) {
+            return Double.compare(this.value, other.value);
         }
     }
     

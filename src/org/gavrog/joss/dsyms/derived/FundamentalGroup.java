@@ -112,7 +112,7 @@ public class FundamentalGroup {
         }
 
         // --- complete edgeToWord and convert to a finite alphabet
-        final FiniteAlphabet B = new FiniteAlphabet("g_", nrGens);
+        final FiniteAlphabet B = FiniteAlphabet.fromPrefix("g_", nrGens);
         final Set edges = new HashSet(edgeToWord.keySet());
         final Iterator edgeIter = edges.iterator();
         while (edgeIter.hasNext()) {

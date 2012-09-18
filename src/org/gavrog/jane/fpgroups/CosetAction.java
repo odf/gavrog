@@ -580,7 +580,7 @@ public class CosetAction implements GroupAction {
      * @return the coset containing the word.
      */
     public Coset getCoset(final String word) {
-        return getCoset(new FreeWord(getGroup().getAlphabet(), word));
+        return getCoset(FreeWord.parsedWord(getGroup().getAlphabet(), word));
     }
     
     // --- implementation of the GroupAction interface starts here.

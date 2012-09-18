@@ -16,7 +16,7 @@
 
 package org.gavrog.jane.numbers;
 
-public abstract class Real extends Complex implements Comparable {
+public abstract class Real extends Complex implements Comparable<Object> {
     public abstract int sign();
 
     public abstract double doubleValue();

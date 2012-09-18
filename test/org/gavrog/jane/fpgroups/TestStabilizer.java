@@ -49,8 +49,8 @@ public class TestStabilizer extends TestCase {
         A = new FiniteAlphabet(new String[] { "a", "b" });
         G = new FpGroup(A, new String[] { "a*b*a^-1*b^-1" });
         final List sgens = new LinkedList();
-        sgens.add(new FreeWord(A, "a^2"));
-        sgens.add(new FreeWord(A, "b^3"));
+        sgens.add(FreeWord.parsedWord(A, "a^2"));
+        sgens.add(FreeWord.parsedWord(A, "b^3"));
         TG = new CosetAction(G, sgens);
         S = new Stabilizer(TG, TG.getTrivialCoset());
 	}

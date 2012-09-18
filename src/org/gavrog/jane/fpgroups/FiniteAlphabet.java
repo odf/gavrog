@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,23 +25,21 @@ import java.util.Map;
 
 /**
  * A finite alphabet to be used in abstract words and groups.
- * @author Olaf Delgado
- * @version $Id: FiniteAlphabet.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
-public class FiniteAlphabet implements Alphabet {
-	private final List nameList;
-	private final Map nameSet;
+public class FiniteAlphabet<E> implements Alphabet<E> {
+	private final List<E> nameList;
+	private final Map<E, Integer> nameSet;
 	
 	/**
 	 * Constructs an Alphabet instance from an list of letter names, which may
 	 * be arbitrary objects.
 	 * @param names all the letter names for this alphabet.
 	 */
-	public FiniteAlphabet(final List names) {
+	public FiniteAlphabet(final List<E> names) {
 	    final int n = names.size();
-	    final Map tmp = new HashMap();
+	    final Map<E, Integer> tmp = new HashMap<E, Integer>();
 	    for (int i = 0; i < n; ++i) {
-	        tmp.put(names.get(i), new Integer(i+1));
+	        tmp.put(names.get(i), i+1);
 	    }
 		this.nameList = Collections.unmodifiableList(names);
 		this.nameSet = Collections.unmodifiableMap(tmp);
@@ -53,8 +51,13 @@ public class FiniteAlphabet implements Alphabet {
 	 * @param prefix the prefix for all letter names.
 	 * @param n the number of letters.
 	 */
-	public FiniteAlphabet(final String prefix, final int n) {
-	    this(lettersFromPrefix(prefix, n));
+	public static FiniteAlphabet<String>
+	fromPrefix(final String prefix, final int n) {
+        final List<String> tmp = new ArrayList<String>();
+        for (int i = 1; i <= n; ++i) {
+            tmp.add(prefix + i);
+        }
+	    return new FiniteAlphabet<String>(tmp);
 	}
 	
 	/**
@@ -62,29 +65,15 @@ public class FiniteAlphabet implements Alphabet {
 	 * be arbitrary objects.
 	 * @param names all the letter names for this alphabet.
 	 */
-	public FiniteAlphabet(final Object[] names) {
+	public FiniteAlphabet(final E[] names) {
 	    this(Arrays.asList(names));
-	}
-
-	/**
-	 * Constructs letter names with a common prefix and indexed from 1.
-	 * @param prefix the prefix for all letter names.
-	 * @param n the number of letters.
-	 * @return the list of letter names.
-	 */
-	protected static List lettersFromPrefix(final String prefix, final int n) {
-	    final List tmp = new ArrayList();
-		for (int i = 1; i <= n; ++i) {
-			tmp.add(prefix + i);
-		}
-		return tmp;
 	}
 
     /**
      * Returns the list of all letter-names in order.
      * @return the name list..
      */
-    public List getNameList() {
+    public List<E> getNameList() {
         return this.nameList;
     }
     
@@ -100,7 +89,7 @@ public class FiniteAlphabet implements Alphabet {
 	 * @param i a number between 1 and the number of letters.
 	 * @return the name of the ith letter.
 	 */
-	public Object letterToName(final int i) {
+	public E letterToName(final int i) {
 		return nameList.get(i-1);
 	}
 	
@@ -109,8 +98,8 @@ public class FiniteAlphabet implements Alphabet {
 	 * @param name the name.
 	 * @return the index of this name.
 	 */
-	public int nameToLetter(final Object name) {
-		return ((Integer) nameSet.get(name)).intValue();
+	public int nameToLetter(final E name) {
+		return nameSet.get(name);
 	}
 	
 	/*
@@ -133,8 +122,9 @@ public class FiniteAlphabet implements Alphabet {
 	
 	public boolean equals(Object other) {
 	    if (other instanceof FiniteAlphabet) {
-	        final List ourNames = this.getNameList();
-	        final List otherNames = ((FiniteAlphabet) other).getNameList();
+	        final List<E> ourNames = this.getNameList();
+	        final List<?> otherNames =
+	                ((FiniteAlphabet<?>) other).getNameList();
 	        return ourNames.equals(otherNames);
 	    } else {
 	        return false;

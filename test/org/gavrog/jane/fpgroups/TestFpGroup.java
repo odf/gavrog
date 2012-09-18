@@ -66,23 +66,23 @@ public class TestFpGroup extends TestCase {
     }
     
     public void testGetIdentity() {
-        Assert.assertEquals(new FreeWord(A, "*"), G.getIdentity());
+        Assert.assertEquals(FreeWord.parsedWord(A, "*"), G.getIdentity());
     }
     
     public void testGetGenerators() {
         final List gens = G.getGenerators();
         Assert.assertTrue(gens.size() == 3);
-        Assert.assertTrue(gens.contains(new FreeWord(A, "a")));
-        Assert.assertTrue(gens.contains(new FreeWord(A, "b")));
-        Assert.assertTrue(gens.contains(new FreeWord(A, "c")));
+        Assert.assertTrue(gens.contains(FreeWord.parsedWord(A, "a")));
+        Assert.assertTrue(gens.contains(FreeWord.parsedWord(A, "b")));
+        Assert.assertTrue(gens.contains(FreeWord.parsedWord(A, "c")));
     }
     
     public void testGetRelators() {
         final List gens = G.getRelators();
         Assert.assertTrue(gens.size() == 3);
-        Assert.assertTrue(gens.contains(new FreeWord(A, "a*b*a^-1*b^-1")));
-        Assert.assertTrue(gens.contains(new FreeWord(A, "a*c*a^-1*c^-1")));
-        Assert.assertTrue(gens.contains(new FreeWord(A, "a*c*a^-1*c^-1")));
+        Assert.assertTrue(gens.contains(FreeWord.parsedWord(A, "a*b*a^-1*b^-1")));
+        Assert.assertTrue(gens.contains(FreeWord.parsedWord(A, "a*c*a^-1*c^-1")));
+        Assert.assertTrue(gens.contains(FreeWord.parsedWord(A, "a*c*a^-1*c^-1")));
     }
     
     public void testTrivialGroup() {

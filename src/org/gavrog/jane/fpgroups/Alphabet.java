@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,21 +18,19 @@ package org.gavrog.jane.fpgroups;
 
 /**
  * Defines a translation between abstract letters and their names.
- * @author Olaf Delgado
- * @version $Id: Alphabet.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
-public interface Alphabet {
+public interface Alphabet<E> {
     /**
      * Retrieves a specific letter name.
      * @param i the numeric letter.
      * @return the name of the ith letter or null if no name was defined.
      */
-    public abstract Object letterToName(int i);
+    public abstract E letterToName(int i);
 
     /**
      * Retrieves the index of a letter name.
      * @param name the name.
      * @return the index or abstract letter for this name.
      */
-    public abstract int nameToLetter(Object name);
+    public abstract int nameToLetter(E name);
 }
