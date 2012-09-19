@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -64,8 +63,8 @@ public class FpGroup<E> {
      * @param alphabet the generators (all letters in the given alphabet).
      * @param relators String specifications for the group relators.
      */
-    public FpGroup(
-            final FiniteAlphabet<? extends E> alphabet,
+    public <X extends E> FpGroup(
+            final FiniteAlphabet<X> alphabet,
             final String[] relators) {
         this(alphabet, asWords(alphabet, relators));
     }
@@ -75,10 +74,10 @@ public class FpGroup<E> {
      * @param alphabet the generators (all letters in the given alphabet).
      * @param relators the relators for the group.
      */
-    private static List asWords(final FiniteAlphabet alphabet,
+    private static <X> List<FreeWord<X>> asWords(
+            final FiniteAlphabet<X> alphabet,
             final String[] relators) {
-
-        final List results = new LinkedList();
+        final List<FreeWord<X>> results = new LinkedList<FreeWord<X>>();
         for (int i = 0; i < relators.length; ++i) {
             results.add(FreeWord.parsedWord(alphabet, relators[i]));
         }
@@ -157,11 +156,11 @@ public class FpGroup<E> {
      * Returns a list of group generators.
      * @return the generators of this group.
      */
-    public List getGenerators() {
-        final FiniteAlphabet A = getAlphabet();
-        final List res = new ArrayList();
-        for (final Iterator iter = A.getNameList().iterator(); iter.hasNext();) {
-            res.add(FreeWord.parsedWord(A, (String) iter.next()));
+    public List<FreeWord<E>> getGenerators() {
+        final FiniteAlphabet<E> A = getAlphabet();
+        final List<FreeWord<E>> res = new ArrayList<FreeWord<E>>();
+        for (final E name: A.getNameList()) {
+            res.add(new FreeWord<E>(A, A.nameToLetter(name)));
         }
         return Collections.unmodifiableList(res);
     }

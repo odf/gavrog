@@ -79,8 +79,8 @@ public class FreeWord<E> implements Comparable<FreeWord<E>> {
 	 * @param A the underlying alphabet.
 	 * @param word a string representation of the word.
 	 */
-    public static FreeWord<String> parsedWord(Alphabet<String> A, String word) {
-        return new FreeWord<String>(new Parser(A, word).getWord());
+    public static <X> FreeWord<X> parsedWord(Alphabet<X> A, String word) {
+        return new Parser<X>(A, word).getWord();
     }
 	
 	/**
@@ -143,14 +143,14 @@ public class FreeWord<E> implements Comparable<FreeWord<E>> {
     /**
 	 * A tiny recursive descent parser for abstract free word expressions.
 	 */
-	protected static class Parser {
-	    final private Alphabet<String> alphabet;
+	protected static class Parser<X> {
+	    final private Alphabet<X> alphabet;
 	    final private String wordAsString;
 	    final private int n;
 	    private int pos;
-	    final private FreeWord<String> word;
+	    final private FreeWord<X> word;
 	    
-	    public Parser(final Alphabet<String> alphabet,
+	    public Parser(final Alphabet<X> alphabet,
 	            final String wordAsString)
 	    {
 	        if (alphabet == null) {
@@ -163,7 +163,7 @@ public class FreeWord<E> implements Comparable<FreeWord<E>> {
 	        this.wordAsString = wordAsString;
 	        this.n = wordAsString.length();
 	        if (this.n == 0 || wordAsString.equals("*")) {
-	            this.word = new FreeWord<String>(alphabet);
+	            this.word = new FreeWord<X>(alphabet);
 	            this.pos = this.n;
 	        } else {
 	            this.pos = 0;
@@ -175,7 +175,7 @@ public class FreeWord<E> implements Comparable<FreeWord<E>> {
 	        }
 	    }
 	    
-	    public FreeWord<String> getWord() {
+	    public FreeWord<X> getWord() {
 	        return this.word;
 	    }
 	    
@@ -203,19 +203,19 @@ public class FreeWord<E> implements Comparable<FreeWord<E>> {
 	        ++this.pos;
 	    }
 	    
-	    protected FreeWord<String> parseWord() {
-            FreeWord<String> tmp = parseFactor();
+	    protected FreeWord<X> parseWord() {
+            FreeWord<X> tmp = parseFactor();
             skipBlanks();
             while (nextChar() == '*') {
                 advance();
-                final FreeWord<String> factor = parseFactor();
+                final FreeWord<X> factor = parseFactor();
                 tmp = tmp.times(factor);
             }
             return tmp;
         }
 	    
-	    protected FreeWord<String> parseFactor() {
-	        final FreeWord<String> arg;
+	    protected FreeWord<X> parseFactor() {
+	        final FreeWord<X> arg;
 	        skipBlanks();
 	        if (nextChar() == '(') {
 	            advance();
@@ -227,14 +227,14 @@ public class FreeWord<E> implements Comparable<FreeWord<E>> {
 	            advance();
 	        } else if (nextChar() == '[') {
 	            advance();
-	            final FreeWord<String> arg1 = parseWord();
+	            final FreeWord<X> arg1 = parseWord();
 	            skipBlanks();
 	            if (nextChar() != ',') {
 	                final String s = "missing comma in commutator expression";
 	                throw new IllegalArgumentException(s);
 	            }
 	            advance();
-	            final FreeWord<String> arg2 = parseWord();
+	            final FreeWord<X> arg2 = parseWord();
 	            skipBlanks();
 	            if (nextChar() != ']') {
 	                throw new IllegalArgumentException("unmatched '['");
@@ -265,7 +265,7 @@ public class FreeWord<E> implements Comparable<FreeWord<E>> {
 	        }
 	    }
 	    
-	    protected FreeWord<String> parseLetter() {
+	    protected FreeWord<X> parseLetter() {
 	        skipBlanks();
 	        final StringBuffer letter = new StringBuffer(10);
 	        while (Character.isLetterOrDigit(nextChar()) || nextChar() == '_') {
@@ -274,11 +274,13 @@ public class FreeWord<E> implements Comparable<FreeWord<E>> {
 	        }
 	        final int i;
 	        try {
-	            i = this.alphabet.nameToLetter(letter.toString());
+	            @SuppressWarnings("unchecked")
+                final X name = (X) letter.toString();
+	            i = this.alphabet.nameToLetter(name);
 	        } catch (Exception ex) {
 	            throw new IllegalArgumentException();
 	        }
-	        return new FreeWord<String>(this.alphabet, i);
+	        return new FreeWord<X>(this.alphabet, i);
 	    }
 	}
 	
