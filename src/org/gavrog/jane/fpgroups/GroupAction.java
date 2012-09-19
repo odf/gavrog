@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,21 +20,19 @@ import java.util.Iterator;
 
 /**
  * Interface for group action (from the right).
- * @author Olaf Delgado
- * @version $Id: GroupAction.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
-public interface GroupAction {
+public interface GroupAction<E, D> {
     /**
      * Retrieves the group for which this action is defined.
      * @return the acting group.
      */
-    public FpGroup getGroup();
+    public FpGroup<E> getGroup();
     
     /**
      * Returns an iterator over the set on which the group acts (its domain).
      * @return an iterator.
      */
-    public Iterator domain();
+    public Iterator<D> domain();
     
     /**
      * Returns the size of the domain, if known and finite, or else throws a
@@ -56,12 +54,12 @@ public interface GroupAction {
      * @return the result of applying <code>w</code> to <code>x</code> or
      *             <code>null</code>, if undefined.
      */
-    public Object apply(Object x, FreeWord w);
+    public D apply(D x, FreeWord<E> w);
     
     /**
      * Checks if a given object is in the domain of this group action.
      * @param x the object to test.
      * @return true if action if defined on x.
      */
-    public boolean isDefinedOn(Object x);
+    public boolean isDefinedOn(D x);
 }

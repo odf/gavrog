@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -31,9 +31,6 @@ import org.gavrog.box.collections.Pair;
 
 /**
  * This class contains some utility methods for group actions.
- * 
- * @author Olaf Delgado
- * @version $Id: GroupActions.java,v 1.2 2005/07/18 23:33:29 odf Exp $
  */
 final public class GroupActions {
     /**
@@ -49,17 +46,19 @@ final public class GroupActions {
      * @param b the second action.
      * @return the product action.
      */
-    public static GroupAction product(final GroupAction a, final GroupAction b) {
+    public static <E, A, B> GroupAction<E, Pair<A, B>> product(
+            final GroupAction<E, A> a,
+            final GroupAction<E, B> b) {
         if (!a.getGroup().equals(b.getGroup())) {
             throw new IllegalArgumentException("actions of different groups");
         }
         
-        return new GroupAction() {
-            public FpGroup getGroup() {
+        return new GroupAction<E, Pair<A, B>>() {
+            public FpGroup<E> getGroup() {
                 return a.getGroup();
             }
 
-            public Iterator domain() {
+            public Iterator<Pair<A, B>> domain() {
                 return Iterators.cantorProduct(a.domain(), b.domain());
             }
 
@@ -67,24 +66,14 @@ final public class GroupActions {
                 return a.size() * b.size();
             }
 
-            public Object apply(Object x, FreeWord w) {
-                if (x instanceof Pair) {
-                    final Pair pair = (Pair) x;
-                    return new Pair(a.apply(pair.getFirst(), w),
-                            b.apply(pair.getSecond(), w));
-                } else {
-                    throw new IllegalArgumentException("Pair expected");
-                }
+            public Pair<A, B> apply(final Pair<A, B> x, final FreeWord<E> w) {
+                return new Pair<A, B>(a.apply(x.getFirst(), w),
+                                      b.apply(x.getSecond(), w));
             }
 
-            public boolean isDefinedOn(Object x) {
-                if (x instanceof Pair) {
-                    final Pair pair = (Pair) x;
-                    return a.isDefinedOn(pair.getFirst())
-                           && b.isDefinedOn(pair.getSecond());
-                } else {
-                    return false;
-                }
+            public boolean isDefinedOn(final Pair<A, B> x) {
+                    return a.isDefinedOn(x.getFirst())
+                            && b.isDefinedOn(x.getSecond());
             }
         };
     }
@@ -97,7 +86,8 @@ final public class GroupActions {
      * @param action the given action.
      * @return the cover or permutation action.
      */
-    public static GroupAction cover(final GroupAction action) {
+    public static <E, D> GroupAction<E, List<D>> cover(
+            final GroupAction<E, D> action) {
         final int n;
         
         try {
@@ -107,14 +97,15 @@ final public class GroupActions {
             throw new UnsupportedOperationException(s);
         }
 
-        return new GroupAction() {
-            public FpGroup getGroup() {
+        return new GroupAction<E, List<D>>() {
+            public FpGroup<E> getGroup() {
                 return action.getGroup();
             }
 
-            public Iterator domain() {
-                final Object dom[] = new Object[action.size()];
-                final Iterator iter = action.domain();
+            public Iterator<List<D>> domain() {
+                @SuppressWarnings("unchecked")
+                final D dom[] = (D[]) new Object[action.size()];
+                final Iterator<D> iter = action.domain();
                 for (int i = 0; i < n; ++i) {
                     dom[i] = iter.next();
                 }
@@ -123,40 +114,29 @@ final public class GroupActions {
 
             public int size() {
                 int r = 1;
-                for (int i = 2; i <= n; ++i) {
+                for (int i = 2; i <= n; ++i)
                     r *= i;
-                }
                 return r;
             }
 
-            public Object apply(Object x, FreeWord w) {
-                if (!isDefinedOn(x)) {
+            public List<D> apply(final List<D> a, final FreeWord<E> w) {
+                if (!isDefinedOn(a))
                     return null;
-                } else {
-                    final List a = (List) x;
-                    final List result = new ArrayList();
-                    for (int i = 0; i < n; ++i) {
-                        result.add(action.apply(a.get(i), w));
-                    }
-                    return result;
-                }
+
+                final List<D> result = new ArrayList<D>();
+                for (final D x: a)
+                    result.add(action.apply(x, w));
+                return result;
             }
 
-            public boolean isDefinedOn(Object x) {
-                if (!(x instanceof List)) {
+            public boolean isDefinedOn(final List<D> a) {
+                if (a.size() != n)
                     return false;
-                }
-                final List a = (List) x;
-                if (a.size() != n) {
-                    return false;
-                }
-                final Set seen = new HashSet();
-                for (int i = 0; i < a.size(); ++i) {
-                    final Object y = a.get(i);
-                    if (!action.isDefinedOn(y) || seen.contains(y)) {
+                final Set<D> seen = new HashSet<D>();
+                for (final D x: a) {
+                    if (!action.isDefinedOn(x) || seen.contains(x))
                         return false;
-                    }
-                    seen.add(y);
+                    seen.add(x);
                 }
                 return true;
             }
@@ -171,25 +151,26 @@ final public class GroupActions {
      * @param action the underlying group action.
      * @return the underlying group action restricted to the orbit of the base.
      */
-    public static GroupAction orbit(final Object base, final GroupAction action) {
+    public static <E, D> GroupAction<E, D> orbit(final D base,
+            final GroupAction<E, D> action) {
         try {
             action.size();
         } catch (UnsupportedOperationException ex) {
             throw new UnsupportedOperationException("action must be finite");
         }
-        final List gens = action.getGroup().getGenerators();
-        final LinkedList queue = new LinkedList();
-        final Set domain = new HashSet();
+        
+        final List<FreeWord<E>> gens = action.getGroup().getGenerators();
+        final LinkedList<D> queue = new LinkedList<D>();
+        final Set<D> domain = new HashSet<D>();
         queue.addLast(base);
         domain.add(base);
 
         while (queue.size() > 0) {
-            final Object next = queue.removeFirst();
-            for (final Iterator iter = gens.iterator(); iter.hasNext();) {
-                final FreeWord g = (FreeWord) iter.next();
+            final D next = queue.removeFirst();
+            for (final FreeWord<E> g: gens) {
                 for (int i = -1; i <= 1; i += 2) {
-                    final FreeWord w = g.raisedTo(i);
-                    final Object neighbor = action.apply(next, w);
+                    final FreeWord<E> w = g.raisedTo(i);
+                    final D neighbor = action.apply(next, w);
                     if (!domain.contains(neighbor)) {
                         domain.add(neighbor);
                         queue.addLast(neighbor);
@@ -198,12 +179,12 @@ final public class GroupActions {
             }
         }
         
-        return new GroupAction() {
-            public FpGroup getGroup() {
+        return new GroupAction<E, D>() {
+            public FpGroup<E> getGroup() {
                 return action.getGroup();
             }
 
-            public Iterator domain() {
+            public Iterator<D> domain() {
                 return domain.iterator();
             }
 
@@ -211,7 +192,7 @@ final public class GroupActions {
                 return domain.size();
             }
 
-            public Object apply(Object x, FreeWord w) {
+            public D apply(final D x, final FreeWord<E> w) {
                 if (!isDefinedOn(x)) {
                     return null;
                 } else {
@@ -219,7 +200,7 @@ final public class GroupActions {
                 }
             }
 
-            public boolean isDefinedOn(Object x) {
+            public boolean isDefinedOn(final D x) {
                 return action.isDefinedOn(x) && domain.contains(x);
             }  
         };
@@ -232,8 +213,9 @@ final public class GroupActions {
      * @param action the underlying group action.
      * @return the underlying group action restricted to its first orbit.
      */
-    public static GroupAction orbit(final GroupAction action) {
-        final Object base = action.domain().next();
+    public static <E, D> GroupAction<E, D> orbit(
+            final GroupAction<E, D> action) {
+        final D base = action.domain().next();
         return orbit(base, action);
     }
     
@@ -243,7 +225,8 @@ final public class GroupActions {
      * @param action the original action.
      * @return the flat action.
      */
-    public static GroupAction flat(final GroupAction action) {
+    public static <E, D> GroupAction<E, Integer> flat(
+            final GroupAction<E, D> action) {
         final int n;
         try {
             n = action.size();
@@ -251,39 +234,35 @@ final public class GroupActions {
             throw new UnsupportedOperationException("action must be finite");
         }
         
-        final Map old2new = new HashMap();
-        final Object new2old[] = new Object[n];
-        int count = 0;
-        for (final Iterator iter = action.domain(); iter.hasNext();) {
-            final Object x = iter.next();
-            old2new.put(x, new Integer(count));
-            new2old[count] = x;
-            ++count;
+        final Map<D, Integer> old2new = new HashMap<D, Integer>();
+        final List<D> new2old = new ArrayList<D>();
+        for (final Iterator<D> iter = action.domain(); iter.hasNext();) {
+            final D x = iter.next();
+            old2new.put(x, new2old.size());
+            new2old.add(x);
         }
         
-        final List gens = action.getGroup().getGenerators();
-        final Map generatorActions = new HashMap();
+        final List<FreeWord<E>> gens = action.getGroup().getGenerators();
+        final Map<FreeWord<E>, int[]> generatorActions =
+                new HashMap<FreeWord<E>, int[]>();
         
-        for (final Iterator iter = gens.iterator(); iter.hasNext();) {
-            final FreeWord g = (FreeWord) iter.next();
+        for (final FreeWord<E> g: gens) {
             for (int exp = -1; exp <= 1; exp += 2) {
-                final FreeWord w = g.raisedTo(exp);
+                final FreeWord<E> w = g.raisedTo(exp);
                 final int map[] = new int[n];
                 for (int i = 0; i < n; ++i) {
-                    final Object img = old2new.get(action.apply(new2old[i], w));
-                    map[i] = ((Integer) img).intValue();
+                    map[i] = old2new.get(action.apply(new2old.get(i), w));
                 }
                 generatorActions.put(w, map);
             }
         }
         
-        return new GroupAction() {
-
-            public FpGroup getGroup() {
+        return new GroupAction<E, Integer>() {
+            public FpGroup<E> getGroup() {
                 return action.getGroup();
             }
 
-            public Iterator domain() {
+            public Iterator<Integer> domain() {
                 return Iterators.range(0, n);
             }
 
@@ -291,26 +270,21 @@ final public class GroupActions {
                 return n;
             }
 
-            public Object apply(final Object x, final FreeWord w) {
+            public Integer apply(final Integer x, final FreeWord<E> w) {
                 if (!isDefinedOn(x)) {
                     return null;
                 } else {
-                    int y = ((Integer) x).intValue();
+                    int y = x;
                     for (int i = 0; i < w.length(); ++i) {
-                        final FreeWord g = w.subword(i, i + 1);
+                        final FreeWord<E> g = w.subword(i, i + 1);
                         y = ((int[]) generatorActions.get(g))[y];
                     }
-                    return new Integer(y);
+                    return y;
                 }
             }
 
-            public boolean isDefinedOn(Object x) {
-                if (x instanceof Integer) {
-                    final int i = ((Integer) x).intValue();
-                    return i >= 0 && i < n;
-                } else {
-                    return false;
-                }
+            public boolean isDefinedOn(final Integer x) {
+                return x >= 0 && x < n;
             }
         };
     }

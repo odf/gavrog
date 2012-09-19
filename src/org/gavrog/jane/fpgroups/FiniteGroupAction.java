@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,14 +21,11 @@ import java.util.Iterator;
 
 /**
  * A convenient base class for group actions on finite sets. Derived classes
- * should only need to override {@link #applyGenerator(Object, int, int)}.
- * 
- * @author Olaf Delgado
- * @version $Id: FiniteGroupAction.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
+ * should only need to override {@link #applyGenerator(D, int, int)}.
  */
-public abstract class FiniteGroupAction implements GroupAction {
-    private FpGroup group;
-    private Collection domain;
+public abstract class FiniteGroupAction<E, D> implements GroupAction<E, D> {
+    private FpGroup<E> group;
+    private Collection<D> domain;
 
     /**
      * Applies a generator or inverse generator the an element of the domain.
@@ -38,7 +35,7 @@ public abstract class FiniteGroupAction implements GroupAction {
      * @param sign if negative, apply the inverse.
      * @return the result.
      */
-    protected abstract Object applyGenerator(final Object x, final int letter,
+    protected abstract D applyGenerator(final D x, final int letter,
             final int sign);
     
     /**
@@ -47,7 +44,8 @@ public abstract class FiniteGroupAction implements GroupAction {
      * @param group the acting group.
      * @param domain the domain on which the group acts.
      */
-    public FiniteGroupAction(final FpGroup group, final Collection domain) {
+    public FiniteGroupAction(final FpGroup<E> group,
+            final Collection<D> domain) {
         this.group = group;
         this.domain = domain;
     }
@@ -55,14 +53,14 @@ public abstract class FiniteGroupAction implements GroupAction {
     /* (non-Javadoc)
      * @see javaDSym.fpgroups.GroupAction#getGroup()
      */
-    public FpGroup getGroup() {
+    public FpGroup<E> getGroup() {
         return this.group;
     }
 
     /* (non-Javadoc)
      * @see javaDSym.fpgroups.GroupAction#domain()
      */
-    public Iterator domain() {
+    public Iterator<D> domain() {
         return this.domain.iterator();
     }
 
@@ -74,11 +72,11 @@ public abstract class FiniteGroupAction implements GroupAction {
     }
 
     /* (non-Javadoc)
-     * @see javaDSym.fpgroups.GroupAction#apply(java.lang.Object, javaDSym.fpgroups.FreeWord)
+     * @see org.gavrog.jane.fpgroups.GroupAction#apply(java.lang.Object, org.gavrog.jane.fpgroups.FreeWord)
      */
-    public Object apply(Object x, FreeWord w) {
+    public D apply(D x, FreeWord<E> w) {
         if (isDefinedOn(x)) {
-            Object z = x;
+            D z = x;
             for (int i = 0; i < w.length(); ++i) {
                 z = applyGenerator(z, w.getLetter(i), w.getSign(i));
             }
