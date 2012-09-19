@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -34,22 +34,19 @@ import org.gavrog.jane.numbers.Whole;
  * relators. The relators are each converted to their lexicographically smallest
  * form and then sorted. This makes it easier to compare group presentations
  * over the same alphabet.
- * 
- * @author Olaf Delgado
- * @version $Id: FpGroup.java,v 1.3 2006/11/18 08:12:39 odf Exp $
  */
-public class FpGroup {
+public class FpGroup<E> {
     final static private Whole ZERO = Whole.ZERO;
     final static private Whole ONE = Whole.ONE;
     
-    final private FiniteAlphabet alphabet;
-    final private List relators;
+    final private FiniteAlphabet<E> alphabet;
+    final private List<FreeWord<E>> relators;
  
     /**
      * Copies an FpGroup instance.
      * @param group the model instance.
      */
-    public FpGroup(FpGroup group) {
+    public <X extends E> FpGroup(final FpGroup<X> group) {
         this(group.getAlphabet(), group.getRelators());
     }
 
@@ -57,7 +54,8 @@ public class FpGroup {
      * Constructs a FpGroup instance without relators.
      * @param alphabet the generators (all letters in the given alphabet).
      */
-    public FpGroup(final FiniteAlphabet alphabet) {
+    @SuppressWarnings("unchecked")
+    public FpGroup(final FiniteAlphabet<? extends E> alphabet) {
         this(alphabet, new FreeWord[] {});
     }
     
@@ -66,7 +64,9 @@ public class FpGroup {
      * @param alphabet the generators (all letters in the given alphabet).
      * @param relators String specifications for the group relators.
      */
-    public FpGroup(final FiniteAlphabet alphabet, final String[] relators) {
+    public FpGroup(
+            final FiniteAlphabet<? extends E> alphabet,
+            final String[] relators) {
         this(alphabet, asWords(alphabet, relators));
     }
     
@@ -90,7 +90,8 @@ public class FpGroup {
      * @param alphabet the generators (all letters in the given alphabet).
      * @param relators the relators for the group.
      */
-    public FpGroup(final FiniteAlphabet alphabet, final FreeWord[] relators) {
+    public <X extends E, Y extends X> FpGroup(final FiniteAlphabet<X> alphabet,
+                                              final FreeWord<Y>[] relators) {
         this(alphabet, Arrays.asList(relators));
     }
     
@@ -101,19 +102,24 @@ public class FpGroup {
      * @param alphabet the generators (all letters in the given alphabet).
      * @param relators the relators for the group.
      */
-    public FpGroup(final FiniteAlphabet alphabet, final List relators) {
-        final List tmp = new LinkedList();
-        final Set seen = new HashSet();
-        for (Iterator iter = relators.iterator(); iter.hasNext();) {
-            final FreeWord w = relatorRepresentative((FreeWord) iter.next());
+    public <X extends E, Y extends X> FpGroup(
+            final FiniteAlphabet<X> alphabet,
+            final List<FreeWord<Y>> relators) {
+        @SuppressWarnings("unchecked")
+        final FiniteAlphabet<E> A = (FiniteAlphabet<E>) alphabet;
+        final List<FreeWord<E>> tmp = new LinkedList<FreeWord<E>>();
+        final Set<FreeWord<E>> seen = new HashSet<FreeWord<E>>();
+        for (FreeWord<Y> rel: relators) {
+            @SuppressWarnings("unchecked")
+            final FreeWord<E> w = (FreeWord<E>) relatorRepresentative(rel);
             if (w.length() > 0 && !seen.contains(w)) {
                 tmp.add(w);
                 seen.add(w);
             }
         }
         Collections.sort(tmp);
-        this.relators =Collections.unmodifiableList(tmp);
-        this.alphabet = alphabet;
+        this.relators = Collections.unmodifiableList(tmp);
+        this.alphabet = A;
     }
     
     /**
@@ -123,15 +129,15 @@ public class FpGroup {
      * @param w the word to permute.
      * @return the smallest cyclic representation.
      */
-    public static FreeWord relatorRepresentative(final FreeWord w) {
+    public static <X> FreeWord<X> relatorRepresentative(final FreeWord<X> w) {
         final int n = w.length();
-        FreeWord best = w;
+        FreeWord<X> best = w;
         for (int i = 0; i < n; ++i) {
-            final FreeWord cand = w.subword(i, n).times(w.subword(0, i));
+            final FreeWord<X> cand = w.subword(i, n).times(w.subword(0, i));
             if (best.compareTo(cand) > 0) {
                 best = cand;
             }
-            final FreeWord inv = cand.inverse();
+            final FreeWord<X> inv = cand.inverse();
             if (best.compareTo(inv) > 0) {
                 best = inv;
             }
@@ -143,7 +149,7 @@ public class FpGroup {
      * Returns the value of alphabet.
      * @return the current value of alphabet.
      */
-    public FiniteAlphabet getAlphabet() {
+    public FiniteAlphabet<E> getAlphabet() {
         return this.alphabet;
     }
     
@@ -164,7 +170,7 @@ public class FpGroup {
      * Returns the value of relators.
      * @return the current value of relators.
      */
-    public List getRelators() {
+    public List<FreeWord<E>> getRelators() {
         return this.relators;
     }
     
@@ -172,8 +178,8 @@ public class FpGroup {
      * Returns the identity of this group.
      * @return the identity word in this group's alphabet.
      */
-    public FreeWord getIdentity() {
-    	return new FreeWord(getAlphabet());
+    public FreeWord<E> getIdentity() {
+    	return new FreeWord<E>(getAlphabet());
     }
     
     /**
@@ -185,11 +191,11 @@ public class FpGroup {
         buf.append(getAlphabet());
         buf.append(", {");
         boolean first = true;
-        for (Iterator iter = getRelators().iterator(); iter.hasNext();) {
+        for (final FreeWord<E> r: getRelators()) {
             if (!first) {
                 buf.append(", ");
             }
-            buf.append(iter.next());
+            buf.append(r);
             first = false;
         }
         buf.append("})");
@@ -204,13 +210,13 @@ public class FpGroup {
 	 */
     private Whole[][] relatorMatrixAsArray() {
         final int ngens = this.getGenerators().size();
-        final List rels = this.getRelators();
+        final List<FreeWord<E>> rels = this.getRelators();
         final int nrels = rels.size();
 
         final Whole M[][] = new Whole[nrels][ngens];
 
         for (int i = 0; i < nrels; ++i) {
-            final FreeWord r = (FreeWord) rels.get(i);
+            final FreeWord<E> r = rels.get(i);
             final int row[] = new int[ngens];
             for (int j = 0; j < r.length(); ++j) {
                 final int k = r.getLetter(j) - 1;
@@ -243,12 +249,12 @@ public class FpGroup {
      * 
      * @return the sorted abelian invariants.
      */
-    public List abelianInvariants() {
+    public List<Whole> abelianInvariants() {
         final int ngens = this.getGenerators().size();
-        final List rels = this.getRelators();
+        final List<FreeWord<E>> rels = this.getRelators();
         final int nrels = rels.size();
         final int n = Math.min(nrels, ngens);
-        final List res = new LinkedList();
+        final List<Whole> res = new LinkedList<Whole>();
         
         if (nrels > 0) {
             // --- compute and diagonalize the relator matrix
