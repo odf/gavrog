@@ -28,17 +28,17 @@ import junit.framework.TestCase;
  * Unit test for class FilteredIterator, also using class IntegerInterator.
  */
 public class TestFilteredIterator extends TestCase {
-    FilteredIterator<Integer> iter;
+    FilteredIterator<Float, Integer> iter;
 
     /*
      * @see TestCase#setUp()
      */
     protected void setUp() throws Exception {
         super.setUp();
-        iter = new FilteredIterator<Integer>(Iterators.range(0, 7)) {
-            public Integer filter(Integer x) {
+        iter = new FilteredIterator<Float, Integer>(Iterators.range(0, 7)) {
+            public Float filter(Integer x) {
                 if (x % 2 != 0)
-                    return x;
+                    return x.floatValue();
                 else
                     return null;
             }
@@ -55,11 +55,11 @@ public class TestFilteredIterator extends TestCase {
 
     public void testFilteredIterator() {
         Assert.assertTrue(iter.hasNext());
-        Assert.assertEquals(iter.next(), new Integer(1));
+        Assert.assertEquals(iter.next(), 1.0f);
         Assert.assertTrue(iter.hasNext());
-        Assert.assertEquals(iter.next(), new Integer(3));
+        Assert.assertEquals(iter.next(), 3.0f);
         Assert.assertTrue(iter.hasNext());
-        Assert.assertEquals(iter.next(), new Integer(5));
+        Assert.assertEquals(iter.next(), 5.0f);
         Assert.assertFalse(iter.hasNext());
         try {
             iter.next();

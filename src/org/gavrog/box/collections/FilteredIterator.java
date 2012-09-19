@@ -24,15 +24,15 @@ import java.util.NoSuchElementException;
  * passing the iterator in question to the constructor of a derived class
  * (possibly anonymous) which implements the {@link #filter(Object)} method.
  */
-public abstract class FilteredIterator<E> extends IteratorAdapter<E> {
+public abstract class FilteredIterator<E, S> extends IteratorAdapter<E> {
 
-	Iterator<? extends E> original;
+	Iterator<? extends S> original;
 	
 	/**
 	 * Constructs a FilteredIterator instance.
 	 * @param original
 	 */
-	public FilteredIterator(Iterator<? extends E> original) {
+	public FilteredIterator(Iterator<? extends S> original) {
 		this.original = original;
 	}
 
@@ -43,7 +43,7 @@ public abstract class FilteredIterator<E> extends IteratorAdapter<E> {
 	 * @param x the object to inspect.
 	 * @return true if the object should be passed through.
 	 */
-	public abstract E filter(E item);
+	public abstract E filter(S item);
 	
     /**
      * This methods finds and caches the next result of the traversal, unless
@@ -51,7 +51,7 @@ public abstract class FilteredIterator<E> extends IteratorAdapter<E> {
      */
 	protected E findNext() throws NoSuchElementException {
         while (original.hasNext()) {
-            E x = original.next();
+            S x = original.next();
             E y = filter(x);
             if (y != null) {
                 return y;

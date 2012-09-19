@@ -46,12 +46,12 @@ public class TestCosetAction extends TestCase {
     private CosetAction ActionH;
     private CosetAction ActionT4;
 
-    private CosetAction.Coset C_0;
-    private CosetAction.Coset C_a;
-    private CosetAction.Coset C_aa;
-    private CosetAction.Coset C_b;
-    private CosetAction.Coset C_ab;
-    private CosetAction.Coset C_aab;
+    private Coset C_0;
+    private Coset C_a;
+    private Coset C_aa;
+    private Coset C_b;
+    private Coset C_ab;
+    private Coset C_aab;
 
     private FreeWord a;
     private FreeWord a_1;
@@ -140,8 +140,8 @@ public class TestCosetAction extends TestCase {
     }
 
     public void testGetTrivialCoset() {
-        final CosetAction.Coset c1 = ActionG.getTrivialCoset();
-        final CosetAction.Coset c2 = ActionG.getCoset("*");
+        final Coset c1 = ActionG.getTrivialCoset();
+        final Coset c2 = ActionG.getCoset("*");
         Assert.assertSame(ActionG, c1.getAction());
         Assert.assertSame(ActionG, c2.getAction());
         Assert.assertEquals(FreeWord.parsedWord(A, "*"), c1.getRepresentative());
@@ -153,8 +153,8 @@ public class TestCosetAction extends TestCase {
     }
 
     public void testGetCoset() {
-        final CosetAction.Coset ab1 = ActionG.getCoset("a*b");
-        final CosetAction.Coset ab2 = ActionG.getCoset("a^4*b^-1");
+        final Coset ab1 = ActionG.getCoset("a*b");
+        final Coset ab2 = ActionG.getCoset("a^4*b^-1");
         Assert.assertSame(ActionG, ab1.getAction());
         Assert.assertSame(ActionG, ab2.getAction());
         Assert.assertEquals(FreeWord.parsedWord(A, "a*b"), ab1.getRepresentative());
@@ -213,11 +213,6 @@ public class TestCosetAction extends TestCase {
         Assert.assertEquals(C_a, ActionH.apply(C_ab, b_1));
         Assert.assertEquals(C_aa, ActionH.apply(C_aab, b_1));
 
-        Assert.assertNull(ActionH.apply(a, a));
-        Assert.assertNull(ActionH.apply(a, a_1));
-        Assert.assertNull(ActionH.apply(a, b));
-        Assert.assertNull(ActionH.apply(a, b_1));
-        
         Assert.assertEquals(C_ab, ActionH.apply(C_0, FreeWord.parsedWord(A, "a^2*b^-1*a^-1")));
     }
 }

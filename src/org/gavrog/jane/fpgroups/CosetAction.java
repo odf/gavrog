@@ -50,7 +50,7 @@ import org.gavrog.box.collections.Partition;
  * @author Olaf Delgado
  * @version $Id: CosetAction.java,v 1.2 2005/07/18 23:33:29 odf Exp $
  */
-public class CosetAction implements GroupAction {
+public class CosetAction<E, D> implements GroupAction<E, Coset<E, D>> {
     // --- set to true to enable logging
     final private static boolean LOGGING = false;
 
@@ -58,20 +58,20 @@ public class CosetAction implements GroupAction {
     final public static int DEFAULT_SiZE_LIMIT = 100000;
 
     // --- the parameters given to the constructor
-    final private FpGroup group;
-    final private List subgroupGenerators;
+    final private FpGroup<E> group;
+    final private List<FreeWord<E>> subgroupGenerators;
     final private int sizeLimit;
     
     // --- temporary fields used only in the construction process
-    final private FreeWord idx2gen[];
+    final private List<FreeWord<E>> idx2gen;
     final private int idx2invidx[];
     final private int ngens;
     
     // --- results of the construction process
-    final private Map gen2idx;
-    final private List table;
+    final private Map<FreeWord<E>, Integer> gen2idx;
+    final private List<int[]> table;
     final private int numberOfCosets;
-    final private FreeWord cosetRepresentatives[];
+    final FreeWord<E> cosetRepresentatives[];
     
     /**
      * Constructs a CosetTable instance which reflects the action of a group on
@@ -79,8 +79,8 @@ public class CosetAction implements GroupAction {
      * 
      * @param group the group.
      */
-    public CosetAction(final FpGroup group) {
-        this(group, new ArrayList(), DEFAULT_SiZE_LIMIT);
+    public CosetAction(final FpGroup<E> group) {
+        this(group, new ArrayList<FreeWord<E>>(), DEFAULT_SiZE_LIMIT);
     }
 
     /**
@@ -90,8 +90,8 @@ public class CosetAction implements GroupAction {
      * @param group the group.
      * @param sizeLimit the limit on the number of coset rows.
      */
-    public CosetAction(final FpGroup group, final int sizeLimit) {
-        this(group, new ArrayList(), sizeLimit);
+    public CosetAction(final FpGroup<E> group, final int sizeLimit) {
+        this(group, new ArrayList<FreeWord<E>>(), sizeLimit);
     }
 
     /**
@@ -100,7 +100,8 @@ public class CosetAction implements GroupAction {
      * @param group the group.
      * @param subgroupGenerators generators of the subgroup.
      */
-    public CosetAction(final FpGroup group, final List subgroupGenerators) {
+    public CosetAction(final FpGroup<E> group,
+            final List<FreeWord<E>> subgroupGenerators) {
         this(group, subgroupGenerators, DEFAULT_SiZE_LIMIT);
     }
         
@@ -115,8 +116,8 @@ public class CosetAction implements GroupAction {
      * @param subgroupGenerators generators of the subgroup.
      * @param sizeLimit the limit on the number of coset rows.
      */
-    public CosetAction(final FpGroup group,
-            final List subgroupGenerators,
+    public CosetAction(final FpGroup<E> group,
+            final List<FreeWord<E>> subgroupGenerators,
             final int sizeLimit) {
         
         // --- copy parameters to fields
@@ -126,49 +127,46 @@ public class CosetAction implements GroupAction {
         this.sizeLimit = sizeLimit;
         
         // --- extract generators and relators for group
-        final List groupGenerators = group.getGenerators();
-        final List groupRelators = group.getRelators();
+        final List<FreeWord<E>> groupGenerators = group.getGenerators();
+        final List<FreeWord<E>> groupRelators = group.getRelators();
         
         // --- set up translation tables
         this.ngens = 2 * groupGenerators.size();
-        this.idx2gen = new FreeWord[this.ngens];
-        this.gen2idx = new HashMap();
+        this.idx2gen = new ArrayList<FreeWord<E>>();
+        this.gen2idx = new HashMap<FreeWord<E>, Integer>();
         this.idx2invidx = new int[this.ngens];
 
         int nu = 0;
-        for (Iterator iter = groupGenerators.iterator(); iter.hasNext();) {
-            final FreeWord g = (FreeWord) iter.next();
-            this.idx2gen[nu] = g;
-            this.gen2idx.put(g, new Integer(nu));
-            this.idx2gen[nu+1] = g.inverse();
-            this.gen2idx.put(g.inverse(), new Integer(nu+1));
+        for (final FreeWord<E> g: groupGenerators) {
+            this.idx2gen.add(g);
+            this.gen2idx.put(g, nu);
+            this.idx2gen.add(g.inverse());
+            this.gen2idx.put(g.inverse(), nu+1);
             this.idx2invidx[nu] = nu+1;
             this.idx2invidx[nu+1] = nu;
             nu += 2;
         }
 
         // --- translate relators
-        final List rels = new ArrayList();
-        for (Iterator iter = groupRelators.iterator(); iter.hasNext();) {
-            final FreeWord r = (FreeWord) iter.next();
+        final List<int[]> rels = new ArrayList<int[]>();
+        for (final FreeWord<E> r: groupRelators) {
             final int n = r.length();
             for (int i = 0; i < n; ++i) {
-                final FreeWord w = r.subword(i, n).times(r.subword(0, i));
+                final FreeWord<E> w = r.subword(i, n).times(r.subword(0, i));
                 rels.add(translateWord(w));
                 rels.add(translateWord(w.inverse()));
             }
         }
         
         // --- translate subgroup generators
-        final List subgens = new ArrayList();
-        for (Iterator iter = subgroupGenerators.iterator(); iter.hasNext();) {
-            final FreeWord generator = (FreeWord) iter.next();
+        final List<int[]> subgens = new ArrayList<int[]>();
+        for (final FreeWord<E> generator: subgroupGenerators) {
             subgens.add(translateWord(generator));
             subgens.add(translateWord(generator.inverse()));
         }
         
         // --- set up a coset table with one dummy row and one row for the trivial coset
-        this.table = new ArrayList();
+        this.table = new ArrayList<int[]>();
         this.table.add(new int[this.ngens]);
         this.table.add(new int[this.ngens]);
         
@@ -214,16 +212,15 @@ public class CosetAction implements GroupAction {
                 }
 
                 // --- scan relations to identify equivalent rows
-                final LinkedList identify = new LinkedList();
-                for (Iterator iter = rels.iterator(); iter.hasNext();) {
-                    final int rel[] = (int[]) iter.next();
+                final LinkedList<Pair<Integer, Integer>> identify =
+                        new LinkedList<Pair<Integer, Integer>>();
+                for (final int rel[]: rels) {
                     scanRelation(rel, n-1, identify);
                 }
                 
                 // --- scan subgroup generators
                 final int one = equivalences.find(1);
-                for (Iterator iter = subgens.iterator(); iter.hasNext();) {
-                    final int gen[] = (int[]) iter.next();
+                for (final int gen[]: subgens) {
                     scanRelation(gen, one, identify);
                 }
 
@@ -297,10 +294,10 @@ public class CosetAction implements GroupAction {
      * @param word the input word.
      * @return the translated word.
      */
-    private int[] translateWord(FreeWord word) {
+    private int[] translateWord(FreeWord<E> word) {
         final int res[] = new int[word.size()];
         for (int i = 0; i < word.size(); ++i) {
-            final FreeWord g = word.subword(i, i+1);
+            final FreeWord<E> g = word.subword(i, i+1);
             final Integer idx = (Integer) this.gen2idx.get(g);
             res[i] = idx.intValue();
         }
@@ -316,7 +313,7 @@ public class CosetAction implements GroupAction {
      * @param identify a list to add equivalent row pairs to.
      */
     private void scanRelation(final int rel[], final int start,
-            final LinkedList identify) {
+            final LinkedList<Pair<Integer, Integer>> identify) {
 
         int head = start;
         int headPos;
@@ -371,11 +368,12 @@ public class CosetAction implements GroupAction {
      * @param P the row equivalence classes (modified by this method).
      * @return the number of individual merges performed.
      */
-    private int performIdentifications(final LinkedList Q, final Partition<Integer> P) {
+    private int performIdentifications(
+            final LinkedList<Pair<Integer, Integer>> Q,
+            final Partition<Integer> P) {
         int count = 0;
         while (Q.size() > 0) {
-            final Pair<Integer, Integer> pair =
-                    (Pair<Integer, Integer>) Q.removeFirst();
+            final Pair<Integer, Integer> pair = Q.removeFirst();
             final int a = P.find(pair.getFirst());
             final int b = P.find(pair.getSecond());
             if (a == b) {
@@ -415,8 +413,8 @@ public class CosetAction implements GroupAction {
     private int[] compressTable(final Partition<Integer> P) {
         // --- initialize the mapping from old to new row numbers
         final int old2new[] = new int[this.table.size()];
-        // --- initlalize the new coset table
-        final LinkedList newTable = new LinkedList();
+        // --- initialize the new coset table
+        final LinkedList<int[]> newTable = new LinkedList<int[]>();
         // --- the row with number 0 is not used
         newTable.add(this.table.get(0));
 
@@ -455,11 +453,12 @@ public class CosetAction implements GroupAction {
      * Computes a shortest representative for each coset.
      * @return the array of representatives.
      */
-    private FreeWord[] computeCosetRepresentatives() {
+    private FreeWord<E>[] computeCosetRepresentatives() {
         final int n = size();
-        final FreeWord reps[] = new FreeWord[n+1];
-        final LinkedList Q = new LinkedList();
-        reps[1] = new FreeWord(getGroup().getAlphabet());
+        @SuppressWarnings("unchecked")
+        final FreeWord<E> reps[] = new FreeWord[n+1];
+        final LinkedList<Integer> Q = new LinkedList<Integer>();
+        reps[1] = new FreeWord<E>(getGroup().getAlphabet());
         Q.addLast(new Integer(1));
         while (Q.size() > 0) {
             final int i = ((Integer) Q.removeFirst()).intValue();
@@ -467,7 +466,7 @@ public class CosetAction implements GroupAction {
             for (int column = 0; column < ngens; ++column) {
                 final int next = row[column];
                 if (reps[next] == null) {
-                    reps[next] = reps[i].times(this.idx2gen[column]);
+                    reps[next] = reps[i].times(this.idx2gen.get(column));
                     Q.addLast(new Integer(next));
                 }
             }
@@ -475,71 +474,6 @@ public class CosetAction implements GroupAction {
         
         return reps;
     }
-    
-    /**
-     * Represents cosets.
-     */
-    public class Coset {
-        final private CosetAction action;
-        final private int index;
-        final private FreeWord representative;
-        
-        /**
-         * Constructs a Coset instance for a given table row number.
-         * @param index the row number corresponding to the coset.
-         */
-        private Coset(final int index) {
-            if (index < 1 || index > CosetAction.this.size()) {
-                throw new IllegalArgumentException("no such coset index");
-            }
-
-            this.action = CosetAction.this;
-            this.index = index;
-            this.representative = this.action.cosetRepresentatives[index];
-        }
-        
-        /**
-         * Returns the coset action object for this coset.
-         * @return the coset action.
-         */
-        public CosetAction getAction() {
-            return this.action;
-        }
-        
-        /**
-         * Returns the index.
-         * @return this coset's index.
-         */
-        private int getIndex() {
-            return this.index;
-        }
-        
-        /**
-         * Returns the representative.
-         * @return this coset's representative.
-         */
-        public FreeWord getRepresentative() {
-            return this.representative;
-        }
-        
-        public boolean equals(Object other) {
-            if (other instanceof Coset) {
-                final Coset coset = (Coset) other;
-                return this.getAction() == coset.getAction()
-                        && this.getIndex() == coset.getIndex();
-            } else {
-                return false;
-            }
-        }
-        
-        public int hashCode() {
-            return getAction().hashCode() * 37 + getIndex();
-        }
-        
-        public String toString() {
-            return getRepresentative().toString();
-        }
-    };
     
     /**
      * Returns the value of sizeLimit.
@@ -553,7 +487,7 @@ public class CosetAction implements GroupAction {
      * Returns the value of subgroupGenerators.
      * @return the current value of subgroupGenerators.
      */
-    public List getSubgroupGenerators() {
+    public List<FreeWord<E>> getSubgroupGenerators() {
         return this.subgroupGenerators;
     }
     
@@ -561,8 +495,8 @@ public class CosetAction implements GroupAction {
      * Retrieves the coset containing the trivial word.
      * @return the coset containing the trivial word.
      */
-    public Coset getTrivialCoset() {
-        return new Coset(1);
+    public Coset<E, D> getTrivialCoset() {
+        return new Coset<E, D>(this, 1);
     }
     
     /**
@@ -570,8 +504,8 @@ public class CosetAction implements GroupAction {
      * @param word the word.
      * @return the coset containing the word.
      */
-    public Coset getCoset(final FreeWord word) {
-        return (Coset) apply(new Coset(1), word);
+    public Coset<E, D> getCoset(final FreeWord<E> word) {
+        return apply(getTrivialCoset(), word);
     }
     
     /**
@@ -579,33 +513,30 @@ public class CosetAction implements GroupAction {
      * @param word the word.
      * @return the coset containing the word.
      */
-    public Coset getCoset(final String word) {
+    public Coset<E, D> getCoset(final String word) {
         return getCoset(FreeWord.parsedWord(getGroup().getAlphabet(), word));
     }
     
     // --- implementation of the GroupAction interface starts here.
     
-    public FpGroup getGroup() {
+    public FpGroup<E> getGroup() {
         return this.group;
     }
     
-    public Iterator domain() {
-        return new FilteredIterator(Iterators.range(1, size() + 1)) {
-            public Object filter(Object x) {
-                return new Coset(((Integer) x).intValue());
+    public Iterator<Coset<E, D>> domain() {
+        return new FilteredIterator<Coset<E, D>, Integer>(
+                Iterators.range(1, size() + 1)) {
+            public Coset<E, D> filter(final Integer x) {
+                return new Coset<E, D>(CosetAction.this, x);
             }
         };
     }
 
-    public Object apply(final Object x, final FreeWord w) {
-        if (!(x instanceof Coset)) {
+    public Coset<E, D> apply(final Coset<E, D> x, final FreeWord<E> w) {
+        if (x.getAction() != this) {
             return null;
         }
-        final Coset coset = (Coset) x;
-        if (coset.getAction() != this) {
-            return null;
-        }
-        int current = coset.getIndex();
+        int current = x.getIndex();
         if (current < 1 || current > size()) {
             return null;
         }
@@ -618,11 +549,11 @@ public class CosetAction implements GroupAction {
                 current = row[j.intValue()];
             }
         }
-        return new Coset(current);
+        return new Coset<E, D>(this, current);
     }
 
-    public boolean isDefinedOn(Object x) {
-        return x instanceof Coset && ((Coset) x).getAction() == this;
+    public boolean isDefinedOn(final Coset<E, D> x) {
+        return x.getAction() == this;
     }
     
     public int size() {
