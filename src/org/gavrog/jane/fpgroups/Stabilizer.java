@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -30,29 +30,26 @@ import org.gavrog.box.collections.Pair;
 
 /**
  * Represents and computes a stabilizer subgroup in a finite group action.
- * 
- * @author Olaf Delgado
- * @version $Id: Stabilizer.java,v 1.2 2005/07/18 23:33:29 odf Exp $
  */
-public class Stabilizer {
+public class Stabilizer<E, D> {
     // --- set to true to enable logging
     final private static boolean LOGGING = false;
 
     // --- the input data
-	final private GroupAction action;
-	final private Object basepoint;
+	final private GroupAction<E, D> action;
+	final private D basepoint;
 	final private int maxLabelLength;
 
 	// --- convenience fields
-	final private FpGroup group;
+	final private FpGroup<E> group;
 
 	// --- temporary data
-	private Map relatorsByStartGen;
+	private Map<FreeWord<E>, Set<FreeWord<E>>> relatorsByStartGen;
 
 	// --- results of the stabilizer computation
-	private List generators = null;
-	private FpGroup presentation = null;
-	private Map edgeLabelling = null;
+	private List<FreeWord<E>> generators = null;
+	private FpGroup<String> presentation = null;
+	private Map<Pair<D, FreeWord<E>>, FreeWord<String>> edgeLabelling = null;
 
 	/**
 	 * Constructs a stabilizer instance.
@@ -60,7 +57,7 @@ public class Stabilizer {
 	 * @param action the underlying action.
 	 * @param basepoint the point to be stabilize.
 	 */
-	public Stabilizer(final GroupAction action, final Object basepoint) {
+	public Stabilizer(final GroupAction<E, D> action, final D basepoint) {
 	    this(action, basepoint, 10);
 	}
 	
@@ -75,7 +72,7 @@ public class Stabilizer {
      * @param basepoint the point to be stabilize.
      * @param maxLabelLength the maximal word size on a Cayley graph edge.
      */
-	public Stabilizer(final GroupAction action, final Object basepoint,
+	public Stabilizer(final GroupAction<E, D> action, final D basepoint,
             final int maxLabelLength) {
 	    
 		// --- check the arguments
@@ -106,10 +103,8 @@ public class Stabilizer {
 		}
 		
 		// --- collect group generators and their inverses
-		final List groupGens = new LinkedList();
-		for (final Iterator iter = this.group.getGenerators().iterator(); iter
-				.hasNext();) {
-			FreeWord g = (FreeWord) iter.next();
+		final List<FreeWord<E>> groupGens = new LinkedList<FreeWord<E>>();
+		for (final FreeWord<E> g: this.group.getGenerators()) {
 			groupGens.add(g);
 			groupGens.add(g.inverse());
 		}
@@ -118,26 +113,27 @@ public class Stabilizer {
 		preprocessRelators();
 
 		// --- initialize
-		this.generators = new ArrayList();
-		this.edgeLabelling = new HashMap();
+		this.generators = new ArrayList<FreeWord<E>>();
+		this.edgeLabelling =
+				new HashMap<Pair<D, FreeWord<E>>, FreeWord<String>>();
 
-		final Alphabet A = new PrefixAlphabet("s_");
-		final FreeWord id = FreeWord.parsedWord(A, "*");
-		final Map point2word = new HashMap();
-		final LinkedList queue = new LinkedList();
+		final Alphabet<String> A = new PrefixAlphabet("s_");
+		final FreeWord<String> id = FreeWord.parsedWord(A, "*");
+		final Map<D, FreeWord<E>> point2word = new HashMap<D, FreeWord<E>>();
+		final LinkedList<D> queue = new LinkedList<D>();
 		queue.addLast(this.basepoint);
 		point2word.put(this.basepoint, this.group.getIdentity());
 
 		// --- construct and close relations on a spanning tree
 		while (queue.size() > 0) {
-			final Object x = queue.removeFirst();
-			final FreeWord w = (FreeWord) point2word.get(x);
-			for (final Iterator gens = groupGens.iterator(); gens.hasNext();) {
-				final FreeWord g = (FreeWord) gens.next();
-				final Object y = this.action.apply(x, g);
+			final D x = queue.removeFirst();
+			final FreeWord<E> w = point2word.get(x);
+			for (final FreeWord<E> g: groupGens) {
+				final D y = this.action.apply(x, g);
 				if (!point2word.containsKey(y)) {
-					this.edgeLabelling.put(new Pair(x, g), id);
-					this.edgeLabelling.put(new Pair(y, g.inverse()), id);
+					this.edgeLabelling.put(new Pair<D, FreeWord<E>>(x, g), id);
+					this.edgeLabelling.put(
+							new Pair<D, FreeWord<E>>(y, g.inverse()), id);
 					queue.addLast(y);
 					point2word.put(y, w.times(g));
 					if (LOGGING) {
@@ -149,21 +145,22 @@ public class Stabilizer {
 		}
 
 		// --- find generators for the stabilizer subgroup
-		for (Iterator points = this.action.domain(); points.hasNext();) {
-			final Object x = points.next();
-			final FreeWord wx = (FreeWord) point2word.get(x);
-			for (Iterator gens = groupGens.iterator(); gens.hasNext();) {
-				final FreeWord g = (FreeWord) gens.next();
-				final Pair edge = new Pair(x, g);
+		for (Iterator<D> points = this.action.domain(); points.hasNext();) {
+			final D x = points.next();
+			final FreeWord<E> wx = point2word.get(x);
+			for (final FreeWord<E> g: groupGens) {
+				final Pair<D, FreeWord<E>> edge =
+						new Pair<D, FreeWord<E>>(x, g);
 				if (!this.edgeLabelling.containsKey(edge)) {
-					final Object y = this.action.apply(x, g);
-					final FreeWord wy = (FreeWord) point2word.get(y);
-					final Pair invEdge = new Pair(y, g.inverse());
+					final D y = this.action.apply(x, g);
+					final FreeWord<E> wy = point2word.get(y);
+					final Pair<D, FreeWord<E>> invEdge =
+							new Pair<D, FreeWord<E>>(y, g.inverse());
 					final int n = this.generators.size() + 1;
-					final FreeWord s = new FreeWord(A, n);
+					final FreeWord<String> s = new FreeWord<String>(A, n);
 					this.edgeLabelling.put(edge, s);
 					this.edgeLabelling.put(invEdge, s.inverse());
-					final FreeWord newgen = wx.times(g).times(wy.inverse());
+					final FreeWord<E> newgen = wx.times(g).times(wy.inverse());
 					this.generators.add(newgen);
 					if (LOGGING) {
 						System.out.println("  New generator " + newgen);
@@ -176,27 +173,25 @@ public class Stabilizer {
 
 		// --- convert edge labels to a finite alphabet
 		final int nrGens = this.generators.size();
-		final FiniteAlphabet B = FiniteAlphabet.fromPrefix("s_", nrGens);
-		final Set edges = this.edgeLabelling.keySet();
-		for (Iterator iter = edges.iterator(); iter.hasNext();) {
-			final Object edge = iter.next();
-			final FreeWord w = (FreeWord) this.edgeLabelling.get(edge);
-			this.edgeLabelling.put(edge, new FreeWord(B, w));
+		final FiniteAlphabet<String> B = FiniteAlphabet.fromPrefix("s_", nrGens);
+		final Set<Pair<D, FreeWord<E>>> edges = this.edgeLabelling.keySet();
+		for (final Pair<D, FreeWord<E>> edge: edges) {
+			final FreeWord<String> w = this.edgeLabelling.get(edge);
+			this.edgeLabelling.put(edge, new FreeWord<String>(B, w));
 		}
 
 		// --- collect relators for subgroup
-		final List oldRelators = this.group.getRelators();
-		final List newRelators = new LinkedList();
-		for (Iterator points = this.action.domain(); points.hasNext();) {
-			final Object x = points.next();
-			for (Iterator rels = oldRelators.iterator(); rels.hasNext();) {
-				final FreeWord r = (FreeWord) rels.next();
+		final List<FreeWord<E>> oldRelators = this.group.getRelators();
+		final List<FreeWord<String>> newRelators =
+				new LinkedList<FreeWord<String>>();
+		for (Iterator<D> points = this.action.domain(); points.hasNext();) {
+			final D x = points.next();
+			for (final FreeWord<E> r: oldRelators)
 				newRelators.add(traceWord(x, r));
-			}
 		}
 		
 		// --- write the presentation
-		this.presentation = new FpGroup(B, newRelators);
+		this.presentation = new FpGroup<String>(B, newRelators);
 	}
 
 	/**
@@ -205,15 +200,14 @@ public class Stabilizer {
 	 */
 	private void preprocessRelators() {
 		this.relatorsByStartGen = new HashMap();
-		final List relators = this.group.getRelators();
-		for (Iterator iter = relators.iterator(); iter.hasNext();) {
-			final FreeWord rel = (FreeWord) iter.next();
+		final List<FreeWord<E>> relators = this.group.getRelators();
+		for (FreeWord<E> rel: relators) {
 			for (int exp = -1; exp <= 1; exp += 2) {
-				final FreeWord w = rel.raisedTo(exp);
+				final FreeWord<E> w = rel.raisedTo(exp);
 				final int n = w.length();
 				for (int i = 0; i < n; ++i) {
-					final FreeWord v = w.subword(i, n).times(w.subword(0, i));
-					final FreeWord g = v.subword(0, 1);
+					final FreeWord<E> v = w.subword(i, n).times(w.subword(0, i));
+					final FreeWord<E> g = v.subword(0, 1);
 					if (!this.relatorsByStartGen.containsKey(g)) {
 						this.relatorsByStartGen.put(g, new HashSet());
 					}
@@ -235,18 +229,19 @@ public class Stabilizer {
      */
 	private void closeRelations(final Object start, final FreeWord startgen) {
 		// --- initialize the edge queue with the given edge
-		final LinkedList queue = new LinkedList();
+		final LinkedList<Pair<D, FreeWord<E>>> queue =
+				new LinkedList<Pair<D, FreeWord<E>>>();
 		queue.addLast(new Pair(start, startgen));
 		final Set seen = new HashSet();
 
 		// --- close relations until the queue is empty
 		while (queue.size() > 0) {
-			final Pair edge = (Pair) queue.removeFirst();
+			final Pair<D, FreeWord<E>> edge = queue.removeFirst();
 			if (seen.contains(edge)) {
 				continue;
 			}
             seen.add(edge);
-			final Object x = edge.getFirst();
+			final D x = edge.getFirst();
 			final FreeWord g = (FreeWord) edge.getSecond();
 
 			// --- look at all relations starting with this generator
@@ -259,8 +254,8 @@ public class Stabilizer {
 				final int n = r.length();
 
 				// --- trace relation r of length n starting at x
-				Object y = x;
-				Pair cut = null;
+				D y = x;
+				Pair<D, FreeWord<E>> cut = null;
 				int cutIndex = 0;
 				for (int i = 0; i < n; ++i) {
 					// --- the next generator
@@ -325,9 +320,9 @@ public class Stabilizer {
 	 * @param r the word to trace
 	 * @return the resulting word.
 	 */
-	private FreeWord traceWord(Object x, FreeWord r) {
+	private FreeWord<String> traceWord(D x, FreeWord<E> r) {
 		FreeWord res = null;
-		Object y = x;
+		D y = x;
 		for (int i = 0; i < r.length(); ++i) {
 			final FreeWord g = r.subword(i, i+1);
 			final Pair edge = new Pair(y, g);
