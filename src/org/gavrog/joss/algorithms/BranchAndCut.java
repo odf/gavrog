@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,9 +25,6 @@ import org.gavrog.box.simple.NamedConstant;
 /**
  * Abstract base class for generators, defining the basic branch-and-cut
  * strategy.
- * 
- * @author Olaf Delgado
- * @version $Id: BranchAndCut.java,v 1.7 2006/09/27 22:04:27 odf Exp $
  */
 public abstract class BranchAndCut<T> extends ResumableGenerator<T> {
 	// --- set to true to enable logging
@@ -81,13 +78,6 @@ public abstract class BranchAndCut<T> extends ResumableGenerator<T> {
 			this.decisionNr = decisionNr;
 		}
 	
-		/**
-		 * @return true if this is no actual move but indicates a choice to be made.
-		 */
-		public boolean isChoice() {
-			return type == Type.CHOICE;
-		}
-		
 		/**
 		 * @return true if this move is a decision made upon a choice.
 		 */
@@ -305,7 +295,8 @@ public abstract class BranchAndCut<T> extends ResumableGenerator<T> {
 	}
 
 	private void postCheckpoint(final String message) {
-		dispatchEvent(new CheckpointEvent(this, !resume_point_reached, message));
+		dispatchEvent(
+				new CheckpointEvent<T>(this, !resume_point_reached, message));
 	}
 
 	/**

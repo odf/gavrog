@@ -21,19 +21,19 @@ package org.gavrog.joss.algorithms;
  * @author Olaf Delgado
  * @version $Id:$
  */
-public class CheckpointEvent {
-	final private ResumableGenerator source;
+public class CheckpointEvent<T> {
+	final private ResumableGenerator<T> source;
 	final private boolean old;
 	final private String message;
 	
-	public CheckpointEvent(final ResumableGenerator source, final boolean old,
+	public CheckpointEvent(final ResumableGenerator<T> source, final boolean old,
 			final String message) {
 		this.source = source;
 		this.old = old;
 		this.message = message;
 	}
 
-	public ResumableGenerator getSource() {
+	public ResumableGenerator<T> getSource() {
 		return source;
 	}
 
