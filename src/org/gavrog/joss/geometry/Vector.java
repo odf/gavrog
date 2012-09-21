@@ -1,5 +1,5 @@
 /*
-Copyright 2008 Olaf Delgado-Friedrichs
+Copyright 2012 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -602,7 +602,7 @@ public class Vector extends ArithmeticBase implements IArithmetic {
      * @param rows a list of vectors.
      * @return the matrix with the given vectors as its rows.
      */
-    public static Matrix toMatrix(final List rows) {
+    public static Matrix toMatrix(final List<Vector> rows) {
         final int n = rows.size();
         if (n == 0) {
             return new Matrix(0, 0);

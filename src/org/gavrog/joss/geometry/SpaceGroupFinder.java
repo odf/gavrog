@@ -1,5 +1,5 @@
 /*
-Copyright 2006 Olaf Delgado-Friedrichs
+Copyright 2012 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -38,9 +38,6 @@ import org.gavrog.joss.geometry.SpaceGroupCatalogue.Lookup;
  * Takes a two- or three-dimensional crystallographic group and identifies it,
  * producing its name as according to the international tables for
  * Crystallography.
- * 
- * @author Olaf Delgado
- * @version $Id: SpaceGroupFinder.java,v 1.58 2008/02/20 04:11:50 odf Exp $
  */
 public class SpaceGroupFinder {
     final private static int DEBUG = 0;
@@ -58,7 +55,8 @@ public class SpaceGroupFinder {
      * 
      * @param G the group to identify.
      */
-    public SpaceGroupFinder(final SpaceGroup G) {
+    @SuppressWarnings("unused")
+	public SpaceGroupFinder(final SpaceGroup G) {
         final int d = this.dimension = G.getDimension();
         this.G = G;
 
@@ -73,9 +71,10 @@ public class SpaceGroupFinder {
             this.fromStd = null;
             return;
         case 1:
-            final Map type2ops = G.primitiveOperatorsByType();
-            final Set mirrors =
-                    (Set) type2ops.get(new OperatorType(1, false, 2, true));
+            final Map<OperatorType, Set<Operator>> type2ops =
+            		G.primitiveOperatorsByType();
+            final Set<Operator> mirrors =
+                    type2ops.get(new OperatorType(1, false, 2, true));
             this.crystalSystem = CrystalSystem.ONE_D;
             this.groupName = mirrors.size() > 0 ? "opm" : "op1";
             this.extension = null;
@@ -124,7 +123,7 @@ public class SpaceGroupFinder {
 
         // --- convert a primitive set of group operators to the normalized
         // basis
-        final List ops = toNormalized.applyTo(G.primitiveOperators());
+        final List<Operator> ops = toNormalized.applyTo(G.primitiveOperators());
 
         // --- determine the coordinate variations the matching process needs to
         // consider
@@ -136,10 +135,8 @@ public class SpaceGroupFinder {
             primitiveCell[i] = (Vector) primitiveCell[i].times(pre2Normal)
                     .abs();
         }
-        Arrays.sort(primitiveCell, new Comparator() {
-            public int compare(final Object o1, final Object o2) {
-                final Vector v1 = (Vector) o1;
-                final Vector v2 = (Vector) o2;
+        Arrays.sort(primitiveCell, new Comparator<Vector>() {
+            public int compare(final Vector v1, final Vector v2) {
                 return v2.abs().compareTo(v1.abs());
             }
         });
@@ -152,7 +149,8 @@ public class SpaceGroupFinder {
         }
 
         // --- compare with lookup setting for all the 3d space groups
-        final Pair match = matchOperators(ops, C, centering, variations);
+        final Pair<String, CoordinateChange> match =
+        		matchOperators(ops, C, centering, variations);
 
         // --- postprocess the output of the lookup
         if (match == null) {
@@ -182,14 +180,8 @@ public class SpaceGroupFinder {
      * 
      * @param ops the list to sort.
      */
-    private static void sortOps(final List ops) {
-        Collections.sort(ops, new Comparator() {
-            public int compare(final Object o1, final Object o2) {
-                final Operator op1 = ((Operator) o1).linearPart();
-                final Operator op2 = ((Operator) o2).linearPart();
-                return op1.compareTo(op2);
-            }
-        });
+    private static void sortOps(final List<Operator> ops) {
+        Collections.sort(ops);
     }
     
     /**
@@ -246,14 +238,20 @@ public class SpaceGroupFinder {
      * 
      * @return an array containing the crystal system, basis and set of generators.
      */
-    private Object[] analyzePointGroup2D() {
+    @SuppressWarnings("unused")
+	private Object[] analyzePointGroup2D() {
         // --- categorize the group operators by their point actions
-        final Map type2ops = G.primitiveOperatorsByType();
-        final Set threeFold = (Set) type2ops.get(new OperatorType(2, true, 3, true));
-        final Set fourFold = (Set) type2ops.get(new OperatorType(2, true, 4, true));
-        final Set sixFold = (Set) type2ops.get(new OperatorType(2, true, 6, true));
+        final Map<OperatorType, Set<Operator>> type2ops =
+        		G.primitiveOperatorsByType();
+        final Set<Operator> threeFold =
+        		type2ops.get(new OperatorType(2, true, 3, true));
+        final Set<Operator> fourFold =
+        		type2ops.get(new OperatorType(2, true, 4, true));
+        final Set<Operator> sixFold =
+        		type2ops.get(new OperatorType(2, true, 6, true));
         
-        final Set mirrors = (Set) type2ops.get(new OperatorType(2, false, 2, false));
+        final Set<Operator> mirrors =
+        		type2ops.get(new OperatorType(2, false, 2, false));
         
         final Operator R;
         final CrystalSystem crystalSystem;
@@ -284,9 +282,9 @@ public class SpaceGroupFinder {
         }
         if (R == null) {
         	if (mirrors.size() > 1) {
-        		final Iterator iter = mirrors.iterator();
+        		final Iterator<Operator> iter = mirrors.iterator();
         		iter.next();
-        		y = ((Operator) iter.next()).linearAxis();
+        		y = iter.next().linearAxis();
         	} else {
         		Vector tmp = new Vector(0, 1);
         		if (tmp.isCollinearTo(x)) {
@@ -314,8 +312,8 @@ public class SpaceGroupFinder {
         
         if (DEBUG > 1) {
         	System.err.println("Original operators:");
-        	for (final Iterator iter = G.getOperators().iterator(); iter.hasNext();) {
-        		System.err.println("    " + iter.next());
+        	for (final Operator op: G.getOperators()) {
+        		System.err.println("    " + op);
         	}
         	System.err.println(crystalSystem + " system.");
         }
@@ -332,23 +330,29 @@ public class SpaceGroupFinder {
      */
     private Object[] analyzePointGroup3D() {
         // --- categorize the group operators by their point actions
-        final Map type2ops = G.primitiveOperatorsByType();
-        final Set twoFold = (Set) type2ops.get(new OperatorType(3, true, 2, true));
-        final Set threeFold = (Set) type2ops.get(new OperatorType(3, true, 3, true));
-        final Set fourFold = (Set) type2ops.get(new OperatorType(3, true, 4, true));
-        final Set sixFold = (Set) type2ops.get(new OperatorType(3, true, 6, true));
+        final Map<OperatorType, Set<Operator>> type2ops =
+        		G.primitiveOperatorsByType();
+        final Set<Operator> twoFold =
+        		type2ops.get(new OperatorType(3, true, 2, true));
+        final Set<Operator> threeFold =
+        		type2ops.get(new OperatorType(3, true, 3, true));
+        final Set<Operator> fourFold =
+        		type2ops.get(new OperatorType(3, true, 4, true));
+        final Set<Operator> sixFold =
+        		type2ops.get(new OperatorType(3, true, 6, true));
         
-        final Set inversions = (Set) type2ops.get(new OperatorType(3, false, 1, true));
-        final Set mirrors = new HashSet();
-        mirrors.addAll((Set) type2ops.get(new OperatorType(3, false, 2, true)));
-        mirrors.addAll((Set) type2ops.get(new OperatorType(3, false, 3, true)));
-        mirrors.addAll((Set) type2ops.get(new OperatorType(3, false, 4, true)));
-        mirrors.addAll((Set) type2ops.get(new OperatorType(3, false, 6, true)));
+        final Set<Operator> inversions =
+        		type2ops.get(new OperatorType(3, false, 1, true));
+        final Set<Operator> mirrors = new HashSet<Operator>();
+        mirrors.addAll(type2ops.get(new OperatorType(3, false, 2, true)));
+        mirrors.addAll(type2ops.get(new OperatorType(3, false, 3, true)));
+        mirrors.addAll(type2ops.get(new OperatorType(3, false, 4, true)));
+        mirrors.addAll(type2ops.get(new OperatorType(3, false, 6, true)));
         
         if (inversions.size() == 0) {
-            twoFold.addAll((Set) type2ops.get(new OperatorType(3, false, 2, true)));
-            fourFold.addAll((Set) type2ops.get(new OperatorType(3, false, 4, true)));
-            sixFold.addAll((Set) type2ops.get(new OperatorType(3, false, 6, true)));
+            twoFold.addAll(type2ops.get(new OperatorType(3, false, 2, true)));
+            fourFold.addAll(type2ops.get(new OperatorType(3, false, 4, true)));
+            sixFold.addAll(type2ops.get(new OperatorType(3, false, 6, true)));
         }
         
         // --- initialize some variables
@@ -363,50 +367,50 @@ public class SpaceGroupFinder {
         if (sixFold.size() > 0) {
             // --- there is a six-fold axis
             crystalSystem = CrystalSystem.HEXAGONAL_3D;
-            final Operator A = (Operator) sixFold.iterator().next();
+            final Operator A = sixFold.iterator().next();
             z = A.linearAxis();
             R = (Operator) A.times(A);
         } else if (fourFold.size() > 1) {
             // --- there is more than one four-fold, but no six-fold, axis
             crystalSystem = CrystalSystem.CUBIC;
-            final Operator A = (Operator) fourFold.iterator().next();
+            final Operator A = fourFold.iterator().next();
             z = A.linearAxis();
-            R = (Operator) threeFold.iterator().next();
+            R = threeFold.iterator().next();
             x = (Vector) z.times(R);
             y = (Vector) x.times(R);
         } else if (fourFold.size() > 0) {
             // --- there is exactly one four-fold, but no six-fold, axis
             crystalSystem = CrystalSystem.TETRAGONAL;
-            final Operator A = (Operator) fourFold.iterator().next();
+            final Operator A = fourFold.iterator().next();
             z = A.linearAxis();
             R = A;
         } else if (threeFold.size() > 1) {
             // --- multiple three-fold, but no four- or six-fold, axes
             crystalSystem = CrystalSystem.CUBIC;
-            final Operator A = (Operator) twoFold.iterator().next();
+            final Operator A = twoFold.iterator().next();
             z = A.linearAxis();
-            R = (Operator) threeFold.iterator().next();
+            R = threeFold.iterator().next();
             x = (Vector) z.times(R);
             y = (Vector) x.times(R);
         } else if (threeFold.size() > 0) {
             // --- exactly one three-fold axis, but no four- or six-fold axes
             crystalSystem = CrystalSystem.TRIGONAL;
-            R = (Operator) threeFold.iterator().next();
+            R = threeFold.iterator().next();
             z = R.linearAxis();
         } else if (twoFold.size() > 1) {
             // --- mutliply two-fold, no three-, four- or six-fold, axes
             crystalSystem = CrystalSystem.ORTHORHOMBIC;
-            final Iterator ops = twoFold.iterator();
-            final Operator A = (Operator) ops.next();
-            final Operator B = (Operator) ops.next();
-            final Operator C = (Operator) ops.next();
+            final Iterator<Operator> ops = twoFold.iterator();
+            final Operator A = ops.next();
+            final Operator B = ops.next();
+            final Operator C = ops.next();
             x = A.linearAxis();
             y = B.linearAxis();
             z = C.linearAxis();
         } else if (twoFold.size() > 0) {
             // --- exactly one two-fold, but no three-, four- or six-fold
             crystalSystem = CrystalSystem.MONOCLINIC;
-            final Operator A = (Operator) twoFold.iterator().next();
+            final Operator A = twoFold.iterator().next();
             z = A.linearAxis();
         } else {
             // --- no two-, three-, four- or six-fold axes
@@ -416,8 +420,7 @@ public class SpaceGroupFinder {
 
         // --- add a first basis vector, if missing
         if (x == null) {
-            for (final Iterator iter = twoFold.iterator(); iter.hasNext();) {
-                final Operator B = (Operator) iter.next();
+            for (final Operator B: twoFold) {
                 final Vector t = B.linearAxis();
                 if (!t.isCollinearTo(z)) {
                     x = t;
@@ -430,10 +433,10 @@ public class SpaceGroupFinder {
                     x = new Vector(0, 1, 0);
                 }
                 if (mirrors.size() > 0) {
-                    final Operator M = (Operator) mirrors.iterator().next();
+                    final Operator M = mirrors.iterator().next();
                     x = (Vector) x.plus(x.times(M));
                 } else if (twoFold.size() > 0) {
-                    final Operator M = (Operator) twoFold.iterator().next();
+                    final Operator M = twoFold.iterator().next();
                     x = (Vector) x.minus(x.times(M));
                 } else if (crystalSystem == CrystalSystem.TRIGONAL) {
                     x = (Vector) x.minus(x.times(R));
@@ -448,10 +451,10 @@ public class SpaceGroupFinder {
             } else {
                 y = Vector.crossProduct3D(z, x);
                 if (mirrors.size() > 0) {
-                    final Operator M = (Operator) mirrors.iterator().next();
+                    final Operator M = mirrors.iterator().next();
                     y = (Vector) y.plus(y.times(M));
                 } else if (twoFold.size() > 0) {
-                    final Operator M = (Operator) twoFold.iterator().next();
+                    final Operator M = twoFold.iterator().next();
                     y = (Vector) y.minus(y.times(M));
                 }
             }
@@ -666,7 +669,8 @@ public class SpaceGroupFinder {
      * @param b the reduced lattice basis.
      * @return the normalized basis and centering.
      */
-    private Object[] normalizedBasisTrigonal(final Vector[] b) {
+    @SuppressWarnings("unused")
+	private Object[] normalizedBasisTrigonal(final Vector[] b) {
         final Vector v[];
         final Vector z = new Vector(0, 0, 1);
         if (z.isCollinearTo(b[0])) {
@@ -921,7 +925,8 @@ public class SpaceGroupFinder {
      * @param b the reduced lattice basis.
      * @return the normalized basis and centering.
      */
-    private Object[] normalizedBasisMonoclinic(final Vector[] b) {
+    @SuppressWarnings("unused")
+	private Object[] normalizedBasisMonoclinic(final Vector[] b) {
         if (DEBUG > 1) {
             System.out.println("\t\t@@@ Monoclinic system");
             System.out.print("\t\t@@@    input basis =");
@@ -998,8 +1003,12 @@ public class SpaceGroupFinder {
      * @param variations variations of the normalized setting that need to be checked
      * @return a pair containing the name found and the required basis change.
      */
-    private Pair matchOperators(final List ops, final CoordinateChange toPrimitive,
-            final char centering, final CoordinateChange[] variations) {
+    @SuppressWarnings("unused")
+	private Pair<String, CoordinateChange> matchOperators(
+    		final List<Operator> ops,
+    		final CoordinateChange toPrimitive,
+            final char centering,
+            final CoordinateChange[] variations) {
         if (DEBUG > 0) {
             System.err.println("\nStarting lookup process...");
             System.err.println("  centering = " + centering + ", system = "
@@ -1010,9 +1019,10 @@ public class SpaceGroupFinder {
         final int n = ops.size();
 
         // --- iterate through the group catalogue
-        for (final Iterator iter = SpaceGroupCatalogue.lookupInfo(); iter.hasNext();) {
+        for (final Iterator<Lookup> iter = SpaceGroupCatalogue.lookupInfo();
+        		iter.hasNext();) {
             // --- retrieve the lookup info for the next group
-            final Lookup info = (Lookup) iter.next();
+            final Lookup info = iter.next();
 
             // --- skip if centering or system are different
             if (info.centering != centering || info.system != this.crystalSystem) {
@@ -1025,8 +1035,8 @@ public class SpaceGroupFinder {
             
             // --- get the list of operators to match
             final SpaceGroup H = new SpaceGroup(d, info.name);
-            final List primitive = H.primitiveOperatorsSorted();
-            final List opsToMatch = info.fromStd.applyTo(primitive);
+            final List<Operator> primitive = H.primitiveOperatorsSorted();
+            final List<Operator> opsToMatch = info.fromStd.applyTo(primitive);
             sortOps(opsToMatch);
             
             // --- both operator lists must have the same length
@@ -1041,7 +1051,7 @@ public class SpaceGroupFinder {
             // --- loop through the necessary coordinate system variations for this group
             for (int i = 0; i < variations.length; ++i) {
                 // --- convert the operators to this coordinate system and sort
-                final List probes = variations[i].applyTo(ops);
+                final List<Operator> probes = variations[i].applyTo(ops);
                 sortOps(probes);
 
                 // --- check if linear parts are still equal
@@ -1094,7 +1104,9 @@ public class SpaceGroupFinder {
                     final CoordinateChange c1 = variations[i];
                     final CoordinateChange c2 = new CoordinateChange(I, origin);
                     final CoordinateChange c3 = (CoordinateChange) info.fromStd.inverse();
-                    final Pair res = new Pair(info.name, c1.times(c2).times(c3));
+                    final Pair<String, CoordinateChange> res =
+                    		new Pair<String, CoordinateChange>(info.name,
+                    				(CoordinateChange) c1.times(c2).times(c3));
                     if (DEBUG > 0) {
                         System.err.println("    success: " + res);
                     }

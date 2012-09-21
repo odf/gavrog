@@ -1,5 +1,5 @@
 /*
-Copyright 2005 Olaf Delgado-Friedrichs
+Copyright 2012 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,9 +29,6 @@ import org.gavrog.jane.numbers.Real;
 
 /**
  * Various methods related to lattices and lattice bases.
- * 
- * @author Olaf Delgado
- * @version $Id: Lattices.java,v 1.7 2008/05/20 07:59:41 odf Exp $
  */
 public class Lattices {
 
@@ -177,11 +174,10 @@ public class Lattices {
      */
 	public static Vector[] reducedLatticeBasis(final Vector[] v, final Matrix M) {
 	    final Vector tmp[] = dirichletVectors(v, M);
-	    Arrays.sort(tmp, new Comparator() {
-	        public int compare(final Object o1, final Object o2) {
-	            final Vector v1 = (Vector) o1;
-	            final Vector v2 = (Vector) o2;
-	            final int d = Vector.dot(v1, v1, M).compareTo(Vector.dot(v2, v2, M));
+	    Arrays.sort(tmp, new Comparator<Vector>() {
+	        public int compare(final Vector v1, final Vector v2) {
+	            final int d = Vector.dot(v1, v1, M)
+	            		.compareTo(Vector.dot(v2, v2, M));
 	            if (d == 0) {
 	                return v2.abs().compareTo(v1.abs());
 	            } else {
@@ -291,7 +287,7 @@ public class Lattices {
 	    
 	    // --- compute further shifts
 	    final Vector p = (Vector) posAsVector.plus(shift);
-	    final Set shifts = new HashSet();
+	    final Set<Vector> shifts = new HashSet<Vector>();
 	    shifts.add(shift);
 	    
 	    for (int i = 0; i < dirichletVectors.length; ++i) {
@@ -299,9 +295,9 @@ public class Lattices {
 	        final IArithmetic c = Vector.dot(v, v, metric);
 	        final IArithmetic q = Vector.dot(p, v, metric).dividedBy(c);
 	        if (q.isGreaterThan(half.minus(delta))) {
-	            shifts.add(shift.minus(v));
+	            shifts.add((Vector) shift.minus(v));
 	        } else if (q.isLessThan(minusHalf.plus(delta))) {
-	            shifts.add(shift.plus(v));
+	            shifts.add((Vector) shift.plus(v));
 	        }
 	    }
 	

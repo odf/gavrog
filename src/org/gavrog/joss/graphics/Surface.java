@@ -1,5 +1,5 @@
 /*
-   Copyright 2007 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,9 +34,6 @@ import org.gavrog.box.simple.NamedConstant;
 
 /**
  * Implements Catmull-Clark subdivision surfaces.
- * 
- * @author Olaf Delgado
- * @version $Id: Surface.java,v 1.3 2007/11/27 06:42:06 odf Exp $
  */
 public class Surface {
 	private static class Target extends NamedConstant {
@@ -233,9 +229,7 @@ public class Surface {
         // --- copy attributes
 		for (int i = 0; i < n; ++i) {
 			final Surface part = parts[i];
-			for (final Iterator iter = part.attributes.keySet().iterator(); iter
-					.hasNext();) {
-				final AttributeKey key = (AttributeKey) iter.next();
+			for (final AttributeKey key: part.attributes.keySet()) {
 				final int newIndex;
 				if (key.targetType == FACE) {
 					newIndex = mapF[i][key.index];
@@ -268,8 +262,7 @@ public class Surface {
         final boolean usedF[] = new boolean[nf];
         int newNV = 0;
         int newNF = 0;
-        for (Iterator iter = attributes.keySet().iterator(); iter.hasNext();) {
-        	final AttributeKey key = (AttributeKey) iter.next();
+        for (final AttributeKey key: attributes.keySet()) {
         	if (key.targetType.equals(FACE) && key.attribute.equals(TAG)
 					&& equal(tag, attributes.get(key))) {
         		final int i = key.index;
@@ -329,9 +322,7 @@ public class Surface {
         final Surface surf = new Surface(newVerts, newFaces, newFixed);
         
         // --- extract attributes
-        for (final Iterator iter = this.attributes.keySet().iterator(); iter
-				.hasNext();) {
-        	final AttributeKey key = (AttributeKey) iter.next();
+        for (final AttributeKey key: this.attributes.keySet()) {
         	final int newIndex;
         	if (key.targetType == FACE) {
         		newIndex = mapF[key.index];
@@ -515,9 +506,7 @@ public class Surface {
         Surface surf = new Surface(newVertices, newFaces, newFixed);
 
         // --- copy attributes
-        for (final Iterator iter = this.attributes.keySet().iterator(); iter
-				.hasNext();) {
-			final AttributeKey key = (AttributeKey) iter.next();
+        for (final AttributeKey key: this.attributes.keySet()) {
 			final Target type = key.targetType;
 			final Attribute attr = key.attribute;
 			final Object val = this.attributes.get(key);

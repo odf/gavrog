@@ -19,9 +19,7 @@ package org.gavrog.joss.geometry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -65,9 +63,6 @@ import org.gavrog.jane.numbers.Whole;
  * by a representative of each class of group operators modulo cell
  * translations. A normalized representative has all the coordinates of its
  * translational part in the half-open interval [0,1).
- * 
- * @author Olaf Delgado
- * @version $Id: SpaceGroup.java,v 1.25 2008/07/09 01:09:26 odf Exp $
  */
 public class SpaceGroup {
     private final int dimension;
@@ -88,7 +83,7 @@ public class SpaceGroup {
      * @param generate if true, a full operator list is generated.
      * @param check verifies that the operator list as given is complete.
      */
-    public SpaceGroup(final int dimension, final Collection operators,
+    public SpaceGroup(final int dimension, final Collection<Operator> operators,
             final boolean generate, boolean check) {
         
         // --- set the dimension here
@@ -97,8 +92,7 @@ public class SpaceGroup {
         // --- check the individual operators
         final int d = dimension;
         
-        for (final Iterator iter = operators.iterator(); iter.hasNext();) {
-            final Operator op = (Operator) iter.next();
+        for (final Operator op: operators) {
             if (op.getDimension() != d) {
                 throw new IllegalArgumentException("wrong dimension for operator " + op);
             }
@@ -133,23 +127,20 @@ public class SpaceGroup {
         }
         
         // --- copy operators and normalize their translational parts
-        final Set ops = new HashSet();
-        for (final Iterator iter = operators.iterator(); iter.hasNext();) {
-            ops.add(((Operator) iter.next()).modZ());
+        final Set<Operator> ops = new HashSet<Operator>();
+        for (final Operator op: operators) {
+            ops.add(op.modZ());
         }
         
         // --- generate a full set of operators, if required
         if (generate) {
-            final Set gens = new HashSet();
-            gens.addAll(ops);
+            final Set<Operator> gens = new HashSet<Operator>(ops);
             ops.clear();
-            final LinkedList queue = new LinkedList();
-            queue.addAll(gens);
+            final LinkedList<Operator> queue = new LinkedList<Operator>(gens);
             
             while (queue.size() > 0) {
                 final Operator A = (Operator) queue.removeFirst();
-                for (final Iterator iter = gens.iterator(); iter.hasNext();) {
-                    final Operator B = (Operator) iter.next();
+                for (final Operator B: gens) {
                     final Operator AB = ((Operator) A.times(B)).modZ();
                     if (!ops.contains(AB)) {
                         ops.add(AB);
@@ -161,10 +152,8 @@ public class SpaceGroup {
         
         // --- check products and inverses, if required
         if (check) {
-            for (final Iterator iter1 = ops.iterator(); iter1.hasNext();) {
-                final Operator A = (Operator) iter1.next();
-                for (final Iterator iter2 = ops.iterator(); iter2.hasNext();) {
-                    final Operator B = (Operator) iter2.next();
+            for (final Operator A: ops) {
+                for (final Operator B: ops) {
                     final Operator AB_ = (Operator) A.times(B.inverse());
                     if (!ops.contains(AB_.modZ())) {
                         throw new IllegalArgumentException("operators form no group");
@@ -192,7 +181,8 @@ public class SpaceGroup {
      * @param name the Hermann-Maugain symbol for the group.
      */
     public SpaceGroup(final int dimension, final String name) {
-        this(dimension, SpaceGroupCatalogue.operators(dimension, name), false, false);
+        this(dimension, SpaceGroupCatalogue.operators(dimension, name),
+        		false, false);
     }
     
     /**
@@ -201,7 +191,8 @@ public class SpaceGroup {
      * @param dimension the dimension of the group.
      * @param generators a set of generating operators modulo unit cell.
      */
-    public SpaceGroup(final int dimension, final Collection generators) {
+    public SpaceGroup(final int dimension,
+    		final Collection<Operator> generators) {
         this(dimension, generators, true, false);
     }
     
@@ -243,9 +234,8 @@ public class SpaceGroup {
         final Operator I = Operator.identity(d);
         
         // --- collect translation vectors
-        final List vecs = new ArrayList();
-        for (final Iterator iter = this.operators.iterator(); iter.hasNext();) {
-            final Operator op = (Operator) iter.next();
+        final List<Matrix> vecs = new ArrayList<Matrix>();
+        for (final Operator op: this.operators) {
             final Operator A = op.linearPart();
             if (A.equals(I)) {
                 vecs.add(op.translationalPart().getCoordinates());
@@ -256,7 +246,7 @@ public class SpaceGroup {
         final Matrix B = new Matrix(vecs.size() + d, d);
         B.setSubMatrix(0, 0, Matrix.one(d));
         for (int i = 0; i < vecs.size(); ++i) {
-            B.setRow(i + d, (Matrix) vecs.get(i));
+            B.setRow(i + d, vecs.get(i));
         }
         
         // --- triangulate to extract a basis
@@ -309,18 +299,10 @@ public class SpaceGroup {
      * 
      * @return the sorted list of operators for a primitive setting.
      */
-    public List primitiveOperatorsSorted() {
-        final List res = new ArrayList();
-        res.addAll(primitiveOperators());
-        
-        Collections.sort(res, new Comparator() {
-            public int compare(final Object o1, final Object o2) {
-                final Operator op1 = ((Operator) o1).linearPart();
-                final Operator op2 = ((Operator) o2).linearPart();
-                return op1.compareTo(op2);
-            }
-        });
-        
+    public List<Operator> primitiveOperatorsSorted() {
+        final List<Operator> res =
+        		new ArrayList<Operator>(primitiveOperators());
+        Collections.sort(res);
         return res;
     }
     
@@ -330,16 +312,17 @@ public class SpaceGroup {
      * 
      * @return a map assigning operators types to operator sets.
      */
-    public Map primitiveOperatorsByType() {
-        final Map res = new HashMapWithDefault() {
-            public Object makeDefault() {
-                return new HashSet();
+    public Map<OperatorType, Set<Operator>> primitiveOperatorsByType() {
+        final Map<OperatorType, Set<Operator>> res =
+        		new HashMapWithDefault<OperatorType, Set<Operator>>() {
+        	private static final long serialVersionUID = -4407523262570166538L;
+
+			public Set<Operator> makeDefault() {
+                return new HashSet<Operator>();
             }
         };
-        for (final Iterator iter = primitiveOperators().iterator(); iter.hasNext();) {
-            final Operator op = (Operator) iter.next();
-            final OperatorType type = new OperatorType(op);
-            ((Set) res.get(type)).add(op);
+        for (final Operator op: primitiveOperators()) {
+            res.get(new OperatorType(op)).add(op);
         }
         
         return res;
@@ -370,12 +353,10 @@ public class SpaceGroup {
         M.makeImmutable();
         
         // --- start with an empty equation list
-        final List eqns = new ArrayList();
+        final List<Matrix> eqns = new ArrayList<Matrix>();
     
         // --- iterate through the ideal symmetries
-        for (final Iterator syms = getOperators().iterator(); syms.hasNext();) {
-            // --- get the next symmetry
-            final Operator sym = (Operator) syms.next();
+        for (final Operator sym: getOperators()) {
             // --- extract the associated linear matrix
             final Matrix S = sym.linearPartAsMatrix();
             // --- construct difference of virtual Gram matrix with its "image" by S
@@ -407,13 +388,13 @@ public class SpaceGroup {
      */
     public Vector[] shiftSpace() {
 		final int d = getDimension();
-		final Set ops = primitiveOperators();
+		final Set<Operator> ops = primitiveOperators();
 		final Matrix M = new Matrix(d, d * ops.size());
 		final Matrix I = Matrix.one(d);
 		int i = 0;
-		for (final Iterator iter = ops.iterator(); iter.hasNext();) {
-			final Matrix op = ((Operator) iter.next()).getCoordinates();
-			final Matrix A = (Matrix) op.getSubMatrix(0, 0, d, d).minus(I);
+		for (final Operator op: ops) {
+			final Matrix A = (Matrix) op.getCoordinates()
+					.getSubMatrix(0, 0, d, d).minus(I);
 			M.setSubMatrix(0, i, A);
 			i += d;
 		}

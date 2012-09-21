@@ -52,7 +52,6 @@ public class SpaceGroupCatalogue {
      * given dimension.
      */
     private static class Table {
-        final public int dimension;
         final public Map<String, List<Operator>> nameToOps =
         	new HashMap<String, List<Operator>>();
         final public Map<String, CoordinateChange> nameToTransform =
@@ -60,7 +59,6 @@ public class SpaceGroupCatalogue {
         final public List<String> namesInOrder = new ArrayList<String>();
         
         public Table(final int dimension) {
-            this.dimension = dimension;
         }
     }
     
@@ -92,10 +90,11 @@ public class SpaceGroupCatalogue {
      */
     private static class Entry {
     	final public String key;
-    	final public List ops;
+    	final public List<Operator> ops;
     	final public CoordinateChange transform;
     	
-    	public Entry(final String key, final List ops, final CoordinateChange transform) {
+    	public Entry(final String key, final List<Operator> ops,
+    			final CoordinateChange transform) {
     		this.key = key;
     		this.ops = ops;
     		this.transform = transform;
@@ -212,7 +211,7 @@ public class SpaceGroupCatalogue {
      * @param dimension the common dimension of the space groups.
      * @return an iterator over the names of space group settings.
      */
-    public static Iterator allKnownSettings(final int dimension) {
+    public static Iterator<String> allKnownSettings(final int dimension) {
         if (groupTables[3] == null) {
             load();
         }
@@ -279,8 +278,8 @@ public class SpaceGroupCatalogue {
         for (int i = 0; i < candidates.length; ++i) {
             final String key = candidates[i];
             if (table.nameToOps.containsKey(key)) {
-                return new Entry(key, (List) table.nameToOps.get(key),
-                        (CoordinateChange) table.nameToTransform.get(key));
+                return new Entry(key, table.nameToOps.get(key),
+                		table.nameToTransform.get(key));
             }
         }
         
@@ -310,7 +309,7 @@ public class SpaceGroupCatalogue {
 	 * @param name the name of the group setting.
 	 * @return the list of operators.
 	 */
-    public static List operators(final int dim, final String name) {
+    public static List<Operator> operators(final int dim, final String name) {
     	final Entry result = retrieve(dim, name);
     	if (result == null) {
     		return null;
@@ -348,7 +347,7 @@ public class SpaceGroupCatalogue {
      * 
      * @return an iterator over the values in the lookup table.
      */
-    public static Iterator lookupInfo() {
+    public static Iterator<Lookup> lookupInfo() {
         if (groupTables[3] == null) {
             load();
         }
