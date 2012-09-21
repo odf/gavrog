@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -33,29 +33,26 @@ import org.gavrog.box.collections.Iterators;
  * Enumerates all non-isomorphic transitive actions of a given group on small
  * sets up to a a given size. By computing the stabilizers of the resulting
  * actions, one obtains all conjugacy classes of subgroups of the group.
- * 
- * @author Olaf Delgado
- * @version $Id: SmallActionsIterator.java,v 1.3 2005/11/28 06:58:46 odf Exp $
  */
-public class SmallActionsIterator extends IteratorAdapter {
+public class SmallActionsIterator<E>
+extends IteratorAdapter<GroupAction<E, Integer>> {
     // --- set to true to enable logging
     final private static boolean LOGGING = false;
 
     // --- input parameters
-    final private FpGroup group;
+    final private FpGroup<E> group;
     final private int maxSize;
     final private boolean normalOnly;
     
     // --- convenience data
     final private int ngens;
-    final private FreeWord idx2gen[];
-    final private Map gen2idx;
+    final private Map<FreeWord<E>, Integer> gen2idx;
     final private int[] idx2invidx;
-    final private Set relatorsByStartGen[];
+    final private List<Set<int[]>> relatorsByStartGen;
     
     // --- the action table and trial stack
     final private int[][] table;
-    final private LinkedList stack;
+    final private LinkedList<Move> stack;
     
     // --- info on the current state
     private int currentNumberOfRows;
@@ -94,16 +91,6 @@ public class SmallActionsIterator extends IteratorAdapter {
     }
     
     /**
-     * Thrown when the iterator exceeds its time limit.
-     */
-    public class ChoiceLimitExceededException extends RuntimeException {
-        public ChoiceLimitExceededException(final String msg) {
-            super(msg);
-        }
-    }
-    
-    
-    /**
      * Constructs and initializes a new instance.
      * 
      * @param group the group to construct actions of.
@@ -111,7 +98,7 @@ public class SmallActionsIterator extends IteratorAdapter {
      * @param normalOnly if true, require that each set element has the same
      *            stabilizer. The stabilizer is then a normal subgroup.
      */
-    public SmallActionsIterator(final FpGroup group, final int maxSize,
+    public SmallActionsIterator(final FpGroup<E> group, final int maxSize,
             final boolean normalOnly) {
         // --- copy the input parameters to fields
         this.group = group;
@@ -119,21 +106,17 @@ public class SmallActionsIterator extends IteratorAdapter {
         this.normalOnly = normalOnly;
         
         // --- extract some information from the group
-        final List groupGenerators = group.getGenerators();
-        final List groupRelators = group.getRelators();
+        final List<FreeWord<E>> groupGenerators = group.getGenerators();
+        final List<FreeWord<E>> groupRelators = group.getRelators();
         this.ngens = 2 * groupGenerators.size();
 
         // --- set up translation tables
-        this.idx2gen = new FreeWord[this.ngens];
-        this.gen2idx = new HashMap();
+        this.gen2idx = new HashMap<FreeWord<E>, Integer>();
         this.idx2invidx = new int[this.ngens];
 
         int nu = 0;
-        for (Iterator iter = groupGenerators.iterator(); iter.hasNext();) {
-            final FreeWord g = (FreeWord) iter.next();
-            this.idx2gen[nu] = g;
+        for (final FreeWord<E> g: groupGenerators) {
             this.gen2idx.put(g, new Integer(nu));
-            this.idx2gen[nu+1] = g.inverse();
             this.gen2idx.put(g.inverse(), new Integer(nu+1));
             this.idx2invidx[nu] = nu+1;
             this.idx2invidx[nu+1] = nu;
@@ -141,27 +124,26 @@ public class SmallActionsIterator extends IteratorAdapter {
         }
 
         // --- translate relators
-        this.relatorsByStartGen = new Set[this.ngens+1];
+        this.relatorsByStartGen = new LinkedList<Set<int[]>>();
         for (int k = 0; k <= this.ngens; ++k) {
-            this.relatorsByStartGen[k] = new HashSet();
+            this.relatorsByStartGen.add(new HashSet<int[]>());
         }
-        for (Iterator iter = groupRelators.iterator(); iter.hasNext();) {
-            final FreeWord rel = (FreeWord) iter.next();
+        for (final FreeWord<E> rel: groupRelators) {
             for (int exp = -1; exp <= 1; exp += 2) {
-                final FreeWord r = rel.raisedTo(exp);
+                final FreeWord<E> r = rel.raisedTo(exp);
                 final int n = r.length();
                 for (int i = 0; i < n; ++i) {
-                    final FreeWord w = r.subword(i, n).times(r.subword(0, i));
-                    final FreeWord g = w.subword(0, 1);
-                    final int k = ((Integer) this.gen2idx.get(g)).intValue();
-                    this.relatorsByStartGen[k].add(translateWord(w));
+                    final FreeWord<E> w = r.subword(i, n).times(r.subword(0, i));
+                    final FreeWord<E> g = w.subword(0, 1);
+                    final int k = this.gen2idx.get(g);
+                    this.relatorsByStartGen.get(k).add(translateWord(w));
                 }
             }
         }
         
         // --- initialize the action table and trial stack
         this.table = new int[maxSize+1][ngens];
-        this.stack = new LinkedList();
+        this.stack = new LinkedList<Move>();
         this.currentNumberOfRows = 1;
         
         // --- push a dummy move (see documentation for findNext() below)
@@ -198,7 +180,7 @@ public class SmallActionsIterator extends IteratorAdapter {
      * 
      * @return the next action, if any.
      */
-    protected Object findNext() throws NoSuchElementException {
+    protected GroupAction<E, Integer> findNext() throws NoSuchElementException {
         if (LOGGING) {
             System.out.println("findNext(): stack size = " + this.stack.size());
         }
@@ -259,7 +241,7 @@ public class SmallActionsIterator extends IteratorAdapter {
         }
 
         final boolean startsRow = value > this.currentNumberOfRows;
-        final LinkedList queue = new LinkedList();
+        final LinkedList<Move> queue = new LinkedList<Move>();
         queue.addLast(new Move(row, column, value, startsRow, true));
         
         while (queue.size() > 0) {
@@ -271,9 +253,8 @@ public class SmallActionsIterator extends IteratorAdapter {
                 ++this.currentNumberOfRows;
             }
             
-            final Set rels = this.relatorsByStartGen[move.column];
-            for (Iterator iter = rels.iterator(); iter.hasNext();) {
-                final int relator[] = (int[]) iter.next();
+            final Set<int[]> rels = this.relatorsByStartGen.get(move.column);
+            for (final int relator[]: rels) {
                 final Move next = scanRelation(relator, move.row);
                 if (next == null) {
                     // --- nothing to do
@@ -496,10 +477,10 @@ public class SmallActionsIterator extends IteratorAdapter {
      * @param word the input word.
      * @return the translated word.
      */
-    private int[] translateWord(FreeWord word) {
+    private int[] translateWord(FreeWord<E> word) {
         final int res[] = new int[word.size()];
         for (int i = 0; i < word.size(); ++i) {
-            final FreeWord g = word.subword(i, i+1);
+            final FreeWord<E> g = word.subword(i, i+1);
             final Integer idx = (Integer) this.gen2idx.get(g);
             res[i] = idx.intValue();
         }
@@ -512,49 +493,41 @@ public class SmallActionsIterator extends IteratorAdapter {
      * 
      * @return the constructed instance.
      */
-    private Object constructAction() {
+    private GroupAction<E, Integer> constructAction() {
         final int size = this.currentNumberOfRows;
         final int[][] table = new int[size+1][this.ngens];
         for (int i = 0; i <= size; ++i) {
             table[i] = (int[]) this.table[i].clone();
         }
         
-        return new GroupAction() {
-            public FpGroup getGroup() {
+        return new GroupAction<E, Integer>() {
+            public FpGroup<E> getGroup() {
                 return SmallActionsIterator.this.group;
             }
             
-            public Iterator domain() {
+            public Iterator<Integer> domain() {
                 return Iterators.range(1, size + 1);
             }
 
-            public Object apply(final Object x, final FreeWord w) {
-                if (!(x instanceof Integer)) {
-                    return null;
-                }
-                int current = ((Integer) x).intValue();
+            public Integer apply(final Integer x, final FreeWord<E> w) {
+                int current = x;
                 if (current < 1 || current > size) {
                     return null;
                 }
                 for (int i = 0; i < w.length(); ++i) {
-                    final FreeWord g = w.subword(i, i+1);
-                    final Object k = SmallActionsIterator.this.gen2idx.get(g);
+                    final FreeWord<E> g = w.subword(i, i+1);
+                    final Integer k = SmallActionsIterator.this.gen2idx.get(g);
                     if (k == null) {
                         return null;
                     } else {
-                        current = table[current][((Integer) k).intValue()];
+                        current = table[current][k];
                     }
                 }
-                return new Integer(current);
+                return current;
             }
 
-            public boolean isDefinedOn(Object x) {
-                if (x instanceof Integer) {
-                    final int i = ((Integer) x).intValue();
-                    return i >= 1 && i <= size;
-                } else {
-                    return false;
-                }
+            public boolean isDefinedOn(final Integer x) {
+            	return x >= 1 && x <= size;
             }
             
             public int size() {
@@ -616,15 +589,18 @@ public class SmallActionsIterator extends IteratorAdapter {
     
     public static void main(final String args[]) {
         final int index = Integer.parseInt(args[0]);
-        final FiniteAlphabet A = new FiniteAlphabet(new String[] { "a", "b", "c" });
-        final FpGroup G = new FpGroup(A, new String[] { "[a,b]", "[a,c]", "[b,c]" });
-        final SmallActionsIterator iter = new SmallActionsIterator(G, index, false);
+        final FiniteAlphabet<String> A =
+        		new FiniteAlphabet<String>(new String[] { "a", "b", "c" });
+        final FpGroup<String> G = new FpGroup<String>(A,
+        		new String[] { "[a,b]", "[a,c]", "[b,c]" });
+        final SmallActionsIterator<String> iter =
+        		new SmallActionsIterator<String>(G, index, false);
         int count = 0;
         while (iter.hasNext()) {
             iter.next();
             ++count;
         }
-        System.out.println(count + " subgroup classes found in " + iter.getTimeElapsed()
-                           / 1000.0 + " second.");
+        System.out.println(count + " subgroup classes found in "
+        		+ iter.getTimeElapsed() / 1000.0 + " second.");
     }
 }

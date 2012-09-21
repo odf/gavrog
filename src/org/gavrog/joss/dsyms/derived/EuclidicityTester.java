@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.gavrog.jane.fpgroups.ChoiceLimitExceededException;
 import org.gavrog.jane.fpgroups.FpGroup;
 import org.gavrog.jane.fpgroups.GroupAction;
 import org.gavrog.jane.fpgroups.SmallActionsIterator;
@@ -351,7 +352,7 @@ public class EuclidicityTester {
                 decide(false, "bad subgroup count for cover");
                 return;
             }
-        } catch (SmallActionsIterator.ChoiceLimitExceededException ex) {
+        } catch (ChoiceLimitExceededException ex) {
             giveUp("runtime limits reached", simpl);
             return;
         }
@@ -437,7 +438,7 @@ public class EuclidicityTester {
                     System.err.flush();
                 }
                 break;
-            } catch (SmallActionsIterator.ChoiceLimitExceededException ex) {
+            } catch (ChoiceLimitExceededException ex) {
                 if (LOGGING) {
                     System.err.println("\n    ... choice limit exceeded after "
                             + stats(actions));
