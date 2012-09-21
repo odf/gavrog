@@ -199,7 +199,7 @@ public class Stabilizer<E, D> {
 	 * and sort the results into bins determined by their start generators.
 	 */
 	private void preprocessRelators() {
-		this.relatorsByStartGen = new HashMap();
+		this.relatorsByStartGen = new HashMap<FreeWord<E>, Set<FreeWord<E>>>();
 		final List<FreeWord<E>> relators = this.group.getRelators();
 		for (FreeWord<E> rel: relators) {
 			for (int exp = -1; exp <= 1; exp += 2) {
@@ -209,9 +209,10 @@ public class Stabilizer<E, D> {
 					final FreeWord<E> v = w.subword(i, n).times(w.subword(0, i));
 					final FreeWord<E> g = v.subword(0, 1);
 					if (!this.relatorsByStartGen.containsKey(g)) {
-						this.relatorsByStartGen.put(g, new HashSet());
+						this.relatorsByStartGen.put(g,
+								new HashSet<FreeWord<E>>());
 					}
-					((Set) this.relatorsByStartGen.get(g)).add(v);
+					this.relatorsByStartGen.get(g).add(v);
 				}
 			}
 		}
@@ -227,12 +228,13 @@ public class Stabilizer<E, D> {
      * @param start point at which to start looking for relation cycles.
      * @param startgen group generator to determine the start edge.
      */
-	private void closeRelations(final Object start, final FreeWord startgen) {
+	private void closeRelations(final D start, final FreeWord<E> startgen) {
 		// --- initialize the edge queue with the given edge
 		final LinkedList<Pair<D, FreeWord<E>>> queue =
 				new LinkedList<Pair<D, FreeWord<E>>>();
-		queue.addLast(new Pair(start, startgen));
-		final Set seen = new HashSet();
+		queue.addLast(new Pair<D, FreeWord<E>>(start, startgen));
+		final Set<Pair<D, FreeWord<E>>> seen =
+				new HashSet<Pair<D, FreeWord<E>>>();
 
 		// --- close relations until the queue is empty
 		while (queue.size() > 0) {
@@ -242,15 +244,14 @@ public class Stabilizer<E, D> {
 			}
             seen.add(edge);
 			final D x = edge.getFirst();
-			final FreeWord g = (FreeWord) edge.getSecond();
+			final FreeWord<E> g = edge.getSecond();
 
 			// --- look at all relations starting with this generator
-			final Set rels = (Set) this.relatorsByStartGen.get(g);
+			final Set<FreeWord<E>> rels = this.relatorsByStartGen.get(g);
             if (rels == null) {
                 continue;
             }
-			for (Iterator iter = rels.iterator(); iter.hasNext();) {
-				final FreeWord r = (FreeWord) iter.next();
+			for (final FreeWord<E> r: rels) {
 				final int n = r.length();
 
 				// --- trace relation r of length n starting at x
@@ -259,9 +260,10 @@ public class Stabilizer<E, D> {
 				int cutIndex = 0;
 				for (int i = 0; i < n; ++i) {
 					// --- the next generator
-					final FreeWord h = r.subword(i, i+1);
+					final FreeWord<E> h = r.subword(i, i+1);
 					// --- the next edge
-					final Pair next = new Pair(y, h);
+					final Pair<D, FreeWord<E>> next =
+							new Pair<D, FreeWord<E>>(y, h);
 					if (!this.edgeLabelling.containsKey(next)) {
 						// --- found a cut
 						if (cut != null) {
@@ -282,17 +284,18 @@ public class Stabilizer<E, D> {
 				if (cut != null) {
 					// --- get point and generator of the cut
 					y = cut.getFirst();
-					final FreeWord h = (FreeWord) cut.getSecond();
+					final FreeWord<E> h = cut.getSecond();
 
 					// --- construct the reverse of the cut edge
-					final Object z = this.action.apply(y, h);
-					final Pair reverseEdge = new Pair(z, h.inverse());
+					final D z = this.action.apply(y, h);
+					final Pair<D, FreeWord<E>> reverseEdge =
+							new Pair<D, FreeWord<E>>(z, h.inverse());
 
 					// --- trace what's assigned to the rest of the loop
-					final FreeWord r1 = r.subword(cutIndex, n);
-					final FreeWord r2 = r.subword(0, cutIndex);
-					final FreeWord w = r1.times(r2).inverse();
-					final FreeWord trace = traceWord(y, w);
+					final FreeWord<E> r1 = r.subword(cutIndex, n);
+					final FreeWord<E> r2 = r.subword(0, cutIndex);
+					final FreeWord<E> w = r1.times(r2).inverse();
+					final FreeWord<String> trace = traceWord(y, w);
 					
 					if (trace != null && trace.length() <= this.maxLabelLength) {
                         // --- label the cut edge and its reverse
@@ -321,12 +324,12 @@ public class Stabilizer<E, D> {
 	 * @return the resulting word.
 	 */
 	private FreeWord<String> traceWord(D x, FreeWord<E> r) {
-		FreeWord res = null;
+		FreeWord<String> res = null;
 		D y = x;
 		for (int i = 0; i < r.length(); ++i) {
-			final FreeWord g = r.subword(i, i+1);
-			final Pair edge = new Pair(y, g);
-			final FreeWord w = (FreeWord) this.edgeLabelling.get(edge);
+			final FreeWord<E> g = r.subword(i, i+1);
+			final Pair<D, FreeWord<E>> edge = new Pair<D, FreeWord<E>>(y, g);
+			final FreeWord<String> w = this.edgeLabelling.get(edge);
 			if (res == null) {
 				res = w;
 			} else if (w != null){
@@ -340,7 +343,7 @@ public class Stabilizer<E, D> {
 	/**
 	 * @return Returns the action.
 	 */
-	public GroupAction getAction() {
+	public GroupAction<E, D> getAction() {
 		return action;
 	}
 
@@ -348,13 +351,13 @@ public class Stabilizer<E, D> {
 	/**
 	 * @return Returns the basepoint.
 	 */
-	public Object getBasepoint() {
+	public D getBasepoint() {
 		return basepoint;
 	}
 	/**
 	 * @return Returns the edge labelling.
 	 */
-	public Map getEdgeLabelling() {
+	public Map<Pair<D, FreeWord<E>>, FreeWord<String>> getEdgeLabelling() {
 		compute();
 		return edgeLabelling;
 	}
@@ -362,7 +365,7 @@ public class Stabilizer<E, D> {
 	/**
 	 * @return Returns the generators.
 	 */
-	public List getGenerators() {
+	public List<FreeWord<E>> getGenerators() {
 		compute();
 		return generators;
 	}
@@ -370,7 +373,7 @@ public class Stabilizer<E, D> {
 	/**
 	 * @return Returns the presentation.
 	 */
-	public FpGroup getPresentation() {
+	public FpGroup<String> getPresentation() {
 		compute();
 		return presentation;
 	}
