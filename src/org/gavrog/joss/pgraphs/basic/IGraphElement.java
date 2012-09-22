@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,17 +20,14 @@ import java.util.Iterator;
 
 /**
  * A common interface for all the nodes and edges of a graph.
- * 
- * @author Olaf Delgado
- * @version $Id: IGraphElement.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
-public interface IGraphElement {
+public interface IGraphElement<T> {
     /**
      * Retrieves the graph that owns this element.
      * 
      * @return the graph this element is in.
      */
-    public IGraph owner();
+    public IGraph<T> owner();
 
     /**
      * Retrieves the elements that this element is incident to. If the element
@@ -39,7 +36,7 @@ public interface IGraphElement {
      * 
      * @return an iterator over the incident elements.
      */
-    public Iterator incidences();
+    public Iterator<IGraphElement<T>> incidences();
 
     /**
      * Retrieves the identifier for this element. The graph implementation must
@@ -47,5 +44,5 @@ public interface IGraphElement {
      * 
      * @return the identifier for this element.
      */
-    public Object id();
+    public T id();
 }

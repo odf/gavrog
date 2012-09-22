@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,24 +20,21 @@ package org.gavrog.joss.pgraphs.basic;
  * Interface for the representation of edges in a graph. Here, edges are always
  * directed, i.e., they have defined source and target nodes. In an undirected
  * graph, this means that the reverse edge is by definition always present.
- * 
- * @author Olaf Delgado
- * @version $Id: IEdge.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
-public interface IEdge extends IGraphElement {
+public interface IEdge<T> extends IGraphElement<T> {
     /**
      * Retrieves the source node of this edge.
      * 
      * @return the source node.
      */
-    public INode source();
+    public INode<T> source();
 
     /**
      * Retrieves the target node of this edge.
      * 
      * @return the target node.
      */
-    public INode target();
+    public INode<T> target();
 
     /**
      * If an end of this edge is given, retrieves the opposite end, otherwise
@@ -46,7 +43,7 @@ public interface IEdge extends IGraphElement {
      * @param oneEnd one end of this edge.
      * @return the opposite end.
      */
-    public INode opposite(final INode oneEnd);
+    public INode<T> opposite(final INode<T> oneEnd);
 
     /**
      * Retrieves the reverse of this edge, if present.
@@ -54,7 +51,7 @@ public interface IEdge extends IGraphElement {
      * @return the reverse edge.
      * @throws UnsupportedOperationException if the reverse does not exist.
      */
-    public IEdge reverse() throws UnsupportedOperationException;
+    public IEdge<T> reverse() throws UnsupportedOperationException;
 
     /**
      * Returns an oriented version of this edge. The only difference is that
@@ -62,7 +59,7 @@ public interface IEdge extends IGraphElement {
      * 
      * @return an oriented version of this edge.
      */
-    public IEdge oriented();
+    public IEdge<T> oriented();
 
     /**
      * Returns an unoriented version of this edge. The only difference is that
@@ -70,5 +67,5 @@ public interface IEdge extends IGraphElement {
      * 
      * @return an unoriented version of this edge.
      */
-    public IEdge unoriented();
+    public IEdge<T> unoriented();
 }

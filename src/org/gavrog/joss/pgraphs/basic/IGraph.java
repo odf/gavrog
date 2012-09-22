@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,14 +20,11 @@ import java.util.Iterator;
 
 /**
  * Common interface for graph classes (not necessarily simple).
- * 
- * @author Olaf Delgado
- * @version $Id: IGraph.java,v 1.2 2006/04/04 22:59:26 odf Exp $
  */
-public interface IGraph {
+public interface IGraph<T> {
     /**
      * Retrieves the identifier for this graph. Every graph object must have a
-     * unique identifyer.
+     * unique identifier.
      * 
      * @return the identifier for this graph.
      */
@@ -54,22 +51,22 @@ public interface IGraph {
      * 
      * @return an iterator over the node set.
      */
-    public Iterator nodes();
+    public Iterator<INode<T>> nodes();
 
     /**
      * Retrieves all the edges of this graph in the order they were added.
      * 
      * @return an iterator over the edge set.
      */
-    public Iterator edges();
+    public Iterator<IEdge<T>> edges();
 
     /**
-     * Retrieves an element of this graph with the given identifyer.
+     * Retrieves an element of this graph with the given identifier.
      * 
-     * @param id the element identifyer.
+     * @param id the element identifier.
      * @return the specified element or null, if none exists.
      */
-    public IGraphElement getElement(final Object id);
+    public IGraphElement<T> getElement(final T id);
 
     /**
      * Checks if this graph contains a certain element (node or edge).
@@ -77,17 +74,18 @@ public interface IGraph {
      * @param element the element to search.
      * @return true if the given element is contained in this graph.
      */
-    public boolean hasElement(final IGraphElement element);
+    public boolean hasElement(final IGraphElement<T> element);
 
     /**
-     * Retrieves all the connecting edges between a given pair of nodes, without regard
-     * for their direction.
+     * Retrieves all the connecting edges between a given pair of nodes, without
+     * regard for their direction.
      * 
      * @param node1 the first node.
      * @param node2 the second node.
      * @return an iterator over the set of connections.
      */
-    public Iterator connectingEdges(final INode node1, final INode node2);
+    public Iterator<IEdge<T>> connectingEdges(
+    		final INode<T> node1, final INode<T> node2);
 
     /**
      * Retrieves the directed edges from a given source to a given target. In an
@@ -98,14 +96,15 @@ public interface IGraph {
      * @param target the target node.
      * @return an iterator over the set of edges.
      */
-    public Iterator directedEdges(final INode source, final INode target);
+    public Iterator<IEdge<T>> directedEdges(
+    		final INode<T> source, final INode<T> target);
 
     /**
      * Creates a new node.
      * 
      * @return the newly created node.
      */
-    public INode newNode();
+    public INode<T> newNode();
 
     /**
      * Creates a new edge between the given nodes.
@@ -114,11 +113,11 @@ public interface IGraph {
      * @param target the target node.
      * @return the newly created edge.
      */
-    public IEdge newEdge(final INode source, final INode target);
+    public IEdge<T> newEdge(final INode<T> source, final INode<T> target);
 
     /**
      * Removes an element from the graph.
      * @param element the element to remove.
      */
-    public void delete(final IGraphElement element);
+    public void delete(final IGraphElement<T> element);
 }
