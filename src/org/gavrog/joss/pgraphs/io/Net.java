@@ -64,17 +64,17 @@ public class Net extends PeriodicGraph {
 	}
 	
 	public void setNodeInfo(final INode v, final Object key, final Object value) {
-		assert(this.hasElement(v));
+		assert(this.hasNode(v));
 		this.nodeInfo.put(new Pair(v, key), value);
 	}
 	
 	public Object getNodeInfo(final INode v, final Object key) {
-		assert(this.hasElement(v));
+		assert(this.hasNode(v));
 		return this.nodeInfo.get(new Pair(v, key));
 	}
 	
 	public String getNodeName(final INode v) {
-		assert(this.hasElement(v));
+		assert(this.hasNode(v));
 		return (String) this.nodeToName.get(v);
 	}
 	
@@ -96,7 +96,7 @@ public class Net extends PeriodicGraph {
 		return v;
 	}
 	
-	public void delete(final IGraphElement x) {
+	public void delete(final INode x) {
 		this.nodeToName.remove(x);
 		super.delete(x);
 	}

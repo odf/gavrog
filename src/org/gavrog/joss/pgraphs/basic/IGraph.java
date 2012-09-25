@@ -61,12 +61,13 @@ public interface IGraph {
     public Iterator<IEdge> edges();
 
     /**
-     * Retrieves an element of this graph with the given identifyer.
+     * Retrieves an element of this graph with the given identifier.
      * 
-     * @param id the element identifyer.
+     * @param id the element identifier.
      * @return the specified element or null, if none exists.
      */
-    public IGraphElement getElement(final long id);
+    public INode getNode(final long id);
+    public IEdge getEdge(final long id);
 
     /**
      * Checks if this graph contains a certain element (node or edge).
@@ -74,7 +75,8 @@ public interface IGraph {
      * @param element the element to search.
      * @return true if the given element is contained in this graph.
      */
-    public boolean hasElement(final IGraphElement element);
+    public boolean hasNode(final INode node);
+    public boolean hasEdge(final IEdge edge);
 
     /**
      * Retrieves all the connecting edges between a given pair of nodes, without regard
@@ -117,5 +119,6 @@ public interface IGraph {
      * Removes an element from the graph.
      * @param element the element to remove.
      */
-    public void delete(final IGraphElement element);
+    public void delete(final INode node);
+    public void delete(final IEdge edge);
 }

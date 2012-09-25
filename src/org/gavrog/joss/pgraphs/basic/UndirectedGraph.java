@@ -121,10 +121,8 @@ public class UndirectedGraph implements IGraph {
             return UndirectedGraph.this;
         }
 
-        /*
-         * (non-Javadoc)
-         * 
-         * @see javaPGraphs.IGraphElement#incidences()
+        /* (non-Javadoc)
+         * @see org.gavrog.joss.pgraphs.basic.INode#incidences()
          */
         public Iterator incidences() {
             final Set ids = (Set) nodeIdToIncidentEdgesIds.get(this.id);
@@ -187,6 +185,10 @@ public class UndirectedGraph implements IGraph {
 
     /**
      * Implements edge objects for this graph.
+     */
+    /**
+     * @author olaf
+     *
      */
     protected class Edge implements IEdge {
         private final long id;
@@ -277,10 +279,8 @@ public class UndirectedGraph implements IGraph {
             return UndirectedGraph.this;
         }
 
-        /*
-         * (non-Javadoc)
-         * 
-         * @see javaPGraphs.IGraphElement#incidences()
+        /* (non-Javadoc)
+         * @see org.gavrog.joss.pgraphs.basic.IEdge#incidences()
          */
         public Iterator incidences() {
             final List tmp = new LinkedList();
@@ -401,52 +401,26 @@ public class UndirectedGraph implements IGraph {
         };
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javaPGraphs.IGraph#getElement(java.lang.Object)
-     */
-    public IGraphElement getElement(final Long id) {
-        if (id == null) {
-            return null;
-        }
-        final Class type = (Class) this.idToType.get(id);
-        if (Node.class.equals(type)) {
-            return new Node(id);
-        } else if (Edge.class.equals(type)) {
-            return new Edge(id, false);
-        } else {
-            return null;
-        }
+
+    public INode getNode(long id) {
+        return new Node(id);
     }
 
-    public IGraphElement getElement(final long id) {
-    	return getElement(new Long(id));
+    public IEdge getEdge(long id) {
+        return new Edge(id, false);
     }
     
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javaPGraphs.IGraph#hasElement(javaPGraphs.IGraphElement)
-     */
-    public boolean hasElement(final IGraphElement element) {
-        if (element == null || element.owner() != this) {
-            return false;
-        }
-        final Class type = (Class) this.idToType.get(element.id());
-        if (Node.class.equals(type)) {
-            return element instanceof Node;
-        } else if (Edge.class.equals(type)) {
-            return element instanceof Edge;
-        } else {
-            return false;
-        }
+
+    public boolean hasNode(INode node) {
+        return node != null && node.owner() == this
+                && nodeIdToDegree.get(node.id()) != null;
     }
 
-    public boolean hasElement(final long id) {
-    	return getElement(id) != null;
+    public boolean hasEdge(IEdge edge) {
+        return edge != null && edge.owner() == this
+                && edgeIdToSourceNodeId.get(edge.id()) != null;
     }
-    
+
     /*
      * (non-Javadoc)
      * 
@@ -468,10 +442,10 @@ public class UndirectedGraph implements IGraph {
      *      javaPGraphs.INode)
      */
     public Iterator directedEdges(final INode source, final INode target) {
-        if (!hasElement(source)) {
+        if (!hasNode(source)) {
             throw new IllegalArgumentException("source node not in graph");
         }
-        if (!hasElement(target)) {
+        if (!hasNode(target)) {
             throw new IllegalArgumentException("source node not in graph");
         }
         final Object sourceId = source.id();
@@ -493,7 +467,7 @@ public class UndirectedGraph implements IGraph {
     }
 
     public Iterator directedEdges(final long i, final long j) {
-    	return directedEdges((INode) getElement(i), (INode) getElement(j));
+    	return directedEdges(getNode(i), getNode(j));
     }
     
     /* (non-Javadoc)
@@ -512,10 +486,10 @@ public class UndirectedGraph implements IGraph {
      */
     public IEdge newEdge(final INode source, final INode target) {
         final Long id = new Long(nextEdgeId--);
-        if (!hasElement(source)) {
+        if (!hasNode(source)) {
             throw new IllegalArgumentException("source node does not exist");
         }
-        if (!hasElement(target)) {
+        if (!hasNode(target)) {
             throw new IllegalArgumentException("target node does not exist");
         }
         final long sId = source.id();
@@ -532,38 +506,27 @@ public class UndirectedGraph implements IGraph {
         return new Edge(id, false);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javaPGraphs.IGraph#delete(javaPGraphs.IGraphElement)
-     */
-    public void delete(final IGraphElement element) {
-        if (!hasElement(element)) {
-            throw new IllegalArgumentException("no such element");
+
+    public void delete(INode v) {
+        if (v.degree() > 0) {
+            throw new UnsupportedOperationException("node must be isolated");
         }
-        final Object id = element.id();
-        if (element instanceof Edge) {
-            final Edge e = (Edge) element;
-            final Object sId = e.source().id();
-            final Object tId = e.target().id();
-            ((Set) this.nodeIdToIncidentEdgesIds.get(sId)).remove(id);
-            ((Set) this.nodeIdToIncidentEdgesIds.get(tId)).remove(id);
-            this.edgeIdToSourceNodeId.remove(id);
-            this.edgeIdToTargetNodeId.remove(id);
-            this.nodeIdToDegree.put(sId, new Integer(((Integer) this.nodeIdToDegree
-                    .get(sId)).intValue() - 1));
-            this.nodeIdToDegree.put(tId, new Integer(((Integer) this.nodeIdToDegree
-                    .get(tId)).intValue() - 1));
-            this.idToType.remove(id);
-        } else if (element instanceof Node) {
-            final Node v = (Node) element;
-            if (v.degree() > 0) {
-                throw new UnsupportedOperationException("node must be isolated");
-            }
-            this.nodeIdToIncidentEdgesIds.remove(id);
-            this.nodeIdToDegree.remove(id);
-            this.idToType.remove(id);
-        }
+        this.nodeIdToIncidentEdgesIds.remove(v.id());
+        this.nodeIdToDegree.remove(v.id());
+        this.idToType.remove(v.id());
+    }
+
+    public void delete(IEdge e) {
+        final long eId = e.id();
+        final long sId = e.source().id();
+        final long tId = e.target().id();
+        ((Set) this.nodeIdToIncidentEdgesIds.get(sId)).remove(eId);
+        ((Set) this.nodeIdToIncidentEdgesIds.get(tId)).remove(eId);
+        this.edgeIdToSourceNodeId.remove(eId);
+        this.edgeIdToTargetNodeId.remove(eId);
+        this.nodeIdToDegree.put(sId, ((Integer) this.nodeIdToDegree.get(sId)) - 1);
+        this.nodeIdToDegree.put(tId, ((Integer) this.nodeIdToDegree.get(tId)) - 1);
+        this.idToType.remove(eId);
     }
 
     /**

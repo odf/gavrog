@@ -137,7 +137,7 @@ public class PeriodicGraph extends UndirectedGraph {
          * @param shift the shift vector.
          */
         public CoverNode(final INode v, final Vector shift) {
-            if (!PeriodicGraph.this.hasElement(v)) {
+            if (!PeriodicGraph.this.hasNode(v)) {
                 throw new IllegalArgumentException("no such node");
             }
             if (!shift.isIntegral()) {
@@ -248,7 +248,7 @@ public class PeriodicGraph extends UndirectedGraph {
          * @param compareAsOriented if true, reverse edges are considered different.
          */
         public CoverEdge(final IEdge e, final Vector shift, final boolean compareAsOriented) {
-            if (!PeriodicGraph.this.hasElement(e)) {
+            if (!PeriodicGraph.this.hasEdge(e)) {
                 throw new IllegalArgumentException("no such edge");
             }
             if (!shift.isIntegral()) {
@@ -466,7 +466,7 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return the shift vector for that edge.
      */
     public Vector getShift(final IEdge e) {
-        if (hasElement(e)) {
+        if (hasEdge(e)) {
             final Vector s = (Vector) edgeIdToShift.get(e.id());
             if (((UndirectedGraph.Edge) e).isReverse) {
                 return (Vector) s.negative();
@@ -568,12 +568,9 @@ public class PeriodicGraph extends UndirectedGraph {
     /* (non-Javadoc)
      * @see javaPGraphs.IGraph#delete(javaPGraphs.IGraphElement)
      */
-    public void delete(final IGraphElement element) {
-        cache.clear();
-        if (element instanceof IEdge) {
-            edgeIdToShift.remove(element.id());
-        }
-        super.delete(element);
+    public void delete(final IEdge e) {
+        edgeIdToShift.remove(e.id());
+        super.delete(e);
     }
 
     /**

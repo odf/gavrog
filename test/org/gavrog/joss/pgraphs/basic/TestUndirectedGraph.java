@@ -83,27 +83,26 @@ public class TestUndirectedGraph extends TestCase {
         assertTrue(edges.contains(e4));
     }
 
-    public void testGetElement() {
-        IGraphElement x;
-        x = G.getElement(v1.id());
-        assertTrue(x instanceof INode);
-        assertEquals(v1.id(), x.id());
-        assertEquals(v1, x);
-        x = G.getElement(e1.id());
-        assertTrue(x instanceof IEdge);
-        assertEquals(e1.id(), x.id());
-        assertEquals(e1, x);
+    public void testGetElements() {
+        INode v = G.getNode(v1.id());
+        assertTrue(v instanceof INode);
+        assertEquals(v1.id(), v.id());
+        assertEquals(v1, v);
+        IEdge e = G.getEdge(e1.id());
+        assertTrue(e instanceof IEdge);
+        assertEquals(e1.id(), e.id());
+        assertEquals(e1, e);
     }
 
-    public void testHasElement() {
-        assertTrue(G.hasElement(v1));
-        assertTrue(G.hasElement(e1));
-        assertTrue(G.hasElement(G.getElement(e1.id())));
-        assertFalse(G.hasElement(null));
+    public void testHasElements() {
+        assertTrue(G.hasNode(v1));
+        assertTrue(G.hasEdge(e1));
+        assertTrue(G.hasEdge(G.getEdge(e1.id())));
+        assertFalse(G.hasEdge(null));
         final UndirectedGraph H = new UndirectedGraph();
         final INode v = H.newNode();
-        assertFalse(G.hasElement(v));
-        assertFalse(H.hasElement(v1));
+        assertFalse(G.hasNode(v));
+        assertFalse(H.hasNode(v1));
     }
 
     public void testOrientedEdge() {
@@ -234,12 +233,12 @@ public class TestUndirectedGraph extends TestCase {
     
     public void testElementOwner() {
         assertEquals(G, v1.owner());
-        assertEquals(G, G.getElement(v1.id()).owner());
+        assertEquals(G, G.getNode(v1.id()).owner());
         assertEquals(G, e1.owner());
     }
     
     public void testElementId() {
-        assertEquals(v1.id(), G.getElement(v1.id()).id());
+        assertEquals(v1.id(), G.getNode(v1.id()).id());
         assertEquals(e1.reverse().id(), e1.id());
     }
     

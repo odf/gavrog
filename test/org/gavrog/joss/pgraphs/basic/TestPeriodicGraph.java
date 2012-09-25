@@ -290,12 +290,12 @@ public class TestPeriodicGraph extends TestCase {
     
     public void testHashCodes() {
         final INode v = v1;
-        final INode w = (INode) G.getElement(v.id());
+        final INode w = G.getNode(v.id());
         assertNotSame(v, w);
         assertEquals(v, w);
         assertEquals(v.hashCode(), w.hashCode());
         final IEdge e = e1;
-        final IEdge f = (IEdge) G.getElement(e.id());
+        final IEdge f = G.getEdge(e.id());
         assertNotSame(e, f);
         assertEquals(e, f);
         assertEquals(e.hashCode(), f.hashCode());
