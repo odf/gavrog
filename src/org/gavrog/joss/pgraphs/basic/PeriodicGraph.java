@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.Stack;
 import java.util.TreeMap;
 
 import org.gavrog.box.collections.Cache;
@@ -56,24 +57,13 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * Implements a representation of a periodic graph.
+ * 
+ * @author Olaf Delgado
+ * @version $Id: PeriodicGraph.java,v 1.73 2007/05/30 23:19:53 odf Exp $
  */
 
-public class PeriodicGraph extends UndirectedGraph<Long> {
-    long nodeId = 0;
-    long edgeId = 0;
-    
-    @Override
-    protected Long nextNodeId() {
-        ++nodeId;
-        return nodeId;
-    }
+public class PeriodicGraph extends UndirectedGraph {
 
-    @Override
-    protected Long nextEdgeId() {
-        --edgeId;
-        return edgeId;
-    }
-    
     // --- enables or disables debugging
     final protected static boolean DEBUG = false;
     

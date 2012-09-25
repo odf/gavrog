@@ -294,12 +294,12 @@ public class TestPeriodicGraph extends TestCase {
     }
     
     public void testHashCodes() {
-        final INode<Long> v = v1;
+        final INode v = v1;
         final INode w = (INode) G.getElement(v.id());
         assertNotSame(v, w);
         assertEquals(v, w);
         assertEquals(v.hashCode(), w.hashCode());
-        final IEdge<Long> e = e1;
+        final IEdge e = e1;
         final IEdge f = (IEdge) G.getElement(e.id());
         assertNotSame(e, f);
         assertEquals(e, f);
@@ -328,7 +328,7 @@ public class TestPeriodicGraph extends TestCase {
     }
     
     public void testShortestCycleAtAngle() {
-    	Iterator<INode<Long>> diaNodes = dia.nodes();
+    	Iterator<INode> diaNodes = dia.nodes();
     	final INode a = (INode) diaNodes.next();
     	final INode b = (INode) diaNodes.next();
     	final PeriodicGraph.CoverNode u = dia.new CoverNode(b);
