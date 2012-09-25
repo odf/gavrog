@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -29,10 +29,25 @@ import junit.framework.TestCase;
 
 /**
  * Tests class UndirectedGraph.
- * @author Olaf Delgado
- * @version $Id: TestUndirectedGraph.java,v 1.3 2006/04/04 22:59:27 odf Exp $
  */
 public class TestUndirectedGraph extends TestCase {
+    private class Graph extends UndirectedGraph<Long> {
+        long nodeId = 0;
+        long edgeId = 0;
+        
+        @Override
+        protected Long nextNodeId() {
+            ++nodeId;
+            return nodeId;
+        }
+
+        @Override
+        protected Long nextEdgeId() {
+            --edgeId;
+            return edgeId;
+        }
+    }
+    
     private UndirectedGraph G;
     private INode v1, v2, v3, v4, v5;
     private IEdge e1, e2, e3, e4;
@@ -42,7 +57,7 @@ public class TestUndirectedGraph extends TestCase {
      */
     protected void setUp() throws Exception {
         super.setUp();
-        G = new UndirectedGraph();
+        G = new Graph();
         v1 = G.newNode();
         v2 = G.newNode();
         v3 = G.newNode();
@@ -64,6 +79,11 @@ public class TestUndirectedGraph extends TestCase {
         super.tearDown();
     }
 
+    public void testNodeEquality() {
+        assertTrue(v1.equals(v1));
+        assertFalse(v1.equals(v2));
+    }
+    
     public void testNodes() {
         final List nodes = Iterators.asList(G.nodes());
         assertEquals(5, nodes.size());
@@ -100,7 +120,7 @@ public class TestUndirectedGraph extends TestCase {
         assertTrue(G.hasElement(e1));
         assertTrue(G.hasElement(G.getElement(e1.id())));
         assertFalse(G.hasElement(null));
-        final UndirectedGraph H = new UndirectedGraph();
+        final UndirectedGraph H = new Graph();
         final INode v = H.newNode();
         assertFalse(G.hasElement(v));
         assertFalse(H.hasElement(v1));

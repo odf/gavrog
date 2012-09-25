@@ -72,8 +72,6 @@ import buoy.event.EventSource;
 
 /**
  * The basic commandlne version of Gavrog Systre.
- * 
- * @author Olaf Delgado
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -536,7 +534,7 @@ public class SystreCmdline extends EventSource {
         final Set<Pair> mergedNames = new LinkedHashSet<Pair>();
         final Net G0 = (Net) M.getSourceGraph();
         
-        for (final Iterator<INode> nodes = G0.nodes(); nodes.hasNext();) {
+        for (final Iterator<INode<Long>> nodes = G0.nodes(); nodes.hasNext();) {
         	final INode v = nodes.next();
         	final String nodeName = G0.getNodeName(v);
         	final INode w = (INode) M.get(v);
