@@ -29,15 +29,14 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.Stack;
 import java.util.TreeMap;
 
 import org.gavrog.box.collections.Cache;
+import org.gavrog.box.collections.CacheMissException;
 import org.gavrog.box.collections.FilteredIterator;
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.NiftyList;
-import org.gavrog.box.collections.CacheMissException;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.collections.Partition;
 import org.gavrog.box.simple.Tag;
@@ -126,7 +125,7 @@ public class PeriodicGraph extends UndirectedGraph {
      * orbit graph. Each node is given as a pair consisting of a node of the
      * orbit graph and an integral shift vector.
      */
-    public class CoverNode implements INode {
+    public class CoverNode {
         private INode v;
         private Vector shift;
         private int degree = -1;
@@ -176,9 +175,6 @@ public class PeriodicGraph extends UndirectedGraph {
             return this.shift;
         }
         
-        /* (non-Javadoc)
-         * @see org.gavrog.joss.pgraphs.basic.INode#degree()
-         */
         public int degree() {
             if (this.degree < 0) {
                 incidences();
@@ -186,16 +182,10 @@ public class PeriodicGraph extends UndirectedGraph {
             return this.degree;
         }
 
-        /* (non-Javadoc)
-         * @see org.gavrog.joss.pgraphs.basic.IGraphElement#owner()
-         */
         public IGraph owner() {
             return PeriodicGraph.this;
         }
 
-        /* (non-Javadoc)
-         * @see org.gavrog.joss.pgraphs.basic.IGraphElement#incidences()
-         */
         public Iterator incidences() {
             final List result = new ArrayList();
             for (final Iterator iter = v.incidences(); iter.hasNext();) {
@@ -209,13 +199,6 @@ public class PeriodicGraph extends UndirectedGraph {
             return result.iterator();
         }
 
-        /* (non-Javadoc)
-         * @see org.gavrog.joss.pgraphs.basic.IGraphElement#id()
-         */
-        public Object id() {
-            return new Pair(this.v.id(), this.shift);
-        }
-        
         /*
          * (non-Javadoc)
          * 
@@ -225,7 +208,8 @@ public class PeriodicGraph extends UndirectedGraph {
             if (other instanceof CoverNode) {
                 final CoverNode x = (CoverNode) other;
                 return this.owner().id().equals(x.owner().id())
-                       && this.id().equals(x.id());
+                       && this.getOrbitNode().equals(x.getOrbitNode())
+                       && this.getShift().equals(x.getShift());
             } else {
                 return false;
             }
@@ -251,7 +235,7 @@ public class PeriodicGraph extends UndirectedGraph {
      * orbit graph. Each edge is given as a pair consisting of an edge of the
      * orbit graph and an integral shift vector.
      */
-    public class CoverEdge implements IEdge {
+    public class CoverEdge {
         private IEdge e;
         private Vector shift;
         private boolean compareAsOriented;
@@ -313,25 +297,16 @@ public class PeriodicGraph extends UndirectedGraph {
             return this.shift;
         }
         
-        /* (non-Javadoc)
-         * @see org.gavrog.joss.pgraphs.basic.IEdge#source()
-         */
-        public INode source() {
+        public CoverNode source() {
             return new CoverNode(this.e.source(), this.shift);
         }
 
-        /* (non-Javadoc)
-         * @see org.gavrog.joss.pgraphs.basic.IEdge#target()
-         */
-        public INode target() {
+        public CoverNode target() {
             final Vector s = PeriodicGraph.this.getShift(this.e);
             return new CoverNode(this.e.target(), (Vector) this.shift.plus(s));
         }
 
-        /* (non-Javadoc)
-         * @see org.gavrog.joss.pgraphs.basic.IEdge#opposite(org.gavrog.joss.pgraphs.basic.INode)
-         */
-        public INode opposite(INode oneEnd) {
+        public CoverNode opposite(CoverNode oneEnd) {
             if (source().equals(oneEnd)) {
                 return target();
             } else if (target().equals(oneEnd)) {
@@ -341,10 +316,7 @@ public class PeriodicGraph extends UndirectedGraph {
             }
         }
 
-        /* (non-Javadoc)
-         * @see org.gavrog.joss.pgraphs.basic.IEdge#reverse()
-         */
-        public IEdge reverse() throws UnsupportedOperationException {
+        public CoverEdge reverse() throws UnsupportedOperationException {
             final Vector s = PeriodicGraph.this.getShift(this.e);
             return new CoverEdge(this.e.reverse(), (Vector) this.shift.plus(s),
                     this.compareAsOriented);
@@ -353,14 +325,14 @@ public class PeriodicGraph extends UndirectedGraph {
         /* (non-Javadoc)
          * @see org.gavrog.joss.pgraphs.basic.IEdge#oriented()
          */
-        public IEdge oriented() {
+        public CoverEdge oriented() {
             return new CoverEdge(this.e, this.shift, true);
         }
 
         /* (non-Javadoc)
          * @see org.gavrog.joss.pgraphs.basic.IEdge#unoriented()
          */
-        public IEdge unoriented() {
+        public CoverEdge unoriented() {
             return new CoverEdge(this.e, this.shift, false);
         }
 
@@ -383,14 +355,6 @@ public class PeriodicGraph extends UndirectedGraph {
             return tmp.iterator();
         }
 
-        /* (non-Javadoc)
-         * @see org.gavrog.joss.pgraphs.basic.IGraphElement#id()
-         */
-        public Object id() {
-            return new Pair(this.e.id(), this.shift);
-        }
-        
-        
         /*
          * (non-Javadoc)
          * 

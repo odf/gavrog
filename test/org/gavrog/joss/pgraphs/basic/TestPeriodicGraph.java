@@ -252,17 +252,12 @@ public class TestPeriodicGraph extends TestCase {
         final PeriodicGraph.CoverNode w4 = G.new CoverNode(v2, new Vector(1, 1, 0));
         assertEquals(w2, f1.opposite(w1));
         assertEquals(w1, f1.opposite(w2));
-        try {
-            e1.opposite(w3);
-            fail("should have thrown an IllegalArgumentException");
-        } catch (IllegalArgumentException success) {
-        }
         assertEquals(w3, f2.opposite(w4));
         assertEquals(w4, f2.opposite(w3));
     }
     
     public void testCoverEdgeReverse() {
-        final IEdge r1 = f1.reverse();
+        final PeriodicGraph.CoverEdge r1 = f1.reverse();
         assertEquals(f1.target(), r1.source());
         assertEquals(f1.source(), r1.target());
         assertEquals(f1.unoriented(), r1.unoriented());

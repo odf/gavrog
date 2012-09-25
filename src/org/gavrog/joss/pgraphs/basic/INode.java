@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,11 +16,10 @@
 
 package org.gavrog.joss.pgraphs.basic;
 
+import java.util.Iterator;
+
 /**
  * Interface for the representation of nodes in a graph.
- * 
- * @author Olaf Delgado
- * @version $Id: INode.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public interface INode extends IGraphElement {
     /**
@@ -29,4 +28,13 @@ public interface INode extends IGraphElement {
      * @return the number of incident edges.
      */
     public int degree();
+    
+    /**
+     * Retrieves the elements that this element is incident to. If the element
+     * is a node and the graph is undirected, the produced edges will have the
+     * given node as their common source.
+     * 
+     * @return an iterator over the incident elements.
+     */
+    public Iterator<IEdge> incidences();
 }

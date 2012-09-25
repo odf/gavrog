@@ -330,12 +330,12 @@ public class DocumentXStream extends XStream {
 							final int fId = (Integer) val[4];
 							item = doc.add(doc.getTile(tId).facet(fId), s);
 						} else if (kind.equals("node")) {
-							INode v = (INode) doc.getNet().getElement(val[3]);
+							INode v = (INode) doc.getNet().getElement((Long) val[3]);
 							item = doc.add(v, s);
 						} else if (kind.equals("edge")) {
 							final Tiling.Skeleton net = doc.getNet();
-							final INode v = (INode) net.getElement(val[3]);
-							final INode w = (INode) net.getElement(val[4]);
+							final INode v = (INode) net.getElement((Long) val[3]);
+							final INode w = (INode) net.getElement((Long) val[4]);
 							final Vector t = (Vector) val[5];
 							final IEdge e = (IEdge) net.getEdge(v, w, t);
 							if (e != null) {

@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,13 +16,12 @@
 
 package org.gavrog.joss.pgraphs.basic;
 
+import java.util.Iterator;
+
 /**
  * Interface for the representation of edges in a graph. Here, edges are always
  * directed, i.e., they have defined source and target nodes. In an undirected
  * graph, this means that the reverse edge is by definition always present.
- * 
- * @author Olaf Delgado
- * @version $Id: IEdge.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public interface IEdge extends IGraphElement {
     /**
@@ -38,6 +37,15 @@ public interface IEdge extends IGraphElement {
      * @return the target node.
      */
     public INode target();
+
+    /**
+     * Retrieves the elements that this element is incident to. If the element
+     * is a node and the graph is undirected, the produced edges will have the
+     * given node as their common source.
+     * 
+     * @return an iterator over the incident elements.
+     */
+    public Iterator<INode> incidences();
 
     /**
      * If an end of this edge is given, retrieves the opposite end, otherwise

@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,14 +20,11 @@ import java.util.Iterator;
 
 /**
  * Common interface for graph classes (not necessarily simple).
- * 
- * @author Olaf Delgado
- * @version $Id: IGraph.java,v 1.2 2006/04/04 22:59:26 odf Exp $
  */
 public interface IGraph {
     /**
      * Retrieves the identifier for this graph. Every graph object must have a
-     * unique identifyer.
+     * unique identifier.
      * 
      * @return the identifier for this graph.
      */
@@ -54,14 +51,14 @@ public interface IGraph {
      * 
      * @return an iterator over the node set.
      */
-    public Iterator nodes();
+    public Iterator<INode> nodes();
 
     /**
      * Retrieves all the edges of this graph in the order they were added.
      * 
      * @return an iterator over the edge set.
      */
-    public Iterator edges();
+    public Iterator<IEdge> edges();
 
     /**
      * Retrieves an element of this graph with the given identifyer.
@@ -69,7 +66,7 @@ public interface IGraph {
      * @param id the element identifyer.
      * @return the specified element or null, if none exists.
      */
-    public IGraphElement getElement(final Object id);
+    public IGraphElement getElement(final long id);
 
     /**
      * Checks if this graph contains a certain element (node or edge).
@@ -87,7 +84,7 @@ public interface IGraph {
      * @param node2 the second node.
      * @return an iterator over the set of connections.
      */
-    public Iterator connectingEdges(final INode node1, final INode node2);
+    public Iterator<IEdge> connectingEdges(final INode node1, final INode node2);
 
     /**
      * Retrieves the directed edges from a given source to a given target. In an
@@ -98,7 +95,7 @@ public interface IGraph {
      * @param target the target node.
      * @return an iterator over the set of edges.
      */
-    public Iterator directedEdges(final INode source, final INode target);
+    public Iterator<IEdge> directedEdges(final INode source, final INode target);
 
     /**
      * Creates a new node.
