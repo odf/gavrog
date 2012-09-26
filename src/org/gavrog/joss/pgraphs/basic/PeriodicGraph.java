@@ -56,9 +56,6 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * Implements a representation of a periodic graph.
- * 
- * @author Olaf Delgado
- * @version $Id: PeriodicGraph.java,v 1.73 2007/05/30 23:19:53 odf Exp $
  */
 
 public class PeriodicGraph extends UndirectedGraph {
@@ -88,7 +85,8 @@ public class PeriodicGraph extends UndirectedGraph {
 
     // --- other fixes fields
     final protected int dimension;
-    final protected Map edgeIdToShift = new HashMap();
+    final protected Map<Long, Vector> edgeIdToShift =
+            new HashMap<Long, Vector>();
 
     /**
      * Constructs an instance.
@@ -107,15 +105,14 @@ public class PeriodicGraph extends UndirectedGraph {
      */
     public PeriodicGraph(final PeriodicGraph src) {
         this(src.getDimension());
-        final Map old2new = new HashMap();
-        for (final Iterator nodes = src.nodes(); nodes.hasNext();) {
-            final INode v = (INode) nodes.next();
-            old2new.put(v, newNode());
+        final Map<INode, INode> old2new = new HashMap<INode, INode>();
+        for (final Iterator<INode> nodes = src.nodes(); nodes.hasNext();) {
+            old2new.put(nodes.next(), newNode());
         }
-        for (final Iterator edges = src.edges(); edges.hasNext();) {
-            final IEdge e = (IEdge) edges.next();
-            final INode v = (INode) old2new.get(e.source());
-            final INode w = (INode) old2new.get(e.target());
+        for (final Iterator<IEdge> edges = src.edges(); edges.hasNext();) {
+            final IEdge e = edges.next();
+            final INode v = old2new.get(e.source());
+            final INode w = old2new.get(e.target());
             newEdge(v, w, src.getShift(e));
         }
     }
@@ -186,10 +183,10 @@ public class PeriodicGraph extends UndirectedGraph {
             return PeriodicGraph.this;
         }
 
-        public Iterator incidences() {
-            final List result = new ArrayList();
-            for (final Iterator iter = v.incidences(); iter.hasNext();) {
-                final IEdge e = ((IEdge) iter.next());
+        public Iterator<CoverEdge> incidences() {
+            final List<CoverEdge> result = new ArrayList<CoverEdge>();
+            for (final Iterator<IEdge> iter = v.incidences(); iter.hasNext();) {
+                final IEdge e = iter.next();
                 result.add(new CoverEdge(e, this.shift));
                 if (e.source().equals(e.target())) {
                     result.add(new CoverEdge(e.reverse(), this.shift));
@@ -346,8 +343,8 @@ public class PeriodicGraph extends UndirectedGraph {
         /* (non-Javadoc)
          * @see org.gavrog.joss.pgraphs.basic.IGraphElement#incidences()
          */
-        public Iterator incidences() {
-            final List tmp = new LinkedList();
+        public Iterator<CoverNode> incidences() {
+            final List<CoverNode> tmp = new LinkedList<CoverNode>();
             tmp.add(source());
             if (!source().equals(target())) {
                 tmp.add(target());
@@ -486,8 +483,9 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return the unique edge with this data, or null, if none exists.
      */
     public IEdge getEdge(final INode source, final INode target, final Vector shift) {
-        for (Iterator edges = directedEdges(source, target); edges.hasNext();) {
-            final IEdge e = (IEdge) edges.next();
+        for (Iterator<IEdge> edges = directedEdges(source, target);
+                edges.hasNext();) {
+            final IEdge e = edges.next();
             if (getShift(e).equals(shift)) {
                 return e;
             } else if (source.equals(target) && getShift(e).equals(shift.negative())) {
@@ -589,27 +587,29 @@ public class PeriodicGraph extends UndirectedGraph {
                                                + amount.getDimension()
                                                + ", but should have " + getDimension());
         }
-        for (final Iterator iter = node.incidences(); iter.hasNext();) {
-            final IEdge e = (IEdge) iter.next();
+        for (final Iterator<IEdge> iter = node.incidences(); iter.hasNext();) {
+            final IEdge e = iter.next();
             if (e.source().equals(e.target())) {
                 continue;
             }
             
             if (((UndirectedGraph.Edge) e).isReverse) {
-                final Object id = e.reverse().id();
-                edgeIdToShift.put(id, ((Vector) edgeIdToShift.get(id)).minus(amount));
+                final long id = e.reverse().id();
+                edgeIdToShift.put(id, (Vector) edgeIdToShift.get(id).minus(amount));
             } else {
-                final Object id = e.id();
-                edgeIdToShift.put(id, ((Vector) edgeIdToShift.get(id)).plus(amount));
+                final long id = e.id();
+                edgeIdToShift.put(id, (Vector) edgeIdToShift.get(id).plus(amount));
             }
         }
             
         // --- adjust barycentric placement, if any
         try {
-            final Map placement = (Map) cache.get(BARYCENTRIC_PLACEMENT);
-            final Map tmp = new HashMap();
+            @SuppressWarnings("unchecked")
+            final Map<INode, Point> placement =
+                    (Map<INode, Point>) cache.get(BARYCENTRIC_PLACEMENT);
+            final Map<INode, Point> tmp = new HashMap<INode, Point>();
             tmp.putAll(placement);
-            tmp.put(node, ((Point) tmp.get(node)).plus(amount));
+            tmp.put(node, (Point) tmp.get(node).plus(amount));
             cache.put(BARYCENTRIC_PLACEMENT, Collections.unmodifiableMap(tmp));
         } catch (CacheMissException ex) {
         }
