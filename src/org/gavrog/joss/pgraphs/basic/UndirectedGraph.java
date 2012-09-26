@@ -39,22 +39,21 @@ import org.gavrog.box.collections.Pair;
  * purposes, edges still have a "source" and a "target" node, their roles are
  * interchangeable and, in effect, each edge is treated as equivalent to its
  * reverse.
- * 
- * @author Olaf Delgado
- * @version $Id: UndirectedGraph.java,v 1.6 2008/02/29 03:42:23 odf Exp $
  */
 public class UndirectedGraph implements IGraph {
     private static long nextGraphId = 1;
     
-    private final Object id;
+    private final Long id;
     private long nextNodeId = 1;
     private long nextEdgeId = -1;
 
-    private Map idToType = new HashMap();
+    private Map<Long, Class<? extends IGraphElement>> idToType =
+            new HashMap<Long, Class<? extends IGraphElement>>();
 
-    private Map nodeIdToIncidentEdgesIds = new LinkedHashMap();
+    private Map<Long, Set<Long>> nodeIdToIncidentEdgesIds =
+            new LinkedHashMap<Long, Set<Long>>();
 
-    private Map nodeIdToDegree = new HashMap();
+    private Map<Long, Integer> nodeIdToDegree = new HashMap<Long, Integer>();
 
     private Map<Long, Long> edgeIdToSourceNodeId = new HashMap<Long, Long>();
 
@@ -71,7 +70,8 @@ public class UndirectedGraph implements IGraph {
      * @see javaPGraphs.IGraph#id()
      */
     public Object id() {
-        return new Pair(getClass(), this.id);
+        return new Pair<Class<? extends UndirectedGraph>, Long>(
+                getClass(), this.id);
     }
     
     /* (non-Javadoc)
@@ -91,7 +91,7 @@ public class UndirectedGraph implements IGraph {
     /**
      * Implements node objects for this graph.
      */
-    protected class Node implements INode, Comparable {
+    protected class Node implements INode, Comparable<INode> {
         private final long id;
 
         /**
@@ -124,8 +124,8 @@ public class UndirectedGraph implements IGraph {
         /* (non-Javadoc)
          * @see org.gavrog.joss.pgraphs.basic.INode#incidences()
          */
-        public Iterator incidences() {
-            final Set ids = (Set) nodeIdToIncidentEdgesIds.get(this.id);
+        public Iterator<IEdge> incidences() {
+            final Set<Long> ids = nodeIdToIncidentEdgesIds.get(this.id);
             return new FilteredIterator<IEdge, Long>(ids.iterator()) {
                 public IEdge filter(final Long x) {
                     if (edgeIdToSourceNodeId.get(x).equals(id())) {
@@ -177,9 +177,8 @@ public class UndirectedGraph implements IGraph {
             return "Node " + id;
         }
 
-        public int compareTo(Object arg0) {
-            return ((Long) this.id()).intValue()
-                    - ((Long) ((Node) arg0).id()).intValue();
+        public int compareTo(final INode arg0) {
+            return (int) this.id() - (int) arg0.id();
         }
     }
 
@@ -282,8 +281,8 @@ public class UndirectedGraph implements IGraph {
         /* (non-Javadoc)
          * @see org.gavrog.joss.pgraphs.basic.IEdge#incidences()
          */
-        public Iterator incidences() {
-            final List tmp = new LinkedList();
+        public Iterator<INode> incidences() {
+            final List<INode> tmp = new LinkedList<INode>();
             tmp.add(source());
             if (!source().equals(target())) {
                 tmp.add(target());
@@ -392,7 +391,7 @@ public class UndirectedGraph implements IGraph {
      * 
      * @see javaPGraphs.IGraph#edges()
      */
-    public Iterator edges() {
+    public Iterator<IEdge> edges() {
         return new FilteredIterator<IEdge, Long>(
                 this.edgeIdToSourceNodeId.keySet().iterator()) {
             public IEdge filter(final Long x) {
@@ -427,11 +426,12 @@ public class UndirectedGraph implements IGraph {
      * @see javaPGraphs.IGraph#connectingEdges(javaPGraphs.INode,
      *      javaPGraphs.INode)
      */
-    public Iterator connectingEdges(final INode node1, final INode node2) {
+    public Iterator<IEdge> connectingEdges(final INode node1,
+                                           final INode node2) {
         return directedEdges(node1, node2);
     }
 
-    public Iterator connectingEdges(final long i, final long j) {
+    public Iterator<IEdge> connectingEdges(final long i, final long j) {
     	return directedEdges(i, j);
     }
     
@@ -441,17 +441,18 @@ public class UndirectedGraph implements IGraph {
      * @see javaPGraphs.IGraph#directedEdges(javaPGraphs.INode,
      *      javaPGraphs.INode)
      */
-    public Iterator directedEdges(final INode source, final INode target) {
+    public Iterator<IEdge> directedEdges(final INode source,
+                                         final INode target) {
         if (!hasNode(source)) {
             throw new IllegalArgumentException("source node not in graph");
         }
         if (!hasNode(target)) {
             throw new IllegalArgumentException("source node not in graph");
         }
-        final Object sourceId = source.id();
-        final Object targetId = target.id();
-        final Set ids = (Set) nodeIdToIncidentEdgesIds.get(sourceId);
-        return new FilteredIterator<Edge, Long>(ids.iterator()) {
+        final long sourceId = source.id();
+        final long targetId = target.id();
+        final Set<Long> ids = nodeIdToIncidentEdgesIds.get(sourceId);
+        return new FilteredIterator<IEdge, Long>(ids.iterator()) {
             public Edge filter(final Long x) {
                 final Object s = edgeIdToSourceNodeId.get(x);
                 final Object t = edgeIdToTargetNodeId.get(x);
@@ -466,7 +467,7 @@ public class UndirectedGraph implements IGraph {
         };
     }
 
-    public Iterator directedEdges(final long i, final long j) {
+    public Iterator<IEdge> directedEdges(final long i, final long j) {
     	return directedEdges(getNode(i), getNode(j));
     }
     
@@ -476,7 +477,7 @@ public class UndirectedGraph implements IGraph {
     public INode newNode() {
         final Long id = new Long(nextNodeId++);
         this.idToType.put(id, Node.class);
-        this.nodeIdToIncidentEdgesIds.put(id, new LinkedHashSet());
+        this.nodeIdToIncidentEdgesIds.put(id, new LinkedHashSet<Long>());
         this.nodeIdToDegree.put(id, new Integer(0));
         return new Node(id);
     }
@@ -497,12 +498,10 @@ public class UndirectedGraph implements IGraph {
         this.idToType.put(id, Edge.class);
         this.edgeIdToSourceNodeId.put(id, sId);
         this.edgeIdToTargetNodeId.put(id, tId);
-        ((Set) this.nodeIdToIncidentEdgesIds.get(sId)).add(id);
-        ((Set) this.nodeIdToIncidentEdgesIds.get(tId)).add(id);
-        this.nodeIdToDegree.put(sId, new Integer(((Integer) this.nodeIdToDegree.get(sId))
-                .intValue() + 1));
-        this.nodeIdToDegree.put(tId, new Integer(((Integer) this.nodeIdToDegree.get(tId))
-                .intValue() + 1));
+        this.nodeIdToIncidentEdgesIds.get(sId).add(id);
+        this.nodeIdToIncidentEdgesIds.get(tId).add(id);
+        this.nodeIdToDegree.put(sId, this.nodeIdToDegree.get(sId) + 1);
+        this.nodeIdToDegree.put(tId, this.nodeIdToDegree.get(tId) + 1);
         return new Edge(id, false);
     }
 
@@ -520,12 +519,12 @@ public class UndirectedGraph implements IGraph {
         final long eId = e.id();
         final long sId = e.source().id();
         final long tId = e.target().id();
-        ((Set) this.nodeIdToIncidentEdgesIds.get(sId)).remove(eId);
-        ((Set) this.nodeIdToIncidentEdgesIds.get(tId)).remove(eId);
+        this.nodeIdToIncidentEdgesIds.get(sId).remove(eId);
+        this.nodeIdToIncidentEdgesIds.get(tId).remove(eId);
         this.edgeIdToSourceNodeId.remove(eId);
         this.edgeIdToTargetNodeId.remove(eId);
-        this.nodeIdToDegree.put(sId, ((Integer) this.nodeIdToDegree.get(sId)) - 1);
-        this.nodeIdToDegree.put(tId, ((Integer) this.nodeIdToDegree.get(tId)) - 1);
+        this.nodeIdToDegree.put(sId, this.nodeIdToDegree.get(sId) - 1);
+        this.nodeIdToDegree.put(tId, this.nodeIdToDegree.get(tId) - 1);
         this.idToType.remove(eId);
     }
 
@@ -596,31 +595,26 @@ public class UndirectedGraph implements IGraph {
      * @see java.lang.Object#toString()
      */
     public String toString() {
-        final List edgeList = new ArrayList();
-        for (final Iterator iter = edges(); iter.hasNext();) {
-            edgeList.add(normalizedEdge((IEdge) iter.next()));
+        final List<IEdge> edgeList = new ArrayList<IEdge>();
+        for (final Iterator<IEdge> iter = edges(); iter.hasNext();) {
+            edgeList.add(normalizedEdge(iter.next()));
         }
-        Collections.sort(edgeList, new Comparator() {
-            public int compare(final Object arg0, final Object arg1) {
-                return compareEdges((IEdge) arg0, (IEdge) arg1);
+        Collections.sort(edgeList, new Comparator<IEdge>() {
+            public int compare(final IEdge arg0, final IEdge arg1) {
+                return compareEdges(arg0, arg1);
             }
         });
-        final List isolatedNodeList = new ArrayList();
-        for (final Iterator iter = nodes(); iter.hasNext();) {
-            final INode v = (INode) iter.next();
+        final List<Node> isolatedNodeList = new ArrayList<Node>();
+        for (final Iterator<INode> iter = nodes(); iter.hasNext();) {
+            final Node v = (Node) iter.next();
             if (v.degree() == 0) {
                 isolatedNodeList.add(v);
             }
         }
-        Collections.sort(isolatedNodeList, new Comparator() {
-            public int compare(final Object arg0, final Object arg1) {
-                return compareIds((INode) arg0, (INode) arg1);
-            }
-        });
+        Collections.sort(isolatedNodeList);
 
         final StringBuffer buf = new StringBuffer(100);
-        for (final Iterator iter = edgeList.iterator(); iter.hasNext();) {
-            final IEdge e = (IEdge) iter.next();
+        for (final IEdge e: edgeList) {
             buf.append("(");
             buf.append(e.source().id());
             buf.append(",");
@@ -632,8 +626,7 @@ public class UndirectedGraph implements IGraph {
             }
             buf.append(")");
         }
-        for (final Iterator iter = isolatedNodeList.iterator(); iter.hasNext();) {
-            final INode v = (INode) iter.next();
+        for (final INode v: isolatedNodeList) {
             buf.append("(");
             buf.append(v.id());
             buf.append(")");
