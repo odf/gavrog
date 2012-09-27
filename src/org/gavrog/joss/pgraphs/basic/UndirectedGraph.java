@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gavrog.box.collections.FilteredIterator;
+import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Pair;
 
 
@@ -377,7 +378,7 @@ public class UndirectedGraph implements IGraph {
      * 
      * @see javaPGraphs.IGraph#nodes()
      */
-    public Iterator<INode> nodes() {
+    public IteratorAdapter<INode> nodes() {
         return new FilteredIterator<INode, Long>(
                 this.nodeIdToIncidentEdgesIds.keySet().iterator()) {
             public INode filter(final Long x) {
@@ -391,7 +392,7 @@ public class UndirectedGraph implements IGraph {
      * 
      * @see javaPGraphs.IGraph#edges()
      */
-    public Iterator<IEdge> edges() {
+    public IteratorAdapter<IEdge> edges() {
         return new FilteredIterator<IEdge, Long>(
                 this.edgeIdToSourceNodeId.keySet().iterator()) {
             public IEdge filter(final Long x) {
@@ -596,8 +597,8 @@ public class UndirectedGraph implements IGraph {
      */
     public String toString() {
         final List<IEdge> edgeList = new ArrayList<IEdge>();
-        for (final Iterator<IEdge> iter = edges(); iter.hasNext();) {
-            edgeList.add(normalizedEdge(iter.next()));
+        for (final IEdge e: edges()) {
+            edgeList.add(normalizedEdge(e));
         }
         Collections.sort(edgeList, new Comparator<IEdge>() {
             public int compare(final IEdge arg0, final IEdge arg1) {
@@ -605,10 +606,9 @@ public class UndirectedGraph implements IGraph {
             }
         });
         final List<Node> isolatedNodeList = new ArrayList<Node>();
-        for (final Iterator<INode> iter = nodes(); iter.hasNext();) {
-            final Node v = (Node) iter.next();
+        for (final INode v: nodes()) {
             if (v.degree() == 0) {
-                isolatedNodeList.add(v);
+                isolatedNodeList.add((Node) v);
             }
         }
         Collections.sort(isolatedNodeList);

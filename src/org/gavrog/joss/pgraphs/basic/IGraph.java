@@ -18,6 +18,8 @@ package org.gavrog.joss.pgraphs.basic;
 
 import java.util.Iterator;
 
+import org.gavrog.box.collections.IteratorAdapter;
+
 /**
  * Common interface for graph classes (not necessarily simple).
  */
@@ -51,14 +53,14 @@ public interface IGraph {
      * 
      * @return an iterator over the node set.
      */
-    public Iterator<INode> nodes();
+    public IteratorAdapter<INode> nodes();
 
     /**
      * Retrieves all the edges of this graph in the order they were added.
      * 
      * @return an iterator over the edge set.
      */
-    public Iterator<IEdge> edges();
+    public IteratorAdapter<IEdge> edges();
 
     /**
      * Retrieves an element of this graph with the given identifier.
