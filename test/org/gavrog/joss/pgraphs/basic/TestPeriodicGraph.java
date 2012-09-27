@@ -271,21 +271,12 @@ public class TestPeriodicGraph extends TestCase {
     }
     
     public void testCoverElementIncidences() {
-        List incidences;
-        
-        // --- nodes:
-        incidences = Iterators.asList(w2.incidences());
+        List incidences = Iterators.asList(w2.incidences());
         assertEquals(4, incidences.size());
         assertTrue(incidences.contains(G.new CoverEdge(e1.reverse(), new Vector(1, 0, 2))));
         assertTrue(incidences.contains(G.new CoverEdge(e3, new Vector(1, 0, 2))));
         assertTrue(incidences.contains(G.new CoverEdge(e2, new Vector(1, 0, 2))));
         assertTrue(incidences.contains(G.new CoverEdge(e2.reverse(), new Vector(1, 0, 2))));
-        
-        // --- edges:
-        incidences = Iterators.asList(f3.incidences());
-        assertEquals(2, incidences.size());
-        assertTrue(incidences.contains(G.new CoverNode(v1, new Vector(1, -1, 1))));
-        assertTrue(incidences.contains(G.new CoverNode(v2, new Vector(1, 0, 1))));
     }
     
     public void testHashCodes() {
@@ -502,8 +493,8 @@ public class TestPeriodicGraph extends TestCase {
 			final Iterator nodes = cds1.nodes();
 			final INode w1 = (INode) nodes.next();
 			final INode w2 = (INode) nodes.next();
-			final List loops1 = Iterators.asList(cds1.directedEdges(w1, w1));
-			final List loops2 = Iterators.asList(cds1.directedEdges(w2, w2));
+			final List loops1 = Iterators.asList(cds1.connectingEdges(w1, w1));
+			final List loops2 = Iterators.asList(cds1.connectingEdges(w2, w2));
 			assertEquals(1, loops1.size());
 			assertEquals(1, loops2.size());
 		}

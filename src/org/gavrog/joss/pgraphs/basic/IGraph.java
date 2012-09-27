@@ -16,8 +16,6 @@
 
 package org.gavrog.joss.pgraphs.basic;
 
-import java.util.Iterator;
-
 import org.gavrog.box.collections.IteratorAdapter;
 
 /**
@@ -79,27 +77,6 @@ public interface IGraph {
      */
     public boolean hasNode(final INode node);
     public boolean hasEdge(final IEdge edge);
-
-    /**
-     * Retrieves all the connecting edges between a given pair of nodes, without regard
-     * for their direction.
-     * 
-     * @param node1 the first node.
-     * @param node2 the second node.
-     * @return an iterator over the set of connections.
-     */
-    public Iterator<IEdge> connectingEdges(final INode node1, final INode node2);
-
-    /**
-     * Retrieves the directed edges from a given source to a given target. In an
-     * undirected graph, this is equivalent to
-     * {@link #connectingEdges(INode, INode)}.
-     * 
-     * @param source the source node.
-     * @param target the target node.
-     * @return an iterator over the set of edges.
-     */
-    public Iterator<IEdge> directedEdges(final INode source, final INode target);
 
     /**
      * Creates a new node.

@@ -16,7 +16,6 @@
 
 package org.gavrog.joss.pgraphs.basic;
 
-import java.util.Iterator;
 
 /**
  * Interface for the representation of edges in a graph. Here, edges are always
@@ -37,15 +36,6 @@ public interface IEdge extends IGraphElement {
      * @return the target node.
      */
     public INode target();
-
-    /**
-     * Retrieves the elements that this element is incident to. If the element
-     * is a node and the graph is undirected, the produced edges will have the
-     * given node as their common source.
-     * 
-     * @return an iterator over the incident elements.
-     */
-    public Iterator<INode> incidences();
 
     /**
      * If an end of this edge is given, retrieves the opposite end, otherwise

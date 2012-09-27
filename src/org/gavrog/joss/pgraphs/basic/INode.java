@@ -16,7 +16,7 @@
 
 package org.gavrog.joss.pgraphs.basic;
 
-import java.util.Iterator;
+import org.gavrog.box.collections.IteratorAdapter;
 
 /**
  * Interface for the representation of nodes in a graph.
@@ -36,5 +36,5 @@ public interface INode extends IGraphElement {
      * 
      * @return an iterator over the incident elements.
      */
-    public Iterator<IEdge> incidences();
+    public IteratorAdapter<IEdge> incidences();
 }

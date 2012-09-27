@@ -20,10 +20,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -125,7 +123,7 @@ public class UndirectedGraph implements IGraph {
         /* (non-Javadoc)
          * @see org.gavrog.joss.pgraphs.basic.INode#incidences()
          */
-        public Iterator<IEdge> incidences() {
+        public IteratorAdapter<IEdge> incidences() {
             final Set<Long> ids = nodeIdToIncidentEdgesIds.get(this.id);
             return new FilteredIterator<IEdge, Long>(ids.iterator()) {
                 public IEdge filter(final Long x) {
@@ -279,18 +277,6 @@ public class UndirectedGraph implements IGraph {
             return UndirectedGraph.this;
         }
 
-        /* (non-Javadoc)
-         * @see org.gavrog.joss.pgraphs.basic.IEdge#incidences()
-         */
-        public Iterator<INode> incidences() {
-            final List<INode> tmp = new LinkedList<INode>();
-            tmp.add(source());
-            if (!source().equals(target())) {
-                tmp.add(target());
-            }
-            return tmp.iterator();
-        }
-
         /*
          * (non-Javadoc)
          * 
@@ -421,29 +407,8 @@ public class UndirectedGraph implements IGraph {
                 && edgeIdToSourceNodeId.get(edge.id()) != null;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javaPGraphs.IGraph#connectingEdges(javaPGraphs.INode,
-     *      javaPGraphs.INode)
-     */
-    public Iterator<IEdge> connectingEdges(final INode node1,
-                                           final INode node2) {
-        return directedEdges(node1, node2);
-    }
-
-    public Iterator<IEdge> connectingEdges(final long i, final long j) {
-    	return directedEdges(i, j);
-    }
-    
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javaPGraphs.IGraph#directedEdges(javaPGraphs.INode,
-     *      javaPGraphs.INode)
-     */
-    public Iterator<IEdge> directedEdges(final INode source,
-                                         final INode target) {
+    public IteratorAdapter<IEdge> connectingEdges(final INode source,
+                                                  final INode target) {
         if (!hasNode(source)) {
             throw new IllegalArgumentException("source node not in graph");
         }
@@ -466,10 +431,6 @@ public class UndirectedGraph implements IGraph {
                 }
             }
         };
-    }
-
-    public Iterator<IEdge> directedEdges(final long i, final long j) {
-    	return directedEdges(getNode(i), getNode(j));
     }
     
     /* (non-Javadoc)

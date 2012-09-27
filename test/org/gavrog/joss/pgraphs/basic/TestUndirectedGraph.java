@@ -118,11 +118,7 @@ public class TestUndirectedGraph extends TestCase {
         assertFalse(edges.hasNext());
         assertEquals(v2, e.source());
         assertEquals(v1, e.target());
-    }
-
-    public void testDirectedEdges() {
-        final Iterator edges = G.connectingEdges(v2, v4);
-        assertFalse(edges.hasNext());
+        assertFalse(G.connectingEdges(v2, v4).hasNext());
     }
 
     public void testNewNode() {
@@ -159,7 +155,7 @@ public class TestUndirectedGraph extends TestCase {
     public void testLoop() {
         final IEdge loop = G.newEdge(v1, v1);
         assertEquals("(1,1)(1,2)(1,3)(1,4)(2,3)(5)", G.toString());
-        assertEquals(1, Iterators.size(G.directedEdges(v1, v1)));
+        assertEquals(1, Iterators.size(G.connectingEdges(v1, v1)));
         assertEquals(v1, loop.source());
         assertEquals(v1, loop.target());
         assertEquals(v1, loop.reverse().source());
@@ -170,9 +166,6 @@ public class TestUndirectedGraph extends TestCase {
         incidences = Iterators.asList(v1.incidences());
         assertEquals(4, incidences.size());
         assertTrue(incidences.contains(loop));
-        incidences = Iterators.asList(loop.incidences());
-        assertEquals(1, incidences.size());
-        assertTrue(incidences.contains(v1));
 
         G.delete(loop);
         assertEquals("(1,2)(1,3)(1,4)(2,3)(5)", G.toString());
@@ -243,21 +236,12 @@ public class TestUndirectedGraph extends TestCase {
     }
     
     public void testElementIncidences() {
-        List incidences;
-        
-        // --- nodes:
-        incidences = Iterators.asList(v2.incidences());
+        List incidences = Iterators.asList(v2.incidences());
         assertEquals(2, incidences.size());
         assertTrue(incidences.contains(e1));
         assertTrue(incidences.contains(e1.reverse()));
         assertTrue(incidences.contains(e4));
         incidences = Iterators.asList(v5.incidences());
         assertEquals(0, incidences.size());
-        
-        // --- edges:
-        incidences = Iterators.asList(e3.incidences());
-        assertEquals(2, incidences.size());
-        assertTrue(incidences.contains(v1));
-        assertTrue(incidences.contains(v4));
     }
 }
