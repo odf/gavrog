@@ -1,5 +1,5 @@
 /*
-Copyright 2005 Olaf Delgado-Friedrichs
+Copyright 2012 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import java.io.Reader;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,14 +36,11 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * A class to represent an archive of periodic nets.
- * 
- * @author Olaf Delgado
- * @version $Id: Archive.java,v 1.1 2007/05/12 01:32:27 odf Exp $
  */
 public class Archive {
     final String keyVersion;
-    final private Map byKey;
-    final private Map byName;
+    final private Map<String, Entry> byKey;
+    final private Map<String, Entry> byName;
     private boolean errorOnOverwrite = false;
     
     /**
@@ -69,7 +65,8 @@ public class Archive {
          * @param version the version of the key generation process used.
          * @param name the name of the structure.
          */
-        public Entry(final String key, final String version, final String name) {
+        public Entry(final String key, final String version, final String name)
+        {
             this.key = key;
             this.keyVersion = version;
             this.name = name;
@@ -178,7 +175,7 @@ public class Archive {
          */
         public static Entry read(final BufferedReader input) {
             String line;
-            final Map fields = new HashMap();
+            final Map<String, String> fields = new HashMap<String, String>();
             while (true) {
                 try {
                     line = input.readLine();
@@ -203,18 +200,18 @@ public class Archive {
                     arg = line.substring(k + 1);
                 }
                 if (tag.equals("end")) {
-                    final String key = (String) fields.get("key");
-                    final String version = (String) fields.get("version");
-                    final String name = (String) fields.get("id");
-                    final String checksum = (String) fields.get("checksum");
+                    final String key = fields.get("key");
+                    final String version = fields.get("version");
+                    final String name = fields.get("id");
+                    final String checksum = fields.get("checksum");
                     final Entry entry = new Entry(key, version, name);
                     if (!entry.getDigestString().equals(checksum)) {
                         throw new DataFormatException("checksum mismatch for entry '"
 								+ name + "'.");
                     }
-                    entry.setDescription((String) fields.get("desc"));
-                    entry.setReference((String) fields.get("ref"));
-                    entry.setURL((String) fields.get("url"));
+                    entry.setDescription(fields.get("desc"));
+                    entry.setReference(fields.get("ref"));
+                    entry.setURL(fields.get("url"));
                     return entry;
                 } else {
                     fields.put(tag, arg);
@@ -273,8 +270,8 @@ public class Archive {
      */
     public Archive(final String keyVersion) {
         this.keyVersion = keyVersion;
-        this.byKey = new LinkedHashMap();
-        this.byName = new HashMap();
+        this.byKey = new LinkedHashMap<String, Entry>();
+        this.byName = new HashMap<String, Entry>();
     }
     
     /**
@@ -367,7 +364,7 @@ public class Archive {
      * @return the entry with the given key or null.
      */
     public Entry getByKey(final String key) {
-        return (Entry) this.byKey.get(key);
+        return this.byKey.get(key);
     }
     
     /**
@@ -376,7 +373,7 @@ public class Archive {
      * @return the entry with the given name or null.
      */
     public Entry getByName(final String name) {
-        return (Entry) this.byName.get(name);
+        return this.byName.get(name);
     }
     
     /**
@@ -423,7 +420,7 @@ public class Archive {
      * Retrieves the set of all Systre keys present in this archive. 
      * @return the set of Systre keys.
      */
-    public Set keySet() {
+    public Set<String> keySet() {
         return this.byKey.keySet();
     }
 
@@ -479,9 +476,8 @@ public class Archive {
 				}
 			}
 			int count = 0;
-			for (Iterator iter = arc.keySet().iterator(); iter.hasNext();) {
-				final String key = (String) iter.next();
-				final Archive.Entry entry = arc.getByKey(key);
+			for (final String key: arc.keySet()) {
+				final Entry entry = arc.getByKey(key);
 				System.out.println(entry.toString());
 				++count;
 			}
@@ -507,30 +503,29 @@ public class Archive {
 			System.err.println("Read " + m + " entr" + (m == 1 ? "y" : "ies")
 					+ " from archive " + newName + ".");
 			
-			final List deleted = new LinkedList();
-			final List renamed = new LinkedList();
-			final List added = new LinkedList();
-			final List changed = new LinkedList();
+			final List<String> deleted = new LinkedList<String>();
+			final List<Pair<String, String>> renamed =
+			        new LinkedList<Pair<String, String>>();
+			final List<String> added = new LinkedList<String>();
+			final List<String> changed = new LinkedList<String>();
 			
-			for (Iterator iter = arc.keySet().iterator(); iter.hasNext();) {
-				final String key = (String) iter.next();
-				final Archive.Entry oldEntry = arc.getByKey(key);
-				final Archive.Entry newEntry = newArc.getByKey(key);
+			for (final String key: arc.keySet()) {
+				final Entry oldEntry = arc.getByKey(key);
+				final Entry newEntry = newArc.getByKey(key);
 				final String name = oldEntry.name;
 				if (newEntry == null) {
 					deleted.add(name);
 				} else if (!newEntry.name.equals(name)) {
-					renamed.add(new Pair(name, newEntry.name));
+					renamed.add(new Pair<String, String>(name, newEntry.name));
 				}
-				final Archive.Entry sameName = newArc.getByName(name);
+				final Entry sameName = newArc.getByName(name);
 				if (sameName != null && !sameName.key.equals(key)) {
 					changed.add(name);
 				}
 			}			
-			for (Iterator iter = newArc.keySet().iterator(); iter.hasNext();) {
-				final String key = (String) iter.next();
-				final Archive.Entry oldEntry = arc.getByKey(key);
-				final Archive.Entry newEntry = newArc.getByKey(key);
+            for (final String key: newArc.keySet()) {
+				final Entry oldEntry = arc.getByKey(key);
+				final Entry newEntry = newArc.getByKey(key);
 				if (oldEntry == null) {
 					added.add(newEntry.name);
 				}
@@ -543,11 +538,11 @@ public class Archive {
 		}
 	}
 	
-	private static void printList(final List list, final String heading) {
+	private static <T> void printList(final List<T> list, final String heading) {
 		if (list.size() > 0) {
 			System.err.print(heading + ": ");
-			for (final Iterator iter = list.iterator(); iter.hasNext();) {
-				System.err.print(" " + iter.next());
+			for (final T item: list) {
+				System.err.print(" " + item);
 			}
 		}
 		System.err.println();
