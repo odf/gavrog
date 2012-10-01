@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -29,11 +29,8 @@ import org.gavrog.joss.dsyms.basic.DSymbol;
 
 /**
  * An iterator that reads Delaney symbols from an input stream.
- * 
- * @author Olaf Delgado
- * @version $Id: InputIterator.java,v 1.5 2008/01/16 00:50:44 odf Exp $
  */
-public class InputIterator extends IteratorAdapter {
+public class InputIterator extends IteratorAdapter<DSymbol> {
     final private BufferedReader reader;
     final StringBuffer buffer = new StringBuffer(200);
 
@@ -60,7 +57,7 @@ public class InputIterator extends IteratorAdapter {
     /* (non-Javadoc)
      * @see javaDSym.util.IteratorAdapter#findNext()
      */
-    protected Object findNext() throws NoSuchElementException {
+    protected DSymbol findNext() throws NoSuchElementException {
     	String name = null;
         while (true) {
 			String line;

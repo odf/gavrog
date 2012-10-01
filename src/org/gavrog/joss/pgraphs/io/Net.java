@@ -1,3 +1,19 @@
+/*
+   Copyright 2012 Olaf Delgado-Friedrichs
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
 package org.gavrog.joss.pgraphs.io;
 
 import java.io.BufferedReader;
@@ -13,10 +29,9 @@ import java.util.NoSuchElementException;
 import org.gavrog.box.collections.FilteredIterator;
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Pair;
-import org.gavrog.joss.dsyms.basic.DelaneySymbol;
+import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.generators.InputIterator;
 import org.gavrog.joss.pgraphs.basic.IEdge;
-import org.gavrog.joss.pgraphs.basic.IGraphElement;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.tilings.Tiling;
@@ -27,9 +42,10 @@ import org.gavrog.joss.tilings.Tiling;
 public class Net extends PeriodicGraph {
 	final private String name;
 	final private String givenGroup;
-	final private Map nodeToName = new HashMap();
-	final private Map nodeInfo = new HashMap();
-	final private List errors = new ArrayList();
+	final private Map<INode, String> nodeToName = new HashMap<INode, String>();
+	final private Map<Pair<INode, Object>, Object> nodeInfo =
+	        new HashMap<Pair<INode, Object>, Object>();
+	final private List<Exception> errors = new ArrayList<Exception>();
 	final private List<String> warnings = new ArrayList<String>();
 	
 	public Net(final int dim, final String name, final String group) {
@@ -38,17 +54,19 @@ public class Net extends PeriodicGraph {
 		this.givenGroup = group;
 	}
 
-	public Net(final PeriodicGraph graph, final String name, final String group) {
+	public Net(
+	        final PeriodicGraph graph,
+	        final String name,
+	        final String group)
+	{
         super(graph.getDimension());
-        final Map old2new = new HashMap();
-        for (final Iterator nodes = graph.nodes(); nodes.hasNext();) {
-            final INode v = (INode) nodes.next();
+        final Map<INode, INode> old2new = new HashMap<INode, INode>();
+        for (final INode v: graph.nodes()) {
             old2new.put(v, newNode());
         }
-        for (final Iterator edges = graph.edges(); edges.hasNext();) {
-            final IEdge e = (IEdge) edges.next();
-            final INode v = (INode) old2new.get(e.source());
-            final INode w = (INode) old2new.get(e.target());
+        for (final IEdge e: graph.edges()) {
+            final INode v = old2new.get(e.source());
+            final INode w = old2new.get(e.target());
             newEdge(v, w, graph.getShift(e));
         }
 		this.name = name;
@@ -65,12 +83,12 @@ public class Net extends PeriodicGraph {
 	
 	public void setNodeInfo(final INode v, final Object key, final Object value) {
 		assert(this.hasNode(v));
-		this.nodeInfo.put(new Pair(v, key), value);
+		this.nodeInfo.put(new Pair<INode, Object>(v, key), value);
 	}
 	
 	public Object getNodeInfo(final INode v, final Object key) {
 		assert(this.hasNode(v));
-		return this.nodeInfo.get(new Pair(v, key));
+		return this.nodeInfo.get(new Pair<INode, Object>(v, key));
 	}
 	
 	public String getNodeName(final INode v) {
@@ -78,10 +96,8 @@ public class Net extends PeriodicGraph {
 		return (String) this.nodeToName.get(v);
 	}
 	
-	public Map getNodeToNameMap() {
-		final Map res = new HashMap();
-		res.putAll(this.nodeToName);
-		return res;
+	public Map<INode, String> getNodeToNameMap() {
+	    return new HashMap<INode, String>(this.nodeToName);
 	}
 	
 	public INode newNode() {
@@ -102,6 +118,8 @@ public class Net extends PeriodicGraph {
 	}
     
     public static class IllegalFileNameException extends RuntimeException {
+        private static final long serialVersionUID = 4776009175735945241L;
+
         public IllegalFileNameException(final String msg) {
             super(msg);
         }
@@ -111,7 +129,7 @@ public class Net extends PeriodicGraph {
     	return this.errors.isEmpty();
     }
     
-    public Iterator getErrors() {
+    public Iterator<Exception> getErrors() {
     	return this.errors.iterator();
     }
     
@@ -127,7 +145,7 @@ public class Net extends PeriodicGraph {
     	warnings.add(text);
     }
     
-   public static Iterator iterator(final String filePath)
+   public static Iterator<Net> iterator(final String filePath)
             throws FileNotFoundException {
         
         final String extension = filePath
@@ -139,12 +157,12 @@ public class Net extends PeriodicGraph {
         if ("cgd".equals(extension) || "pgr".equals(extension)) {
             final NetParser parser = new NetParser(reader);
             
-            return new Iterator() {
+            return new Iterator<Net>() {
                 public boolean hasNext() {
                     return !parser.atEnd();
                 }
 
-                public Object next() {
+                public Net next() {
                     return parser.parseNet();
                 }
 
@@ -153,17 +171,17 @@ public class Net extends PeriodicGraph {
                 }
             };
         } else if ("ds".equals(extension) || "tgs".equals(extension)) {
-            return new FilteredIterator(new InputIterator(reader)) {
-                public Object filter(Object x) {
-                    final DelaneySymbol ds = (DelaneySymbol) x;
+            return new FilteredIterator<Net, DSymbol>(
+                    new InputIterator(reader)) {
+                public Net filter(final DSymbol ds) {
                     final PeriodicGraph graph = new Tiling(ds).getSkeleton();
                     final String group = (ds.dim() == 3) ? "P1" : "p1";
                     return new Net(graph, null, group);
                 }
             };
         } else if ("arc".equals(extension)) {
-            return new IteratorAdapter() {
-                protected Object findNext() throws NoSuchElementException {
+            return new IteratorAdapter<Net>() {
+                protected Net findNext() throws NoSuchElementException {
                     final Archive.Entry entry = Archive.Entry.read(reader);
                     if (entry == null) {
                         throw new NoSuchElementException("at end");
