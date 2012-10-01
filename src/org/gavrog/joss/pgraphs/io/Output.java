@@ -1,5 +1,5 @@
 /*
-Copyright 2006 Olaf Delgado-Friedrichs
+Copyright 2012 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,9 +23,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -38,52 +37,48 @@ import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
- * @author Olaf Delgado
- * @version $Id: Output.java,v 1.5 2007/05/30 23:19:53 odf Exp $
  */
 public class Output {
-    public static void writePGR(final Writer out, final PeriodicGraph G, final String name)
-			throws IOException {
+    public static void writePGR(
+            final Writer out,
+            final PeriodicGraph G,
+            final String name) throws IOException {
     	
         out.write("PERIODIC_GRAPH\n");
         if (name != null) {
             out.write("  NAME " + name + "\n");
         }
-        final Map node2idx = new HashMap();
+        final Map<INode, Integer> node2idx = new HashMap<INode, Integer>();
         int i = 0;
-        for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
-            final INode v = (INode) nodes.next();
-            node2idx.put(v, new Integer(++i));
+        for (final INode v: G.nodes()) {
+            node2idx.put(v, ++i);
         }
-        final List[] tmp = new List[G.numberOfEdges()];
+        final List<NiftyList<Integer>> tmp =
+                new LinkedList<NiftyList<Integer>>();
         out.write("  EDGES\n");
-        i = 0;
-        for (final Iterator edges = G.edges(); edges.hasNext();) {
-            final IEdge e = (IEdge) edges.next();
-            final Integer v = (Integer) node2idx.get(e.source());
-            final Integer w = (Integer) node2idx.get(e.target());
+        for (final IEdge e: G.edges()) {
+            final Integer v = node2idx.get(e.source());
+            final Integer w = node2idx.get(e.target());
             final Vector s = G.getShift(e);
-            final List list = new LinkedList();
+            final List<Integer> list = new LinkedList<Integer>();
             final int d = v.compareTo(w);
             if (d > 0 || (d == 0 && s.isNegative())) {
 				list.add(w);
 				list.add(v);
 				for (int k = 0; k < s.getDimension(); ++k) {
-					list.add(new Integer(((Whole) s.get(k).negative()).intValue()));
+					list.add(((Whole) s.get(k).negative()).intValue());
 				}
 			} else {
 				list.add(v);
 				list.add(w);
 				for (int k = 0; k < s.getDimension(); ++k) {
-					list.add(new Integer(((Whole) s.get(k)).intValue()));
+					list.add(((Whole) s.get(k)).intValue());
 				}
 			}
-			tmp[i] = new NiftyList(list);
-            ++i;
+			tmp.add(new NiftyList<Integer>(list));
         }
-        Arrays.sort(tmp);
-        for (i = 0; i < tmp.length; ++i) {
-        	final List e = tmp[i];
+        Collections.sort(tmp);
+        for (final List<Integer> e: tmp) {
         	final StringBuffer line = new StringBuffer(20);
         	line.append("    ");
         	line.append(format(e.get(0), true));
@@ -100,9 +95,8 @@ public class Output {
         out.write("END\n");
     }
     
-    private static String format(final Object num, final boolean isIndex) {
+    private static String format(final int n, final boolean isIndex) {
     	final StringBuffer tmp = new StringBuffer(5);
-    	final int n = ((Integer) num).intValue();
 		if (isIndex) {
 			if (n < 10) {
 				tmp.append(' ');
