@@ -38,9 +38,6 @@ import org.gavrog.joss.geometry.Vector;
 
 /**
  * Represents a cover of a periodic graph.
- * 
- * @author Olaf Delgado
- * @version $Id: Cover.java,v 1.4 2007/02/15 23:41:50 odf Exp $
  */
 public class Cover extends PeriodicGraph {
     final private Morphism coverMorphism;
@@ -82,7 +79,7 @@ public class Cover extends PeriodicGraph {
         final CoordinateChange C = new CoordinateChange(M);
         
         // --- find translation representatives modulo the new unit lattice
-        final Set translations = new HashSet();
+        final Set<Vector> translations = new HashSet<Vector>();
         final int d = getDimension();
         for (int i = 0; i < d; ++i) {
             final Vector e = Vector.unit(d, i);
@@ -91,14 +88,13 @@ public class Cover extends PeriodicGraph {
                 translations.add(b);
             }
         }
-        final LinkedList Q = new LinkedList();
+        final LinkedList<Vector> Q = new LinkedList<Vector>();
         Q.addAll(translations);
-        final Set gens = new HashSet();
+        final Set<Vector> gens = new HashSet<Vector>();
         gens.addAll(translations);
         while (Q.size() > 0) {
             final Vector s = (Vector) Q.removeFirst();
-            for (final Iterator iter = gens.iterator(); iter.hasNext();) {
-                final Vector t = (Vector) iter.next();
+            for (final Vector t: gens) {
                 final Vector sum = ((Vector) s.plus(t)).modZ();
                 if (!translations.contains(sum)) {
                     translations.add(sum);
@@ -108,71 +104,70 @@ public class Cover extends PeriodicGraph {
         }
 
         // --- find node and edge representatives in the new coordinate system
-        final Map pos = image.barycentricPlacement();
-        final List transformedNodes = new ArrayList();
-        for (final Iterator iter = image.nodes(); iter.hasNext();) {
-            final INode v = (INode) iter.next();
-            transformedNodes.add(new Pair(v, ((Point) pos.get(v)).times(C)));
+        final Map<INode, Point> pos = image.barycentricPlacement();
+        final List<Pair<INode, Point>> transformedNodes =
+                new ArrayList<Pair<INode, Point>>();
+        for (final INode v: image.nodes()) {
+            transformedNodes.add(
+                    new Pair<INode, Point>(v, (Point) pos.get(v).times(C)));
         }
-        final Map transformedEdges = new HashMap();
-        for (final Iterator iter = image.edges(); iter.hasNext();) {
-            final IEdge e = (IEdge) iter.next();
-            final Point p = (Point) pos.get(e.source());
-            final Point q = (Point) pos.get(e.target());
+        final Map<IEdge, Pair<Point, Point>> transformedEdges =
+                new HashMap<IEdge, Pair<Point, Point>>();
+        for (final IEdge e: image.edges()) {
+            final Point p = pos.get(e.source());
+            final Point q = pos.get(e.target());
             final Point src = (Point) p.times(C);
             final Point dst = (Point) q.plus(image.getShift(e)).times(C);
-            transformedEdges.put(e, new Pair(src, dst));
+            transformedEdges.put(e, new Pair<Point, Point>(src, dst));
         }
 
         // --- extend the system of representatives to the new unit cell
-        final List coverNodes = new ArrayList();
+        final List<Pair<INode, Point>> coverNodes =
+                new ArrayList<Pair<INode, Point>>();
         
-        for (final Iterator iter = transformedNodes.iterator(); iter.hasNext();) {
-            final Pair vp = (Pair) iter.next();
-            final INode v = (INode) vp.getFirst();
-            final Point p = (Point) vp.getSecond();
-            for (final Iterator shifts = translations.iterator(); shifts.hasNext();) {
-                final Vector s = (Vector) shifts.next();
+        for (final Pair<INode, Point> vp: transformedNodes) {
+            final INode v = vp.getFirst();
+            final Point p = vp.getSecond();
+            for (final Vector s: translations) {
                 final Point pv = (Point) p.plus(s);
-                coverNodes.add(new Pair(v, pv.modZ()));
+                coverNodes.add(new Pair<INode, Point>(v, pv.modZ()));
             }
         }
         
-        final List coverEdges = new ArrayList();
-        for (final Iterator iter = transformedEdges.keySet().iterator(); iter
-                .hasNext();) {
-            final IEdge e = (IEdge) iter.next();
-            final Pair pq = (Pair) transformedEdges.get(e);
-            final Point p = (Point) pq.getFirst();
-            final Point q = (Point) pq.getSecond();
-            for (final Iterator shifts = translations.iterator(); shifts.hasNext();) {
-                final Vector v = (Vector) shifts.next();
+        final List<Pair<IEdge, Pair<Point, Point>>> coverEdges =
+                new ArrayList<Pair<IEdge, Pair<Point, Point>>>();
+        for (final IEdge e: transformedEdges.keySet()) {
+            final Pair<Point, Point> pq = transformedEdges.get(e);
+            final Point p = pq.getFirst();
+            final Point q = pq.getSecond();
+            for (final Vector v: translations) {
                 final Point pv = (Point) p.plus(v);
                 final Point qv = (Point) q.plus(v);
                 final Point rv = pv.modZ();
-                coverEdges.add(new Pair(e, new Pair(rv, qv.minus(pv).plus(rv))));
+                final Point sv = (Point) qv.minus(pv).plus(rv);
+                coverEdges.add(new Pair<IEdge, Pair<Point, Point>>(
+                        e, new Pair<Point, Point>(rv, sv)));
             }
         }
 
         // --- extract a representation of the new graph
-        final Map pos2node = new HashMap();
-        final Map node2pos = new HashMap();
-        for (final Iterator iter = coverNodes.iterator(); iter.hasNext();) {
-            final Pair vp = (Pair) iter.next();
+        final Map<Pair<INode, Point>, INode> pos2node =
+                new HashMap<Pair<INode, Point>, INode>();
+        final Map<INode, Point> node2pos = new HashMap<INode, Point>();
+        for (final Pair<INode, Point> vp: coverNodes) {
             final INode w = newNode();
             pos2node.put(vp, w);
             node2pos.put(w, vp.getSecond());
         }
-        for (final Iterator iter = coverEdges.iterator(); iter.hasNext();) {
-            final Pair epq = (Pair) iter.next();
-            final IEdge e = (IEdge) epq.getFirst();
-            final Pair pq = (Pair) epq.getSecond();
-            final Point p = (Point) pq.getFirst();
-            final Point q = (Point) pq.getSecond();
+        for (final Pair<IEdge, Pair<Point, Point>> epq: coverEdges) {
+            final IEdge e = epq.getFirst();
+            final Pair<Point, Point> pq = epq.getSecond();
+            final Point p = pq.getFirst();
+            final Point q = pq.getSecond();
             final Point r = q.modZ();
             final Vector s = (Vector) q.minus(r);
-            final INode v = (INode) pos2node.get(new Pair(e.source(), p));
-            final INode w = (INode) pos2node.get(new Pair(e.target(), r));
+            final INode v = pos2node.get(new Pair<INode, Point>(e.source(), p));
+            final INode w = pos2node.get(new Pair<INode, Point>(e.target(), r));
             newEdge(v, w, s);
         }
         
@@ -180,8 +175,10 @@ public class Cover extends PeriodicGraph {
         cache.put(BARYCENTRIC_PLACEMENT, node2pos);
         
         // --- compute the cover morphism
-        this.coverMorphism = new Morphism((INode) this.nodes().next(), (INode) image
-                .nodes().next(), ((CoordinateChange) C.inverse()).getOperator());
+        this.coverMorphism = new Morphism(
+                this.nodes().next(),
+                image.nodes().next(),
+                ((CoordinateChange) C.inverse()).getOperator());
         
         // --- store some additional data
         this.image = image;
@@ -208,7 +205,7 @@ public class Cover extends PeriodicGraph {
      * @return the image.
      */
     public INode image(final INode v) {
-        return (INode) getCoverMorphism().get(v);
+        return getCoverMorphism().getImage(v);
     }
     
     /**
@@ -220,13 +217,13 @@ public class Cover extends PeriodicGraph {
      * @return the image.
      */
     public IEdge image(final IEdge e) {
-        return (IEdge) getCoverMorphism().get(e);
+        return getCoverMorphism().getImage(e);
     }
     
     /**
-     * Computes the position of a node with respect to the cover's coordinate system
-     * given the position of it's image under the cover morphism in the image's coordinate
-     * system.
+     * Computes the position of a node with respect to the cover's coordinate
+     * system given the position of it's image under the cover morphism in the
+     * image's coordinate system.
      * 
      * @param v the node.
      * @param p the position of its image.
@@ -235,23 +232,24 @@ public class Cover extends PeriodicGraph {
     public Point liftedPosition(final INode v, final Point p) {
         final PeriodicGraph image = this.getImage();
         final Operator A = getCoverMorphism().getAffineOperator();
-        final Point b = (Point) this.barycentricPlacement().get(v);
+        final Point b = this.barycentricPlacement().get(v);
         final Point bA = (Point) b.times(A);
-        final Vector d = (Vector) bA.minus(image.barycentricPlacement().get(image(v)));
+        final Vector d =
+                (Vector) bA.minus(image.barycentricPlacement().get(image(v)));
         return (Point) p.plus(d).times(A.inverse());
     }
     
     /**
-     * Computes the position of a node with respect to the cover's coordinate system
-     * given the position of it's image under the cover morphism in the image's coordinate
-     * system.
+     * Computes the position of a node with respect to the cover's coordinate
+     * system given the position of it's image under the cover morphism in the
+     * image's coordinate system.
      * 
      * @param v the node.
      * @param pos a map assigning positions to image nodes.
      * @return the corresponding position of v.
      */
-    public Point liftedPosition(final INode v, final Map pos) {
-        return liftedPosition(v, (Point) pos.get(image(v)));
+    public Point liftedPosition(final INode v, final Map<INode, Point> pos) {
+        return liftedPosition(v, pos.get(image(v)));
     }
     
     /**
@@ -260,28 +258,26 @@ public class Cover extends PeriodicGraph {
      * 
      * @return an iterator over the set of orbits.
      */
-    public Iterator nodeOrbits() {
+    public Iterator<Set<INode>> nodeOrbits() {
     	// --- determine node orbit representatives of the image graph
     	final PeriodicGraph img = getImage();
-        final Partition P = new Partition();
-        for (final Iterator syms = img.symmetries().iterator(); syms.hasNext();) {
-            final Morphism a = (Morphism) syms.next();
-            for (final Iterator nodes = img.nodes(); nodes.hasNext();) {
-                final INode v = (INode) nodes.next();
-                P.unite(v, a.get(v));
+        final Partition<INode> P = new Partition<INode>();
+        for (final Morphism a: img.symmetries()) {
+            for (final INode v: img.nodes()) {
+                P.unite(v, a.getImage(v));
             }
         }
-        final Map imageToRep = P.representativeMap();
+        final Map<INode, INode> imageToRep = P.representativeMap();
         
-        // --- determine sets of preimages for each node orbit of the image graph
-    	final SortedMap preImages = new TreeMap();
-    	for (final Iterator nodes = nodes(); nodes.hasNext();) {
-    		final INode v = (INode) nodes.next();
-    		final INode w = (INode) imageToRep.get(image(v));
+        // --- determine preimage sets for each node orbit of the image graph
+    	final SortedMap<INode, Set<INode>> preImages =
+    	        new TreeMap<INode, Set<INode>>();
+    	for (final INode v: nodes()) {
+    		final INode w = imageToRep.get(image(v));
     		if (!preImages.containsKey(w)) {
-    			preImages.put(w, new TreeSet());
+    			preImages.put(w, new TreeSet<INode>());
     		}
-    		((Set) preImages.get(w)).add(v);
+    		preImages.get(w).add(v);
     	}
     	
         return preImages.values().iterator();
@@ -293,30 +289,28 @@ public class Cover extends PeriodicGraph {
      * 
      * @return an iterator over the set of orbits.
      */
-    public Iterator edgeOrbits() {
+    public Iterator<Set<IEdge>> edgeOrbits() {
     	// --- determine edge orbit representatives of the image graph
     	final PeriodicGraph img = getImage();
-        final Partition P = new Partition();
-        for (final Iterator syms = img.symmetries().iterator(); syms.hasNext();) {
-            final Morphism a = (Morphism) syms.next();
-            for (final Iterator edges = img.edges(); edges.hasNext();) {
-                final IEdge e = (IEdge) edges.next();
-                final IEdge ae = ((IEdge) a.get(e.oriented())).unoriented();
+        final Partition<IEdge> P = new Partition<IEdge>();
+        for (final Morphism a: img.symmetries()) {
+            for (final IEdge e: img.edges()) {
+                final IEdge ae = a.getImage(e.oriented()).unoriented();
                 P.unite(e, ae);
             }
         }
-        final Map imageToRep = P.representativeMap();
+        final Map<IEdge, IEdge> imageToRep = P.representativeMap();
 
-        // --- determine sets of preimages for each edge orbit of the image graph
-    	final Map preImages = new HashMap();
-    	for (final Iterator edges = edges(); edges.hasNext();) {
-    		final IEdge e = (IEdge) edges.next();
-    		final IEdge e1 = ((IEdge) image(e.oriented())).unoriented();
-    		final IEdge f = (IEdge) imageToRep.get(e1);
+        // --- determine preimage sets for each edge orbit of the image graph
+    	final Map<IEdge, Set<IEdge>> preImages =
+    	        new HashMap<IEdge, Set<IEdge>>();
+    	for (final IEdge e: edges()) {
+    		final IEdge e1 = image(e.oriented()).unoriented();
+    		final IEdge f = imageToRep.get(e1);
     		if (!preImages.containsKey(f)) {
-    			preImages.put(f, new HashSet());
+    			preImages.put(f, new HashSet<IEdge>());
     		}
-    		((Set) preImages.get(f)).add(e);
+    		preImages.get(f).add(e);
     	}
     	
         return preImages.values().iterator();
