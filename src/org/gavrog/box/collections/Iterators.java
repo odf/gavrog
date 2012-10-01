@@ -39,7 +39,7 @@ final public class Iterators {
      * 
      * @return the newly constructed iterator.
      */
-    public static <E> Iterator<E> empty() {
+    public static <E> IteratorAdapter<E> empty() {
         return new IteratorAdapter<E>() {
             protected E findNext() throws NoSuchElementException {
                 throw new NoSuchElementException("at end");
@@ -52,7 +52,7 @@ final public class Iterators {
      * @param x the object.
      * @return the newly constructed iterator.
      */
-    public static <E> Iterator<E> singleton(final E x) {
+    public static <E> IteratorAdapter<E> singleton(final E x) {
         return new IteratorAdapter<E>() {
             private boolean done = false;
             
@@ -74,7 +74,7 @@ final public class Iterators {
      * @param end the smallest element above the range.
      * @return the newly constructed iterator.
      */
-    public static Iterator<Integer> range(final int start, final int end) {
+    public static IteratorAdapter<Integer> range(final int start, final int end) {
         return new IteratorAdapter<Integer>() {
             private int next = start;
 
@@ -104,7 +104,7 @@ final public class Iterators {
      * @param b the second source iterator.
      * @return the newly constructed iterator.
      */
-    public static <A, B> Iterator<Pair<A, B>>
+    public static <A, B> IteratorAdapter<Pair<A, B>>
     cantorProduct(final Iterator<A> a, final Iterator<B> b)
     {
         if (a == b) {
@@ -147,7 +147,7 @@ final public class Iterators {
      * @param things the things to permute.
      * @return the newly constructed iterator.
      */
-    public static <E> Iterator<List<E>> permutations(final E things[]) {
+    public static <E> IteratorAdapter<List<E>> permutations(final E things[]) {
         final int n = things.length;
         
         return new IteratorAdapter<List<E>>() {
@@ -191,8 +191,8 @@ final public class Iterators {
      * @param things the set of objects to pick from.
      * @return the newly constructed iterator.
      */
-    public static <E> Iterator<List<E>> combinations(final E things[],
-                                                     final int m)
+    public static <E> IteratorAdapter<List<E>> combinations(final E things[],
+                                                            final int m)
     {
         final int n = things.length;
         if (n < m) {
@@ -245,8 +245,8 @@ final public class Iterators {
      * @param k the size of selections to produce.
      * @return the newly constructed iterator.
      */
-    public static <E> Iterator<List<E>> selections(final E things[],
-                                                   final int k)
+    public static <E> IteratorAdapter<List<E>> selections(final E things[],
+                                                          final int k)
     {
         final int n = things.length;
         

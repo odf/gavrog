@@ -1,5 +1,5 @@
 /*
-   Copyright 2007 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -42,11 +42,8 @@ import org.gavrog.joss.geometry.Vector;
  * CAVEATS:
  * - only surjective morphisms are supported.
  * - only directed edges as returned by UndirectedGraph.orientedEdge() are mapped
- * 
- * @author Olaf Delgado
- * @version $Id: Morphism.java,v 1.11 2007/05/09 00:17:06 odf Exp $
  */
-public class Morphism implements Map {
+public class Morphism {
     final private Map src2img;
     final private Map img2src;
     final private Operator operator;
@@ -415,6 +412,14 @@ public class Morphism implements Map {
      */
     public Object get(Object arg0) {
         return src2img.get(arg0);
+    }
+
+    public INode getNodeImage(INode arg0) {
+        return (INode) get(arg0);
+    }
+
+    public IEdge getEdgeImage(IEdge arg0) {
+        return (IEdge) get(arg0);
     }
 
     /* (non-Javadoc)

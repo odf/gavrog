@@ -1340,34 +1340,34 @@ public class PeriodicGraph extends UndirectedGraph {
      * 
      * @return the set of characteristic bases, represented by edge lists.
      */
-    public List characteristicBases() {
+    public List<List<IEdge>> characteristicBases() {
         try {
-            return (List) this.cache.get(CHARACTERISTIC_BASES);
+            @SuppressWarnings("unchecked")
+            final List<List<IEdge>> result =
+                    (List<List<IEdge>>) this.cache.get(CHARACTERISTIC_BASES);
+            return result;
         } catch (CacheMissException ex) {
         }
         
-        final List result = new LinkedList();
-        final Map pos = barycentricPlacement();
+        final List<List<IEdge>> result = new LinkedList<List<IEdge>>();
+        final Map<INode, Point> pos = barycentricPlacement();
         final int d = getDimension();
 
         // --- look for edge lists with a common source
-        for (final Iterator iter = nodes(); iter.hasNext();) {
-            final INode v = (INode) iter.next();
-            final List edges = allIncidences(v);
-            for (final Iterator good = goodCombinations(edges, pos); good.hasNext();) {
-                result.add(good.next());
+        for (final INode v: nodes()) {
+            final List<IEdge> edges = allIncidences(v);
+            for (final List<IEdge> good: goodCombinations(edges, pos)) {
+                result.add(good);
             }
         }
 
         if (result.size() == 0) {
             // --- no results, now look for edge lists that form chains
-            for (final Iterator iter = nodes(); iter.hasNext();) {
-                // --- get the next start node for the chain
-                final INode v0 = (INode) iter.next();
-                
+            for (final INode v0: nodes()) {
                 // --- initialize objects used in the subsequent search
-                final LinkedList iterators = new LinkedList();
-                final LinkedList edges = new LinkedList();
+                final LinkedList<Iterator<IEdge>> iterators =
+                        new LinkedList<Iterator<IEdge>>();
+                final LinkedList<IEdge> edges = new LinkedList<IEdge>();
                 final Matrix M = Matrix.zero(d, d).mutableClone();
                 iterators.addLast(allIncidences(v0).iterator());
                 edges.addLast(null);
@@ -1375,15 +1375,16 @@ public class PeriodicGraph extends UndirectedGraph {
                 // --- do a depth first search for usable chains
                 while (iterators.size() > 0) {
                     final int k = iterators.size();
-                    final Iterator current = (Iterator) iterators.getLast();
+                    final Iterator<IEdge> current = iterators.getLast();
                     if (current.hasNext()) {
                         // -- get next edge and data related to it
-                        final IEdge e = (IEdge) current.next();
+                        final IEdge e = current.next();
                         final INode v = e.source();
                         final INode w = e.target();
-                        final Point pv = (Point) pos.get(v);
-                        final Point pw = (Point) pos.get(w);
-                        final Vector diff = (Vector) pw.minus(pv).plus(getShift(e));
+                        final Point pv = pos.get(v);
+                        final Point pw = pos.get(w);
+                        final Vector diff =
+                                (Vector) pw.minus(pv).plus(getShift(e));
                         
                         // --- see if so far edge vectors are independent
                         M.setRow(k-1, diff.getCoordinates());
@@ -1393,7 +1394,7 @@ public class PeriodicGraph extends UndirectedGraph {
                             edges.addLast(e.oriented());
                             if (k == d) {
                                 // --- found a result here
-                                result.add(edges.clone());
+                                result.add(new LinkedList<IEdge>(edges));
                             } else {
                                 // --- have to extend the chain
                                 iterators.addLast(allIncidences(w).iterator());
@@ -1412,14 +1413,15 @@ public class PeriodicGraph extends UndirectedGraph {
         
         if (result.size() == 0) {
             // --- still nothing, so use general edge lists
-            final List edges = allDirectedEdges();
-            for (final Iterator good = goodCombinations(edges, pos); good.hasNext();) {
-                result.add(good.next());
+            final List<IEdge> edges = allDirectedEdges();
+            for (final List<IEdge> good: goodCombinations(edges, pos)) {
+                result.add(good);
             }
         }
         
-        return (List) cache.put(CHARACTERISTIC_BASES, Collections
-                .unmodifiableList(result));
+        final List<List<IEdge>> out = Collections.unmodifiableList(result);
+        cache.put(CHARACTERISTIC_BASES, out);
+        return out;
     }
 
     /**
@@ -1429,10 +1431,10 @@ public class PeriodicGraph extends UndirectedGraph {
      * @param v the common source node.
      * @return the list of edges found.
      */
-    public List allIncidences(final INode v) {
-        final List result = new ArrayList();
-        for (final Iterator iter = v.incidences(); iter.hasNext();) {
-            final IEdge e = ((IEdge) iter.next()).oriented();
+    public List<IEdge> allIncidences(final INode v) {
+        final List<IEdge> result = new ArrayList<IEdge>();
+        for (final IEdge ee: v.incidences()) {
+            final IEdge e = ee.oriented();
             result.add(e);
             if (e.source().equals(e.target())) {
                 result.add(e.reverse());
@@ -1447,10 +1449,10 @@ public class PeriodicGraph extends UndirectedGraph {
      * 
      * @return the list of edges found.
      */
-    private List allDirectedEdges() {
-        final List result = new ArrayList();
-        for (final Iterator iter = edges(); iter.hasNext();) {
-            final IEdge e = ((IEdge) iter.next()).oriented();
+    private List<IEdge> allDirectedEdges() {
+        final List<IEdge> result = new ArrayList<IEdge>();
+        for (final IEdge ee: edges()) {
+            final IEdge e = ee.oriented();
             result.add(e);
             result.add(e.reverse());
         }
@@ -1468,27 +1470,29 @@ public class PeriodicGraph extends UndirectedGraph {
      * @param pos associates d-dimensional coordinates to nodes.
      * @return an iterator over all good edge combinations.
      */
-    public Iterator goodCombinations(final List edges, final Map pos) {
+    public IteratorAdapter<List<IEdge>> goodCombinations(
+            final List<IEdge> edges,
+            final Map<INode, Point> pos) {
         final int d = getDimension();
         final int n = edges.size();
         if (n < d || d == 0) {
             return Iterators.empty();
         } else if (d == 1) {
-            return new FilteredIterator(edges.iterator()) {
+            return new FilteredIterator<List<IEdge>, IEdge>(edges.iterator()) {
                 @Override
-                public Object filter(Object x) {
-                    List a = new ArrayList();
+                public List<IEdge> filter(final IEdge x) {
+                    final List<IEdge> a = new ArrayList<IEdge>();
                     a.add(x);
                     return a;
                 }
             };
         }
 
-        return new IteratorAdapter() {
-            private Iterator perms = Iterators.empty();
+        return new IteratorAdapter<List<IEdge>>() {
+            private Iterator<List<IEdge>> perms = Iterators.empty();
             private final int a[] = new int[d];
 
-            protected Object findNext() throws NoSuchElementException {
+            protected List<IEdge> findNext() throws NoSuchElementException {
                 while (!perms.hasNext()) {
                     int k;
                     if (d > 1 && a[1] == 0) {
@@ -1513,14 +1517,15 @@ public class PeriodicGraph extends UndirectedGraph {
                     
                     final Matrix M = new Matrix(d, d);
                     for (int i = 0; i < d; ++i) {
-                        final IEdge e = (IEdge) edges.get(a[i]);
-                        final Point pv = (Point) pos.get(e.source());
-                        final Point pw = (Point) pos.get(e.target());
-                        final Vector t = (Vector) pw.minus(pv).plus(getShift(e));
+                        final IEdge e = edges.get(a[i]);
+                        final Point pv = pos.get(e.source());
+                        final Point pw = pos.get(e.target());
+                        final Vector t =
+                                (Vector) pw.minus(pv).plus(getShift(e));
                         M.setRow(i, t.getCoordinates());                        
                     }
                     if (M.rank() == d) {
-                        final Object picks[] = new Object[d];
+                        final IEdge picks[] = new IEdge[d];
                         for (int i = 0; i < d; ++i) {
                             picks[i] = edges.get(a[i]);
                         }
@@ -1543,7 +1548,10 @@ public class PeriodicGraph extends UndirectedGraph {
      */
     public Set<Morphism> symmetries() {
         try {
-            return (Set) this.cache.get(SYMMETRIES);
+            @SuppressWarnings("unchecked")
+            final Set<Morphism> result =
+                    (Set<Morphism>) this.cache.get(SYMMETRIES);
+            return result;
         } catch (CacheMissException ex) {
         }
         
@@ -1557,19 +1565,19 @@ public class PeriodicGraph extends UndirectedGraph {
         
         final TaskController taskController = TaskController.getInstance();
         
-        final List generators = new LinkedList();
+        final List<Morphism> generators = new LinkedList<Morphism>();
         final int d = getDimension();
-        final List bases = characteristicBases();
+        final List<List<IEdge>> bases = characteristicBases();
         
-        final List basis0 = (List) bases.get(0);
-        final INode v0 = ((IEdge) basis0.get(0)).source();
+        final List<IEdge> basis0 = bases.get(0);
+        final INode v0 = basis0.get(0).source();
         final Matrix B0 = differenceMatrix(basis0);
         
         for (int i = 0; i < bases.size(); ++i) {
             taskController.bailOutIfCancelled();
             
-            final List b = (List) bases.get(i);
-            final INode v = ((IEdge) b.get(0)).source();
+            final List<IEdge> b = bases.get(i);
+            final INode v = b.get(0).source();
             final Matrix B = differenceMatrix(b);
             final Matrix M = new Matrix(d+1, d+1);
             M.setSubMatrix(0, 0, Matrix.solve(B0, B));
@@ -1587,15 +1595,14 @@ public class PeriodicGraph extends UndirectedGraph {
             }
         }
         
-        final Set seen = new HashSet();
-        final LinkedList queue = new LinkedList();
+        final Set<Morphism> seen = new HashSet<Morphism>();
+        final LinkedList<Morphism> queue = new LinkedList<Morphism>();
         final Morphism identity = new Morphism(v0, v0, Operator.identity(d));
         seen.add(identity);
         queue.addLast(identity);
         while (queue.size() > 0) {
             final Morphism phi = (Morphism) queue.removeFirst();
-            for (final Iterator gens = generators.iterator(); gens.hasNext();) {
-                final Morphism psi = (Morphism) gens.next();
+            for (final Morphism psi: generators) {
                 final Morphism product = phi.times(psi);
                 if (!seen.contains(product)) {
                     seen.add(product);
@@ -1604,7 +1611,9 @@ public class PeriodicGraph extends UndirectedGraph {
             }
         }
         
-        return (Set) cache.put(SYMMETRIES, Collections.unmodifiableSet(seen));
+        final Set<Morphism> out = Collections.unmodifiableSet(seen);
+        cache.put(SYMMETRIES, out);
+        return out;
     }
 
     /**
@@ -1636,9 +1645,9 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return the difference vector
      */
     public Vector differenceVector(final IEdge e) {
-        final Map pos = barycentricPlacement();
-        final Point pv = (Point) pos.get(e.source());
-        final Point pw = (Point) pos.get(e.target());
+        final Map<INode, Point> pos = barycentricPlacement();
+        final Point pv = pos.get(e.source());
+        final Point pw = pos.get(e.target());
         return (Vector) pw.minus(pv).plus(getShift(e));
     }
     
@@ -1649,12 +1658,12 @@ public class PeriodicGraph extends UndirectedGraph {
      * @param edges a list of edges.
      * @return a matrix composed of difference vectors
      */
-    private Matrix differenceMatrix(final List edges) {
+    private Matrix differenceMatrix(final List<IEdge> edges) {
         final int n = edges.size();
         
         final Matrix M = new Matrix(n, getDimension());
         for (int i = 0; i < n; ++i) {
-            M.setRow(i, differenceVector((IEdge) edges.get(i)).getCoordinates());
+            M.setRow(i, differenceVector(edges.get(i)).getCoordinates());
         }
         return M;
     }
@@ -1687,12 +1696,12 @@ public class PeriodicGraph extends UndirectedGraph {
     public Matrix symmetricBasis() {
         // -- preparations
         final int d = getDimension();
-        final Set syms = symmetries();
+        final Set<Morphism> syms = symmetries();
         
         // --- compute a symmetry-invariant quadratic form
         Matrix M = Matrix.zero(d, d);
-        for (final Iterator iter = syms.iterator(); iter.hasNext();) {
-            final Matrix A = ((Morphism) iter.next()).getLinearOperator().getCoordinates()
+        for (final Morphism phi: syms) {
+            final Matrix A = phi.getLinearOperator().getCoordinates()
                     .getSubMatrix(0, 0, d, d);
             M = (Matrix) M.plus(A.times(A.transposed()));
         }
@@ -1708,32 +1717,17 @@ public class PeriodicGraph extends UndirectedGraph {
      * 
      * @return an iterator over the set of orbits.
      */
-//    public Iterator nodeOrbits() {
-//        final Partition P = new Partition();
-//        for (final Iterator syms = symmetries().iterator(); syms.hasNext();) {
-//            final Morphism a = (Morphism) syms.next();
-//            for (final Iterator nodes = nodes(); nodes.hasNext();) {
-//                final INode v = (INode) nodes.next();
-//                P.unite(v, a.get(v));
-//            }
-//        }
-//        return P.classes();
-//    }
     public Iterator<Set<INode>> nodeOrbits() {
         final Set<INode> seen = new HashSet<INode>();
         final List<Set<INode>> orbits = new ArrayList<Set<INode>>();
 
-        for (final Iterator nodes = nodes(); nodes.hasNext();) {
-            final INode v = (INode) nodes.next();
+        for (final INode v: nodes()) {
             if (!seen.contains(v)) {
                 final Set<INode> orbit = new HashSet<INode>();
                 orbit.add(v);
                 seen.add(v);
-                for (final Iterator syms = symmetries().iterator();
-                        syms.hasNext();)
-                {
-                    final Morphism a = (Morphism) syms.next();
-                    final INode w = (INode) a.get(v);
+                for (final Morphism a: symmetries()) {
+                    final INode w = a.getNodeImage(v);
                     orbit.add(w);
                     seen.add(w);
                 }
@@ -1749,10 +1743,9 @@ public class PeriodicGraph extends UndirectedGraph {
      * @param v a node of the representation graph.
      * @return the list of symmetries stabilizing the node up to translations.
      */
-    public List nodeStabilizer(final INode v) {
-        final List res = new ArrayList();
-        for (final Iterator syms = symmetries().iterator(); syms.hasNext();) {
-            final Morphism a = (Morphism) syms.next();
+    public List<Morphism> nodeStabilizer(final INode v) {
+        final List<Morphism> res = new ArrayList<Morphism>();
+        for (final Morphism a: symmetries()) {
             if (a.get(v).equals(v)) {
                 res.add(a);
             }
@@ -1766,12 +1759,11 @@ public class PeriodicGraph extends UndirectedGraph {
      * 
      * @return an iterator over the set of orbits.
      */
-    public Iterator edgeOrbits() {
-        final Partition P = new Partition();
-        for (final Iterator syms = symmetries().iterator(); syms.hasNext();) {
-            final Morphism a = (Morphism) syms.next();
+    public Iterator<Set<IEdge>> edgeOrbits() {
+        final Partition<IEdge> P = new Partition<IEdge>();
+        for (final Morphism a: symmetries()) {
             for (final IEdge e: edges()) {
-                final IEdge ae = ((IEdge) a.get(e.oriented())).unoriented();
+                final IEdge ae = a.getEdgeImage(e.oriented()).unoriented();
                 P.unite(e, ae);
             }
         }
@@ -1790,12 +1782,15 @@ public class PeriodicGraph extends UndirectedGraph {
      * 
      * @return the invariant.
      */
-    public NiftyList invariant() {
+    public NiftyList<Integer> invariant() {
         if (DEBUG) {
             System.out.println("\nComputing invariant for " + this);
         }
         try {
-            return (NiftyList) this.cache.get(INVARIANT);
+            @SuppressWarnings("unchecked")
+            final NiftyList<Integer> result =
+                    (NiftyList<Integer>) this.cache.get(INVARIANT);
+            return result;
         } catch (CacheMissException ex) {
         }
         
@@ -1811,10 +1806,10 @@ public class PeriodicGraph extends UndirectedGraph {
         
         final int d = getDimension();
         final int m = numberOfEdges();
-        final List bases = characteristicBases();
+        final List<List<IEdge>> bases = characteristicBases();
         final Point zero = Point.origin(d);
 
-        class EdgeCmd implements Comparable {
+        class EdgeCmd implements Comparable<EdgeCmd> {
             public int source;
             public int target;
             public Vector shift;
@@ -1825,18 +1820,13 @@ public class PeriodicGraph extends UndirectedGraph {
                 this.shift = s;
             }
             
-            public int compareTo(final Object other) {
-                if (other instanceof EdgeCmd) {
-                    final EdgeCmd e = (EdgeCmd) other;
-                    if (e.source != this.source) {
-                        return this.source - e.source;
-                    } else if (e.target != this.target) {
-                        return this.target - e.target;
-                    } else {
-                        return ((Vector) this.shift.minus(e.shift)).sign();
-                    }
+            public int compareTo(final EdgeCmd e) {
+                if (e.source != this.source) {
+                    return this.source - e.source;
+                } else if (e.target != this.target) {
+                    return this.target - e.target;
                 } else {
-                    throw new IllegalArgumentException();
+                    return this.shift.minus(e.shift).sign();
                 }
             }
             
@@ -1869,19 +1859,20 @@ public class PeriodicGraph extends UndirectedGraph {
         for (int i = 0; i < bases.size(); ++i) {
             taskController.bailOutIfCancelled();
             
-            final List b = (List) bases.get(i);
+            final List<IEdge> b = bases.get(i);
             if (DEBUG) {
                 System.out.println("  Checking basis " + b);
             }
-            final INode v0 = ((IEdge) b.get(0)).source();
+            final INode v0 = b.get(0).source();
             final Matrix B = differenceMatrix(b);
             final Matrix B_1 = (Matrix) B.inverse();
             
-            final LinkedList Q = new LinkedList();
-            Q.addLast(new Pair(v0, zero));
-            final Map old2new = new HashMap();
-            old2new.put(v0, new Integer(1));
-            final Map newPos = new HashMap();
+            final LinkedList<Pair<INode, Point>> Q =
+                    new LinkedList<Pair<INode, Point>>();
+            Q.addLast(new Pair<INode, Point>(v0, zero));
+            final Map<INode, Integer> old2new = new HashMap<INode, Integer>();
+            old2new.put(v0, 1);
+            final Map<INode, Point> newPos = new HashMap<INode, Point>();
             newPos.put(v0, zero);
 
             int nextVertex = 2;
@@ -1892,33 +1883,35 @@ public class PeriodicGraph extends UndirectedGraph {
             int r = 0;
             
             class Break extends Throwable {
+               private static final long serialVersionUID = -4765692704642559061L;
             }
             
             try {
                 while (Q.size() > 0) {
-                    final Pair entry = (Pair) Q.removeFirst();
-                    final INode v = (INode) entry.getFirst();
-                    final int vn = ((Integer) old2new.get(v)).intValue();
-                    final Point p = (Point) entry.getSecond();
+                    final Pair<INode, Point> entry = Q.removeFirst();
+                    final INode v = entry.getFirst();
+                    final int vn = old2new.get(v);
+                    final Point p = entry.getSecond();
                     
                     // --- collect neighbors and sort by mapped difference vectors
-                    final List incident = allIncidences(v);
-                    final Matrix M = (Matrix) differenceMatrix(incident).times(B_1);
-                    final Map edgeToRow = new HashMap();
+                    final List<IEdge> incident = allIncidences(v);
+                    final Matrix M =
+                            (Matrix) differenceMatrix(incident).times(B_1);
+                    final Map<IEdge, Vector> edgeToRow =
+                            new HashMap<IEdge, Vector>();
                     for (int k = 0; k < incident.size(); ++k) {
                         edgeToRow.put(incident.get(k), new Vector(M.getRow(k)));
                     }
-                    Collections.sort(incident, new Comparator() {
-                        public int compare(final Object arg0, final Object arg1) {
-                            final Vector a = (Vector) edgeToRow.get(arg0);
-                            final Vector b = (Vector) edgeToRow.get(arg1);
+                    Collections.sort(incident, new Comparator<IEdge>() {
+                        public int compare(final IEdge arg0, final IEdge arg1) {
+                            final Vector a = edgeToRow.get(arg0);
+                            final Vector b = edgeToRow.get(arg1);
                             return a.compareTo(b);
                         }
                     });
                     
                     // --- loop over neighbors
-                    for (final Iterator it = incident.iterator(); it.hasNext();) {
-                        final IEdge e = (IEdge) it.next();
+                    for (final IEdge e: incident) {
                         final INode w = e.target();
                         final Point s = (Point) p.plus(edgeToRow.get(e));
                         final int wn;
@@ -1926,13 +1919,13 @@ public class PeriodicGraph extends UndirectedGraph {
                         
                         if (!old2new.containsKey(w)) {
                             // --- edge connects to new vertex class
-                            Q.addLast(new Pair(w, s));
+                            Q.addLast(new Pair<INode, Point>(w, s));
                             wn = nextVertex++;
-                            old2new.put(w, new Integer(wn));
+                            old2new.put(w, wn);
                             newPos.put(w, s);
                             shift = Vector.zero(d);
                         } else {
-                            wn = ((Integer) old2new.get(w)).intValue();
+                            wn = old2new.get(w);
                             if (wn < vn) {
                                 // --- wrong direction
                                 continue;
@@ -1944,7 +1937,8 @@ public class PeriodicGraph extends UndirectedGraph {
                                 shift = (Vector) shift.times(basisAdjustment);
                             } else {
                                 // --- see if new vector contributes to a basis of shifts
-                                essentialShifts.setRow(r, shift.getCoordinates());
+                                essentialShifts.setRow(r,
+                                        shift.getCoordinates());
                                 if (essentialShifts.rank() > r) {
                                     // --- yes, it does
                                     shift = Vector.unit(d, r);
@@ -1954,11 +1948,14 @@ public class PeriodicGraph extends UndirectedGraph {
                                                 essentialShifts);
                                     }
                                 } else {
-                                    // --- no, so express as sum of former shifts
-                                    essentialShifts.setRow(r, Matrix.zero(1, d));
-                                    shift = new Vector(LinearAlgebra.solutionInRows(
-                                            essentialShifts, shift.getCoordinates(),
-                                            false));
+                                    // --- no, express as sum of former shifts
+                                    essentialShifts.setRow(
+                                            r, Matrix.zero(1, d));
+                                    shift = new Vector(
+                                            LinearAlgebra.solutionInRows(
+                                                    essentialShifts,
+                                                    shift.getCoordinates(),
+                                                    false));
                                 }
                             }
                         }
@@ -2006,8 +2003,9 @@ public class PeriodicGraph extends UndirectedGraph {
             } catch (Break done) {
                 continue;
             }
-            bestBasis = (Matrix) basisAdjustment.getBasis().times(differenceMatrix(b));
-            bestStart = ((IEdge) b.get(0)).source();
+            bestBasis = (Matrix) basisAdjustment.getBasis()
+                    .times(differenceMatrix(b));
+            bestStart = b.get(0).source();
         }
         
         // --- collect the shift vectors and extract a basis
@@ -2041,8 +2039,8 @@ public class PeriodicGraph extends UndirectedGraph {
         
         // --- construct the canonical form and the invariant
         final PeriodicGraph canonical = new PeriodicGraph(d);
-        final List invariant = new LinkedList();
-        invariant.add(new Integer(this.getDimension()));
+        final List<Integer> invariant = new LinkedList<Integer>();
+        invariant.add(this.getDimension());
         
         final int n = numberOfNodes();
         final INode nodes[] = new INode[n+1];
@@ -2052,10 +2050,10 @@ public class PeriodicGraph extends UndirectedGraph {
         for (int i = 0; i < m; ++i) {
             final EdgeCmd cmd = bestScript[i];
             canonical.newEdge(nodes[cmd.source], nodes[cmd.target], cmd.shift);
-            invariant.add(new Integer(cmd.source));
-            invariant.add(new Integer(cmd.target));
+            invariant.add(cmd.source);
+            invariant.add(cmd.target);
             for (int j = 0; j < d; ++j) {
-                invariant.add(new Integer(((Whole) cmd.shift.get(j)).intValue()));
+                invariant.add(((Whole) cmd.shift.get(j)).intValue());
             }
         }
         
@@ -2072,7 +2070,9 @@ public class PeriodicGraph extends UndirectedGraph {
         }
 
         // --- cache the results
-        return (NiftyList) cache.put(INVARIANT, new NiftyList(invariant));
+        final NiftyList<Integer> out = new NiftyList<Integer>(invariant);
+        cache.put(INVARIANT, out);
+        return out;
     }
     
     /**
@@ -2081,7 +2081,7 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return the Systre key as a simple string.
      */
     public String getSystreKey() {
-        final List inv = invariant();
+        final List<Integer> inv = invariant();
         final StringBuffer buffer = new StringBuffer(50);
         for (int i = 0; i < inv.size(); ++i) {
             if (i > 0) {
@@ -2147,7 +2147,7 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return the associated periodic graph.
      */
     public static PeriodicGraph fromInvariantString(final String key) {
-        final List numbers = new ArrayList();
+        final List<Integer> numbers = new ArrayList<Integer>();
         final String fields[] = key.split("\\s+");
         for (int i = 0; i < fields.length; ++i) {
             numbers.add(new Integer(fields[i]));
@@ -2155,12 +2155,12 @@ public class PeriodicGraph extends UndirectedGraph {
         final int d = ((Integer) numbers.get(0)).intValue();
         final int n = (numbers.size() - 1) / (d + 2);
         final PeriodicGraph G = new PeriodicGraph(d);
-        final List nodes = new ArrayList();
+        final List<INode> nodes = new ArrayList<INode>();
         nodes.add(null);
         for (int i = 0; i < n; ++i) {
             final int offset = 1 + i * (d + 2);
-            final int s = ((Integer) numbers.get(offset)).intValue();
-            final int t = ((Integer) numbers.get(offset + 1)).intValue();
+            final int s = numbers.get(offset);
+            final int t = numbers.get(offset + 1);
             if (s == nodes.size()) {
                 nodes.add(G.newNode());
             }
@@ -2172,10 +2172,9 @@ public class PeriodicGraph extends UndirectedGraph {
             }
             final int[] shift = new int[d];
             for (int j = 0; j < d; ++j) {
-                final Integer x = (Integer) numbers.get(offset + 2 + j);
-                shift[j] = x.intValue();
+                shift[j] = numbers.get(offset + 2 + j);
             }
-            G.newEdge((INode) nodes.get(s), (INode) nodes.get(t), shift);
+            G.newEdge(nodes.get(s), nodes.get(t), shift);
         }
         return G;
     }
