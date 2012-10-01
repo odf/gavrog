@@ -56,10 +56,8 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 
 /**
- * Contains methods to parse a net specification in Systre format (file extension "cgd").
- * 
- * @author Olaf Delgado
- * @version $Id: NetParser.java,v 1.100 2008/07/08 06:41:34 odf Exp $
+ * Contains methods to parse a net specification in Systre format (file
+ * extension "cgd").
  */
 public class NetParser extends GenericParser {
     // --- used to enable or disable a log of the parsing process
@@ -72,7 +70,8 @@ public class NetParser extends GenericParser {
         }
     }
     public static InfoType CONNECTIVITY = new InfoType("Connectivity");
-    public static InfoType COORDINATION_SEQUENCE = new InfoType("Coordination-Sequence");
+    public static InfoType COORDINATION_SEQUENCE =
+            new InfoType("Coordination-Sequence");
     public static InfoType POSITION = new InfoType("Position");
     
     /**
@@ -109,7 +108,8 @@ public class NetParser extends GenericParser {
         public final Object target;   // the edge's target node representative
         public final Operator shift;  // shift to be applied to the target representative
         
-        public EdgeDescriptor(final Object source, final Object target, final Operator shift) {
+        public EdgeDescriptor(final Object source, final Object target,
+                final Operator shift) {
             this.source = source;
             this.target = target;
             this.shift = shift;
@@ -158,8 +158,8 @@ public class NetParser extends GenericParser {
      * 
      * @return the mapping of keywords.
      */
-    private static Map makeSynonyms() {
-        final Map result = new HashMap();
+    private static Map<String, String> makeSynonyms() {
+        final Map<String, String> result = new HashMap<String, String>();
         result.put("vertex", "node");
         result.put("vertices", "node");
         result.put("vertexes", "node");
@@ -300,12 +300,12 @@ public class NetParser extends GenericParser {
      */
     private Net parsePeriodicGraph(final Entry block[]) {
         Net G = null;
-        final Map nameToNode = new HashMap();
+        final Map<Object, INode> nameToNode = new HashMap<Object, INode>();
         final List<String> warnings = new ArrayList<String>();
         
         for (int i = 0; i < block.length; ++i) {
             if (block[i].key.equals("edge")) {
-                final List row = block[i].values;
+                final List<Object> row = block[i].values;
                 final int d = row.size() - 2;
                 if (d < 1) {
                     final String msg = "not enough fields at line ";
@@ -360,7 +360,8 @@ public class NetParser extends GenericParser {
         } else {
             dim = 3;
         }
-        final Collection ops = SpaceGroupCatalogue.operators(dim, name);
+        final Collection<Operator> ops =
+                SpaceGroupCatalogue.operators(dim, name);
         if (ops == null) {
             return null;
         } else {
@@ -370,14 +371,16 @@ public class NetParser extends GenericParser {
     
     
     /**
-     * Parses a periodic net given in terms of a crystallographic group. Edges are
-     * specified in a similar way as in parsePeriodicGraph(), but instead of just lattice
-     * translation, any operator from the symmetry group may be used.
+     * Parses a periodic net given in terms of a crystallographic group. Edges
+     * are specified in a similar way as in parsePeriodicGraph(), but instead
+     * of just lattice translation, any operator from the symmetry group may
+     * be used.
      * 
-     * Group operators are in symbolic form, as in "y,x,z+1/2". For nodes not in general
-     * position, i.e., with a non-trivial stabilizer, their respective special positions
-     * must be given in symbolic form, as e.g. in "x,y,x+1/2". Symbolic specifications for
-     * both operators and special positions are handled by {@link Operator#parse(String)}.
+     * Group operators are in symbolic form, as in "y,x,z+1/2". For nodes not
+     * in general position, i.e., with a non-trivial stabilizer, their
+     * respective special positions must be given in symbolic form, as e.g. in
+     * "x,y,x+1/2". Symbolic specifications for both operators and special
+     * positions are handled by {@link Operator#parse(String)}.
      * 
      * Example:
      * 
@@ -398,15 +401,16 @@ public class NetParser extends GenericParser {
         String groupName = null;
         int dimension = 0;
         SpaceGroup group = null;
-        List ops = new ArrayList();
-        List nodeDescriptors = new LinkedList();
-        List edgeDescriptors = new LinkedList();
-        final Map nodeNameToDesc = new HashMap();
+        List<Operator> ops = new ArrayList<Operator>();
+        List<NodeDescriptor> nodeDescriptors = new LinkedList<NodeDescriptor>();
+        List<EdgeDescriptor> edgeDescriptors = new LinkedList<EdgeDescriptor>();
+        final Map<Object, NodeDescriptor> nodeNameToDesc =
+                new HashMap<Object, NodeDescriptor>();
         final List<String> warnings = new ArrayList<String>();
         
         // --- collect data from the input
         for (int i = 0; i < block.length; ++i) {
-            final List row = block[i].values;
+            final List<Object> row = block[i].values;
             final String key = block[i].key;
             if (key.equals("group")) {
                 if (groupName == null) {
@@ -462,31 +466,29 @@ public class NetParser extends GenericParser {
         }
         
         // --- convert to primitive setting
-        final Set primitiveOps = group.primitiveOperators();
+        final Set<Operator> primitiveOps = group.primitiveOperators();
         final Operator to = group.transformationToPrimitive();
         final Operator from = (Operator) to.inverse();
         
         ops.clear();
-        for (final Iterator iter = primitiveOps.iterator(); iter.hasNext();) {
-            final Operator op = (Operator) iter.next();
+        for (final Operator op: primitiveOps) {
             ops.add(((Operator) from.times(op).times(to)).modZ());
         }
         
-        final List nodeDescsTmp = new LinkedList();
-        for (final Iterator iter = nodeDescriptors.iterator(); iter.hasNext();) {
-            final NodeDescriptor desc = (NodeDescriptor) iter.next();
-            final Operator site = (Operator) ((Operator) desc.site).times(to);
-            nodeDescsTmp.add(new NodeDescriptor(desc.name, desc.connectivity, site,
-                    desc.isEdgeCenter));
+        final List<NodeDescriptor> nodeDescsTmp =
+                new LinkedList<NodeDescriptor>();
+        for (final NodeDescriptor desc: nodeDescriptors) {
+            nodeDescsTmp.add(new NodeDescriptor(desc.name, desc.connectivity,
+                    desc.site.times(to), desc.isEdgeCenter));
         }
         nodeDescriptors.clear();
         nodeDescriptors.addAll(nodeDescsTmp);
         
-        final List edgeDescsTmp = new LinkedList();
-        for (final Iterator iter = edgeDescriptors.iterator(); iter.hasNext();) {
-            final EdgeDescriptor desc = (EdgeDescriptor) iter.next();
-            final Operator shift = (Operator) from.times(desc.shift).times(to);
-            edgeDescsTmp.add(new EdgeDescriptor(desc.source, desc.target, shift));
+        final List<EdgeDescriptor> edgeDescsTmp =
+                new LinkedList<EdgeDescriptor>();
+        for (final EdgeDescriptor desc: edgeDescriptors) {
+            edgeDescsTmp.add(new EdgeDescriptor(desc.source, desc.target,
+                    (Operator) from.times(desc.shift).times(to)));
         }
         edgeDescriptors.clear();
         edgeDescriptors.addAll(edgeDescsTmp);
@@ -495,23 +497,24 @@ public class NetParser extends GenericParser {
         
         // --- apply group operators to generate all nodes
         final Net G = new Net(dimension, getName(), getSpaceGroup());
-        final Map addressToNode = new HashMap();
-        final Map addressToShift = new HashMap();
+        final Map<Pair<Object, Operator>, INode> addressToNode =
+                new HashMap<Pair<Object, Operator>, INode>();
+        final Map<Pair<Object, Operator>, Vector> addressToShift =
+                new HashMap<Pair<Object, Operator>, Vector>();
         
-        for (final Iterator it1 = nodeDescriptors.iterator(); it1.hasNext();) {
-            // --- find the next node
-            final NodeDescriptor node = (NodeDescriptor) it1.next();
+        for (final NodeDescriptor node: nodeDescriptors) {
             final Object name = node.name;
             final Operator site = (Operator) node.site;
-            final Map siteToNode = new HashMap();
-            for (final Iterator it2 = ops.iterator(); it2.hasNext();) {
-                final Operator op = (Operator) it2.next();
+            final Map<Operator, INode> siteToNode =
+                    new HashMap<Operator, INode>();
+            for (final Operator op: ops) {
                 final Operator image = (Operator) site.times(op);
                 final Operator imageModZ = image.modZ();
                 final INode v;
-                final Pair address = new Pair(name, op);
+                final Pair<Object, Operator> address =
+                        new Pair<Object, Operator>(name, op);
                 if (siteToNode.containsKey(imageModZ)) {
-                    v = (INode) siteToNode.get(imageModZ);
+                    v = siteToNode.get(imageModZ);
                 } else {
                     v = G.newNode("" + name);
                     siteToNode.put(imageModZ, v);
@@ -522,23 +525,25 @@ public class NetParser extends GenericParser {
         }
         
         // --- apply group operators to generate all edges
-        for (final Iterator it1 = edgeDescriptors.iterator(); it1.hasNext();) {
-            final EdgeDescriptor edge = (EdgeDescriptor) it1.next();
+        for (final EdgeDescriptor edge: edgeDescriptors) {
             final Object sourceName = edge.source;
             final Object targetName = edge.target;
             final Operator shift = edge.shift;
-            for (final Iterator it2 = ops.iterator(); it2.hasNext();) {
-                final Operator srcOp = (Operator) it2.next();
+            for (final Operator srcOp: ops) {
                 final Operator trgOp = (Operator) shift.times(srcOp);
-                final Pair sourceAddress = new Pair(sourceName, srcOp.modZ());
-                final Pair targetAddress = new Pair(targetName, trgOp.modZ());
-                final Vector edgeShift = (Vector) trgOp.floorZ().minus(srcOp.floorZ());
+                final Pair<Object, Operator> sourceAddress =
+                        new Pair<Object, Operator>(sourceName, srcOp.modZ());
+                final Pair<Object, Operator> targetAddress =
+                        new Pair<Object, Operator>(targetName, trgOp.modZ());
+                final Vector edgeShift =
+                        (Vector) trgOp.floorZ().minus(srcOp.floorZ());
                 
-                final INode v = (INode) addressToNode.get(sourceAddress);
-                final INode w = (INode) addressToNode.get(targetAddress);
-                final Vector shiftv = (Vector) addressToShift.get(sourceAddress);
-                final Vector shiftw = (Vector) addressToShift.get(targetAddress);
-                final Vector totalShift = (Vector) edgeShift.plus(shiftw.minus(shiftv));
+                final INode v = addressToNode.get(sourceAddress);
+                final INode w = addressToNode.get(targetAddress);
+                final Vector shiftv = addressToShift.get(sourceAddress);
+                final Vector shiftw = addressToShift.get(targetAddress);
+                final Vector totalShift =
+                        (Vector) edgeShift.plus(shiftw.minus(shiftv));
                 if (G.getEdge(v, w, totalShift) == null) {
                     G.newEdge(v, w, totalShift);
                 }
@@ -557,14 +562,16 @@ public class NetParser extends GenericParser {
     /**
      * Utility method to parse an operator or site (same format) from a string
      * specification which is broken up into fields. The specified fields are
-     * concatenated, using blanks as field separators, and the result is passed to the
-     * {@link Operator#Operator(String)} constructor.
+     * concatenated, using blanks as field separators, and the result is passed
+     * to the {@link Operator#Operator(String)} constructor.
      * 
      * @param fields a list of fields.
      * @param startIndex the field index to start parsing at.
      * @return the result as an {@link Operator}.
      */
-    private static Operator parseSiteOrOperator(final List fields, final int startIndex) {
+    private static Operator parseSiteOrOperator(
+            final List<Object> fields, final int startIndex)
+    {
         if (fields.size() <= startIndex) {
             return Operator.identity(3);
         } else {
@@ -596,26 +603,30 @@ public class NetParser extends GenericParser {
      */
     private Net parseCrystal(final Entry[] block) {
         // TODO make this work for general dimensions
-        final Set seen = new HashSet();
+        final Set<String> seen = new HashSet<String>();
         
         String groupName = null;
         int dim = 3;
         SpaceGroup group = null;
-        List ops = new ArrayList();
+        List<Operator> ops = new ArrayList<Operator>();
         Matrix cellGram = null;
         
         double precision = 0.001;
         double minEdgeLength = 0.1;
         
-        final List nodeDescriptors = new LinkedList();
-        final Map nameToDesc = new HashMap();
-        final List edgeDescriptors = new LinkedList();
-        final List coordinationSeqs = new LinkedList();
+        final List<NodeDescriptor> nodeDescriptors =
+                new LinkedList<NodeDescriptor>();
+        final Map<Object, NodeDescriptor> nameToDesc =
+                new HashMap<Object, NodeDescriptor>();
+        final List<EdgeDescriptor> edgeDescriptors =
+                new LinkedList<EdgeDescriptor>();
+        final List<List<Object>> coordinationSeqs =
+                new LinkedList<List<Object>>();
         final List<String> warnings = new ArrayList<String>();
         
         // --- collect data from the input
         for (int i = 0; i < block.length; ++i) {
-            final List row = block[i].values;
+            final List<Object> row = block[i].values;
             final String key = block[i].key;
             final int lineNr = block[i].lineNumber;
             if (key.equals("group")) {
@@ -684,8 +695,8 @@ public class NetParser extends GenericParser {
                     }
                     isCenter = true;
                 }
-                final NodeDescriptor node = new NodeDescriptor(name, c, new Point(pos),
-                        isCenter);
+                final NodeDescriptor node =
+                        new NodeDescriptor(name, c, new Point(pos), isCenter);
                 nodeDescriptors.add(node);
                 nameToDesc.put(name, node);
             } else if (key.equals("edge")) {
@@ -720,7 +731,8 @@ public class NetParser extends GenericParser {
                             + " arguments at line";
                     throw new DataFormatException(msg + lineNr);
                 }
-                final EdgeDescriptor edge = new EdgeDescriptor(source, target, null);
+                final EdgeDescriptor edge =
+                        new EdgeDescriptor(source, target, null);
                 edgeDescriptors.add(edge);
             } else if (key.equals("coordination_sequence")) {
             	coordinationSeqs.add(row);
@@ -731,10 +743,10 @@ public class NetParser extends GenericParser {
         }
         
         // --- assign coordination sequences to node names
-        final Map name2cs = new HashMap();
+        final Map<Object, List<Object>> name2cs =
+                new HashMap<Object, List<Object>>();
         for (int i = 0; i < coordinationSeqs.size(); ++i) {
-        	final Object nodeName = ((NodeDescriptor) nodeDescriptors.get(i)).name;
-			name2cs.put(nodeName, coordinationSeqs.get(i));
+			name2cs.put(nodeDescriptors.get(i).name, coordinationSeqs.get(i));
 		}
         
         // --- use reasonable default for missing data
@@ -790,8 +802,8 @@ public class NetParser extends GenericParser {
             System.err.println();
             System.err.println("Group name: " + groupName);
             System.err.println("  operators:");
-            for (final Iterator iter = ops.iterator(); iter.hasNext();) {
-                System.err.println("    " + iter.next());
+            for (final Operator op: ops) {
+                System.err.println("    " + op);
             }
             System.err.println();
 
@@ -799,13 +811,13 @@ public class NetParser extends GenericParser {
             System.err.println();
             
             System.err.println("Nodes:");
-            for (final Iterator iter = nodeDescriptors.iterator(); iter.hasNext();) {
-                System.err.println("  " + iter.next());
+            for (final NodeDescriptor desc: nodeDescriptors) {
+                System.err.println("  " + desc);
             }
             
             System.err.println("Edges:");
-            for (final Iterator iter = edgeDescriptors.iterator(); iter.hasNext();) {
-                System.err.println("  " + iter.next());
+            for (final EdgeDescriptor desc: edgeDescriptors) {
+                System.err.println("  " + desc);
             }
         }
         
@@ -823,20 +835,18 @@ public class NetParser extends GenericParser {
         }
         
         // --- extract and convert operators
-        final Set primitiveOps = group.primitiveOperators();
+        final Set<Operator> primitiveOps = group.primitiveOperators();
         ops.clear();
-        for (final Iterator iter = primitiveOps.iterator(); iter.hasNext();) {
-            final Operator op = (Operator) iter.next();
+        for (final Operator op: primitiveOps) {
             ops.add(((Operator) from.times(op).times(to)).modZ());
         }
         
         // --- convert node descriptors
-        final List nodeDescsTmp = new LinkedList();
-        for (final Iterator iter = nodeDescriptors.iterator(); iter.hasNext();) {
-            final NodeDescriptor desc = (NodeDescriptor) iter.next();
-            final Point site = (Point) desc.site.times(to);
+        final List<NodeDescriptor> nodeDescsTmp =
+                new LinkedList<NodeDescriptor>();
+        for (final NodeDescriptor desc: nodeDescriptors) {
             final NodeDescriptor newDesc = new NodeDescriptor(desc.name,
-                    desc.connectivity, site, desc.isEdgeCenter);
+                    desc.connectivity, desc.site.times(to), desc.isEdgeCenter);
             nodeDescsTmp.add(newDesc);
             nameToDesc.put(desc.name, newDesc);
         }
@@ -844,9 +854,9 @@ public class NetParser extends GenericParser {
         nodeDescriptors.addAll(nodeDescsTmp);
         
         // --- convert edge descriptors
-        final List edgeDescsTmp = new LinkedList();
-        for (final Iterator iter = edgeDescriptors.iterator(); iter.hasNext();) {
-            final EdgeDescriptor desc = (EdgeDescriptor) iter.next();
+        final List<EdgeDescriptor> edgeDescsTmp =
+                new LinkedList<EdgeDescriptor>();
+        for (final EdgeDescriptor desc: edgeDescriptors) {
             final Object source;
             if (desc.source instanceof Point) {
                 source = ((Point) desc.source).times(to);
@@ -871,106 +881,43 @@ public class NetParser extends GenericParser {
         }
         
         // --- apply group operators to generate all nodes
-        final Net G = new Net(dim, getName(), getSpaceGroup());
-        final Map nodeToPosition = new HashMap();
-        final Map nodeToDescriptorAddress = new HashMap();
+        final List<Pair<NodeDescriptor, Operator>> allNodes = applyOps(ops,
+                nodeDescriptors, precision);
         
-        for (final Iterator itNodes = nodeDescriptors.iterator(); itNodes.hasNext();) {
-            final NodeDescriptor desc = (NodeDescriptor) itNodes.next();
-            if (DEBUG) {
-                System.err.println();
-                System.err.println("Mapping node " + desc);
-            }
-            final Point site = (Point) desc.site;
-            final Set stabilizer = pointStabilizer(site, ops, precision);
-            if (DEBUG) {
-                System.err.println("  stabilizer has size " + stabilizer.size());
-            }
-            // --- loop through the cosets of the stabilizer
-            final Set opsSeen = new HashSet();
-            for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
-                // --- get the next coset representative
-                final Operator op = ((Operator) itOps.next()).modZ();
-                if (!opsSeen.contains(op)) {
-                    if (DEBUG) {
-                        System.err.println("  applying " + op);
-                    }
-                    // --- compute mapped node position
-                    final Point p = (Point) site.times(op);
-                    // --- construct a new node
-                    final INode v = G.newNode("" + desc.name);
-                    // --- store some temporary data for it
-                    nodeToPosition.put(v, p);
-                    nodeToDescriptorAddress.put(v, new Pair(desc, op));
-                    // --- also store some permanent information
-                    G.setNodeInfo(v, CONNECTIVITY, new Integer(desc.connectivity));
-                    G.setNodeInfo(v, COORDINATION_SEQUENCE, name2cs.get(desc.name));
-                    // --- mark operators that should not be used anymore
-                    for (final Iterator iter = stabilizer.iterator(); iter.hasNext();) {
-                        final Operator a = (Operator) ((Operator) iter.next()).times(op);
-                        final Operator aModZ = a.modZ();
-                        opsSeen.add(aModZ);
-                        if (DEBUG) {
-                            System.err.println("  marking operator " + aModZ + " as used");
-                        }
-                    }
-                }
-            }
-        }
-
         if (DEBUG) {
             System.err.println();
-            System.err.println("Generated " + G.numberOfNodes() + " nodes in unit cell.");
+            System.err.println("Generated " + allNodes.size()
+                    + " nodes in unit cell.");
         }
         
-        // --- handle explicit edges
-        final Vector zero = Vector.zero(dim);
-        for (final Iterator itEdges = edgeDescriptors.iterator(); itEdges.hasNext();) {
-            final EdgeDescriptor desc = (EdgeDescriptor) itEdges.next();
-            if (DEBUG) {
-                System.err.println();
-                System.err.println("Adding edge " + desc);
-            }
-            final Point sourcePos;
-            if (desc.source instanceof Point) {
-                sourcePos = (Point) desc.source;
-            } else {
-                sourcePos = (Point) ((NodeDescriptor) nameToDesc.get(desc.source)).site;
-            }
-            final Point targetPos;
-            if (desc.target instanceof Point) {
-                targetPos = (Point) desc.target;
-            } else {
-                targetPos = (Point) ((NodeDescriptor) nameToDesc.get(desc.target)).site;
-            }
-            
-            // --- loop through the operators to generate all images
-            for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
-                // --- get the next coset representative
-                final Operator op = ((Operator) itOps.next()).modZ();
-                if (DEBUG) {
-                    System.err.println("  applying " + op);
-                }
-                final Point p = (Point) sourcePos.times(op);
-                final Point q = (Point) targetPos.times(op);
-                final Pair pAdr = lookup(p, nodeToPosition, precision);
-                final Pair qAdr = lookup(q, nodeToPosition, precision);
-                if (pAdr == null) {
-                    throw new DataFormatException("no point at " + p.times(from));
-                }
-                if (qAdr == null) {
-                    throw new DataFormatException("no point at " + q.times(from));
-                }
-                final INode v = (INode) pAdr.getFirst();
-                final INode w = (INode) qAdr.getFirst();
-                final Vector vShift = (Vector) pAdr.getSecond();
-                final Vector wShift = (Vector) qAdr.getSecond();
-                final Vector s = (Vector) wShift.minus(vShift);
-                if (G.getEdge(v, w, s) == null) {
-                    G.newEdge(v, w, s);
-                }
-            }
+        // --- Create a net with the computed nodes
+        final Net G = new Net(dim, getName(), getSpaceGroup());
+        final Map<INode, Pair<NodeDescriptor, Operator>>
+            nodeToDescriptorAddress =
+            new HashMap<INode, Pair<NodeDescriptor, Operator>>();
+        
+        for (final Pair<NodeDescriptor, Operator> adr: allNodes) {
+            final NodeDescriptor desc = adr.getFirst();
+            final INode v = G.newNode("" + desc.name);
+            G.setNodeInfo(v, CONNECTIVITY, new Integer(desc.connectivity));
+            G.setNodeInfo(v, COORDINATION_SEQUENCE, name2cs.get(desc.name));
+            nodeToDescriptorAddress.put(v, adr);
         }
+
+        // --- Map nodes to positions
+        final Map<INode, Point> nodeToPosition = new HashMap<INode, Point>();
+
+        for (final INode v: nodeToDescriptorAddress.keySet())
+        {
+            final Pair<NodeDescriptor, Operator> adr =
+                    nodeToDescriptorAddress.get(v);
+            nodeToPosition.put(v,
+                    (Point) adr.getFirst().site.times(adr.getSecond()));
+        }
+        
+        // --- Handle explicit edges
+        addExplicitEdges(G, edgeDescriptors, ops, nameToDesc, nodeToPosition,
+                from, precision);
         
         if (DEBUG) {
             System.err.println("Graph after adding explicit edges: " + G);
@@ -978,199 +925,242 @@ public class NetParser extends GenericParser {
             		"connected.");
         }
         
-        if (edgeDescriptors.size() == 0) {
-			// --- construct a Dirichlet domain for the translation group
-			final Vector basis[] = Vector.rowVectors(Matrix.one(group
-					.getDimension()));
-			if (DEBUG) {
-				System.err.println("Computing Dirichlet vectors...");
-			}
-			final Vector dirichletVectors[] = Lattices.dirichletVectors(basis,
-					cellGram);
-			if (DEBUG) {
-				for (int i = 0; i < dirichletVectors.length; ++i) {
-					System.err.println("  " + dirichletVectors[i]);
-				}
-			}
-
-			// --- shift generated nodes into the Dirichlet domain
-			for (final Iterator iter = nodeToPosition.keySet().iterator(); iter
-					.hasNext();) {
-				final INode v = (INode) iter.next();
-				final Point p = (Point) nodeToPosition.get(v);
-				// --- shift into Dirichlet domain
-				if (DEBUG) {
-					System.err.println("Shifting " + p + " / " + p.times(from) +
-							" into Dirichlet domain...");
-				}
-				final Vector shift = Lattices.dirichletShifts(p,
-						dirichletVectors, cellGram, 1)[0];
-				if (DEBUG) {
-					System.err.println("  shift is " + shift);
-				}
-				nodeToPosition.put(v, p.plus(shift));
-				G.shiftNode(v, shift);
-				if (DEBUG) {
-					System.err.println("  shifting done");
-				}
-			}
-
-			// --- compute nodes in two times extended Dirichlet domain
-			final List extended = new ArrayList();
-			final Map addressToPosition = new HashMap();
-			for (final Iterator iter = G.nodes(); iter.hasNext();) {
-				TaskController.getInstance().bailOutIfCancelled();
-				final INode v = (INode) iter.next();
-				final Point pv = (Point) nodeToPosition.get(v);
-				if (DEBUG) {
-					System.err.println();
-					System.err.println("Extending " + v + " at " + pv);
-				}
-				extended.add(new Pair(v, zero));
-				addressToPosition.put(new Pair(v, zero), pv);
-				for (int i = 0; i < dirichletVectors.length; ++i) {
-					final Vector vec = dirichletVectors[i];
-					if (DEBUG) {
-						System.err.println("  shifting by " + vec);
-					}
-					final Point p = (Point) pv.plus(vec);
-					final Vector shifts[] = Lattices.dirichletShifts(p,
-							dirichletVectors, cellGram, 2);
-					if (DEBUG) {
-						System.err.println("    induced " + shifts.length
-								+ " further shifts");
-					}
-					for (int k = 0; k < shifts.length; ++k) {
-						final Vector shift = shifts[k];
-						if (DEBUG) {
-							System.err.println("      added with shift "
-									+ shift);
-						}
-						final Pair adr = new Pair(v, vec.plus(shift));
-						extended.add(adr);
-						addressToPosition.put(adr, p.plus(shift));
-					}
-				}
-			}
-
-			if (DEBUG) {
-				System.err.println();
-				System.err.println("Generated " + extended.size()
-						+ " nodes in extended Dirichlet domain.");
-				System.err.println();
-			}
-
-			// --- compute potential edges
-			final List edges = new ArrayList();
-			for (final Iterator iter = G.nodes(); iter.hasNext();) {
-				TaskController.getInstance().bailOutIfCancelled();
-				final INode v = (INode) iter.next();
-				final Pair adrV = (Pair) nodeToDescriptorAddress.get(v);
-				final NodeDescriptor descV = (NodeDescriptor) adrV.getFirst();
-				final Pair adr0 = new Pair(v, zero);
-				final Point pv = (Point) nodeToPosition.get(v);
-				final List distances = new ArrayList();
-				for (int i = 0; i < extended.size(); ++i) {
-					TaskController.getInstance().bailOutIfCancelled();
-					final Pair adr = (Pair) extended.get(i);
-					if (adr.equals(adr0)) {
-						continue;
-					}
-					final INode w = (INode) adr.getFirst();
-					final Pair adrW = (Pair) nodeToDescriptorAddress.get(w);
-					final NodeDescriptor descW = (NodeDescriptor) adrW
-							.getFirst();
-					if (descV.isEdgeCenter && descW.isEdgeCenter) {
-						continue;
-					}
-
-					final Point pos = (Point) addressToPosition.get(adr);
-					final Vector diff0 = (Vector) pos.minus(pv);
-					final Matrix diff = diff0.getCoordinates();
-					final IArithmetic dist = LinearAlgebra.dotRows(diff, diff,
-							cellGram);
-					distances.add(new Pair(dist, new Integer(i)));
-				}
-				Collections.sort(distances,
-				        new Comparator<Pair<IArithmetic, Integer>>() {
-				            public int compare(
-				                    Pair<IArithmetic, Integer> p,
-				                    Pair<IArithmetic, Integer> q)
-				            {
-				                int d = p.getFirst().compareTo(q.getFirst());
-				                if (d == 0)
-				                    d = p.getSecond().compareTo(q.getSecond());
-				                return d;
-				            }
-				});
-
-				for (int i = 0; i < descV.connectivity; ++i) {
-					final Pair entry = (Pair) distances.get(i);
-					final IArithmetic dist = (IArithmetic) entry.getFirst();
-					final Integer k = (Integer) entry.getSecond();
-					edges.add(new Pair(dist, new Pair(v, k)));
-				}
-			}
-
-			// --- sort potential edges by length
-			Collections.sort(edges, new Comparator() {
-				public int compare(final Object o1, final Object o2) {
-					final IArithmetic d1 = (IArithmetic) ((Pair) o1).getFirst();
-					final IArithmetic d2 = (IArithmetic) ((Pair) o2).getFirst();
-					return d1.compareTo(d2);
-				}
-			});
-
-			// --- add eges shortest to longest until all nodes are saturated
-			for (final Iterator iter = edges.iterator(); iter.hasNext();) {
-				final Pair edge = (Pair) iter.next();
-				final double dist = ((Real) edge.getFirst()).doubleValue();
-				final Pair ends = (Pair) edge.getSecond();
-				final INode v = (INode) ends.getFirst();
-				final int index = ((Integer) ends.getSecond()).intValue();
-				final Pair adr = (Pair) extended.get(index);
-				final INode w = (INode) adr.getFirst();
-				final Vector s = (Vector) adr.getSecond();
-
-				final Pair adrV = (Pair) nodeToDescriptorAddress.get(v);
-				final NodeDescriptor descV = (NodeDescriptor) adrV.getFirst();
-				final Pair adrW = (Pair) nodeToDescriptorAddress.get(w);
-				final NodeDescriptor descW = (NodeDescriptor) adrW.getFirst();
-
-				if (v.degree() >= descV.connectivity
-						&& w.degree() >= descW.connectivity) {
-					continue;
-				}
-				if (dist < minEdgeLength) {
-					final String msg = "Found points closer than minimal edge length of ";
-					throw new DataFormatException(msg + minEdgeLength);
-				}
-				if (G.getEdge(v, w, s) == null) {
-					if (DEBUG) {
-						System.err.println("Adding edge from " + v + " to (" +
-								w + ", " + s +  ") of length " + dist);
-					}
-
-					G.newEdge(v, w, s);
-				}
-				if (v.degree() > descV.connectivity) {
-					final String msg = "Found " + v.degree()
-							+ " neighbors for node " + descV.name
-							+ " (should be " + descV.connectivity + ")";
-					throw new DataFormatException(msg);
-				}
-				if (w.degree() > descW.connectivity) {
-					final String msg = "Found " + w.degree()
-							+ " neighbors for node " + descW.name
-							+ " (should be " + descW.connectivity + ")";
-					throw new DataFormatException(msg);
-				}
-			}
-		}
+        // --- Compute implicit edges
+        if (edgeDescriptors.size() == 0)
+            computeImplicitEdges(G, cellGram, nodeToDescriptorAddress,
+                    nodeToPosition, from, minEdgeLength);
         
         // TODO check to see if all nodes have the right number of neighbors
         
         // --- remove nodes that are really meant to be edge centers
+        removeEdgeCenters(G, nodeToDescriptorAddress);
+        
+        if (DEBUG) {
+            System.err.println("--------------------");
+        }
+
+        // Store the original positions for all nodes.
+        for (final INode v: G.nodes()) {
+            G.setNodeInfo(v, POSITION, nodeToPosition.get(v));
+        }
+
+        // Return the result.
+        for (Iterator<String> iter = warnings.iterator(); iter.hasNext();)
+        	G.addWarning(iter.next());
+        return G;
+    }
+
+    /**
+     * @param G
+     * @param cellGram
+     * @param nodeToDescriptorAddress
+     * @param nodeToPosition
+     * @param from
+     * @param minEdgeLength
+     * @param edgeDescriptors
+     */
+    private void computeImplicitEdges(
+            final Net G,
+            final Matrix cellGram,
+            final Map<INode, Pair<NodeDescriptor, Operator>>
+                nodeToDescriptorAddress,
+            final Map<INode, Point> nodeToPosition,
+            final Operator from,
+            final double minEdgeLength) {
+
+        // --- construct a Dirichlet domain for the translation group
+        final Vector basis[] = Vector.rowVectors(Matrix.one(G.getDimension()));
+        if (DEBUG) {
+            System.err.println("Computing Dirichlet vectors...");
+        }
+        final Vector dirichletVectors[] = Lattices.dirichletVectors(basis,
+                cellGram);
+        if (DEBUG) {
+            for (int i = 0; i < dirichletVectors.length; ++i) {
+                System.err.println("  " + dirichletVectors[i]);
+            }
+        }
+
+        // --- shift generated nodes into the Dirichlet domain
+        for (final Iterator iter = nodeToPosition.keySet().iterator(); iter
+                .hasNext();) {
+            final INode v = (INode) iter.next();
+            final Point p = (Point) nodeToPosition.get(v);
+            // --- shift into Dirichlet domain
+            if (DEBUG) {
+                System.err.println("Shifting " + p + " / " + p.times(from)
+                        + " into Dirichlet domain...");
+            }
+            final Vector shift = Lattices.dirichletShifts(p, dirichletVectors,
+                    cellGram, 1)[0];
+            if (DEBUG) {
+                System.err.println("  shift is " + shift);
+            }
+            nodeToPosition.put(v, (Point) p.plus(shift));
+            G.shiftNode(v, shift);
+            if (DEBUG) {
+                System.err.println("  shifting done");
+            }
+        }
+
+        // --- compute nodes in two times extended Dirichlet domain
+        final Vector zero = Vector.zero(G.getDimension());
+
+        final List extended = new ArrayList();
+        final Map addressToPosition = new HashMap();
+        for (final Iterator iter = G.nodes(); iter.hasNext();) {
+            TaskController.getInstance().bailOutIfCancelled();
+            final INode v = (INode) iter.next();
+            final Point pv = (Point) nodeToPosition.get(v);
+            if (DEBUG) {
+                System.err.println();
+                System.err.println("Extending " + v + " at " + pv);
+            }
+            extended.add(new Pair(v, zero));
+            addressToPosition.put(new Pair(v, zero), pv);
+            for (int i = 0; i < dirichletVectors.length; ++i) {
+                final Vector vec = dirichletVectors[i];
+                if (DEBUG) {
+                    System.err.println("  shifting by " + vec);
+                }
+                final Point p = (Point) pv.plus(vec);
+                final Vector shifts[] = Lattices.dirichletShifts(p,
+                        dirichletVectors, cellGram, 2);
+                if (DEBUG) {
+                    System.err.println("    induced " + shifts.length
+                            + " further shifts");
+                }
+                for (int k = 0; k < shifts.length; ++k) {
+                    final Vector shift = shifts[k];
+                    if (DEBUG) {
+                        System.err.println("      added with shift " + shift);
+                    }
+                    final Pair adr = new Pair(v, vec.plus(shift));
+                    extended.add(adr);
+                    addressToPosition.put(adr, p.plus(shift));
+                }
+            }
+        }
+
+        if (DEBUG) {
+            System.err.println();
+            System.err.println("Generated " + extended.size()
+                    + " nodes in extended Dirichlet domain.");
+            System.err.println();
+        }
+
+        // --- compute potential edges
+        final List edges = new ArrayList();
+        for (final Iterator iter = G.nodes(); iter.hasNext();) {
+            TaskController.getInstance().bailOutIfCancelled();
+            final INode v = (INode) iter.next();
+            final Pair adrV = (Pair) nodeToDescriptorAddress.get(v);
+            final NodeDescriptor descV = (NodeDescriptor) adrV.getFirst();
+            final Pair adr0 = new Pair(v, zero);
+            final Point pv = (Point) nodeToPosition.get(v);
+            final List distances = new ArrayList();
+            for (int i = 0; i < extended.size(); ++i) {
+                TaskController.getInstance().bailOutIfCancelled();
+                final Pair adr = (Pair) extended.get(i);
+                if (adr.equals(adr0)) {
+                    continue;
+                }
+                final INode w = (INode) adr.getFirst();
+                final Pair adrW = (Pair) nodeToDescriptorAddress.get(w);
+                final NodeDescriptor descW = (NodeDescriptor) adrW.getFirst();
+                if (descV.isEdgeCenter && descW.isEdgeCenter) {
+                    continue;
+                }
+
+                final Point pos = (Point) addressToPosition.get(adr);
+                final Vector diff0 = (Vector) pos.minus(pv);
+                final Matrix diff = diff0.getCoordinates();
+                final IArithmetic dist = LinearAlgebra.dotRows(diff, diff,
+                        cellGram);
+                distances.add(new Pair(dist, new Integer(i)));
+            }
+            Collections.sort(distances,
+                    new Comparator<Pair<IArithmetic, Integer>>() {
+                        public int compare(Pair<IArithmetic, Integer> p,
+                                Pair<IArithmetic, Integer> q) {
+                            int d = p.getFirst().compareTo(q.getFirst());
+                            if (d == 0)
+                                d = p.getSecond().compareTo(q.getSecond());
+                            return d;
+                        }
+                    });
+
+            for (int i = 0; i < descV.connectivity; ++i) {
+                final Pair entry = (Pair) distances.get(i);
+                final IArithmetic dist = (IArithmetic) entry.getFirst();
+                final Integer k = (Integer) entry.getSecond();
+                edges.add(new Pair(dist, new Pair(v, k)));
+            }
+        }
+
+        // --- sort potential edges by length
+        Collections.sort(edges, new Comparator() {
+            public int compare(final Object o1, final Object o2) {
+                final IArithmetic d1 = (IArithmetic) ((Pair) o1).getFirst();
+                final IArithmetic d2 = (IArithmetic) ((Pair) o2).getFirst();
+                return d1.compareTo(d2);
+            }
+        });
+
+        // --- add eges shortest to longest until all nodes are saturated
+        for (final Iterator iter = edges.iterator(); iter.hasNext();) {
+            final Pair edge = (Pair) iter.next();
+            final double dist = ((Real) edge.getFirst()).doubleValue();
+            final Pair ends = (Pair) edge.getSecond();
+            final INode v = (INode) ends.getFirst();
+            final int index = ((Integer) ends.getSecond()).intValue();
+            final Pair adr = (Pair) extended.get(index);
+            final INode w = (INode) adr.getFirst();
+            final Vector s = (Vector) adr.getSecond();
+
+            final Pair adrV = (Pair) nodeToDescriptorAddress.get(v);
+            final NodeDescriptor descV = (NodeDescriptor) adrV.getFirst();
+            final Pair adrW = (Pair) nodeToDescriptorAddress.get(w);
+            final NodeDescriptor descW = (NodeDescriptor) adrW.getFirst();
+
+            if (v.degree() >= descV.connectivity
+                    && w.degree() >= descW.connectivity) {
+                continue;
+            }
+            if (dist < minEdgeLength) {
+                final String msg = "Found points closer than minimal edge length of ";
+                throw new DataFormatException(msg + minEdgeLength);
+            }
+            if (G.getEdge(v, w, s) == null) {
+                if (DEBUG) {
+                    System.err.println("Adding edge from " + v + " to (" + w
+                            + ", " + s + ") of length " + dist);
+                }
+
+                G.newEdge(v, w, s);
+            }
+            if (v.degree() > descV.connectivity) {
+                final String msg = "Found " + v.degree()
+                        + " neighbors for node " + descV.name + " (should be "
+                        + descV.connectivity + ")";
+                throw new DataFormatException(msg);
+            }
+            if (w.degree() > descW.connectivity) {
+                final String msg = "Found " + w.degree()
+                        + " neighbors for node " + descW.name + " (should be "
+                        + descW.connectivity + ")";
+                throw new DataFormatException(msg);
+            }
+        }
+    }
+
+    /**
+     * @param G
+     * @param nodeToDescriptorAddress
+     */
+    private void removeEdgeCenters(
+            final Net G,
+            final Map<INode, Pair<NodeDescriptor, Operator>> nodeToDescriptorAddress) {
         final Set bogus = new HashSet();
         for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
             final INode v = (INode) nodes.next();
@@ -1203,21 +1193,121 @@ public class NetParser extends GenericParser {
             G.delete(e2);
             G.delete(v);
         }
-        
-        if (DEBUG) {
-            System.err.println("--------------------");
-        }
+    }
 
-        // Store the original positions for all nodes.
-        for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
-            final INode v = (INode) nodes.next();
-            G.setNodeInfo(v, POSITION, nodeToPosition.get(v));
+    /**
+     * @param G
+     * @param edgeDescriptors
+     * @param ops
+     * @param nameToDesc
+     * @param nodeToPosition
+     * @param from
+     * @param precision
+     */
+    private void addExplicitEdges(final Net G,
+            final List<EdgeDescriptor> edgeDescriptors,
+            final List<Operator> ops,
+            final Map<Object, NodeDescriptor> nameToDesc,
+            final Map<INode, Point> nodeToPosition,
+            final Operator from,
+            final double precision) {
+        for (final EdgeDescriptor desc: edgeDescriptors) {
+            if (DEBUG) {
+                System.err.println();
+                System.err.println("Adding edge " + desc);
+            }
+            final Point sourcePos;
+            if (desc.source instanceof Point) {
+                sourcePos = (Point) desc.source;
+            } else {
+                sourcePos = (Point) nameToDesc.get(desc.source).site;
+            }
+            final Point targetPos;
+            if (desc.target instanceof Point) {
+                targetPos = (Point) desc.target;
+            } else {
+                targetPos = (Point) nameToDesc.get(desc.target).site;
+            }
+            
+            // --- loop through the operators to generate all images
+            for (final Operator oper: ops) {
+                // --- get the next coset representative
+                final Operator op = oper.modZ();
+                if (DEBUG) {
+                    System.err.println("  applying " + op);
+                }
+                final Point p = (Point) sourcePos.times(op);
+                final Point q = (Point) targetPos.times(op);
+                final Pair<INode, Vector> pAdr =
+                        lookup(p, nodeToPosition, precision);
+                final Pair<INode, Vector> qAdr =
+                        lookup(q, nodeToPosition, precision);
+                if (pAdr == null) {
+                    throw new DataFormatException("no point at "
+                            + p.times(from));
+                }
+                if (qAdr == null) {
+                    throw new DataFormatException("no point at "
+                            + q.times(from));
+                }
+                final INode v = pAdr.getFirst();
+                final INode w = qAdr.getFirst();
+                final Vector vShift = pAdr.getSecond();
+                final Vector wShift = qAdr.getSecond();
+                final Vector s = (Vector) wShift.minus(vShift);
+                if (G.getEdge(v, w, s) == null) {
+                    G.newEdge(v, w, s);
+                }
+            }
         }
+    }
 
-        // Return the result.
-        for (Iterator<String> iter = warnings.iterator(); iter.hasNext();)
-        	G.addWarning(iter.next());
-        return G;
+    /**
+     * @param ops
+     * @param nodeDescriptors
+     * @param precision
+     * @return
+     */
+    private List<Pair<NodeDescriptor, Operator>> applyOps(
+            final List<Operator> ops,
+            final List<NodeDescriptor> nodeDescriptors,
+            final double precision) {
+        final List<Pair<NodeDescriptor, Operator>> allNodes =
+                new LinkedList<Pair<NodeDescriptor, Operator>>();
+
+        for (final NodeDescriptor desc: nodeDescriptors) {
+            if (DEBUG) {
+                System.err.println();
+                System.err.println("Mapping node " + desc);
+            }
+            final Point site = (Point) desc.site;
+            final Set<Operator> stabilizer =
+                    pointStabilizer(site, ops, precision);
+            if (DEBUG) {
+                System.err.println("  stabilizer has size " + stabilizer.size());
+            }
+            // --- loop through the cosets of the stabilizer
+            final Set<Operator> opsSeen = new HashSet<Operator>();
+            for (final Operator oper: ops) {
+                // --- get the next coset representative
+                final Operator op = oper.modZ();
+                if (!opsSeen.contains(op)) {
+                    if (DEBUG) {
+                        System.err.println("  applying " + op);
+                    }
+                    allNodes.add(new Pair<NodeDescriptor, Operator>(desc, op));
+                    // --- mark operators that should not be used anymore
+                    for (final Operator op1: stabilizer) {
+                        final Operator a = ((Operator) op1.times(op)).modZ();
+                        opsSeen.add(a);
+                        if (DEBUG) {
+                            System.err.println("  marking operator " + a + " as used");
+                        }
+                    }
+                }
+            }
+        }
+        return allNodes;
     }
 
     private double gramMatrixError(int dim, SpaceGroup group, Matrix cellGram) {
@@ -1746,12 +1836,14 @@ public class NetParser extends GenericParser {
      * 
      * @return the (node, shift) pair found or else null.
      */
-    private static Pair lookup(final Point pos, final Map nodeToPos,
-            final double precision) {
+    private static Pair<INode, Vector> lookup(
+            final Point pos,
+            final Map<INode, Point> nodeToPos,
+            final double precision)
+    {
         final int d = pos.getDimension();
-        for (final Iterator iter = nodeToPos.keySet().iterator(); iter.hasNext();) {
-            final Object v = iter.next();
-            final Point p = (Point) nodeToPos.get(v);
+        for (final INode v: nodeToPos.keySet()) {
+            final Point p = nodeToPos.get(v);
             if (distModZ(pos, p) <= precision) {
                 final Vector diff = (Vector) pos.minus(p);
                 final int s[] = new int[d];
@@ -1759,7 +1851,7 @@ public class NetParser extends GenericParser {
                     final double x = ((Real) diff.get(i)).doubleValue();
                     s[i] = (int) Math.round(x);
                 }
-                return new Pair(v, new Vector(s));
+                return new Pair<INode, Vector>(v, new Vector(s));
             }
         }
         return null;
@@ -1827,11 +1919,12 @@ public class NetParser extends GenericParser {
      * @param precision points this close are considered equal.
      * @return the set of operators forming the stabilizer
      */
-    private static Set pointStabilizer(final Point site, final List ops, final double precision) {
-        final Set stabilizer = new HashSet();
+    private static Set<Operator> pointStabilizer(
+            final Point site, final List<Operator> ops, final double precision)
+    {
+        final Set<Operator> stabilizer = new HashSet<Operator>();
         
-        for (final Iterator it2 = ops.iterator(); it2.hasNext();) {
-            final Operator op = (Operator) it2.next();
+        for (final Operator op: ops) {
             final double dist = distModZ(site, (Point) site.times(op));
             if (dist <= precision) { // using "<=" allows for precision 0
                 stabilizer.add(op.modZ());
