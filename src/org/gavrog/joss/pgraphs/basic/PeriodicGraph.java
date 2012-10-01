@@ -1727,7 +1727,7 @@ public class PeriodicGraph extends UndirectedGraph {
                 orbit.add(v);
                 seen.add(v);
                 for (final Morphism a: symmetries()) {
-                    final INode w = a.getNodeImage(v);
+                    final INode w = a.getImage(v);
                     orbit.add(w);
                     seen.add(w);
                 }
@@ -1763,7 +1763,7 @@ public class PeriodicGraph extends UndirectedGraph {
         final Partition<IEdge> P = new Partition<IEdge>();
         for (final Morphism a: symmetries()) {
             for (final IEdge e: edges()) {
-                final IEdge ae = a.getEdgeImage(e.oriented()).unoriented();
+                final IEdge ae = a.getImage(e.oriented()).unoriented();
                 P.unite(e, ae);
             }
         }

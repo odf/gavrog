@@ -240,18 +240,6 @@ public class TestMorphism extends TestCase {
         assertEquals(10, nonInjective.size());
     }
 
-    public void testClear() {
-        try {
-            autoDia1.clear();
-            fail("should throw an UnsupportedOperationException");
-        } catch (UnsupportedOperationException success) {
-        }
-    }
-
-    public void testIsEmpty() {
-        assertFalse(autoCds1.isEmpty());
-    }
-
     public void testContainsKey() {
         for (final Iterator nodes = dia.nodes(); nodes.hasNext();) {
             final INode v = (INode) nodes.next();
@@ -290,60 +278,6 @@ public class TestMorphism extends TestCase {
         }
     }
 
-    public void testValues() {
-        final Collection values = autoDia1.values();
-        assertEquals(10, values.size());
-        for (final Iterator nodes = dia.nodes(); nodes.hasNext();) {
-            final INode v = (INode) nodes.next();
-            assertTrue(values.contains(v));
-        }
-        for (final Iterator edges = dia.edges(); edges.hasNext();) {
-            final IEdge e = (IEdge) edges.next();
-            final IEdge o = e.oriented();
-            final IEdge r = o.reverse();
-            assertTrue(values.contains(o));
-            assertTrue(values.contains(r));
-            assertFalse(values.contains(e));
-        }
-    }
-
-    public void testPutAll() {
-        final Map bogus = new HashMap();
-        bogus.put("a", "A");
-        bogus.put("b", "B");
-        try {
-            autoDia1.putAll(bogus);
-            fail("should throw an UnsupportedOperationException");
-        } catch (UnsupportedOperationException success) {
-        }
-    }
-
-    public void testKeySet() {
-        final Set keys1 = autoDia1.keySet();
-        final Set keys2 = autoDia2.keySet();
-
-        assertEquals(10, keys1.size());
-        assertEquals(10, keys2.size());
-        for (final Iterator nodes = dia.nodes(); nodes.hasNext();) {
-            final INode v = (INode) nodes.next();
-            assertTrue(keys1.contains(v));
-            assertTrue(keys2.contains(v));
-        }
-        assertFalse(keys1.contains(x1));
-        assertFalse(keys1.contains(v1));
-        for (final Iterator edges = dia.edges(); edges.hasNext();) {
-            final IEdge e = (IEdge) edges.next();
-            final IEdge o = e.oriented();
-            final IEdge r = o.reverse();
-            assertTrue(keys1.contains(o));
-            assertTrue(keys2.contains(o));
-            assertTrue(keys1.contains(r));
-            assertTrue(keys2.contains(r));
-            assertFalse(keys1.contains(e));
-            assertFalse(keys2.contains(e));
-        }
-    }
-
     public void testGet() {
         assertEquals(w2, autoDia1.get(w1));
         assertEquals(w1, autoDia1.get(w2));
@@ -363,21 +297,5 @@ public class TestMorphism extends TestCase {
         assertEquals(e1o, autoCds1.get(e3o));
         assertEquals(e2o.reverse(), autoCds1.get(e4o));
         assertEquals(e2o, autoCds1.get(e4o.reverse()));
-    }
-
-    public void testRemove() {
-        try {
-            autoDia1.remove(w1);
-            fail("should throw an UnsupportedOperationException");
-        } catch (UnsupportedOperationException success) {
-        }
-    }
-
-    public void testPut() {
-        try {
-            autoDia1.put(w1, w2);
-            fail("should throw an UnsupportedOperationException");
-        } catch (UnsupportedOperationException success) {
-        }
     }
 }

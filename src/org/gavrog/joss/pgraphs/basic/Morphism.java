@@ -16,12 +16,9 @@
 
 package org.gavrog.joss.pgraphs.basic;
 
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Set;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Real;
@@ -44,8 +41,8 @@ import org.gavrog.joss.geometry.Vector;
  * - only directed edges as returned by UndirectedGraph.orientedEdge() are mapped
  */
 public class Morphism {
-    final private Map src2img;
-    final private Map img2src;
+    final private Map<IGraphElement, IGraphElement> src2img;
+    final private Map<IGraphElement, IGraphElement> img2src;
     final private Operator operator;
     final private boolean injective;
     final private PeriodicGraph sourceGraph;
@@ -55,6 +52,8 @@ public class Morphism {
      * Exception to be thrown if no morphism exists with a given specification.
      */
     public class NoSuchMorphismException extends RuntimeException {
+        private static final long serialVersionUID = 5112586471768016998L;
+
         public NoSuchMorphismException(final String msg) {
             super(msg);
         }
@@ -103,26 +102,26 @@ public class Morphism {
         }
         
         // --- initialize the map and queue
-        final Map src2img = new HashMap();
-        final Map img2src = new HashMap();
+        final Map<IGraphElement, IGraphElement> src2img =
+                new HashMap<IGraphElement, IGraphElement>();
+        final Map<IGraphElement, IGraphElement> img2src =
+                new HashMap<IGraphElement, IGraphElement>();
         boolean injective = true;
-        final LinkedList queue = new LinkedList();
+        final LinkedList<INode> queue = new LinkedList<INode>();
         
         src2img.put(v1, v2);
         queue.addLast(v1);
         
         // --- make a breadth-first traversal over both graphs in parallel
         while (queue.size() > 0) {
-            final INode w1 = (INode) queue.removeFirst();
+            final INode w1 = queue.removeFirst();
             final INode w2 = (INode) src2img.get(w1);
-            final Map n1 = neighborVectors(w1);
-            final Map n2 = neighborVectors(w2);
+            final Map<Vector, IEdge> n1 = neighborVectors(w1);
+            final Map<Vector, IEdge> n2 = neighborVectors(w2);
             
-            for (final Iterator iter = n1.keySet().iterator(); iter.hasNext();) {
-                final Vector dist = (Vector) iter.next();
-
-                final IEdge e1 = (IEdge) n1.get(dist);
-                final IEdge e2 = (IEdge) n2.get(dist.times(M));
+            for (final Vector dist: n1.keySet()) {
+                final IEdge e1 = n1.get(dist);
+                final IEdge e2 = n2.get(dist.times(M));
                 if (e2 == null) {
                     throw new NoSuchMorphismException("no such morphism");
                 } else if (e2.equals(src2img.get(e1))) {
@@ -147,14 +146,13 @@ public class Morphism {
         }
         
         // --- test for surjectivity
-        for (final Iterator nodes = G2.nodes(); nodes.hasNext();) {
-            final Object x = nodes.next();
-            if (!img2src.containsKey(x)) {
-                throw new NoSuchMorphismException("no preimage for " + x);
+        for (final INode v: G2.nodes()) {
+            if (!img2src.containsKey(v)) {
+                throw new NoSuchMorphismException("no preimage for " + v);
             }
         }
-        for (final Iterator edges = G2.edges(); edges.hasNext();) {
-            final IEdge e = ((IEdge) edges.next()).oriented();
+        for (final IEdge ee: G2.edges()) {
+            final IEdge e = ee.oriented();
             if (!img2src.containsKey(e)) {
                 throw new NoSuchMorphismException("no preimage for " + e);
             }
@@ -179,16 +177,16 @@ public class Morphism {
      * @param v a node.
      * @return a map from distance vectors to edge representatives.
      */
-    private Map neighborVectors(final INode v) {
+    private Map<Vector, IEdge> neighborVectors(final INode v) {
         final PeriodicGraph G = (PeriodicGraph) v.owner();
-        final Map result = new HashMap();
+        final Map<Vector, IEdge> result = new HashMap<Vector, IEdge>();
         
-        for (final Iterator iter = v.incidences(); iter.hasNext();) {
-            final IEdge e = ((IEdge) iter.next()).oriented();
+        for (final IEdge ee: v.incidences()) {
+            final IEdge e = ee.oriented();
             final Vector dist = G.differenceVector(e);
             result.put(dist, e);
             if (v.equals(e.target())) {
-                result.put(dist.negative(), e.reverse());
+                result.put((Vector) dist.negative(), e.reverse());
             }
         }
         return result;
@@ -213,14 +211,18 @@ public class Morphism {
      * @param operator the associated coordinate transformation.
      * @param injective is the morphism injective?
      */
-    public Morphism(final Map src2img, final Map img2src,
-            final Operator operator, final boolean injective) {
+    public Morphism(
+            final Map<IGraphElement, IGraphElement> src2img,
+            final Map<IGraphElement, IGraphElement> img2src,
+            final Operator operator,
+            final boolean injective)
+    {
         this.src2img = src2img;
         this.img2src = img2src;
         this.operator = operator;
         this.injective = injective;
-        final IGraphElement x = (IGraphElement) src2img.keySet().iterator().next();
-        final IGraphElement y = (IGraphElement) img2src.keySet().iterator().next();
+        final IGraphElement x = src2img.keySet().iterator().next();
+        final IGraphElement y = img2src.keySet().iterator().next();
         this.sourceGraph = (PeriodicGraph) x.owner();
         this.imageGraph = (PeriodicGraph) y.owner();
     }
@@ -270,27 +272,28 @@ public class Morphism {
      * @return the composed morphism.
      */
     public Morphism times(final Morphism other) {
-        final Map newS2I = new HashMap();
-        for (final Iterator keys = this.src2img.keySet().iterator(); keys.hasNext();) {
-            final Object x = keys.next();
-            final Object y = other.src2img.get(this.src2img.get(x));
+        final Map<IGraphElement, IGraphElement> newS2I =
+                new HashMap<IGraphElement, IGraphElement>();
+        for (final IGraphElement x: this.src2img.keySet()) {
+            final IGraphElement y = other.src2img.get(this.src2img.get(x));
             if (y == null) {
                 throw new IllegalArgumentException("morphisms do not compose");
             } else {
                 newS2I.put(x, y);
             }
         }
-        final Map newI2S = new HashMap();
-        for (final Iterator keys = other.img2src.keySet().iterator(); keys.hasNext();) {
-            final Object y = keys.next();
-            final Object x = this.img2src.get(other.img2src.get(y));
+        final Map<IGraphElement, IGraphElement> newI2S =
+                new HashMap<IGraphElement, IGraphElement>();
+        for (final IGraphElement y: other.img2src.keySet()) {
+            final IGraphElement x = this.img2src.get(other.img2src.get(y));
             if (x == null) {
                 throw new IllegalArgumentException("morphisms do not compose");
             } else {
                 newI2S.put(y, x);
             }
         }
-        return new Morphism(newS2I, newI2S, (Operator) this.operator.times(other.operator),
+        return new Morphism(newS2I, newI2S,
+                (Operator) this.operator.times(other.operator),
                 this.injective && other.injective);
     }
     
@@ -311,7 +314,7 @@ public class Morphism {
      * @return the translation part of the associated affine transformation.
      */
     public Vector getTranslation() {
-        final Object x = src2img.keySet().iterator().next();
+        final IGraphElement x = src2img.keySet().iterator().next();
         final INode v;
         if (x instanceof INode) {
             v = (INode) x;
@@ -319,10 +322,12 @@ public class Morphism {
             v = ((IEdge) x).source();
         }
         final INode w = (INode) src2img.get(v);
-        final Map pos1 = ((PeriodicGraph) v.owner()).barycentricPlacement();
-        final Map pos2 = ((PeriodicGraph) w.owner()).barycentricPlacement();
-        final Point posv = (Point) pos1.get(v);
-        final Point posw = (Point) pos2.get(w);
+        final Map<INode, Point> pos1 =
+                ((PeriodicGraph) v.owner()).barycentricPlacement();
+        final Map<INode, Point> pos2 =
+                ((PeriodicGraph) w.owner()).barycentricPlacement();
+        final Point posv = pos1.get(v);
+        final Point posw = pos2.get(w);
         final Vector s = (Vector) posw.minus(posv.times(getLinearOperator()));
         final int d = s.getDimension();
         final Real result[] = new Real[d];
@@ -342,103 +347,31 @@ public class Morphism {
         return (Operator) getLinearOperator().times(getTranslation());
     }
     
-    // --- Implementation of map interface starts here.
-    
-    /* (non-Javadoc)
-     * @see java.util.Map#size()
-     */
     public int size() {
         return src2img.size();
     }
 
-    /* (non-Javadoc)
-     * @see java.util.Map#clear()
-     */
-    public void clear() {
-        throw new UnsupportedOperationException("morphisms are immutable");
-    }
 
-    /* (non-Javadoc)
-     * @see java.util.Map#isEmpty()
-     */
-    public boolean isEmpty() {
-        return src2img.isEmpty();
-    }
-
-    /* (non-Javadoc)
-     * @see java.util.Map#containsKey(java.lang.Object)
-     */
     public boolean containsKey(Object arg0) {
         return src2img.containsKey(arg0);
     }
 
-    /* (non-Javadoc)
-     * @see java.util.Map#containsValue(java.lang.Object)
-     */
     public boolean containsValue(Object arg0) {
         return src2img.containsValue(arg0);
     }
 
-    /* (non-Javadoc)
-     * @see java.util.Map#values()
-     */
-    public Collection values() {
-        return src2img.values();
-    }
-
-    /* (non-Javadoc)
-     * @see java.util.Map#putAll(java.util.Map)
-     */
-    public void putAll(Map arg0) {
-        throw new UnsupportedOperationException("morphisms are immutable");
-    }
-
-    /* (non-Javadoc)
-     * @see java.util.Map#entrySet()
-     */
-    public Set entrySet() {
-        return src2img.entrySet();
-    }
-
-    /* (non-Javadoc)
-     * @see java.util.Map#keySet()
-     */
-    public Set keySet() {
-        return src2img.keySet();
-    }
-
-    /* (non-Javadoc)
-     * @see java.util.Map#get(java.lang.Object)
-     */
     public Object get(Object arg0) {
         return src2img.get(arg0);
     }
 
-    public INode getNodeImage(INode arg0) {
+    public INode getImage(INode arg0) {
         return (INode) get(arg0);
     }
 
-    public IEdge getEdgeImage(IEdge arg0) {
+    public IEdge getImage(IEdge arg0) {
         return (IEdge) get(arg0);
     }
 
-    /* (non-Javadoc)
-     * @see java.util.Map#remove(java.lang.Object)
-     */
-    public Object remove(Object arg0) {
-        throw new UnsupportedOperationException("morphisms are immutable");
-    }
-
-    /* (non-Javadoc)
-     * @see java.util.Map#put(java.lang.Object, java.lang.Object)
-     */
-    public Object put(Object arg0, Object arg1) {
-        throw new UnsupportedOperationException("morphisms are immutable");
-    }
-
-    /* (non-Javadoc)
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
     public boolean equals(Object other) {
         if (other instanceof Morphism) {
             return this.src2img.equals(((Morphism) other).src2img);
@@ -450,8 +383,7 @@ public class Morphism {
     public String toString() {
     	final StringBuffer buf = new StringBuffer(500);
     	buf.append("(\n");
-    	for (final Iterator keys = this.src2img.keySet().iterator(); keys.hasNext();) {
-    		final Object key = keys.next();
+    	for (final IGraphElement key: this.src2img.keySet()) {
     		buf.append("  ");
     		buf.append(key);
     		buf.append("==>");
@@ -462,9 +394,6 @@ public class Morphism {
     	return buf.toString();
     }
     
-    /* (non-Javadoc)
-     * @see java.lang.Object#hashCode()
-     */
     public int hashCode() {
         return this.src2img.hashCode();
     }
