@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -35,25 +34,23 @@ import org.gavrog.jane.numbers.Whole;
 
 
 /**
- * @author Olaf Delgado
- * @version $Id: GenericParser.java,v 1.8 2008/07/07 05:21:22 odf Exp $
  */
 public class GenericParser {
     private BufferedReader input;
-    protected Map synonyms;
+    protected Map<String, String> synonyms;
     protected String defaultKey;
     private int lineno;
-    private LinkedList bufferedLine = null;
+    private LinkedList<String> bufferedLine = null;
     private Block block;
 
     public class Entry {
         public final int lineNumber;
         public final String originalKey;
         public final String key;
-        public final List values;
+        public final List<Object> values;
         
         public Entry(final int lineNumber, final String originalKey,
-                final String key, final List values) {
+                final String key, final List<Object> values) {
             this.lineNumber = lineNumber;
             this.originalKey = originalKey;
             this.key = key;
@@ -64,15 +61,17 @@ public class GenericParser {
     public class Block {
         private final String type;
         private final Entry entries[];
-        private final Map byKey;
+        private final Map<String, List<Entry>> byKey;
         
-        public Block(final String type, final Entry entries[], final Map byKey) {
+        public Block(final String type,
+                final Entry entries[],
+                final Map<String, List<Entry>> byKey) {
             this.type = type;
             this.entries = entries;
             this.byKey = byKey;
         }
 
-        public Map getByKey() {
+        public Map<String, List<Entry>> getByKey() {
             return this.byKey;
         }
 
@@ -90,8 +89,8 @@ public class GenericParser {
          * @param key the key to look up.
          * @return the entries for the given key.
          */
-        public List getEntries(final String key) {
-            final List entries = (List) getByKey().get(key);
+        public List<Entry> getEntries(final String key) {
+            final List<Entry> entries = getByKey().get(key);
             if (entries == null) {
                 return null;
             } else {
@@ -106,14 +105,14 @@ public class GenericParser {
          * @return the entries concatenated into a single string.
          */
         public String getEntriesAsString(final String key) {
-            final List entries = getEntries(key);
+            final List<Entry> entries = getEntries(key);
             if (entries == null) {
                 return null;
             } else {
                 final StringBuffer buf = new StringBuffer(20);
                 for  (int i = 0; i < entries.size(); ++i) {
                     final Entry entry = (Entry) entries.get(i);
-                    final List values = entry.values;
+                    final List<Object> values = entry.values;
                     if (i > 0) {
                         buf.append("; ");
                     }
@@ -132,7 +131,7 @@ public class GenericParser {
          * Retrieves all keys present in this data block.
          * @return the set of keys.
          */
-        public Set getKeys() {
+        public Set<String> getKeys() {
             return getByKey().keySet();
         }
     }
@@ -148,9 +147,9 @@ public class GenericParser {
         this(new BufferedReader(input));
     }
     
-    private LinkedList nextLineChopped() {
+    private LinkedList<String> nextLineChopped() {
     	if (this.bufferedLine != null) {
-    		final LinkedList tmp = this.bufferedLine;
+    		final LinkedList<String> tmp = this.bufferedLine;
     		this.bufferedLine = null;
     		return tmp;
     	}
@@ -171,7 +170,7 @@ public class GenericParser {
                 continue;
             }
 
-            final LinkedList fields = new LinkedList();
+            final LinkedList<String> fields = new LinkedList<String>();
             int i = 0;
             while (i < line.length()) {
                 while (i < line.length()
@@ -223,18 +222,19 @@ public class GenericParser {
     }
     
     public Block parseDataBlock() {
-        final LinkedList fields0 = nextLineChopped();
+        final LinkedList<String> fields0 = nextLineChopped();
         if (fields0 == null) {
             return null;
         }
-        final String type = ((String) fields0.getFirst()).toLowerCase();
-        final List result = new LinkedList();
-        final Map byKey = new HashMap();
+        final String type = fields0.getFirst().toLowerCase();
+        final List<Entry> result = new LinkedList<Entry>();
+        final Map<String, List<Entry>> byKey =
+                new HashMap<String, List<Entry>>();
         String originalKey = this.defaultKey;
         String key = this.defaultKey;
         
         while (true) {
-            final LinkedList fields = nextLineChopped();
+            final LinkedList<String> fields = nextLineChopped();
             if (fields == null) {
                 throw new DataFormatException("end of file while reading block");
             }
@@ -246,15 +246,14 @@ public class GenericParser {
                 key = originalKey = first.toLowerCase();
                 if (this.synonyms != null) {
                     while (this.synonyms.containsKey(key)) {
-                        key = (String) this.synonyms.get(key);
+                        key = this.synonyms.get(key);
                     }
                 }
                 fields.removeFirst();
             }
             
-            final LinkedList row = new LinkedList();
-            for (final Iterator iter = fields.iterator(); iter.hasNext();) {
-                final String item = (String) iter.next();
+            final LinkedList<Object> row = new LinkedList<Object>();
+            for (final String item: fields) {
                 final char c = item.charAt(0);
                 if (c == '"') {
                     row.add(item.substring(1, item.length() - 1));
@@ -303,9 +302,9 @@ public class GenericParser {
                             new Entry(this.lineno, originalKey, key, row);
                     result.add(entry);
                     if (!byKey.containsKey(key)) {
-                        byKey.put(key, new LinkedList());
+                        byKey.put(key, new LinkedList<Entry>());
                     }
-                    ((List) byKey.get(key)).add(entry);
+                    byKey.get(key).add(entry);
                 }
             } else {
                 final String msg = "keyless data found at line ";
@@ -338,7 +337,7 @@ public class GenericParser {
      * 
      * @return the current synonyms map.
      */
-    public Map getSynonyms() {
+    public Map<String, String> getSynonyms() {
         return synonyms;
     }
     
@@ -347,7 +346,7 @@ public class GenericParser {
      * 
      * @param synonyms the new synonyms map.
      */
-    public void setSynonyms(Map synonyms) {
+    public void setSynonyms(final Map<String, String> synonyms) {
         this.synonyms = synonyms;
     }
     
