@@ -982,10 +982,8 @@ public class NetParser extends GenericParser {
         }
 
         // --- shift generated nodes into the Dirichlet domain
-        for (final Iterator iter = nodeToPosition.keySet().iterator(); iter
-                .hasNext();) {
-            final INode v = (INode) iter.next();
-            final Point p = (Point) nodeToPosition.get(v);
+        for (final INode v: nodeToPosition.keySet()) {
+            final Point p = nodeToPosition.get(v);
             // --- shift into Dirichlet domain
             if (DEBUG) {
                 System.err.println("Shifting " + p + " / " + p.times(from)
@@ -1006,18 +1004,19 @@ public class NetParser extends GenericParser {
         // --- compute nodes in two times extended Dirichlet domain
         final Vector zero = Vector.zero(G.getDimension());
 
-        final List extended = new ArrayList();
-        final Map addressToPosition = new HashMap();
-        for (final Iterator iter = G.nodes(); iter.hasNext();) {
+        final List<Pair<INode, Vector>> extended =
+                new ArrayList<Pair<INode, Vector>>();
+        final Map<Pair<INode, Vector>, Point> addressToPosition =
+                new HashMap<Pair<INode, Vector>, Point>();
+        for (final INode v: G.nodes()) {
             TaskController.getInstance().bailOutIfCancelled();
-            final INode v = (INode) iter.next();
-            final Point pv = (Point) nodeToPosition.get(v);
+            final Point pv = nodeToPosition.get(v);
             if (DEBUG) {
                 System.err.println();
                 System.err.println("Extending " + v + " at " + pv);
             }
-            extended.add(new Pair(v, zero));
-            addressToPosition.put(new Pair(v, zero), pv);
+            extended.add(new Pair<INode, Vector>(v, zero));
+            addressToPosition.put(new Pair<INode, Vector>(v, zero), pv);
             for (int i = 0; i < dirichletVectors.length; ++i) {
                 final Vector vec = dirichletVectors[i];
                 if (DEBUG) {
@@ -1035,9 +1034,10 @@ public class NetParser extends GenericParser {
                     if (DEBUG) {
                         System.err.println("      added with shift " + shift);
                     }
-                    final Pair adr = new Pair(v, vec.plus(shift));
+                    final Pair<INode, Vector> adr = new Pair<INode, Vector>(v,
+                            (Vector) vec.plus(shift));
                     extended.add(adr);
-                    addressToPosition.put(adr, p.plus(shift));
+                    addressToPosition.put(adr, (Point) p.plus(shift));
                 }
             }
         }
@@ -1050,34 +1050,34 @@ public class NetParser extends GenericParser {
         }
 
         // --- compute potential edges
-        final List edges = new ArrayList();
-        for (final Iterator iter = G.nodes(); iter.hasNext();) {
+        final List<Pair<IArithmetic, Pair<INode, Integer>>> edges =
+                new ArrayList<Pair<IArithmetic, Pair<INode, Integer>>>();
+        for (final INode v: G.nodes()) {
             TaskController.getInstance().bailOutIfCancelled();
-            final INode v = (INode) iter.next();
-            final Pair adrV = (Pair) nodeToDescriptorAddress.get(v);
-            final NodeDescriptor descV = (NodeDescriptor) adrV.getFirst();
-            final Pair adr0 = new Pair(v, zero);
-            final Point pv = (Point) nodeToPosition.get(v);
-            final List distances = new ArrayList();
+            final NodeDescriptor descV =
+                    nodeToDescriptorAddress.get(v).getFirst();
+            final Pair<INode, Vector> adr0 = new Pair<INode, Vector>(v, zero);
+            final Point pv = nodeToPosition.get(v);
+            final List<Pair<IArithmetic, Integer>> distances =
+                    new ArrayList<Pair<IArithmetic, Integer>>();
             for (int i = 0; i < extended.size(); ++i) {
                 TaskController.getInstance().bailOutIfCancelled();
-                final Pair adr = (Pair) extended.get(i);
+                final Pair<INode, Vector> adr = extended.get(i);
                 if (adr.equals(adr0)) {
                     continue;
                 }
-                final INode w = (INode) adr.getFirst();
-                final Pair adrW = (Pair) nodeToDescriptorAddress.get(w);
-                final NodeDescriptor descW = (NodeDescriptor) adrW.getFirst();
+                final NodeDescriptor descW =
+                        nodeToDescriptorAddress.get(adr.getFirst()).getFirst();
                 if (descV.isEdgeCenter && descW.isEdgeCenter) {
                     continue;
                 }
 
-                final Point pos = (Point) addressToPosition.get(adr);
+                final Point pos = addressToPosition.get(adr);
                 final Vector diff0 = (Vector) pos.minus(pv);
                 final Matrix diff = diff0.getCoordinates();
                 final IArithmetic dist = LinearAlgebra.dotRows(diff, diff,
                         cellGram);
-                distances.add(new Pair(dist, new Integer(i)));
+                distances.add(new Pair<IArithmetic, Integer>(dist, i));
             }
             Collections.sort(distances,
                     new Comparator<Pair<IArithmetic, Integer>>() {
@@ -1091,37 +1091,35 @@ public class NetParser extends GenericParser {
                     });
 
             for (int i = 0; i < descV.connectivity; ++i) {
-                final Pair entry = (Pair) distances.get(i);
-                final IArithmetic dist = (IArithmetic) entry.getFirst();
-                final Integer k = (Integer) entry.getSecond();
-                edges.add(new Pair(dist, new Pair(v, k)));
+                final Pair<IArithmetic, Integer> entry = distances.get(i);
+                final IArithmetic dist = entry.getFirst();
+                final Integer k = entry.getSecond();
+                edges.add(new Pair<IArithmetic, Pair<INode, Integer>>(dist,
+                        new Pair<INode, Integer>(v, k)));
             }
         }
 
         // --- sort potential edges by length
-        Collections.sort(edges, new Comparator() {
-            public int compare(final Object o1, final Object o2) {
-                final IArithmetic d1 = (IArithmetic) ((Pair) o1).getFirst();
-                final IArithmetic d2 = (IArithmetic) ((Pair) o2).getFirst();
-                return d1.compareTo(d2);
+        Collections.sort(edges, new Comparator<Pair<IArithmetic, ?>>() {
+            public int compare(final Pair<IArithmetic, ?> o1,
+                               final Pair<IArithmetic, ?> o2) {
+                return o1.getFirst().compareTo(o2.getFirst());
             }
         });
 
         // --- add eges shortest to longest until all nodes are saturated
-        for (final Iterator iter = edges.iterator(); iter.hasNext();) {
-            final Pair edge = (Pair) iter.next();
+        for (final Pair<IArithmetic, Pair<INode, Integer>> edge: edges) {
             final double dist = ((Real) edge.getFirst()).doubleValue();
-            final Pair ends = (Pair) edge.getSecond();
-            final INode v = (INode) ends.getFirst();
-            final int index = ((Integer) ends.getSecond()).intValue();
-            final Pair adr = (Pair) extended.get(index);
-            final INode w = (INode) adr.getFirst();
-            final Vector s = (Vector) adr.getSecond();
+            final Pair<INode, Integer> ends = edge.getSecond();
+            final INode v = ends.getFirst();
+            final Pair<INode, Vector> adr = extended.get(ends.getSecond());
+            final INode w = adr.getFirst();
+            final Vector s = adr.getSecond();
 
-            final Pair adrV = (Pair) nodeToDescriptorAddress.get(v);
-            final NodeDescriptor descV = (NodeDescriptor) adrV.getFirst();
-            final Pair adrW = (Pair) nodeToDescriptorAddress.get(w);
-            final NodeDescriptor descW = (NodeDescriptor) adrW.getFirst();
+            final NodeDescriptor descV =
+                    nodeToDescriptorAddress.get(v).getFirst();
+            final NodeDescriptor descW =
+                    nodeToDescriptorAddress.get(w).getFirst();
 
             if (v.degree() >= descV.connectivity
                     && w.degree() >= descW.connectivity) {
@@ -1156,33 +1154,28 @@ public class NetParser extends GenericParser {
 
     /**
      * @param G
-     * @param nodeToDescriptorAddress
+     * @param nodeToAdr
      */
     private void removeEdgeCenters(
             final Net G,
-            final Map<INode, Pair<NodeDescriptor, Operator>> nodeToDescriptorAddress) {
-        final Set bogus = new HashSet();
-        for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
-            final INode v = (INode) nodes.next();
-            final Pair adr = (Pair) nodeToDescriptorAddress.get(v);
-            final NodeDescriptor desc = (NodeDescriptor) adr.getFirst();
-            if (desc.isEdgeCenter) {
+            final Map<INode, Pair<NodeDescriptor, Operator>> nodeToAdr) {
+        final Set<INode> bogus = new HashSet<INode>();
+        for (final INode v: G.nodes()) {
+            if (nodeToAdr.get(v).getFirst().isEdgeCenter) {
                 bogus.add(v);
             }
         }
-        for (final Iterator nodes = bogus.iterator(); nodes.hasNext();) {
-            final INode v = (INode) nodes.next();
-            final List inc = G.allIncidences(v);
+        for (final INode v: bogus) {
+            final List<IEdge> inc = G.allIncidences(v);
             if (inc.size() != 2) {
-                throw new DataFormatException("Edge center has connectivity != 2");
+                throw new DataFormatException(
+                        "Edge center has connectivity != 2");
             }
-            final IEdge e1 = (IEdge) inc.get(0);
-            final Vector s1 = G.getShift(e1);
+            final IEdge e1 = inc.get(0);
             final INode w1 = e1.opposite(v);
-            final IEdge e2 = (IEdge) inc.get(1);
-            final Vector s2 = G.getShift(e2);
+            final IEdge e2 = inc.get(1);
             final INode w2 = e2.opposite(v);
-            final Vector shift = (Vector) s2.minus(s1);
+            final Vector shift = (Vector) G.getShift(e2).minus(G.getShift(e1));
             if (G.getEdge(w1, w2, shift) != null) {
                 throw new DataFormatException("duplicate edge");
             } else if (w1.equals(w2) && shift.equals(shift.zero())) {
@@ -1326,7 +1319,7 @@ public class NetParser extends GenericParser {
         return ((Real) D.norm()).doubleValue();
     }
     
-    public static class Face implements Comparable {
+    public static class Face implements Comparable<Face> {
     	final private int size;
     	final private int vertices[];
     	final private Vector shifts[];
@@ -1358,28 +1351,26 @@ public class NetParser extends GenericParser {
 			return code;
 		}
 		
-		public int compareTo(final Object other) {
-			if (other instanceof Face) {
-				final Face f = (Face) other;
-				int d = 0;
-				for (int i = 0; i < size(); ++i) {
-					d = vertex(i) - f.vertex(i);
-					if (d != 0) {
-						return d;
-					}
-					d = shift(i).compareTo(f.shift(i));
-					if (d != 0) {
-						return d;
-					}
-				}
-				return 0;
-			} else {
-				throw new IllegalArgumentException("argument must be a face");
-			}
+		public int compareTo(final Face f) {
+		    int d = 0;
+		    for (int i = 0; i < size(); ++i) {
+		        d = vertex(i) - f.vertex(i);
+		        if (d != 0) {
+		            return d;
+		        }
+		        d = shift(i).compareTo(f.shift(i));
+		        if (d != 0) {
+		            return d;
+		        }
+		    }
+		    return 0;
 		}
 		
 		public boolean equals(final Object other) {
-			return compareTo(other) == 0;
+		    if (other instanceof Face)
+		        return compareTo((Face) other) == 0;
+		    else
+		        return false;
 		}
 		
 		public String toString() {
