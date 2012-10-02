@@ -1396,24 +1396,24 @@ public class NetParser extends GenericParser {
      * @return the ring list in symbolic form.
      */
     private static Pair parseFaceList(final Entry[] block) {
-        final Set seen = new HashSet();
+        final Set<String> seen = new HashSet<String>();
         
         String groupName = null;
         int dim = 3;
         SpaceGroup group = null;
-        List ops = new ArrayList();
+        List<Operator> ops = new ArrayList<Operator>();
         Matrix cellGram = null;
         
         double precision = 0.001;
         boolean useTiles = false;
-        final List faceLists = new ArrayList();
-        List faces = new ArrayList();
+        final List<List<Point[]>> faceLists = new ArrayList<List<Point[]>>();
+        List<Point[]> faces = new ArrayList<Point[]>();
         IArithmetic faceData[] = null;
         int faceDataIndex = 0;
         
         // --- collect data from the input
         for (int i = 0; i < block.length; ++i) {
-            final List row = block[i].values;
+            final List<Object> row = block[i].values;
             final String key = block[i].key;
             final int lineNr = block[i].lineNumber;
             if (key.equals("group")) {
@@ -1492,7 +1492,7 @@ public class NetParser extends GenericParser {
                 if (faces.size() > 0) {
                     faceLists.add(faces);
                 }
-                faces = new ArrayList();
+                faces = new ArrayList<Point[]>();
             } else {
                 // store additional entrys here
             }
@@ -1551,8 +1551,8 @@ public class NetParser extends GenericParser {
             System.err.println();
             System.err.println("Group name: " + groupName);
             System.err.println("  operators:");
-            for (final Iterator iter = ops.iterator(); iter.hasNext();) {
-                System.err.println("    " + iter.next());
+            for (final Operator op: ops) {
+                System.err.println("    " + op);
             }
             System.err.println();
 
@@ -1564,10 +1564,8 @@ public class NetParser extends GenericParser {
             } else {
                 System.err.println("Faces:");
             }
-            for (Iterator iterT = faceLists.iterator(); iterT.hasNext();) {
-                final List list = (List) iterT.next();
-                for (Iterator iter = list.iterator(); iter.hasNext();) {
-                    final Point f[] = (Point[]) iter.next();
+            for (final List<Point[]> list: faceLists) {
+                for (final Point f[]: list) {
                     System.err.print("   ");
                     for (int i = 0; i < f.length; ++i) {
                         System.err.print(" " + f[i]);
@@ -1588,18 +1586,16 @@ public class NetParser extends GenericParser {
         }
         
         // --- extract and convert operators
-        final Set primitiveOps = group.primitiveOperators();
+        final Set<Operator> primitiveOps = group.primitiveOperators();
         ops.clear();
-        for (final Iterator iter = primitiveOps.iterator(); iter.hasNext();) {
-            final Operator op = (Operator) iter.next();
+        for (final Operator op: primitiveOps) {
             ops.add(((Operator) from.times(op).times(to)).modZ());
         }
         
         // --- convert face lists
-        for (final Iterator iter = faceLists.iterator(); iter.hasNext();) {
-            final List list = (List) iter.next();
+        for (final List<Point[]> list: faceLists) {
             for (int i = 0; i < list.size(); ++i) {
-                final Point faceOld[] = (Point[]) list.get(i);
+                final Point faceOld[] = list.get(i);
                 final Point faceNew[] = new Point[faceOld.length];
                 for (int k = 0; k < faceOld.length; ++k) {
                     faceNew[k] = (Point) faceOld[k].times(to);
@@ -1615,12 +1611,10 @@ public class NetParser extends GenericParser {
         }
         
         // --- apply group operators to generate all corner points
-        final Map indexToPos = new HashMap();
+        final Map<Integer, Point> indexToPos = new HashMap<Integer, Point>();
         
-        for (final Iterator itert = faceLists.iterator(); itert.hasNext();) {
-            final List list = (List) itert.next();
-            for (final Iterator iterf = list.iterator(); iterf.hasNext();) {
-                final Point face[] = (Point[]) iterf.next();
+        for (final List<Point[]> list: faceLists) {
+            for (final Point face[]: list) {
                 for (int i = 0; i < face.length; ++i) {
                     final Point site = face[i];
                     if (lookup(site, indexToPos, precision) != null) {
@@ -1634,7 +1628,8 @@ public class NetParser extends GenericParser {
                         System.err.println();
                         System.err.println("Mapping point " + site);
                     }
-                    final Set stabilizer = pointStabilizer(site, ops, precision);
+                    final Set<Operator> stabilizer =
+                            pointStabilizer(site, ops, precision);
                     if (DEBUG) {
                         System.err.println("  stabilizer has size "
                                 + stabilizer.size());
@@ -1751,7 +1746,7 @@ public class NetParser extends GenericParser {
         		System.err.println("  " + iter.next());
         	}
         }
-        return new Pair(result, indexToPos);
+        return new Pair<List, Map>(result, indexToPos);
     }
     
     public static Pair parseFaceList(final Block block) {
@@ -1827,14 +1822,14 @@ public class NetParser extends GenericParser {
      * 
      * @return the (node, shift) pair found or else null.
      */
-    private static Pair<INode, Vector> lookup(
+    private static <K> Pair<K, Vector> lookup(
             final Point pos,
-            final Map<INode, Point> nodeToPos,
+            final Map<K, Point> keyToPos,
             final double precision)
     {
         final int d = pos.getDimension();
-        for (final INode v: nodeToPos.keySet()) {
-            final Point p = nodeToPos.get(v);
+        for (final K v: keyToPos.keySet()) {
+            final Point p = keyToPos.get(v);
             if (distModZ(pos, p) <= precision) {
                 final Vector diff = (Vector) pos.minus(p);
                 final int s[] = new int[d];
@@ -1842,7 +1837,7 @@ public class NetParser extends GenericParser {
                     final double x = ((Real) diff.get(i)).doubleValue();
                     s[i] = (int) Math.round(x);
                 }
-                return new Pair<INode, Vector>(v, new Vector(s));
+                return new Pair<K, Vector>(v, new Vector(s));
             }
         }
         return null;
