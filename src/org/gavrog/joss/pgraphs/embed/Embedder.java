@@ -44,9 +44,6 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * This class implements an embedding algorithm for periodic graphs.
- * 
- * @author Olaf Delgado
- * @version $Id: Embedder.java,v 1.9 2008/07/09 01:09:24 odf Exp $
  */
 public class Embedder {
     final static boolean DEBUG = false;
@@ -159,7 +156,7 @@ public class Embedder {
 		    System.err.println("Embedder: initial placement: ");
 		    Map<INode, Point> tmp =
 		            new TreeMap<INode, Point>(this.initialPlacement);
-		    for (INode node: tmp.keySet())
+		    for (final INode node: tmp.keySet())
 		        System.err.println("  " + node + ": " + tmp.get(node));
 		}
 		
@@ -167,20 +164,18 @@ public class Embedder {
 
 		this.node2images = new HashMap<INode, Map<INode, Operator>>();
 		final Set<INode> seen = new HashSet<INode>();
-		for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
-			final INode v = (INode) nodes.next();
+		for (final INode v: this.graph.nodes()) {
 			if (!seen.contains(v)) {
-				final Point bv = (Point) getGraph().barycentricPlacement().get(v);
+				final Point bv = getGraph().barycentricPlacement().get(v);
 				final Map<INode, Operator> img2sym =
 					new HashMap<INode, Operator>();
 				img2sym.put(v, new Operator(Matrix.one(dim + 1)));
 				seen.add(v);
-				for (final Iterator syms = this.graph.symmetries().iterator(); syms
-						.hasNext();) {
-					final Morphism a = (Morphism) syms.next();
-					final INode va = (INode) a.get(v);
+				for (final Morphism a: this.graph.symmetries()) {
+					final INode va = a.getImage(v);
 					if (!seen.contains(va)) {
-						final Point bva = (Point) getGraph().barycentricPlacement().get(va);
+						final Point bva =
+						        getGraph().barycentricPlacement().get(va);
 						final Operator opa = a.getAffineOperator();
 						final Vector shift = (Vector) bva.minus(bv.times(opa));
 						final Operator op = (Operator) opa.times(shift);
@@ -217,24 +212,21 @@ public class Embedder {
 		this.node2index = new HashMap<INode, Integer>();
 		this.node2mapping = new HashMap<INode, double[][]>();
 
-		for (final Iterator nodeReps = nodeOrbitReps(); nodeReps.hasNext();) {
-			final INode v = (INode) nodeReps.next();
+		for (final INode v: nodeOrbitReps()) {
 			final Matrix N = normalizedPositionSpace(v);
 
 			this.node2index.put(v, new Integer(k));
 			this.node2mapping.put(v, N.asDoubleArray());
-			final Map images = images(v);
-			for (final Iterator iter = images.keySet().iterator(); iter
-					.hasNext();) {
-				final INode w = (INode) iter.next();
+			final Map<INode, Operator> images = images(v);
+			for (final INode w: images.keySet()) {
 				if (w == v) {
 					continue;
 				}
-				final Matrix M = ((Operator) images.get(w)).getCoordinates();
-				this.node2index.put(w, new Integer(k));
+				final Matrix M = images.get(w).getCoordinates();
+				this.node2index.put(w, k);
 				final Matrix NM = (Matrix) N.times(M);
 				this.node2mapping.put(w, NM.asDoubleArray());
-				if (NM.times(symmetrizer(w).getCoordinates()).equals(NM) == false) {
+				if (!NM.times(symmetrizer(w).getCoordinates()).equals(NM)) {
 					throw new RuntimeException("bad parameter space for " + w
 							+ ": " + NM + " (gets 'symmetrized' to "
 							+ NM.times(symmetrizer(w)));
@@ -246,17 +238,18 @@ public class Embedder {
 
 		// --- the encoded list of graph edge orbits
 		final List<Edge> edgeList = new ArrayList<Edge>();
-		for (final Iterator iter = graph.edgeOrbits(); iter.hasNext();) {
-			final Set orbit = (Set) iter.next();
-			final IEdge e = (IEdge) orbit.iterator().next();
+		for (final Iterator<Set<IEdge>> iter = graph.edgeOrbits();
+		        iter.hasNext();) {
+			final Set<IEdge> orbit = iter.next();
+			final IEdge e = orbit.iterator().next();
 			edgeList.add(new Edge(e.source(), e.target(), graph.getShift(e),
 					EDGE, orbit.size()));
 		}
 
 		// --- the encoded list of next nearest neighbor (angle) orbits
-		for (final Iterator iter = angleOrbits(); iter.hasNext();) {
-			final Set orbit = (Set) iter.next();
-			final Angle a = (Angle) orbit.iterator().next();
+		for (final Iterator<Set<Angle>> iter = angleOrbits(); iter.hasNext();) {
+			final Set<Angle> orbit = iter.next();
+			final Angle a = orbit.iterator().next();
 			edgeList.add(new Edge(a.v, a.w, a.s, ANGLE, orbit.size()));
 		}
 
@@ -339,17 +332,16 @@ public class Embedder {
 	 * 
 	 * @return an iterator over the set of orbits.
 	 */
-	private Iterator angleOrbits() {
+	private Iterator<Set<Angle>> angleOrbits() {
 		final Set<Angle> angles = new HashSet<Angle>();
-		for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
-			final INode v = (INode) nodes.next();
-			final List incidences = this.graph.allIncidences(v);
+		for (final INode v: this.graph.nodes()) {
+			final List<IEdge> incidences = this.graph.allIncidences(v);
 			final int n = incidences.size();
 			for (int i = 0; i < n - 1; ++i) {
-				final IEdge e1 = (IEdge) incidences.get(i);
+				final IEdge e1 = incidences.get(i);
 				final INode w1 = e1.target();
 				for (int j = i + 1; j < n; ++j) {
-					final IEdge e2 = (IEdge) incidences.get(j);
+					final IEdge e2 = incidences.get(j);
 					final INode w2 = e2.target();
 					final Vector s = (Vector) this.graph.getShift(e2).minus(
 							this.graph.getShift(e1));
@@ -358,20 +350,16 @@ public class Embedder {
 			}
 		}
 
-		final Partition P = new Partition();
+		final Partition<Angle> P = new Partition<Angle>();
 		final Map<INode, Point> pos = getGraph().barycentricPlacement();
-		for (final Iterator syms = getGraph().symmetries().iterator(); syms
-				.hasNext();) {
-			final Morphism phi = (Morphism) syms.next();
+		for (final Morphism phi: getGraph().symmetries()) {
 			final Operator A = phi.getAffineOperator();
-			for (final Iterator iter = angles.iterator(); iter.hasNext();) {
-				final Angle a = (Angle) iter.next();
-
-				final INode vphi = (INode) phi.get(a.v);
+			for (final Angle a: angles) {
+				final INode vphi = phi.getImage(a.v);
 				final Point pv = pos.get(a.v);
 				final Vector dv = (Vector) pv.times(A).minus(pos.get(vphi));
 
-				final INode wphi = (INode) phi.get(a.w);
+				final INode wphi = phi.getImage(a.w);
 				final Point pw = pos.get(a.w);
 				final Vector dw = (Vector) pw.times(A).minus(pos.get(wphi));
 
@@ -385,26 +373,26 @@ public class Embedder {
 
 	private void setPosition(final INode v, final Point pos,
 			final double state[]) {
-		final Matrix mapping = new Matrix((double[][]) this.node2mapping.get(v))
-				.mutableClone();
+		final Matrix mapping =
+		        new Matrix(this.node2mapping.get(v)).mutableClone();
 		final int n = mapping.numberOfRows();
 
 		if (n > 1) {
 			final int d = this.dimGraph;
 			final Matrix q = new Matrix(1, d + 1);
-			q.setSubMatrix(0, 0, ((Point) pos.times(symmetrizer(v)))
-					.getCoordinates());
+			q.setSubMatrix(0, 0,
+			        ((Point) pos.times(symmetrizer(v))).getCoordinates());
 			q.set(0, d, Whole.ONE);
 			final Matrix r = mapping.getRow(n - 1);
 			mapping.setRow(n - 1, (Matrix) r.minus(r));
-			final Matrix s = LinearAlgebra.solutionInRows(mapping, (Matrix) q
-					.minus(r), false);
+			final Matrix s = LinearAlgebra.solutionInRows(mapping,
+			        (Matrix) q.minus(r), false);
 			if (s == null) {
-				throw new RuntimeException("Could not solve x * " + mapping
-						+ " = " + q);
+				throw new RuntimeException(
+				        "Could not solve x * " + mapping + " = " + q);
 			}
 
-			final int offset = ((Integer) this.node2index.get(v)).intValue();
+			final int offset = this.node2index.get(v);
 			for (int i = 0; i < n - 1; ++i) {
 				state[offset + i] = ((Real) s.get(0, i)).doubleValue();
 			}
@@ -422,8 +410,8 @@ public class Embedder {
 
 	private double[] getPosition(final INode v, final double state[]) {
 		final int d = this.dimGraph;
-		final int offset = ((Integer) this.node2index.get(v)).intValue();
-		final double mapping[][] = (double[][]) this.node2mapping.get(v);
+		final int offset = this.node2index.get(v);
+		final double mapping[][] = this.node2mapping.get(v);
 		final int n = mapping.length;
 
 		double loc[] = new double[d];
@@ -609,14 +597,13 @@ public class Embedder {
 
 	private Map<INode, Operator> nodeSymmetrizations() {
 		final Map<INode, Operator> result = new HashMap<INode, Operator>();
-		for (final Iterator nodes = this.graph.nodes(); nodes.hasNext();) {
-			final INode v = (INode) nodes.next();
-			final List stab = this.graph.nodeStabilizer(v);
-			final Point p = (Point) getGraph().barycentricPlacement().get(v);
+		for (final INode v: this.graph.nodes()) {
+			final List<Morphism> stab = this.graph.nodeStabilizer(v);
+			final Point p = getGraph().barycentricPlacement().get(v);
 			final int dim = p.getDimension();
 			Matrix s = Matrix.zero(dim + 1, dim + 1);
-			for (final Iterator syms = stab.iterator(); syms.hasNext();) {
-				final Operator a = ((Morphism) syms.next()).getAffineOperator();
+			for (final Morphism phi: stab) {
+				final Operator a = phi.getAffineOperator();
 				final Vector d = (Vector) p.minus(p.times(a));
 				final Operator ad = (Operator) a.times(d);
 				s = (Matrix) s.plus(ad.getCoordinates());
@@ -645,12 +632,12 @@ public class Embedder {
 		return Math.sqrt(squareLength.doubleValue());
 	}
 
-	private Iterator nodeOrbitReps() {
-		return this.node2images.keySet().iterator();
+	private Set<INode> nodeOrbitReps() {
+		return this.node2images.keySet();
 	}
 
-	private Map images(final INode v) {
-		return (Map) this.node2images.get(v);
+	private Map<INode, Operator> images(final INode v) {
+		return this.node2images.get(v);
 	}
 
 	private Operator symmetrizer(final INode v) {
@@ -665,13 +652,13 @@ public class Embedder {
 			final PeriodicGraph graph) {
 		// -- preparations
 		final int d = graph.getDimension();
-		final Set syms = graph.symmetries();
+		final Set<Morphism> syms = graph.symmetries();
 
 		// --- compute a symmetry-invariant quadratic form
 		Matrix M = Matrix.zero(d, d);
-		for (final Iterator iter = syms.iterator(); iter.hasNext();) {
-			final Matrix A = ((Morphism) iter.next()).getLinearOperator()
-					.getCoordinates().getSubMatrix(0, 0, d, d);
+		for (final Morphism phi: syms) {
+			final Matrix A = phi.getLinearOperator().getCoordinates()
+			        .getSubMatrix(0, 0, d, d);
 			M = (Matrix) M.plus(A.times(G).times(A.transposed()));
 		}
 		M = ((Matrix) M.times(new Fraction(1, syms.size()))).mutableClone();
@@ -728,10 +715,9 @@ public class Embedder {
 		setPosition(v, p, this.p);
 	}
 
-	public void setPositions(Map map) {
-		for (final Iterator nodes = map.keySet().iterator(); nodes.hasNext();) {
-			final INode v = (INode) nodes.next();
-			setPosition(v, (Point) map.get(v));
+	public void setPositions(Map<INode, Point> map) {
+		for (final INode v: map.keySet()) {
+			setPosition(v, map.get(v));
 		}
 	}
 
@@ -741,8 +727,7 @@ public class Embedder {
 
 	public Map<INode, Point> getPositions() {
 		final Map<INode, Point> pos = new HashMap<INode, Point>();
-		for (final Iterator nodes = getGraph().nodes(); nodes.hasNext();) {
-			final INode v = (INode) nodes.next();
+		for (final INode v: getGraph().nodes()) {
 			pos.put(v, getPosition(v));
 		}
 		return pos;
@@ -803,16 +788,16 @@ public class Embedder {
 
 	public double maximalEdgeLength() {
 		double maxLength = 0.0;
-		for (final Iterator edges = this.graph.edges(); edges.hasNext();) {
-			maxLength = Math.max(maxLength, length((IEdge) edges.next()));
+		for (final IEdge e: this.graph.edges()) {
+			maxLength = Math.max(maxLength, length(e));
 		}
 		return maxLength;
 	}
 
 	public double minimalEdgeLength() {
 		double minLength = Double.MAX_VALUE;
-		for (final Iterator edges = this.graph.edges(); edges.hasNext();) {
-			minLength = Math.min(minLength, length((IEdge) edges.next()));
+		for (final IEdge e: this.graph.edges()) {
+			minLength = Math.min(minLength, length(e));
 		}
 		return minLength;
 	}
@@ -820,8 +805,8 @@ public class Embedder {
 	public double averageEdgeLength() {
 		double sumLength = 0.0;
 		int count = 0;
-		for (final Iterator edges = this.graph.edges(); edges.hasNext();) {
-			sumLength += length((IEdge) edges.next());
+		for (final IEdge e: this.graph.edges()) {
+			sumLength += length(e);
 			++count;
 		}
 		return sumLength / count;
