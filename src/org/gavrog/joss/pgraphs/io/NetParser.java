@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.gavrog.box.collections.NiftyList;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.NamedConstant;
@@ -776,7 +775,7 @@ public class NetParser extends GenericParser {
         		}
         	} else if (dim == 3) {
         		final char c;
-        		if (groupName.charAt(1) == '_') {
+        		if (groupName.charAt(1) == '-') {
         			c = groupName.charAt(2);
         		} else {
         			c = groupName.charAt(1);
@@ -1315,6 +1314,8 @@ public class NetParser extends GenericParser {
         final Matrix S = group.configurationSpaceForGramMatrix();
         final Matrix A = new Matrix(new double[][] { g });
         final Matrix M = LinearAlgebra.solutionInRows(S, A, false);
+        if (M == null)
+            return 1;
         final Matrix D = (Matrix) ((Matrix) M.times(S)).minus(A);
         return ((Real) D.norm()).doubleValue();
     }
@@ -1635,23 +1636,21 @@ public class NetParser extends GenericParser {
                                 + stabilizer.size());
                     }
                     // --- loop through the cosets of the stabilizer
-                    final Set opsSeen = new HashSet();
-                    for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
+                    final Set<Operator> opsSeen = new HashSet<Operator>();
+                    for (final Operator oper: ops) {
                         // --- get the next coset representative
-                        final Operator op = ((Operator) itOps.next()).modZ();
+                        final Operator op = oper.modZ();
                         if (!opsSeen.contains(op)) {
                             if (DEBUG) {
                                 System.err.println("  applying " + op);
                             }
                             // --- compute mapped node position
                             final Point p = (Point) site.times(op);
-                            indexToPos.put(new Integer(indexToPos.size()), p);
+                            indexToPos.put(indexToPos.size(), p);
 
                             // --- mark operators that should not be used anymore
-                            for (final Iterator iter = stabilizer.iterator(); iter
-                                    .hasNext();) {
-                                final Operator a = (Operator) ((Operator) iter
-                                        .next()).times(op);
+                            for (final Operator op2: stabilizer) {
+                                final Operator a = (Operator) op2.times(op);
                                 final Operator aModZ = a.modZ();
                                 opsSeen.add(aModZ);
                                 if (DEBUG) {
@@ -1671,37 +1670,38 @@ public class NetParser extends GenericParser {
 					+ " nodes in primitive cell.\n");
 		}
         
-        final Set notNew = new HashSet();
-        final List result = new ArrayList();
-        for (final Iterator iterT = faceLists.iterator(); iterT.hasNext();) {
-            final List list = (List) iterT.next();
-            for (final Iterator itOps = ops.iterator(); itOps.hasNext();) {
-                final Operator op = ((Operator) itOps.next()).modZ();
-                final List mappedFaces = new ArrayList();
+        final Set<Object> notNew = new HashSet<Object>();
+        final List<Object> result = new ArrayList<Object>();
+        for (final List<Point[]> list: faceLists) {
+            for (final Operator oper: ops) {
+                final Operator op = oper.modZ();
+                final List<Pair<Face, Vector>> mappedFaces =
+                        new ArrayList<Pair<Face, Vector>>();
                 
-                for (final Iterator iter = list.iterator(); iter.hasNext();) {
-                    final Point f[] = (Point[]) iter.next();
+                for (final Point f[]: list) {
                     final int n = f.length;
                     final int points[] = new int[n];
                     final Vector shifts[] = new Vector[n];
                     for (int i = 0; i < n; ++i) {
-                        final Pair p = lookup((Point) f[i].times(op),
-                                indexToPos, precision);
-                        points[i] = ((Integer) p.getFirst()).intValue();
-                        shifts[i] = (Vector) p.getSecond();
+                        final Pair<Integer, Vector> p =
+                                lookup((Point) f[i].times(op),
+                                        indexToPos, precision);
+                        points[i] = p.getFirst();
+                        shifts[i] = p.getSecond();
                     }
                     final Face fMapped = new Face(points, shifts);
                     if (DEBUG) {
                         System.err.println("Mapped face: " + fMapped);
                     }
-                    final Pair normalized = normalizedFace(fMapped);
+                    final Pair<Face, Vector> normalized =
+                            normalizedFace(fMapped);
                     if (DEBUG) {
                         System.err.println("  normalized: " + normalized);
                     }
                     if (useTiles) {
                         mappedFaces.add(normalized);
                     } else {
-                        final Face fNormal = (Face) normalized.getFirst();
+                        final Face fNormal = normalized.getFirst();
                         if (notNew.contains(fNormal)) {
                             if (DEBUG) {
                                 System.err.println("  rejected!");
@@ -1719,7 +1719,8 @@ public class NetParser extends GenericParser {
                     if (DEBUG) {
                         System.err.println("Mapped tile: " + mappedFaces);
                     }
-                    final NiftyList tNormal = normalizedTile(mappedFaces);
+                    final List<Pair<Face, Vector>> tNormal =
+                            normalizedTile(mappedFaces);
                     if (DEBUG) {
                         System.err.println("  normalized: " + tNormal);
                     }
@@ -1757,7 +1758,7 @@ public class NetParser extends GenericParser {
 	 * @param face
 	 * @return the normalized form of the given face.
 	 */
-	public static Pair normalizedFace(final Face face) {
+	public static Pair<Face, Vector> normalizedFace(final Face face) {
 		final int n = face.size();
 		Face trial;
 		Face best = null;
@@ -1791,22 +1792,52 @@ public class NetParser extends GenericParser {
 			}
 		}
 
-		return new Pair(best, bestShift);
+		return new Pair<Face, Vector>(best, bestShift);
 	}
 
-    private static NiftyList normalizedTile(final List tile) {
-        NiftyList best = null;
-        for (int i = 0; i < tile.size(); ++i) {
-            final Vector shift = (Vector) ((Pair) tile.get(i)).getSecond();
-            final NiftyList current = new NiftyList();
-            for (final Iterator iter = tile.iterator(); iter.hasNext();) {
-                final Pair pair = (Pair) iter.next();
-                final Face face = (Face) pair.getFirst();
-                final Vector t = (Vector) pair.getSecond();
-                current.add(new Pair(face, t.minus(shift)));
+    private static List<Pair<Face, Vector>> normalizedTile(
+            final List<Pair<Face, Vector>> tile) {
+
+        final Comparator<Pair<Face, Vector>> pairComparator =
+                new Comparator<Pair<Face, Vector>>() {
+            public int compare(final Pair<Face, Vector> o1,
+                    final Pair<Face, Vector> o2) {
+                int d = o1.getFirst().compareTo(o2.getFirst());
+                if (d == 0)
+                    d = o1.getSecond().compareTo(o2.getSecond());
+                return d;
             }
-            Collections.sort(current);
-            if (best == null || best.compareTo(current) < 0) {
+        };
+
+        final Comparator<List<Pair<Face, Vector>>> listComparator =
+                new Comparator<List<Pair<Face,Vector>>>() {
+            public int compare(final List<Pair<Face, Vector>> o1,
+                               final List<Pair<Face, Vector>> o2) {
+                for (int i = 0; i < Math.min(o1.size(), o2.size()); ++i) {
+                    final int d =
+                            pairComparator.compare(o1.get(i), o2.get(i));
+                    if (d != 0) {
+                        return d;
+                    }
+                }
+                return o1.size() - o2.size();
+            }
+        };
+        
+        List<Pair<Face, Vector>> best = null;
+        for (int i = 0; i < tile.size(); ++i) {
+            final Vector shift = tile.get(i).getSecond();
+            final List<Pair<Face, Vector>> current =
+                    new ArrayList<Pair<Face, Vector>>();
+            for (final Pair<Face, Vector> pair: tile) {
+                final Face face = pair.getFirst();
+                final Vector t = pair.getSecond();
+                current.add(
+                        new Pair<Face, Vector>(face, (Vector) t.minus(shift)));
+            }
+            Collections.sort(current, pairComparator);
+            
+            if (best == null || listComparator.compare(best, current) < 0) {
                 best = current;
             }
         }
