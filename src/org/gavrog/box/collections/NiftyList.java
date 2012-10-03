@@ -17,6 +17,7 @@
 package org.gavrog.box.collections;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -78,5 +79,37 @@ public class NiftyList<E extends Comparable<? super E>> extends ArrayList<E>
             buffer.append(get(i));
         }
         return buffer.toString();
+    }
+    
+    public static <E> Comparator<List<E>>
+    lexicographicComparator(final Comparator<? super E> itemComparator)
+    {
+        return new Comparator<List<E>>() {
+            public int compare(final List<E> a1, final List<E> a2) {
+                for (int i = 0; i < Math.min(a1.size(), a2.size()); ++i) {
+                    final int d = itemComparator.compare(a1.get(i), a2.get(i));
+                    if (d != 0) {
+                        return d;
+                    }
+                }
+                return a1.size() - a2.size();
+            }
+        };
+    }
+    
+    public static <E extends Comparable<? super E>> Comparator<List<E>>
+    lexicographicComparator()
+    {
+        return new Comparator<List<E>>() {
+            public int compare(final List<E> a1, final List<E> a2) {
+                for (int i = 0; i < Math.min(a1.size(), a2.size()); ++i) {
+                    final int d = a1.get(i).compareTo(a2.get(i));
+                    if (d != 0) {
+                        return d;
+                    }
+                }
+                return a1.size() - a2.size();
+            }
+        };
     }
 }

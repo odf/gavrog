@@ -21,7 +21,6 @@ import java.io.Writer;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -679,15 +678,7 @@ public class ProcessedNet {
             
             // --- sort edges by end point positions
             Collections.sort(candidates,
-                    new Comparator<Pair<PlacedNode, PlacedNode>>() {
-                        public int compare(Pair<PlacedNode, PlacedNode> o1,
-                                Pair<PlacedNode, PlacedNode> o2) {
-                            int d = o1.getFirst().compareTo(o2.getFirst());
-                            if (d == 0)
-                                d = o1.getSecond().compareTo(o2.getSecond());
-                            return d;
-                        }
-            });
+                    Pair.<PlacedNode, PlacedNode>defaultComparator());
             
             // --- extract the edge (or edges) to use
             if (allEdges) {

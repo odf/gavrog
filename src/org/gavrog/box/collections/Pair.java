@@ -16,6 +16,8 @@
 
 package org.gavrog.box.collections;
 
+import java.util.Comparator;
+
 /**
  * A class for hashable pairs of objects.
  */
@@ -62,4 +64,29 @@ public class Pair<F, S> {
 	public String toString() {
 		return "("  + first + ", " + second + ")";
 	}
+	
+	public static <F extends Comparable<? super F>,
+	               S extends Comparable<? super S>>
+	Comparator<Pair<F, S>> defaultComparator()
+	{
+        return new Comparator<Pair<F,S>>() {
+            public int compare(final Pair<F, S> p1, final Pair<F, S> p2) {
+                final int d = p1.getFirst().compareTo(p2.getFirst());
+                if (d == 0)
+                    return p1.getSecond().compareTo(p2.getSecond());
+                else
+                    return d;
+            }
+        };
+	}
+    
+    public static <F extends Comparable<? super F>>
+    Comparator<Pair<F, ?>> firstItemComparator()
+    {
+        return new Comparator<Pair<F, ?>>() {
+            public int compare(final Pair<F, ?> p1, final Pair<F, ?> p2) {
+                return p1.getFirst().compareTo(p2.getFirst());
+            }
+        };
+    }
 }

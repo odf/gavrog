@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.gavrog.box.collections.NiftyList;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.simple.DataFormatException;
 import org.gavrog.box.simple.NamedConstant;
@@ -1090,15 +1091,7 @@ public class NetParser extends GenericParser {
                 distances.add(new Pair<IArithmetic, Integer>(dist, i));
             }
             Collections.sort(distances,
-                    new Comparator<Pair<IArithmetic, Integer>>() {
-                        public int compare(Pair<IArithmetic, Integer> p,
-                                Pair<IArithmetic, Integer> q) {
-                            int d = p.getFirst().compareTo(q.getFirst());
-                            if (d == 0)
-                                d = p.getSecond().compareTo(q.getSecond());
-                            return d;
-                        }
-                    });
+                    Pair.<IArithmetic, Integer>defaultComparator());
 
             for (int i = 0; i < descV.connectivity; ++i) {
                 final Pair<IArithmetic, Integer> entry = distances.get(i);
@@ -1110,12 +1103,7 @@ public class NetParser extends GenericParser {
         }
 
         // --- sort potential edges by length
-        Collections.sort(edges, new Comparator<Pair<IArithmetic, ?>>() {
-            public int compare(final Pair<IArithmetic, ?> o1,
-                               final Pair<IArithmetic, ?> o2) {
-                return o1.getFirst().compareTo(o2.getFirst());
-            }
-        });
+        Collections.sort(edges, Pair.<IArithmetic>firstItemComparator());
 
         // --- add eges shortest to longest until all nodes are saturated
         for (final Pair<IArithmetic, Pair<INode, Integer>> edge: edges) {
@@ -1779,30 +1767,11 @@ public class NetParser extends GenericParser {
             final List<Pair<Face, Vector>> tile) {
 
         final Comparator<Pair<Face, Vector>> pairComparator =
-                new Comparator<Pair<Face, Vector>>() {
-            public int compare(final Pair<Face, Vector> o1,
-                    final Pair<Face, Vector> o2) {
-                int d = o1.getFirst().compareTo(o2.getFirst());
-                if (d == 0)
-                    d = o1.getSecond().compareTo(o2.getSecond());
-                return d;
-            }
-        };
+                Pair.<Face, Vector>defaultComparator();
 
         final Comparator<List<Pair<Face, Vector>>> listComparator =
-                new Comparator<List<Pair<Face,Vector>>>() {
-            public int compare(final List<Pair<Face, Vector>> o1,
-                               final List<Pair<Face, Vector>> o2) {
-                for (int i = 0; i < Math.min(o1.size(), o2.size()); ++i) {
-                    final int d =
-                            pairComparator.compare(o1.get(i), o2.get(i));
-                    if (d != 0) {
-                        return d;
-                    }
-                }
-                return o1.size() - o2.size();
-            }
-        };
+                NiftyList.<Pair<Face, Vector>>
+                    lexicographicComparator(pairComparator);
         
         List<Pair<Face, Vector>> best = null;
         for (int i = 0; i < tile.size(); ++i) {

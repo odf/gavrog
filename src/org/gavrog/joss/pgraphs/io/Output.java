@@ -53,8 +53,7 @@ public class Output {
         for (final INode v: G.nodes()) {
             node2idx.put(v, ++i);
         }
-        final List<NiftyList<Integer>> tmp =
-                new LinkedList<NiftyList<Integer>>();
+        final List<List<Integer>> tmp = new LinkedList<List<Integer>>();
         out.write("  EDGES\n");
         for (final IEdge e: G.edges()) {
             final Integer v = node2idx.get(e.source());
@@ -75,9 +74,10 @@ public class Output {
 					list.add(((Whole) s.get(k)).intValue());
 				}
 			}
-			tmp.add(new NiftyList<Integer>(list));
+			tmp.add(new LinkedList<Integer>(list));
         }
-        Collections.sort(tmp);
+        Collections.sort(tmp, NiftyList.<Integer>lexicographicComparator());
+        
         for (final List<Integer> e: tmp) {
         	final StringBuffer line = new StringBuffer(20);
         	line.append("    ");
