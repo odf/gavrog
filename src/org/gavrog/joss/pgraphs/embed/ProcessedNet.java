@@ -50,9 +50,6 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * Stores and prints a graph with its name, embedding and space group symmetry.
- * 
- * @author Olaf Delgado
- * @version $Id: ProcessedNet.java,v 1.9 2008/07/12 08:44:04 odf Exp $
  */
 public class ProcessedNet {
     private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
@@ -63,7 +60,7 @@ public class ProcessedNet {
     /*
      * Auxiliary type.
      */
-    private class PlacedNode implements Comparable {
+    private class PlacedNode implements Comparable<PlacedNode> {
         final public INode v;
         final public Point p;
         
@@ -75,9 +72,9 @@ public class ProcessedNet {
         /* (non-Javadoc)
          * @see java.lang.Comparable#compareTo(java.lang.Object)
          */
-        public int compareTo(final Object other) {
+        public int compareTo(final PlacedNode other) {
             final Point p = this.p;
-            final Point q = ((PlacedNode) other).p;
+            final Point q = other.p;
             final int dim = p.getDimension();
             final Point o = Point.origin(dim);
             final Vector s = (Vector) p.minus(o);
@@ -138,13 +135,17 @@ public class ProcessedNet {
     private boolean verified = false;
     private final PeriodicGraph graph;
     private final String name;
-    private final Map node2name;
+    private final Map<INode, String> node2name;
     private final SpaceGroupFinder finder;
     private final Embedder embedder;
 
     public ProcessedNet(
-			final PeriodicGraph G, final String name, final Map node2name,
-			final SpaceGroupFinder finder, final Embedder embedder) {
+			final PeriodicGraph G,
+			final String name,
+			final Map<INode, String> node2name,
+			final SpaceGroupFinder finder,
+			final Embedder embedder)
+    {
         this.graph = G;
         this.name = name;
         this.node2name = node2name;
@@ -152,8 +153,12 @@ public class ProcessedNet {
         this.embedder = embedder;
     }
 
-    public void writeEmbedding(final Writer stream, final boolean cgdFormat,
-			final boolean fullCell, final String posType) {
+    public void writeEmbedding(
+            final Writer stream,
+            final boolean cgdFormat,
+			final boolean fullCell,
+			final String posType)
+    {
 		final PrintWriter out = new PrintWriter(stream);
         
         // --- extract some data from the arguments
@@ -163,7 +168,6 @@ public class ProcessedNet {
         
         final int d = graph.getDimension();
         final CoordinateChange toStd = finder.getToStd();
-        final boolean posRelaxed = embedder.positionsRelaxed();
         final Matrix gram = embedder.getGramMatrix();
         
         // --- process unit cell parameters (possibly correcting settings)
@@ -186,15 +190,14 @@ public class ProcessedNet {
         	System.out.println("\t\t@@@ Computing full list of node positions...");
         }
         
-        final Map pos = embedder.getPositions();
-		final INode v0 = (INode) cov.nodes().next();
-		final Vector shift = (Vector) ((Point) pos.get(cov.image(v0))).times(
+        final Map<INode, Point> pos = embedder.getPositions();
+		final INode v0 = cov.nodes().next();
+		final Vector shift = (Vector) pos.get(cov.image(v0)).times(
 				toStd).minus(cov.liftedPosition(v0, pos));
-		final Map lifted = new HashMap();
-		for (final Iterator nodes = cov.nodes(); nodes.hasNext();) {
-			final INode v = (INode) nodes.next();
-			lifted.put(v, cov.liftedPosition(v, pos).plus(shift).times(
-					correction));
+		final Map<INode, Point> lifted = new HashMap<INode, Point>();
+		for (final INode v: cov.nodes()) {
+			lifted.put(v, (Point) cov.liftedPosition(v, pos).plus(shift)
+			        .times(correction));
 		}
         
         // --- if there's translational freedom, shift some node to a nice place
@@ -206,14 +209,13 @@ public class ProcessedNet {
 			final Matrix shiftSpace = Vector.toMatrix(tmp);
 			final Operator proj = Operator.orthogonalProjection(shiftSpace,
 					Matrix.one(d));
-			final INode v = (INode) lifted.keySet().iterator().next();
-			final Point p = (Point) lifted.get(v);
+			final INode v = lifted.keySet().iterator().next();
+			final Point p = lifted.get(v);
 			final Vector s = (Vector) Point.origin(d).minus(p.times(proj));
 			final CoordinateChange corrective_shift = new CoordinateChange(
 					new Operator(s));
-			for (Iterator iter = lifted.keySet().iterator(); iter.hasNext();) {
-				final INode w = (INode) iter.next();
-				lifted.put(w, ((Point) lifted.get(w)).times(corrective_shift));
+			for (final INode w: lifted.keySet()) {
+				lifted.put(w, (Point) lifted.get(w).times(corrective_shift));
 			}
 			correction = (CoordinateChange) correction.times(corrective_shift);
 		}
@@ -224,7 +226,7 @@ public class ProcessedNet {
         	System.out.println("\t\t@@@ Computing node representatives...");
         }
         
-        final Map reps = nodeReps(cov, lifted, allNodes);
+        final Map<INode, Point> reps = nodeReps(cov, lifted, allNodes);
         
         // --- print the node positions
         if (!cgdFormat) {
@@ -234,16 +236,14 @@ public class ProcessedNet {
         	System.out.println("\t\t@@@ Printing node positions...");
         }
         int last = 0;
-        for (final Iterator iter = reps.keySet().iterator(); iter.hasNext();) {
-			// --- extract the next node and its position
-			final INode v = (INode) iter.next();
-			final Point p = (Point) reps.get(v);
+        for (final INode v: reps.keySet()) {
+			final Point p = reps.get(v);
 			final String name;
 			if (allNodes) {
 				name = "" + (++last);
 			} else {
-				name = Strings.parsable((String) this.node2name.get(cov
-						.image(v)), false);
+				name = Strings.parsable(this.node2name.get(cov.image(v)),
+				        false);
 			}
 
 			// --- print them
@@ -254,7 +254,8 @@ public class ProcessedNet {
 				out.print("      Node " + name + ":   ");
 			}
 			for (int i = 0; i < d; ++i) {
-				out.print(" " + fmtReal5.format(((Real) p.get(i)).doubleValue()));
+				out.print(" "
+				        + fmtReal5.format(((Real) p.get(i)).doubleValue()));
 			}
 			out.println();
 		}
@@ -267,11 +268,11 @@ public class ProcessedNet {
         if (!cgdFormat) {
             out.println("   Edges:");
         }
-        final List ereps = edgeReps(cov, reps, lifted, correction, fullCell);
-        for (final Iterator iter = ereps.iterator(); iter.hasNext();) {
-            final Pair pair = (Pair) iter.next();
-            final Point p = ((PlacedNode) pair.getFirst()).p;
-            final Point q = ((PlacedNode) pair.getSecond()).p;
+        final List<Pair<PlacedNode, PlacedNode>> ereps =
+                edgeReps(cov, reps, lifted, correction, fullCell);
+        for (final Pair<PlacedNode, PlacedNode> pair: ereps) {
+            final Point p = pair.getFirst().p;
+            final Point q = pair.getSecond().p;
 
             // --- print its start and end positions
             if (cgdFormat) {
@@ -301,10 +302,9 @@ public class ProcessedNet {
         if (!cgdFormat) {
             out.println("   Edge centers:");
         }
-        for (final Iterator iter = ereps.iterator(); iter.hasNext();) {
-            final Pair pair = (Pair) iter.next();
-            final Point p = ((PlacedNode) pair.getFirst()).p;
-            final Point q = ((PlacedNode) pair.getSecond()).p;
+        for (final Pair<PlacedNode, PlacedNode> pair: ereps) {
+            final Point p = pair.getFirst().p;
+            final Point q = pair.getSecond().p;
 
             if (cgdFormat) {
                 out.print("# EDGE_CENTER ");
@@ -338,8 +338,10 @@ public class ProcessedNet {
 	 * @param gram
 	 * @param pos
 	 */
-	private void writeStatistics(final PrintWriter out, final Matrix gram,
-			final Map pos) {
+	private void writeStatistics(
+	        final PrintWriter out,
+	        final Matrix gram,
+			final Map<INode, Point> pos) {
 		// --- write edge statistics
 		if (DEBUG) {
 			System.out.println("\t\t@@@ Computing edge statistics...");
@@ -362,28 +364,28 @@ public class ProcessedNet {
 		double sumAngle = 0.0;
 		int count = 0;
 		
-		for (final Iterator nodes = graph.nodes(); nodes.hasNext();) {
-		    final INode v = (INode) nodes.next();
-		    final Point p = (Point) pos.get(v);
-		    final List incidences = graph.allIncidences(v);
-		    final List vectors = new ArrayList();
-		    for (final Iterator iter = incidences.iterator(); iter.hasNext();) {
-		        final IEdge e = (IEdge) iter.next();
+		for (final INode v: graph.nodes()) {
+		    final Point p = pos.get(v);
+		    final List<IEdge> incidences = graph.allIncidences(v);
+		    final List<Vector> vectors = new ArrayList<Vector>();
+		    for (final IEdge e: incidences) {
 		        final INode w = e.target();
 		        final Point q = (Point) pos.get(w);
-		        vectors.add(q.plus(graph.getShift(e)).minus(p));
+		        vectors.add((Vector) q.plus(graph.getShift(e)).minus(p));
 		    }
 		    final int m = vectors.size();
 		    for (int i = 0; i < m; ++i) {
-		        final Vector s = (Vector) vectors.get(i);
-		        final double ls = ((Real) Vector.dot(s, s, gram)).sqrt()
-		                .doubleValue();
+		        final Vector s = vectors.get(i);
+		        final double ls =
+		                ((Real) Vector.dot(s, s, gram)).sqrt().doubleValue();
 		        for (int j = i + 1; j < m; ++j) {
-		            final Vector t = (Vector) vectors.get(j);
+		            final Vector t = vectors.get(j);
 		            final double lt = ((Real) Vector.dot(t, t, gram)).sqrt()
 		                    .doubleValue();
-		            final double dot = ((Real) Vector.dot(s, t, gram)).doubleValue();
-		            final double arg = Math.max(-1, Math.min(1, dot / (ls * lt)));
+		            final double dot =
+		                    ((Real) Vector.dot(s, t, gram)).doubleValue();
+		            final double arg =
+		                    Math.max(-1, Math.min(1, dot / (ls * lt)));
 		            final double angle = Math.acos(arg) / Math.PI * 180;
 		            minAngle = Math.min(minAngle, angle);
 		            maxAngle = Math.max(maxAngle, angle);
@@ -598,18 +600,21 @@ public class ProcessedNet {
 		return correction;
 	}
 
-    private Map nodeReps(final PeriodicGraph cov, final Map lifted,
-			boolean allNodes) {
-		final Map reps = new LinkedHashMap();
-        for (final Iterator orbits = cov.nodeOrbits(); orbits.hasNext();) {
+    private Map<INode, Point> nodeReps(
+            final PeriodicGraph cov,
+            final Map<INode, Point> lifted,
+			final boolean allNodes)
+	{
+		final Map<INode, Point> reps = new LinkedHashMap<INode, Point>();
+        for (final Iterator<Set<INode>> orbits = cov.nodeOrbits();
+                orbits.hasNext();) {
             // --- grab the next node orbit
-            final Set orbit = (Set) orbits.next();
+            final Set<INode> orbit = orbits.next();
             
             // --- find positions for all nodes
-            final List tmp = new ArrayList();
-            for (final Iterator iter = orbit.iterator(); iter.hasNext();) {
-                final INode v = (INode) iter.next();
-                final Point p = ((Point) lifted.get(v)).modZ();
+            final List<PlacedNode> tmp = new ArrayList<PlacedNode>();
+            for (final INode v: orbit) {
+                final Point p = lifted.get(v).modZ();
                 tmp.add(new PlacedNode(v, p));
             }
             
@@ -619,11 +624,11 @@ public class ProcessedNet {
             // --- extract the node (or nodes) to use
             if (allNodes) {
                 for (int i = 0; i < tmp.size(); ++i) {
-                    final PlacedNode pn = (PlacedNode) tmp.get(i);
+                    final PlacedNode pn = tmp.get(i);
                     reps.put(pn.v, pn.p);
                 }
             } else {
-                final PlacedNode pn = (PlacedNode) tmp.get(0);
+                final PlacedNode pn = tmp.get(0);
                 reps.put(pn.v, pn.p);
             }
         }
@@ -631,39 +636,45 @@ public class ProcessedNet {
         return reps;
     }
 
-    private List edgeReps(final PeriodicGraph cov, final Map reps,
-			final Map lifted, final CoordinateChange correction,
-			boolean allEdges) {
-        final List result = new LinkedList();
+    private List<Pair<PlacedNode, PlacedNode>> edgeReps(
+            final PeriodicGraph cov,
+            final Map<INode, Point> reps,
+			final Map<INode, Point> lifted,
+			final CoordinateChange correction,
+			final boolean allEdges)
+	{
+        final List<Pair<PlacedNode, PlacedNode>> result =
+                new LinkedList<Pair<PlacedNode, PlacedNode>>();
         
-        for (final Iterator orbits = cov.edgeOrbits(); orbits.hasNext();) {
+        for (final Iterator<Set<IEdge>> orbits = cov.edgeOrbits();
+                orbits.hasNext();) {
             // --- grab the next edge orbit
-            final Set orbit = (Set) orbits.next();
+            final Set<IEdge> orbit = orbits.next();
             
-            // --- extract edges starting or ending in a node that was printed
-            final List candidates = new ArrayList();
-            for (final Iterator iter = orbit.iterator(); iter.hasNext();) {
-                final IEdge e = (IEdge) iter.next();
+            // --- extract edges starting or ending in a node in reps
+            final List<IEdge> edges = new ArrayList<IEdge>();
+            for (final IEdge e: orbit) {
                 if (reps.containsKey(e.source())) {
-                    candidates.add(e);
+                    edges.add(e);
                 }
                 if (reps.containsKey(e.target())) {
-                    candidates.add(e.reverse());
+                    edges.add(e.reverse());
                 }
             }
             
             // --- find positions for all the end points
-            for (int i = 0; i < candidates.size(); ++i) {
-                final IEdge e = (IEdge) candidates.get(i);
+            final List<Pair<PlacedNode, PlacedNode>> candidates =
+                    new ArrayList<Pair<PlacedNode, PlacedNode>>();
+            for (final IEdge e: edges) {
                 final INode v = e.source();
                 final INode w = e.target();
-                final Point p = (Point) lifted.get(v);
-                final Point q = (Point) ((Point) lifted.get(w)).plus(cov
-						.getShift(e).times(correction));
+                final Point p = lifted.get(v);
+                final Point q = (Point) lifted.get(w)
+                        .plus(cov.getShift(e).times(correction));
 				final Point p0 = p.modZ();
 				final Point q0 = (Point) q.minus(p.minus(p0));
-				candidates.set(i, new Pair(new PlacedNode(v, p0),
-						new PlacedNode(w, q0)));
+				candidates.add(new Pair<PlacedNode, PlacedNode>(
+				        new PlacedNode(v, p0), new PlacedNode(w, q0)));
             }
             
             // --- sort edges by end point positions
@@ -695,8 +706,10 @@ public class ProcessedNet {
      * @param embedder  an embedding for G.
      * @return the smallest distance between nodes that are not connected.
      */
-    private double smallestNonBondedDistance(final PeriodicGraph G,
-            final Map pos, final Matrix gram) {
+    private double smallestNonBondedDistance(
+            final PeriodicGraph G,
+            final Map<INode, Point> pos,
+            final Matrix gram) {
         // --- get some data about the graph and embedding
     	final int dim = G.getDimension();
         
@@ -716,7 +729,7 @@ public class ProcessedNet {
 			System.out.println("\t\t\t@@@ Computing neighborhood vectors...");
 		}
         final Matrix M = Vector.toMatrix(reduced);
-        final List cellNeighbors = new ArrayList();
+        final List<Vector> cellNeighbors = new ArrayList<Vector>();
         final int f[] = new int[dim];
         for (int i = 0; i < dim; ++i) f[i] = -1;
         while (true) {
@@ -739,12 +752,10 @@ public class ProcessedNet {
 		if (DEBUG) {
 			System.out.println("\t\t\t@@@ Looping over node pairs...");
 		}
-        for (final Iterator iter1 = G.nodes(); iter1.hasNext();) {
-            final INode v = (INode) iter1.next();
-            final Point p = (Point) pos.get(v);
-            for (final Iterator iter2 = G.nodes(); iter2.hasNext();) {
-                final INode w = (INode) iter2.next();
-                final Point q = (Point) pos.get(w);
+        for (final INode v: G.nodes()) {
+            final Point p = pos.get(v);
+            for (final INode w: G.nodes()) {
+                final Point q = pos.get(w);
                 
                 // --- find a closest translate of w
                 final Point d = (Point) q.minus(p).plus(Point.origin(dim));
@@ -752,15 +763,13 @@ public class ProcessedNet {
                 	Lattices.dirichletShifts(d, dirichlet, gram, 1)[0];
                 
                 // --- determine excluded translates and seeds
-                final Set excluded = new HashSet();
+                final Set<Vector> excluded = new HashSet<Vector>();
                 if (v.equals(w)) {
                 	excluded.add(Vector.zero(dim));
                 }
-                final Set seeds = new HashSet();
+                final Set<Vector> seeds = new HashSet<Vector>();
                 seeds.add(Vector.zero(dim));
-                for (final Iterator inc = G.allIncidences(v).iterator(); inc
-						.hasNext();) {
-                	final IEdge e = (IEdge) inc.next();
+                for (final IEdge e: G.allIncidences(v)) {
                 	final INode u = e.target();
                 	if (u.equals(w)) {
                 		excluded.add(G.getShift(e));
@@ -769,12 +778,9 @@ public class ProcessedNet {
                 }
                 
                 // --- find closest translate that isn't a neighbor of v
-                for (final Iterator it_s = seeds.iterator(); it_s.hasNext();) {
-                	final Vector seed = (Vector) it_s.next();
-					for (final Iterator iter = cellNeighbors.iterator(); iter
-							.hasNext();) {
-						final Vector t = (Vector) ((Vector) iter.next())
-								.plus(s).plus(seed);
+                for (final Vector seed: seeds) {
+					for (final Vector n: cellNeighbors) {
+						final Vector t = (Vector) n.plus(s).plus(seed);
 						if (!excluded.contains(t)) {
 							final Point r = (Point) q.plus(t);
 							final Vector x = (Vector) r.minus(p);
