@@ -758,42 +758,7 @@ public class NetParser extends GenericParser {
         }
         if (cellGram == null) {
             warnings.add("Unit cell parameters missing; using defaults");
-            if (dim == 1) {
-                cellGram = new Matrix(new double[][] { { 1.0 } });
-            } else if (dim == 2) {
-        		final char c = groupName.charAt(1);
-        		if (c == '3' || c == '6') {
-        			cellGram = new Matrix(new double[][] {
-        					{  1.0, -0.5 },
-        					{ -0.5,  1.0 }
-        			});
-        		} else {
-        			cellGram = new Matrix(new double[][] {
-        					{  1.0,  0.0 },
-        					{  0.0,  1.0 }
-        			});
-        		}
-        	} else if (dim == 3) {
-        		final char c;
-        		if (groupName.charAt(1) == '-') {
-        			c = groupName.charAt(2);
-        		} else {
-        			c = groupName.charAt(1);
-        		}
-        		if (c == '3' || c == '6') {
-        			cellGram = new Matrix(new double[][] {
-        					{  1.0, -0.5,  0.0 },
-        					{ -0.5,  1.0,  0.0 },
-        					{  0.0,  0.0,  1.0 },
-        			});
-        		} else {
-        			cellGram = new Matrix(new double[][] {
-        					{  1.0,  0.0,  0.0 },
-        					{  0.0,  1.0,  0.0 },
-        					{  0.0,  0.0,  1.0 },
-        			});
-        		}
-        	}
+            cellGram = defaultGramMatrix(groupName, dim);
         }
         
         // --- output some of the basic data
@@ -947,6 +912,52 @@ public class NetParser extends GenericParser {
         for (Iterator<String> iter = warnings.iterator(); iter.hasNext();)
         	G.addWarning(iter.next());
         return G;
+    }
+
+    /**
+     * @param groupName
+     * @param dim
+     * @return
+     */
+    private static Matrix defaultGramMatrix(final String groupName,
+                                            final int dim) {
+        if (dim == 1) {
+            return new Matrix(new double[][] { { 1.0 } });
+        } else if (dim == 2) {
+        	final char c = groupName.charAt(1);
+        	if (c == '3' || c == '6') {
+        		return new Matrix(new double[][] {
+        				{  1.0, -0.5 },
+        				{ -0.5,  1.0 }
+        		});
+        	} else {
+        		return new Matrix(new double[][] {
+        				{  1.0,  0.0 },
+        				{  0.0,  1.0 }
+        		});
+        	}
+        } else if (dim == 3) {
+        	final char c;
+        	if (groupName.charAt(1) == '-') {
+        		c = groupName.charAt(2);
+        	} else {
+        		c = groupName.charAt(1);
+        	}
+        	if (c == '3' || c == '6') {
+        		return new Matrix(new double[][] {
+        				{  1.0, -0.5,  0.0 },
+        				{ -0.5,  1.0,  0.0 },
+        				{  0.0,  0.0,  1.0 },
+        		});
+        	} else {
+        		return new Matrix(new double[][] {
+        				{  1.0,  0.0,  0.0 },
+        				{  0.0,  1.0,  0.0 },
+        				{  0.0,  0.0,  1.0 },
+        		});
+        	}
+        } else
+            throw new RuntimeException("illegal dimension " + dim);
     }
 
     /**
@@ -1396,7 +1407,8 @@ public class NetParser extends GenericParser {
      * @param block the pre-parsed input.
      * @return the ring list in symbolic form.
      */
-    private static Pair parseFaceList(final Entry[] block) {
+    private static Pair<List<Object>, Map<Integer, Point>> parseFaceList(
+            final Entry[] block) {
         final Set<String> seen = new HashSet<String>();
         
         String groupName = null;
@@ -1511,40 +1523,7 @@ public class NetParser extends GenericParser {
             ops.addAll(group.getOperators());
         }
         if (cellGram == null) {
-        	if (dim == 2) {
-        		final char c = groupName.charAt(1);
-        		if (c == '3' || c == '6') {
-        			cellGram = new Matrix(new double[][] {
-        					{  1.0, -0.5 },
-        					{ -0.5,  1.0 }
-        			});
-        		} else {
-        			cellGram = new Matrix(new double[][] {
-        					{  1.0,  0.0 },
-        					{  0.0,  1.0 }
-        			});
-        		}
-        	} else if (dim == 3) {
-        		final char c;
-        		if (groupName.charAt(1) == '_') {
-        			c = groupName.charAt(2);
-        		} else {
-        			c = groupName.charAt(1);
-        		}
-        		if (c == '3' || c == '6') {
-        			cellGram = new Matrix(new double[][] {
-        					{  1.0, -0.5,  0.0 },
-        					{ -0.5,  1.0,  0.0 },
-        					{  0.0,  0.0,  1.0 },
-        			});
-        		} else {
-        			cellGram = new Matrix(new double[][] {
-        					{  1.0,  0.0,  0.0 },
-        					{  0.0,  1.0,  0.0 },
-        					{  0.0,  0.0,  1.0 },
-        			});
-        		}
-        	}
+            cellGram = defaultGramMatrix(groupName, dim);
         }
         
         // --- output some of the basic data
@@ -1743,14 +1722,15 @@ public class NetParser extends GenericParser {
         if (DEBUG) {
         	System.err.println("\nAccepted " + result.size()
                        + (useTiles ? " tiles:" : " faces:"));
-        	for (final Iterator iter = result.iterator(); iter.hasNext();) {
-        		System.err.println("  " + iter.next());
+        	for (final Object entry: result) {
+        		System.err.println("  " + entry);
         	}
         }
-        return new Pair<List, Map>(result, indexToPos);
+        return new Pair<List<Object>, Map<Integer, Point>>(result, indexToPos);
     }
     
-    public static Pair parseFaceList(final Block block) {
+    public static Pair<List<Object>, Map<Integer, Point>> parseFaceList(
+            final Block block) {
     	return parseFaceList(block.getEntries());
     }
     
@@ -1882,7 +1862,8 @@ public class NetParser extends GenericParser {
      * @param cellParameters the list of cell parameters.
      * @return the gram matrix for the vectors.
      */
-    private static Matrix gramMatrix(int dim, final List cellParameters) {
+    private static Matrix gramMatrix(int dim,
+            final List<Object> cellParameters) {
         if (dim == 2) {
             final Real a = (Real) cellParameters.get(0);
             final Real b = (Real) cellParameters.get(1);
@@ -1984,11 +1965,9 @@ public class NetParser extends GenericParser {
      * @param operators a collection of operators.
      * @return true if the operators form a group.
      */
-    final static boolean formGroup(final Collection operators) {
-        for (final Iterator iter1 = operators.iterator(); iter1.hasNext();) {
-            final Operator A = (Operator) iter1.next();
-            for (final Iterator iter2 = operators.iterator(); iter2.hasNext();) {
-                final Operator B = (Operator) iter2.next();
+    final static boolean formGroup(final Collection<Operator> operators) {
+        for (final Operator A: operators) {
+            for (final Operator B: operators) {
                 final Operator AB_ = ((Operator) A.times(B.inverse())).modZ();
                 if (!operators.contains(AB_)) {
                     return false;
