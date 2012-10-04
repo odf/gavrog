@@ -24,6 +24,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.gavrog.box.collections.FilteredIterator;
+import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Iterators;
 
 
@@ -36,11 +38,11 @@ import org.gavrog.box.collections.Iterators;
  * @author Olaf Delgado
  * @version $Id: DynamicDSymbol.java,v 1.3 2007/04/22 06:31:43 odf Exp $
  */
-public class DynamicDSymbol extends DelaneySymbol {
+public class DynamicDSymbol extends DelaneySymbol<Integer> {
     final private int dim;
     private int lastId = 0;
-    final Map op;
-    final Map v;
+    final Map<Integer, int[]> op;
+    final Map<Integer, int[]> v;
 
     /**
      * Constructs an empty instance of a given dimension.
@@ -49,8 +51,8 @@ public class DynamicDSymbol extends DelaneySymbol {
     public DynamicDSymbol(final int dim) {
         this.dim = dim;
         // --- use linked hash maps to preserve the element order
-        this.op = new LinkedHashMap();
-        this.v = new LinkedHashMap();
+        this.op = new LinkedHashMap<Integer, int[]>();
+        this.v = new LinkedHashMap<Integer, int[]>();
     }
     
     /**
@@ -102,67 +104,72 @@ public class DynamicDSymbol extends DelaneySymbol {
     /**
      * This produces the elements in the order in which they were first created.
      */
-    public Iterator elements() {
-        return this.op.keySet().iterator();
+    public IteratorAdapter<Integer> elements() {
+        return new FilteredIterator<Integer, Integer>(
+                    this.op.keySet().iterator())
+        {
+            @Override
+            public Integer filter(final Integer D) {
+                return D;
+            }
+        };
     }
 
     /* (non-Javadoc)
      * @see javaDSym.symbols.DelaneySymbol#hasElement(java.lang.Object)
      */
-    public boolean hasElement(Object D) {
+    public boolean hasElement(final Integer D) {
         return this.op.containsKey(D);
     }
 
     /* (non-Javadoc)
      * @see javaDSym.symbols.DelaneySymbol#indices()
      */
-    public Iterator indices() {
+    public IteratorAdapter<Integer> indices() {
         return Iterators.range(0, dim() + 1);
     }
 
     /* (non-Javadoc)
      * @see javaDSym.symbols.DelaneySymbol#hasIndex(int)
      */
-    public boolean hasIndex(int i) {
+    public boolean hasIndex(final int i) {
         return i >= 0 && i <= dim();
     }
 
     /* (non-Javadoc)
      * @see javaDSym.symbols.DelaneySymbol#definesOp(int, java.lang.Object)
      */
-    public boolean definesOp(int i, Object D) {
-		return hasElement(D) && hasIndex(i)
-               && ((Object[]) this.op.get(D))[i] != null;
+    public boolean definesOp(final int i, final Integer D) {
+		return hasElement(D) && hasIndex(i) && this.op.get(D)[i] != 0;
 	}
 
     /* (non-Javadoc)
      * @see javaDSym.symbols.DelaneySymbol#op(int, java.lang.Object)
      */
-    public Object op(int i, Object D) {
+    public Integer op(final int i, final Integer D) {
         if (!hasElement(D)) {
             throw new IllegalArgumentException("not an element: " + D);
         }
         if (!hasIndex(i)) {
             throw new IllegalArgumentException("invalid index: " + i);
         }
-        return ((Object[]) this.op.get(D))[i];
+        return this.op.get(D)[i];
     }
 
     /* (non-Javadoc)
      * @see javaDSym.symbols.DelaneySymbol#definesV(int, int, java.lang.Object)
      */
-    public boolean definesV(int i, int j, Object D) {
+    public boolean definesV(final int i, final int j, final Integer D) {
 		return hasElement(D)
                && hasIndex(i)
                && hasIndex(j)
-               && (Math.abs(i - j) != 1 || ((int[]) this.v.get(D))[Math.min(i,
-                       j)] != 0);
+               && (Math.abs(i - j) != 1 || this.v.get(D)[Math.min(i, j)] != 0);
     }
 
     /* (non-Javadoc)
      * @see javaDSym.symbols.DelaneySymbol#v(int, int, java.lang.Object)
      */
-    public int v(int i, int j, Object D) {
+    public int v(final int i, final int j, final Integer D) {
         if (!hasElement(D)) {
             throw new IllegalArgumentException("not an element: " + D);
         }
@@ -193,7 +200,7 @@ public class DynamicDSymbol extends DelaneySymbol {
      * @param i index.
      * @param D symbol element.
      */
-    public void undefineOp(final int i, final Object D) {
+    public void undefineOp(final int i, final Integer D) {
         if (!hasElement(D)) {
             throw new IllegalArgumentException("not an element: " + D);
         }
@@ -201,9 +208,9 @@ public class DynamicDSymbol extends DelaneySymbol {
             throw new IllegalArgumentException("invalid index: " + i);
         }
         if (definesOp(i, D)) {
-            ((Object[]) this.op.get(op(i, D)))[i] = null;
+            this.op.get(op(i, D))[i] = 0;
         }
-        ((Object[]) this.op.get(D))[i] = null;
+        this.op.get(D)[i] = 0;
     }
     
     /**
@@ -215,7 +222,7 @@ public class DynamicDSymbol extends DelaneySymbol {
      * @param j the second index.
      * @param D the symbol element.
      */
-    public void undefineV(final int i, final int j, final Object D) {
+    public void undefineV(final int i, final int j, final Integer D) {
         if (!hasElement(D)) {
             throw new IllegalArgumentException("not an element: " + D);
         }
@@ -231,10 +238,8 @@ public class DynamicDSymbol extends DelaneySymbol {
         }
         
         final int k = Math.min(i, j);
-        final Iterator orb = orbit(new IndexList(k, k+1), D);
-        while (orb.hasNext()) {
-            final Object E = orb.next();
-            ((int[]) this.v.get(E))[k] = 0;
+        for (final int E: orbit(new IndexList(k, k+1), D)) {
+            this.v.get(E)[k] = 0;
         }
     }
     
@@ -245,7 +250,7 @@ public class DynamicDSymbol extends DelaneySymbol {
      * @param D the element.
      * @param E the new i-neighbor of D.
      */
-    public void redefineOp(final int i, final Object D, final Object E) {
+    public void redefineOp(final int i, final Integer D, final Integer E) {
         if (!hasElement(D)) {
             throw new IllegalArgumentException("not an element: " + D);
         }
@@ -270,8 +275,8 @@ public class DynamicDSymbol extends DelaneySymbol {
         if (definesOp(i, E)) {
             undefineOp(i, E);
         }
-        ((Object[]) this.op.get(D))[i] = E;	
-        ((Object[]) this.op.get(E))[i] = D;
+        this.op.get(D)[i] = E;	
+        this.op.get(E)[i] = D;
     }
     
     /**
@@ -284,7 +289,7 @@ public class DynamicDSymbol extends DelaneySymbol {
      * @param D the element.
      * @param v the new branching value.
      */
-    public void redefineV(final int i, final int j, final Object D, final int v) {
+    public void redefineV(final int i, final int j, final Integer D, final int v) {
         if (!hasElement(D)) {
             throw new IllegalArgumentException("not an element: " + D);
         }
@@ -303,10 +308,8 @@ public class DynamicDSymbol extends DelaneySymbol {
         }
         
         final int k = Math.min(i, j);
-        final Iterator orb = orbit(new IndexList(k, k+1), D);
-        while (orb.hasNext()) {
-            final Object E = orb.next();
-            ((int[]) this.v.get(E))[k] = v;
+        for (final int E: orbit(new IndexList(k, k+1), D)) {
+            this.v.get(E)[k] = v;
         }
     }
     
@@ -317,9 +320,9 @@ public class DynamicDSymbol extends DelaneySymbol {
      * 
      * @return the new element.
      */
-    public Object addElement() {
-        final Integer x = new Integer(++this.lastId);
-        this.op.put(x, new Object[dim() + 1]);
+    public Integer addElement() {
+        final int x = ++this.lastId;
+        this.op.put(x, new int[dim() + 1]);
         this.v.put(x, new int[dim()]);
         return x;
     }
@@ -328,7 +331,7 @@ public class DynamicDSymbol extends DelaneySymbol {
      * Removes an element from this symbol.
      * @param D the element to remove.
      */
-    public void removeElement(final Object D) {
+    public void removeElement(final Integer D) {
         if (!hasElement(D)) {
             throw new IllegalArgumentException("not an element: " + D);
         }
@@ -346,8 +349,8 @@ public class DynamicDSymbol extends DelaneySymbol {
      * @param n how many elements to add.
      * @return the list of new elements.
      */
-    public List grow(final int n) {
-        final List newElements = new ArrayList(n);
+    public List<Integer> grow(final int n) {
+        final List<Integer> newElements = new ArrayList<Integer>(n);
         for (int i = 0; i < n; ++i) {
             newElements.add(addElement());
         }
@@ -364,14 +367,14 @@ public class DynamicDSymbol extends DelaneySymbol {
      * @param disposable the elements to remove.
      * @param connector the index used for reconnecting the remains.
      */
-    public void collapse(final Collection disposable, final int connector) {
+    public void collapse(final Collection<Integer> disposable,
+            final int connector) {
         // TODO make this work for more general branching situations
 
         if (!hasIndex(connector)) {
             throw new IllegalArgumentException("illegal index " + connector);
         }
-        for (final Iterator iter = disposable.iterator(); iter.hasNext();) {
-            final Object D = iter.next();
+        for (final int D: disposable) {
             if (!hasElement(D)) {
                 throw new IllegalArgumentException("illegal element " + D);
             }
@@ -387,19 +390,17 @@ public class DynamicDSymbol extends DelaneySymbol {
             }
         }
         
-        for (final Iterator idcs = indices(); idcs.hasNext();) {
-            final int i = ((Integer) idcs.next()).intValue();
+        for (final int i: indices()) {
             if (i == connector) {
                 continue;
             }
-            for (final Iterator elms = disposable.iterator(); elms.hasNext();) {
-                final Object D = elms.next();
+            for (final int D: disposable) {
                 if (!definesOp(i, D)) {
                     continue;
                 }
-                final Object E = op(i, D);
+                final int E = op(i, D);
                 if (!disposable.contains(E)) {
-                    Object E1 = D;
+                    int E1 = D;
                     while (disposable.contains(E1)) {
                         E1 = op(i, op(connector, E1));
                     }
@@ -407,8 +408,8 @@ public class DynamicDSymbol extends DelaneySymbol {
                 }
             }
         }
-        for (final Iterator elms = disposable.iterator(); elms.hasNext();) {
-            removeElement(elms.next());
+        for (final int D: disposable) {
+            removeElement(D);
         }
     }
 
@@ -420,30 +421,28 @@ public class DynamicDSymbol extends DelaneySymbol {
     public DynamicDSymbol dual() {
         // --- initialize the new symbol
         final DynamicDSymbol ds = new DynamicDSymbol(dim);
-        final List elms = ds.grow(size());
+        final List<Integer> elms = ds.grow(size());
         
         // --- map old to new elements
-        final Map old2new = new HashMap();
+        final Map<Integer, Integer> old2new = new HashMap<Integer, Integer>();
         int count = 0;
-        for (final Iterator iter = elements(); iter.hasNext();) {
-            old2new.put(iter.next(), elms.get(count));
+        for (final int D: elements()) {
+            old2new.put(D, elms.get(count));
             ++count;
         }
 
         // --- set neighbor relations for dual
-        for (final Iterator iter = elements(); iter.hasNext();) {
-            final Integer D = (Integer) iter.next();
+        for (final int D: elements()) {
             for (int i = 0; i <= dim(); ++i) {
                 if (definesOp(i, D)) {
-                    final Integer E = (Integer) op(i, D);
+                    final int E = op(i, D);
                     ds.redefineOp(dim() - i, old2new.get(D), old2new.get(E));
                 }
             }
         }
         
         // --- set branching numbers (must be done after neighbor relations)
-        for (final Iterator iter = elements(); iter.hasNext();) {
-            final Integer D = (Integer) iter.next();
+        for (final int D: elements()) {
             for (int i = 0; i < dim(); ++i) {
                 if (definesV(i, i+1, D)) {
                     final int v = v(i, i+1, D);
@@ -459,23 +458,21 @@ public class DynamicDSymbol extends DelaneySymbol {
      * Append the contents of another symbol
      * @param source the symbol to append.
      */
-    public List append(final DSymbol source) {
-        final List elms = grow(source.size());
+    public List<Integer> append(final DSymbol source) {
+        final List<Integer> elms = grow(source.size());
         // --- cannot mix the setting up of neigbors and branching numbers here
-        for (final Iterator iter = source.elements(); iter.hasNext();) {
-            final Integer sD = (Integer) iter.next();
-            final Object tD = elms.get(sD.intValue() - 1);
+        for (final int sD: source.elements()) {
+            final int tD = elms.get(sD - 1);
             for (int i = 0; i <= dim(); ++i) {
                 if (source.definesOp(i, sD)) {
-                    final Integer sE = (Integer) source.op(i, sD);
-                    final Object tE = elms.get(sE.intValue() - 1);
+                    final int sE = source.op(i, sD);
+                    final int tE = elms.get(sE - 1);
                     redefineOp(i, tD, tE);
                 }
             }
         }
-        for (final Iterator iter = source.elements(); iter.hasNext();) {
-            final Integer sD = (Integer) iter.next();
-            final Object tD = elms.get(sD.intValue() - 1);
+        for (final int sD: source.elements()) {
+            final int tD = elms.get(sD - 1);
             for (int i = 0; i < dim(); ++i) {
                 if (source.definesV(i, i+1, sD)) {
                     redefineV(i, i+1, tD, source.v(i, i+1, sD));

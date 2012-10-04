@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,27 +20,25 @@ import org.gavrog.box.collections.Pair;
 
 /**
  * This class represents edges in a Delaney symbol.
- * @author Olaf Delgado
- * @version $Id: DSPair.java,v 1.1 2007/04/18 04:17:48 odf Exp $
  */
-public class DSPair extends Pair {
+public class DSPair<T> extends Pair<Integer, T> {
 
-	public DSPair(int i, Object D) {
+	public DSPair(int i, T D) {
 		super(new Integer(i), D);
     }
     
     public int getIndex() {
-        return ((Integer) getFirst()).intValue();
+        return getFirst();
     }
     
-    public Object getElement() {
+    public T getElement() {
         return getSecond();
     }
     
-    public DSPair reverse(final DelaneySymbol ds) {
+    public DSPair<T> reverse(final DelaneySymbol<T> ds) {
         final int i = getIndex();
-        final Object D = getElement();
-        return new DSPair(i, ds.op(i, D));
+        final T D = getElement();
+        return new DSPair<T>(i, ds.op(i, D));
     }
 }
 

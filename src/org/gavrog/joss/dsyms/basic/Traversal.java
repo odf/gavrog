@@ -34,14 +34,14 @@ import org.gavrog.box.collections.Iterators;
  * @author Olaf Delgado
  * @version $Id: Traversal.java,v 1.3 2007/04/18 04:17:48 odf Exp $
  */
-public class Traversal extends IteratorAdapter {
+public class Traversal<T> extends IteratorAdapter<DSPair<T>> {
 
-    private DelaneySymbol ds;
+    private DelaneySymbol<T> ds;
     private List indices;
-    private Iterator seeds;
+    private Iterator<T> seeds;
     private boolean visitAllEdges;
 
-    private LinkedList[] buffer;
+    private LinkedList<T>[] buffer;
     private HashMap elm2num;
     private int nextNum;
 
@@ -124,11 +124,11 @@ public class Traversal extends IteratorAdapter {
     /**
      * This methods finds the next edge of the traversal.
      */
-    protected Object findNext() {
+    protected DSPair<T> findNext() {
 		for (int k = 0; k < indices.size(); ++k) {
 			while (buffer[k].size() > 0) {
 				int i = ((Integer) indices.get(k)).intValue();
-				Object D;
+				T D;
 				if (k < 2) {
 					D = buffer[k].removeLast();
 				} else {
@@ -158,7 +158,7 @@ public class Traversal extends IteratorAdapter {
 		}
 
 		while (seeds.hasNext()) {
-			Object D = seeds.next();
+			T D = seeds.next();
 			if (D != null && !elm2num.containsKey(D)) {
 				elm2num.put(D, new Integer(nextNum++));
 				for (int k = 0; k < indices.size(); ++k) {

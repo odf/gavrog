@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.gavrog.box.collections.FilteredIterator;
+import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.NiftyList;
 import org.gavrog.jane.numbers.Fraction;
@@ -32,11 +33,9 @@ import org.gavrog.jane.numbers.Rational;
 
 
 /**
- * @author Olaf Delgado
- * @version $Id: DelaneySymbol.java,v 1.10 2008/04/07 00:56:41 odf Exp $
  */
-public abstract class DelaneySymbol implements Comparable {
-
+public abstract class DelaneySymbol<T> implements Comparable<DelaneySymbol<T>>
+{
     private boolean vDefaultToOne = false;
     
     /**
@@ -55,7 +54,7 @@ public abstract class DelaneySymbol implements Comparable {
     }
     
     /**
-     * Returns a normailized v result according to the current default.
+     * Returns a normalized v result according to the current default.
      * @param val the unnormalized v-value.
      * @return the normalized v-value.
      */
@@ -71,55 +70,25 @@ public abstract class DelaneySymbol implements Comparable {
     
     /* --- The minimal set of methods each derived class must implement. */
     
-    /* (non-Javadoc)
-     * @see javaDSym.DelaneySymbol#dim()
-     */
     public abstract int dim();
 
-    /* (non-Javadoc)
-     * @see javaDSym.DelaneySymbol#size()
-     */
     public abstract int size();
 
-    /* (non-Javadoc)
-     * @see javaDSym.DelaneySymbol#elements()
-     */
-    public abstract Iterator elements();
+    public abstract IteratorAdapter<T> elements();
 
-    /* (non-Javadoc)
-     * @see javaDSym.DelaneySymbol#isElement(java.lang.Object)
-     */
-    public abstract boolean hasElement(Object D);
+    public abstract boolean hasElement(T D);
     
-    /* (non-Javadoc)
-     * @see javaDSym.DelaneySymbol#indices()
-     */
-    public abstract Iterator indices();
+    public abstract IteratorAdapter<Integer> indices();
 
-    /* (non-Javadoc)
-     * @see javaDSym.DelaneySymbol#isIndex(int)
-     */
     public abstract boolean hasIndex(int i);
     
-    /* (non-Javadoc)
-     * @see javaDSym.DelaneySymbol#op(int, java.lang.Object)
-     */
-    public abstract boolean definesOp(int i, Object D);
+    public abstract boolean definesOp(int i, T D);
 
-    /* (non-Javadoc)
-     * @see javaDSym.DelaneySymbol#op(int, java.lang.Object)
-     */
-    public abstract Object op(int i, Object D);
+    public abstract T op(int i, T D);
 
-    /* (non-Javadoc)
-     * @see javaDSym.DelaneySymbol#v(int, int, java.lang.Object)
-     */
-    public abstract boolean definesV(int i, int j, Object D);
+    public abstract boolean definesV(int i, int j, T D);
 
-    /* (non-Javadoc)
-     * @see javaDSym.DelaneySymbol#v(int, int, java.lang.Object)
-     */
-    public abstract int v(int i, int j, Object D);
+    public abstract int v(int i, int j, T D);
 
 
     /* --- Default implementations for the rest of the interface. */
@@ -132,7 +101,7 @@ public abstract class DelaneySymbol implements Comparable {
      * @param fill the fill character to use. 
      * @return the adjusted string.
      */
-    private String rjust(String s, int n, char fill) {
+    private static String rjust(String s, int n, char fill) {
         if (s.length() >= n) {
             return s;
         } else {
@@ -167,13 +136,11 @@ public abstract class DelaneySymbol implements Comparable {
         }
         
         StringBuffer buf = new StringBuffer(500);
-        List idcs = new IndexList(this);
+        final List<Integer> idcs = new IndexList(this);
         
         int elmSize = 4;
         int vSize = 4;
-        Iterator elms = elements();
-        while (elms.hasNext()) {
-            Object D = elms.next();
+        for (final T D: this.elements()) {
             elmSize = Math.max(elmSize, D.toString().length());
             for (int i = 0; i < dim(); ++i) {
                 int i1 = ((Integer) idcs.get(i)).intValue();
@@ -207,24 +174,22 @@ public abstract class DelaneySymbol implements Comparable {
         }
         buf.append("-\n");
 
-        elms = elements();
-        while (elms.hasNext()) {
-            Object D = elms.next();
+        for (final T D: this.elements()) {
             buf.append(rjust(D.toString(), elmSize));
             buf.append(" |");
             for (int i = 0; i <= dim(); i++) {
-                Object Di = op(((Integer) idcs.get(i)).intValue(), D);
-                String s = (Di == null) ? "-" : Di.toString();
+                final T Di = op(idcs.get(i), D);
+                final String s = (Di == null) ? "-" : Di.toString();
                 buf.append(" ");
                 buf.append(rjust(s, elmSize));
             }
             buf.append(" |");
             for (int i = 0; i < dim(); i++) {
                 buf.append(" ");
-                int i1 = ((Integer) idcs.get(i)).intValue();
-                int i2 = ((Integer) idcs.get(i+1)).intValue();
-                int v = v(i1, i2, D);
-                String s = (v == 0) ? "-" : String.valueOf(v);
+                final int i1 = idcs.get(i);
+                final int i2 = idcs.get(i+1);
+                final int v = v(i1, i2, D);
+                final String s = (v == 0) ? "-" : String.valueOf(v);
                 buf.append(rjust(s, vSize));
             }
             buf.append("\n");
@@ -236,9 +201,9 @@ public abstract class DelaneySymbol implements Comparable {
      * @see javaDSym.DelaneySymbol#hasStandardIndexSet()
      */
     public boolean hasStandardIndexSet() {
-    	List idcs = new IndexList(this);
+    	final List<Integer> idcs = new IndexList(this);
     	for (int i = 0; i < idcs.size(); ++i) {
-    		if (((Integer) idcs.get(i)).intValue() != i) {
+    		if (idcs.get(i) != i) {
     			return false;
     		}
     	}
@@ -249,16 +214,15 @@ public abstract class DelaneySymbol implements Comparable {
      * @see javaDSym.symbols.DelaneySymbol#isComplete()
      */
     public boolean isComplete() {
-        final List idcs = new IndexList(this);
-        for (final Iterator elms = elements(); elms.hasNext();) {
-            final Object D = elms.next();
+        final List<Integer> idcs = new IndexList(this);
+        for (final T D: elements()) {
             for (int i = 0; i < idcs.size()-1; ++i) {
-                final int ii = ((Integer) idcs.get(i)).intValue();
+                final int ii = idcs.get(i);
                 if (!definesOp(ii, D)) {
                     return false;
                 }
                 for (int j = i+1; j < idcs.size(); ++j) {
-                    final int jj = ((Integer) idcs.get(j)).intValue();
+                    final int jj = idcs.get(j);
                     if (!definesV(ii, jj, D)) {
                         return false;
                     }
@@ -271,7 +235,7 @@ public abstract class DelaneySymbol implements Comparable {
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#r(int, int, java.lang.Object)
      */
-    public int r(int i, int j, Object D) {
+    public int r(int i, int j, final T D) {
         if (!hasElement(D)) {
             throw new IllegalArgumentException("not an element: " + D);
         }
@@ -282,7 +246,7 @@ public abstract class DelaneySymbol implements Comparable {
             throw new IllegalArgumentException("invalid index: " + j);
         }
 
-        Object Di = D;
+        T Di = D;
         int k = 0;
         while (true) {
             if (op(i, Di) != null) {
@@ -302,23 +266,22 @@ public abstract class DelaneySymbol implements Comparable {
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#m(int, int, java.lang.Object)
      */
-    public int m(int i, int j, Object D) {
+    public int m(final int i, final int j, final T D) {
         return v(i, j, D) * r(i, j, D);
     }
 
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#numberOfOrbits(java.util.Collection)
      */
-    public int numberOfOrbits(List indices) {
+    public int numberOfOrbits(final List<Integer> indices) {
         try {
             size();
         } catch (UnsupportedOperationException ex) {
     		throw new UnsupportedOperationException("symbol must be finite");
     	}
-    	Traversal trav = new Traversal(this, indices, elements());
+        
     	int count = 0;
-    	while (trav.hasNext()) {
-    		DSPair e = (DSPair) trav.next();
+    	for (final DSPair<T> e: new Traversal<T>(this, indices, elements())) {
     		if (e.getIndex() < 0) {
     			++count;
     		}
@@ -336,10 +299,11 @@ public abstract class DelaneySymbol implements Comparable {
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#orbitRepresentatives(java.util.List)
      */
-    public Iterator orbitReps(List indices) {
-		return new FilteredIterator(new Traversal(this, indices, elements())) {
-			public Object filter(Object x) {
-				DSPair e = (DSPair) x;
+    public IteratorAdapter<T> orbitReps(final List<Integer> indices) {
+		return new FilteredIterator<T, DSPair<T>>(
+		        new Traversal<T>(this, indices, elements()))
+		{
+			public T filter(final DSPair<T> e) {
 				if (e.getIndex() < 0) {
 					return e.getElement();
 				} else {
@@ -352,10 +316,11 @@ public abstract class DelaneySymbol implements Comparable {
     /* (non-Javadoc)
 	 * @see javaDSym.DelaneySymbol#elementsOfOrbit(java.util.List, java.lang.Object)
 	 */
-    public Iterator orbit(List indices, Object seed) {
-    	return new FilteredIterator(new Traversal(this, indices, seed)) {
-    		public Object filter(Object x) {
-    			return ((DSPair) x).getElement();
+    public IteratorAdapter<T> orbit(final List<Integer> indices, final T seed) {
+    	return new FilteredIterator<T, DSPair<T>>(
+    	        new Traversal<T>(this, indices, seed)) {
+    		public T filter(final DSPair<T> x) {
+    			return x.getElement();
     		}
     	};
     }
@@ -363,24 +328,23 @@ public abstract class DelaneySymbol implements Comparable {
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#partialOrientation(java.util.List, java.util.Iterator)
      */
-    public Map partialOrientation(List indices, Iterator seeds) {
+    public Map<T, Integer> partialOrientation(
+            final List<Integer> indices, final Iterator<T> seeds)
+    {
         try {
             size();
         } catch (UnsupportedOperationException ex) {
     		throw new UnsupportedOperationException("symbol must be finite");
     	}
-        Traversal trav = new Traversal(this, indices, seeds);
-        HashMap or = new HashMap();
-        while (trav.hasNext()) {
-            DSPair e = (DSPair) trav.next();
-            int i = e.getIndex();
-            Object D = e.getElement();
+        
+        final HashMap<T, Integer> or = new HashMap<T, Integer>();
+        for (final DSPair<T> e: new Traversal<T>(this, indices, seeds)) {
+            final int i = e.getIndex();
+            final T D = e.getElement();
             if (i < 0) {
-                or.put(D, new Integer(1));
+                or.put(D, 1);
             } else {
-                Object Di = op(i, D);
-                int x = ((Integer) or.get(Di)).intValue();
-                or.put(D, new Integer(-x));
+                or.put(D, -or.get(op(i, D)));
             }
         }
         return or;
@@ -389,7 +353,7 @@ public abstract class DelaneySymbol implements Comparable {
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#partialOrientation()
      */
-    public Map partialOrientation() {
+    public Map<T, Integer> partialOrientation() {
         return partialOrientation(new IndexList(this), this.elements());
     }
 
@@ -403,21 +367,20 @@ public abstract class DelaneySymbol implements Comparable {
      * @param seed the seed for the orbit.
      * @return an integer encoding the result.
      */
-    private int orbitOrientation(List indices, Object seed) {
+    private int orbitOrientation(final List<Integer> indices, final T seed) {
         try {
             size();
         } catch (UnsupportedOperationException ex) {
             throw new UnsupportedOperationException("symbol must be finite");
         }
-        final Map or = partialOrientation(indices, Iterators.singleton(seed));
-        final Iterator elms = orbit(indices, seed);
+        
+        final Map<T, Integer> or =
+                partialOrientation(indices, Iterators.singleton(seed));
         boolean weaklyOriented = true;
         boolean loopless = true;
-        while (elms.hasNext()) {
-            final Object D = elms.next();
-            for (int k = 0; k < indices.size(); ++k) {
-                final int i = ((Integer) indices.get(k)).intValue();
-                final Object Di = op(i, D);
+        for (final T D: orbit(indices, seed)) {
+            for (final int i: indices) {
+                final T Di = op(i, D);
                 if (D.equals(Di)) {
                     loopless = false;
                 } else if (or.get(D).equals(or.get(Di))) {
@@ -431,7 +394,7 @@ public abstract class DelaneySymbol implements Comparable {
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#isOriented(java.util.List, java.lang.Object)
      */
-    public boolean orbitIsOriented(List indices, Object seed) {
+    public boolean orbitIsOriented(final List<Integer> indices, final T seed) {
         return orbitOrientation(indices, seed) == 3;
     }
 
@@ -444,10 +407,10 @@ public abstract class DelaneySymbol implements Comparable {
         } catch (UnsupportedOperationException ex) {
     		throw new UnsupportedOperationException("symbol must be finite");
     	}
-    	List idcs = new IndexList(this);
-        Iterator reps = this.orbitReps(idcs);
-        while (reps.hasNext()) {
-            if (!orbitIsOriented(idcs, reps.next())) {
+
+        final List<Integer> idcs = new IndexList(this);
+    	for (final T D: this.orbitReps(idcs)) {
+            if (!orbitIsOriented(idcs, D)) {
                 return false;
             }
         }
@@ -457,7 +420,7 @@ public abstract class DelaneySymbol implements Comparable {
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#isLoopless(java.util.List, java.lang.Object)
      */
-    public boolean orbitIsLoopless(List indices, Object seed) {
+    public boolean orbitIsLoopless(final List<Integer> indices, final T seed) {
         return orbitOrientation(indices, seed) % 2 == 1;
     }
 
@@ -470,10 +433,10 @@ public abstract class DelaneySymbol implements Comparable {
         } catch (UnsupportedOperationException ex) {
             throw new UnsupportedOperationException("symbol must be finite");
         }
-        List idcs = new IndexList(this);
-        Iterator reps = this.orbitReps(idcs);
-        while (reps.hasNext()) {
-            if (!orbitIsLoopless(idcs, reps.next())) {
+        
+        final List<Integer> idcs = new IndexList(this);
+        for (final T D: this.orbitReps(idcs)) {
+            if (!orbitIsLoopless(idcs, D)) {
                 return false;
             }
         }
@@ -484,7 +447,8 @@ public abstract class DelaneySymbol implements Comparable {
      * @see javaDSym.DelaneySymbol#isWeaklyOriented(java.util.List,
      *      java.lang.Object)
      */
-    public boolean orbitIsWeaklyOriented(List indices, Object seed) {
+    public boolean orbitIsWeaklyOriented(
+            final List<Integer> indices, final T seed) {
         return orbitOrientation(indices, seed) >= 2;
     }
 
@@ -497,10 +461,10 @@ public abstract class DelaneySymbol implements Comparable {
         } catch (UnsupportedOperationException ex) {
             throw new UnsupportedOperationException("symbol must be finite");
         }
-        List idcs = new IndexList(this);
-        Iterator reps = this.orbitReps(idcs);
-        while (reps.hasNext()) {
-            if (!orbitIsWeaklyOriented(idcs, reps.next())) {
+        
+        final List<Integer> idcs = new IndexList(this);
+        for (final T D: this.orbitReps(idcs)) {
+            if (!orbitIsWeaklyOriented(idcs, D)) {
                 return false;
             }
         }
@@ -508,13 +472,13 @@ public abstract class DelaneySymbol implements Comparable {
     }
 
     // --- Caches for invariant and map from original to canonical element names
-    private NiftyList _invariant = null;
-    private Map original2canonical;
+    private NiftyList<Integer> _invariant = null;
+    private Map<T, Integer> original2canonical;
     
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#invariant()
      */
-    public NiftyList invariant() {
+    public NiftyList<Integer> invariant() {
     	if (this._invariant != null) {
     		return this._invariant;
     	}
@@ -527,59 +491,54 @@ public abstract class DelaneySymbol implements Comparable {
         
         if (!isConnected()) {
             // --- For non-connected symbols, collect invariants for components and sort.
-            final List invariants = new ArrayList();
+            final List<NiftyList<Integer>> invariants =
+                    new ArrayList<NiftyList<Integer>>();
             final IndexList idcs = new IndexList(this);
-            for (final Iterator iter = this.orbitReps(idcs); iter.hasNext();) {
-                final DelaneySymbol sub = new Subsymbol(this, idcs, iter.next()).flat();
+            for (final T D: this.orbitReps(idcs)) {
+                final DelaneySymbol<Integer> sub =
+                        new Subsymbol<T>(this, idcs, D).flat();
                 invariants.add(sub.invariant());
             }
             Collections.sort(invariants);
-            final List result = new LinkedList();
-            for (final Iterator iter = invariants.iterator(); iter.hasNext();) {
-                result.addAll((List) iter.next());
+            final List<Integer> result = new LinkedList<Integer>();
+            for (final List<Integer> inv: invariants) {
+                result.addAll(inv);
             }
-            this._invariant = new NiftyList(result);
+            this._invariant = new NiftyList<Integer>(result);
             return this._invariant;
         }
         
         /* --- Preparations. */
+        final List<Integer> idcs = new IndexList(this);
+
         int[] best = null;
         int[] current = new int[(size() + 1) * (4 * dim() + 3)];
         int bestk = 0;
-        List idcs = new IndexList(this);
-        Map bestMap = null;
+        Map<T, Integer> bestMap = null;
 
         /* --- Map indices. */
-        HashMap i2pos = new HashMap();
+        HashMap<Integer, Integer> i2pos = new HashMap<Integer, Integer>();
         for (int i = 0; i <= dim(); ++i) {
-            i2pos.put(idcs.get(i), new Integer(i));
+            i2pos.put(idcs.get(i), i);
         }
         
         /* --- Try each element in turn as the seed for a traversal. */
-        Iterator elms = elements();
-        while (elms.hasNext()) {
-            Object seed = elms.next();
-
-            /* --- Initialize the traversal. */
-            Traversal trav = new Traversal(this, idcs, seed, true);
-            
+        for (final T seed: this.elements()) {
             /* --- Elements will be numbered in the order they appear. */
-            HashMap old2new = new HashMap();
+            final HashMap<T, Integer> old2new = new HashMap<T, Integer>();
             int nextE = 1;
 
             /* --- Follow the traversal and create a protocol. */
             int k = 0;
-            while (trav.hasNext()) {
-            	/* --- Retrieve the next edge. */
-                DSPair e = (DSPair) trav.next();
-                Object D = e.getElement();
-                int i = e.getIndex();
+            
+            for (final DSPair<T> e: new Traversal<T>(this, idcs, seed, true)) {
+                final T D = e.getElement();
+                final int i = e.getIndex();
                 
                 /* --- Determine a running number E for the target element D. */
-                int E;
-                boolean elementIsNew;
-                Integer tmp = (Integer) old2new.get(D);
-                if (tmp == null) {
+                final int E;
+                final boolean elementIsNew;
+                if (!old2new.containsKey(D)) {
                 	/* --- Element D is encountered for the first time. */
                     elementIsNew = true;
                     E = nextE++;
@@ -587,13 +546,13 @@ public abstract class DelaneySymbol implements Comparable {
                 } else {
                 	/* --- Element D already has a number. */
                     elementIsNew = false;
-                    E = tmp.intValue();
+                    E = old2new.get(D);
                 }
                 
                 /* --- Add the mapped edge index to the protocol. */
                 int ip = i;
                 if (i >= 0) {
-                    ip = ((Integer) i2pos.get(new Integer(i))).intValue();
+                    ip = i2pos.get(i);
                 }
                 if (best != null) {
                     if (ip > best[k]) {
@@ -608,7 +567,7 @@ public abstract class DelaneySymbol implements Comparable {
                 
                 /* --- If we're not at the seed, add the source element. */
                 if (i >= 0) {
-					int Ei = ((Integer) old2new.get(op(i, D))).intValue();
+					final int Ei = old2new.get(op(i, D));
 					if (best != null) {
 						if (Ei > best[k]) {
 							break;
@@ -633,9 +592,9 @@ public abstract class DelaneySymbol implements Comparable {
                 if (elementIsNew) {
                     boolean bad = false;
                     for (int m = 0; m < dim(); ++m) {
-                        int j0 = ((Integer) idcs.get(m)).intValue();
-                        int j1 = ((Integer) idcs.get(m + 1)).intValue();
-                        int v = definesV(j0, j1, D) ? v(j0, j1, D) : 0;
+                        final int j0 = idcs.get(m);
+                        final int j1 = idcs.get(m + 1);
+                        final int v = definesV(j0, j1, D) ? v(j0, j1, D) : 0;
                         if (best != null) {
                             if (v > best[k] || (v == 0 && best[k] != 0)) {
                                 bad = true;
@@ -665,13 +624,13 @@ public abstract class DelaneySymbol implements Comparable {
         this.original2canonical = Collections.unmodifiableMap(bestMap);
         
         /* --- Convert the best protocol into a list. */
-        final ArrayList result = new ArrayList();
+        final List<Integer> result = new ArrayList<Integer>();
         for (int i = 0; i < bestk; ++i) {
-            result.add(new Integer(best[i]));
+            result.add(best[i]);
         }
         
         /* --- Cache and return it. */
-        this._invariant = new NiftyList(result);
+        this._invariant = new NiftyList<Integer>(result);
         return this._invariant;
     }
 
@@ -680,7 +639,8 @@ public abstract class DelaneySymbol implements Comparable {
      */
     public boolean equals(Object other) {
     	if (other instanceof DelaneySymbol) {
-    	    final DelaneySymbol ds = (DelaneySymbol) other;
+    	    @SuppressWarnings("unchecked")
+            final DelaneySymbol<T> ds = (DelaneySymbol<T>) other;
     	    if (ds.dim() == this.dim() && ds.size() == this.size()) {
     	        return this.invariant().equals(ds.invariant());
     	    }
@@ -691,11 +651,7 @@ public abstract class DelaneySymbol implements Comparable {
     /* (non-Javadoc)
      * @see int java.lang.Comparable#compareTo(java.lang.Object)
      */
-    public int compareTo(final Object arg) {
-        if (!(arg instanceof DelaneySymbol)) {
-            throw new IllegalArgumentException("argument must be a DelaneySymbol");
-        }
-        final DelaneySymbol other = (DelaneySymbol) arg;
+    public int compareTo(final DelaneySymbol<T> other) {
         if (this.dim() != other.dim()) {
             return this.dim() - other.dim();
         } else {
@@ -715,30 +671,30 @@ public abstract class DelaneySymbol implements Comparable {
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#canonical()
      */
-    public DelaneySymbol canonical() {
+    public DelaneySymbol<Integer> canonical() {
     	int op[][] = new int[dim() + 1][size() + 1];
     	int v[][] = new int[dim()][size() + 1];
-    	final List invariant = invariant();
+    	final List<Integer> invariant = invariant();
         int offset = 0;
     	
     	int maxD = 0;
     	int k = 0;
     	while (k < invariant.size()) {
-    		int i = ((Integer) invariant.get(k++)).intValue();
+    		int i = invariant.get(k++);
             if (i < 0) {
                 offset = maxD;
             }
-    		int D = ((Integer) invariant.get(k++)).intValue() + offset;
+    		int D = invariant.get(k++) + offset;
     		int Di = 0;
     		if (i >= 0) {
     			Di = D;
-    			D = ((Integer) invariant.get(k++)).intValue() + offset;
+    			D = invariant.get(k++) + offset;
     			op[i][D] = Di;
     			op[i][Di] = D;
             }
     		if (D > maxD) {
     			for (i = 0; i < dim(); ++i) {
-    	    		v[i][D] = ((Integer) invariant.get(k++)).intValue();
+    	    		v[i][D] = invariant.get(k++);
     	    		maxD = D;
     			}
     		}
@@ -749,7 +705,7 @@ public abstract class DelaneySymbol implements Comparable {
     /* (non-Javadoc)
      * @see javaDSym.symbols.DelaneySymbol#getMapToCanonical()
      */
-    public Map getMapToCanonical() {
+    public Map<T, Integer> getMapToCanonical() {
         if (!this.isConnected()) {
             throw new UnsupportedOperationException("symbol must be connected");
         }
@@ -768,11 +724,10 @@ public abstract class DelaneySymbol implements Comparable {
         }
         
         /* --- Determine classes of elements to be mapped to a common one. */
-        TypedPartition P = new TypedPartition(this);
+        final TypedPartition<T> P = new TypedPartition<T>(this);
 
-        Object D0 = null;
-        for (final Iterator elms = elements(); elms.hasNext();) {
-            final Object D = elms.next();
+        T D0 = null;
+        for (final T D: elements()) {
             if (D0 == null) {
                 D0 = D;
             } else {
@@ -787,7 +742,7 @@ public abstract class DelaneySymbol implements Comparable {
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#minimal()
      */
-    public DelaneySymbol minimal() {
+    public DelaneySymbol<Integer> minimal() {
         try {
             size();
         } catch (UnsupportedOperationException ex) {
@@ -795,36 +750,32 @@ public abstract class DelaneySymbol implements Comparable {
         }
         
         /* --- Determine classes of elements to be mapped to a common one. */
-    	TypedPartition P = new TypedPartition(this);
+    	final TypedPartition<T> P = new TypedPartition<T>(this);
     	P.uniteAll();
     	
     	/* --- Map elements of old to elements of new symbol. */
-    	HashMap old2new = new HashMap();
-    	Object new2old[] = new Object[size() + 1];
-    	int k = 0;
-    	Iterator elms = elements();
-    	while (elms.hasNext()) {
-    		Object D = elms.next();
-    		Object E = P.find(D);
+    	final Map<T, Integer> old2new = new HashMap<T, Integer>();
+    	final List<T> new2old = new ArrayList<T>();
+    	for (final T D: elements()) {
+    		final T E = P.find(D);
     		if (!old2new.containsKey(E)) {
-    			++k;
-    			old2new.put(E, new Integer(k));
-    			new2old[k] = E;
+                new2old.add(E);
+    			old2new.put(E, new2old.size());
     		}
     		old2new.put(D, old2new.get(E));
     	}
     	
     	/** --- Specify operations for new symbol. */
-    	int newSize = k;
+    	int newSize = new2old.size();
     	int op[][] = new int[dim() + 1][newSize + 1];
     	int v[][] = new int[dim()][newSize + 1];
-    	List idcs = new IndexList(this);
+    	final List<Integer> idcs = new IndexList(this);
    	
     	for (int D = 1; D <= newSize; ++D) {
-    		Object E = new2old[D];
+    		final T E = new2old.get(D);
     		for (int i = 0; i <= dim(); ++i) {
-    		    int ii = ((Integer) idcs.get(i)).intValue();
-    			op[i][D] = ((Integer) old2new.get(op(ii, E))).intValue();
+    		    int ii = idcs.get(i);
+    			op[i][D] = old2new.get(op(ii, E));
     			if (i < dim()) {
     				v[i][D] = 1;
     			}
@@ -835,19 +786,15 @@ public abstract class DelaneySymbol implements Comparable {
     	DSymbol tmp = new DSymbol(op, v);
     	
     	for (int i = 0; i < dim(); ++i) {
-    		List idcsI = new IndexList(i, i+1);
-    		Iterator reps = tmp.orbitReps(idcsI);
-    		while (reps.hasNext()) {
-    			Object D = reps.next();
-        		Object E = new2old[((Integer) D).intValue()];
-    		    int ii = ((Integer) idcs.get(i)).intValue();
-    		    int ii1 = ((Integer) idcs.get(i+1)).intValue();
-        		int m = this.m(ii, ii1, E);
-        		int r = tmp.r(i, i+1, D);
-        		int b = m / r;
-        		Iterator orb = tmp.orbit(idcsI, D);
-        		while (orb.hasNext()) {
-        			int C = ((Integer) orb.next()).intValue();
+    		final List<Integer> idcsI = new IndexList(i, i+1);
+    		for (final int D: tmp.orbitReps(idcsI)) {
+        		final T E = new2old.get(D);
+    		    final int ii = idcs.get(i);
+    		    final int ii1 = idcs.get(i+1);
+        		final int m = this.m(ii, ii1, E);
+        		final int r = tmp.r(i, i+1, D);
+        		final int b = m / r;
+        		for (final int C: tmp.orbit(idcsI, D)) {
         			v[i][C] = b;
         		}
     		}
@@ -860,7 +807,7 @@ public abstract class DelaneySymbol implements Comparable {
     /* (non-Javadoc)
      * @see javaDSym.symbols.DelaneySymbol#flat()
      */
-    public DelaneySymbol flat() {
+    public DelaneySymbol<Integer> flat() {
         return new DSymbol(this);
     }
     
@@ -871,12 +818,10 @@ public abstract class DelaneySymbol implements Comparable {
      * @return the sum of summands for this index pair.
      */
     private Rational curvatureSummands(int i, int j) {
-    	Rational result = new Fraction(0, 1);
+        Rational result = new Fraction(0, 1);
 
-		Iterator reps = orbitReps(new IndexList(i, j));
-		while (reps.hasNext()) {
-			Object D = reps.next();
-			int s;
+		for (final T D: orbitReps(new IndexList(i, j))) {
+		    int s;
 			if (orbitIsOriented(new IndexList(i, j), D)) {
 				s = 2;
 			} else {
@@ -897,10 +842,10 @@ public abstract class DelaneySymbol implements Comparable {
     	}
     	
     	Rational result = new Fraction(-size(), 1);
-    	Iterator idcs = indices();
-    	int i = ((Integer) idcs.next()).intValue();
-    	int j = ((Integer) idcs.next()).intValue();
-    	int k = ((Integer) idcs.next()).intValue();
+    	final Iterator<Integer> idcs = indices();
+    	int i = idcs.next();
+    	int j = idcs.next();
+    	int k = idcs.next();
     	result = (Rational) result.plus(curvatureSummands(i, j));
     	result = (Rational) result.plus(curvatureSummands(i, k));
     	result = (Rational) result.plus(curvatureSummands(j, k));
@@ -920,13 +865,11 @@ public abstract class DelaneySymbol implements Comparable {
         }
         if (curvature2D().isPositive()) {
             final DSymbol dso = new DSymbol(orientedCover());
-            final List degrees = new ArrayList();
+            final List<Integer> degrees = new ArrayList<Integer>();
             for (int i = 0; i < 2; ++i) {
                 for (int j = i+1; j <= 2; ++j) {
-                    final Iterator reps = dso.orbitReps(new IndexList(i, j));
-                    while (reps.hasNext()) {
-                        final Object D = reps.next();
-                        final int v =dso.v(i, j, D);
+                    for (final int D: dso.orbitReps(new IndexList(i, j))) {
+                        final int v = dso.v(i, j, D);
                         if (v > 1) {
                             degrees.add(new Integer(v));
                         }
@@ -954,7 +897,8 @@ public abstract class DelaneySymbol implements Comparable {
         if (!isSpherical2D()) {
             throw new NonSphericalException("symbol must be spherical");
         }
-        final Rational size = (Rational) new Fraction(4, 1).dividedBy(curvature2D());
+        final Rational size =
+                (Rational) new Fraction(4, 1).dividedBy(curvature2D());
         return size.numerator().intValue();
     }
 
@@ -968,11 +912,10 @@ public abstract class DelaneySymbol implements Comparable {
     	}
     	
     	for (int k = 0; k <= dim(); ++k) {
-        	List idcs = new IndexList(this);
+        	final List<Integer> idcs = new IndexList(this);
     		idcs.remove(k);
-    		Iterator reps = orbitReps(idcs);
-    		while (reps.hasNext()) {
-    			DelaneySymbol sub = new Subsymbol(this, idcs, reps.next());
+    		for (final T D: orbitReps(idcs)) {
+    			final DelaneySymbol<T> sub = new Subsymbol<T>(this, idcs, D);
     			if (! sub.isSpherical2D()) {
     				return false;
     			}
@@ -993,20 +936,19 @@ public abstract class DelaneySymbol implements Comparable {
         if (!isConnected()) {
             throw new IllegalArgumentException("symbol must be connected");
         }
-		final List cones = new ArrayList();
-		final List corners = new ArrayList();
+		final List<String> cones = new ArrayList<String>();
+		final List<String> corners = new ArrayList<String>();
 		final int x[] = new int[3];
-		final Iterator indices = indices();
-		x[0] = ((Integer) indices.next()).intValue();
-		x[1] = ((Integer) indices.next()).intValue();
-		x[2] = ((Integer) indices.next()).intValue();
+		final Iterator<Integer> indices = indices();
+		x[0] = indices.next();
+		x[1] = indices.next();
+		x[2] = indices.next();
 		
 		for (int k = 0; k < 3; ++k) {
 			final int i = (k + 1) % 3;
 			final int j = (k + 2) % 3;
-			final List idcs = new IndexList(x[i], x[j]);
-			for (Iterator reps = orbitReps(idcs); reps.hasNext(); ) {
-				final Object D = reps.next();
+			final List<Integer> idcs = new IndexList(x[i], x[j]);
+			for (final T D: orbitReps(idcs)) {
 				final int v = v(i, j, D);
 				if (v > 1) {
 					if (orbitIsLoopless(idcs, D)) {
@@ -1026,14 +968,14 @@ public abstract class DelaneySymbol implements Comparable {
         if (cones.isEmpty() && corners.isEmpty()) {
         	buf.append('1');
         }
-        for (Iterator iter2 = cones.iterator(); iter2.hasNext();) {
-        	buf.append(iter2.next());
+        for (final String cone: cones) {
+        	buf.append(cone);
         }
         if (!isLoopless()) {
         	buf.append('*');
         }
-        for (Iterator iter2 = corners.iterator(); iter2.hasNext();) {
-        	buf.append(iter2.next());
+        for (final String corner: corners) {
+        	buf.append(corner);
         }
         if (!isWeaklyOriented()) {
         	buf.append('x');
@@ -1047,7 +989,7 @@ public abstract class DelaneySymbol implements Comparable {
      * 
      * @return the oriented cover of this symbol.
      */
-    public DelaneySymbol orientedCover() {
+    public DelaneySymbol<?> orientedCover() {
         try {
             size();
         } catch (UnsupportedOperationException ex) {
@@ -1061,30 +1003,28 @@ public abstract class DelaneySymbol implements Comparable {
             final int d = dim();
             final int op[][] = new int[d + 1][2 * n + 1];
             final int v[][] = new int[d][2 * n + 1];
-            final DSymbol ds = (DSymbol) this.flat();
-            final Map ori = ds.partialOrientation();
+            final DelaneySymbol<Integer> ds = this.flat();
+            final Map<Integer, Integer> ori = ds.partialOrientation();
 
             for (int i = 0; i <= d; ++i) {
-                for (int k = 1; k <= n; ++k) {
-                    final Object D = new Integer(k);
+                for (int D = 1; D <= n; ++D) {
                     if (!ds.definesOp(i, D)) {
                         continue;
                     }
-                    final Object Di = ds.op(i, D);
-                    final int ki = ((Integer) Di).intValue();
+                    final int Di = ds.op(i, D);
                     if (ori.get(D).equals(ori.get(Di))) {
-                        op[i][k] = ki + n;
-                        op[i][ki] = k + n;
-                        op[i][k + n] = ki;
-                        op[i][ki + n] = k;
+                        op[i][D] = Di + n;
+                        op[i][Di] = D + n;
+                        op[i][D + n] = Di;
+                        op[i][Di + n] = D;
                     } else {
-                        op[i][k] = ki;
-                        op[i][ki] = k;
-                        op[i][k + n] = ki + n;
-                        op[i][ki + n] = k + n;
+                        op[i][D] = Di;
+                        op[i][Di] = D;
+                        op[i][D + n] = Di + n;
+                        op[i][Di + n] = D + n;
                     }
                     if (i < d) {
-                        v[i][k] = v[i][k + n] = ds.v(i, i+1, D);
+                        v[i][D] = v[i][D + n] = ds.v(i, i+1, D);
                     }
                 }
             }

@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Iterators;
 
 
@@ -27,7 +28,7 @@ import org.gavrog.box.collections.Iterators;
  * @author Olaf Delgado
  * @version $Id: DSymbol.java,v 1.9 2008/01/21 03:53:37 odf Exp $
  */
-public class DSymbol extends DelaneySymbol implements Cloneable {
+public class DSymbol extends DelaneySymbol<Integer> implements Cloneable {
     
     private int dim;
     private int size;
@@ -417,7 +418,7 @@ public class DSymbol extends DelaneySymbol implements Cloneable {
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#elements()
      */
-    public Iterator elements() {
+    public IteratorAdapter elements() {
         return Iterators.range(1, size() + 1);
     }
 
@@ -436,7 +437,7 @@ public class DSymbol extends DelaneySymbol implements Cloneable {
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#indices()
      */
-    public Iterator indices() {
+    public IteratorAdapter indices() {
         return Iterators.range(0, dim() + 1);
     }
 

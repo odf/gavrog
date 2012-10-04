@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
 
+import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Iterators;
 
 
@@ -28,7 +29,7 @@ import org.gavrog.box.collections.Iterators;
  * @author Olaf Delgado
  * @version $Id: Subsymbol.java,v 1.4 2007/04/22 06:31:43 odf Exp $
  */
-public class Subsymbol extends DelaneySymbol {
+public class Subsymbol<T> extends DelaneySymbol<T> {
 	private DelaneySymbol ds;
 	private TreeSet indices;
 	private TreeSet elements;
@@ -56,7 +57,7 @@ public class Subsymbol extends DelaneySymbol {
 		return this.size;
 	}
 
-	public Iterator elements() {
+	public IteratorAdapter<T> elements() {
 		return elements.iterator();
 	}
 
@@ -64,7 +65,7 @@ public class Subsymbol extends DelaneySymbol {
 		return elements.contains(D);
 	}
 
-	public Iterator indices() {
+	public IteratorAdapter<Integer> indices() {
 		return indices.iterator();
 	}
 

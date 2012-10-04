@@ -43,13 +43,13 @@ import org.gavrog.box.collections.Partition;
  * @author Olaf Delgado
  * @version $Id: TypedPartition.java,v 1.2 2005/07/18 23:32:57 odf Exp $
  */
-public class TypedPartition {
-	private DelaneySymbol ds;
+public class TypedPartition<T> {
+	private DelaneySymbol<T> ds;
 	private List indices;
-	private Partition P = new Partition();
+	private Partition<T> P = new Partition<T>();
 	private HashMap M = new HashMap();
 	
-	public TypedPartition(DelaneySymbol ds) {
+	public TypedPartition(DelaneySymbol<T> ds) {
 		this.ds = ds;
 		this.indices = new IndexList(ds);
 	}
@@ -65,7 +65,7 @@ public class TypedPartition {
 		return (int[]) M.get(D);
 	}
 	
-	private int[] type(Object D) {
+	private int[] type(T D) {
 		int result[] = preliminaryType(D);
 		
 		for (int k = 0; k < ds.dim(); ++k) {
@@ -85,7 +85,7 @@ public class TypedPartition {
 		return result;
 	}
 	
-	public boolean haveEqualTypes(Object D, Object E) {
+	public boolean haveEqualTypes(T D, T E) {
 		int typeD[] = type(D);
 		int typeE[] = type(E);
 		
@@ -97,7 +97,7 @@ public class TypedPartition {
 		return true;
 	}
 	
-	public boolean unite(Object D, Object E) {
+	public boolean unite(T D, T E) {
 		D = P.find(D);
 		E = P.find(E);
 
@@ -106,8 +106,8 @@ public class TypedPartition {
 		} else if (! haveEqualTypes(D, E)) {
 			return false;
 		} else {
-			Partition newP = (Partition) P.clone();
-			LinkedList stack = new LinkedList();
+			Partition<T> newP = (Partition<T>) P.clone();
+			LinkedList<T> stack = new LinkedList<T>();
 			newP.unite(D, E);
 			stack.addLast(D);
 			stack.addLast(E);
@@ -119,8 +119,8 @@ public class TypedPartition {
 				Iterator idcs = ds.indices();
 				while (idcs.hasNext()) {
 					int i = ((Integer) idcs.next()).intValue();
-					Object Di = newP.find(ds.op(i, D));
-					Object Ei = newP.find(ds.op(i, E));
+					T Di = newP.find(ds.op(i, D));
+					T Ei = newP.find(ds.op(i, E));
 					if (Di == Ei) {
 						continue;
 					} else if (! haveEqualTypes(Di, Ei)) {
@@ -139,10 +139,10 @@ public class TypedPartition {
 	}
 	
 	public void uniteAll() {
-		Iterator elms = ds.elements();
-		Object D0 = null;
+		Iterator<T> elms = ds.elements();
+		T D0 = null;
 		while (elms.hasNext()) {
-			Object D = elms.next();
+			T D = elms.next();
 			if (D0 == null) {
 				D0 = D;
 			} else {
@@ -151,11 +151,11 @@ public class TypedPartition {
 		}
 	}
 	
-	public Object find(Object D) {
+	public T find(T D) {
 		return P.find(D);
 	}
 	
-	public boolean areEquivalent(Object D, Object E) {
+	public boolean areEquivalent(T D, T E) {
 		return P.areEquivalent(D, E);
 	}
 	
