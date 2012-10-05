@@ -1,5 +1,5 @@
 /*
-   Copyright 2006 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -43,8 +43,6 @@ import org.gavrog.joss.dsyms.basic.Subsymbol;
 import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
- * @author Olaf Delgado
- * @version $Id: FaceTransitive.java,v 1.43 2007/04/26 20:21:58 odf Exp $
  */
 public class FaceTransitive extends IteratorAdapter {
 	final static private boolean TEST = false;
@@ -67,7 +65,7 @@ public class FaceTransitive extends IteratorAdapter {
         	this.minFace = minFace;
             if (size % 2 == 1) {
                 final DynamicDSymbol ds = new DynamicDSymbol(1);
-                final List elms = ds.grow(size);
+                final List<Integer> elms = ds.grow(size);
                 for (int i = 1; i < size; i += 2) {
                     ds.redefineOp(0, elms.get(i-1), elms.get(i));
                     ds.redefineOp(1, elms.get(i), elms.get(i+1));
@@ -78,7 +76,7 @@ public class FaceTransitive extends IteratorAdapter {
             } else {
                 final List tmp = new LinkedList();
                 final DynamicDSymbol ds = new DynamicDSymbol(1);
-                final List elms = ds.grow(size);
+                final List<Integer> elms = ds.grow(size);
                 for (int i = 1; i < size; i += 2) {
                     ds.redefineOp(0, elms.get(i-1), elms.get(i));
                     ds.redefineOp(1, elms.get(i), elms.get((i+1) % size));
@@ -108,7 +106,7 @@ public class FaceTransitive extends IteratorAdapter {
             while (true) {
                 if (this.currentSet != null && this.v <= 4) {
                     final DynamicDSymbol ds = this.currentSet;
-                    final Object D = ds.elements().next();
+                    final int D = ds.elements().next();
                     ds.redefineV(0, 1, D, this.v);
                     ++this.v;
                     if (ds.m(0, 1, D) < this.minFace) {
@@ -134,7 +132,7 @@ public class FaceTransitive extends IteratorAdapter {
     private class Augmenter extends IteratorAdapter {
         final private DSymbol base;
         final private int targetSize;
-        final Object orbRep[];
+        final int orbRep[];
         final int orbSize[];
         final int orbAdded[];
         int currentSize;
@@ -152,10 +150,8 @@ public class FaceTransitive extends IteratorAdapter {
             this.currentSize = base.size();
             
             // --- collect (0,2)-orbits
-            final List orbits = new ArrayList();
-            for (final Iterator reps = base.orbitReps(idcsEdge2d); reps
-					.hasNext();) {
-				final Object D = reps.next();
+            final List<List<Integer>> orbits = new ArrayList<List<Integer>>();
+            for (final int D: base.orbitReps(idcsEdge2d)) {
 				final List orbit = Iterators.asList(base.orbit(idcsEdge2d, D));
                 orbits.add(orbit);
             }
@@ -171,13 +167,13 @@ public class FaceTransitive extends IteratorAdapter {
             
             // --- create arrays
             final int n = orbits.size();
-            this.orbRep = new Object[n];
+            this.orbRep = new int[n];
             this.orbSize = new int[n];
             this.orbAdded = new int[n];
             
             // --- fill arrays
             for (int i = 0; i < n; ++i) {
-                final List orb = (List) orbits.get(i);
+                final List<Integer> orb = orbits.get(i);
                 this.orbRep[i] = orb.get(0);
                 this.orbSize[i] = orb.size();
                 this.orbAdded[i] = 0;
@@ -234,7 +230,7 @@ public class FaceTransitive extends IteratorAdapter {
                 }
 
                 // --- holds orbit and added elements
-                final Object D[] = new Object[size + added];
+                final int D[] = new int[size + added];
                 // --- encodes original 0 operation
                 final int op0[];
                 // --- encodes original 2 operation
@@ -275,13 +271,13 @@ public class FaceTransitive extends IteratorAdapter {
                 // --- remember v01 values and remove 0 edges
                 final int v[] = new int[size];
                 for (int k = 0; k < size; ++k) {
-                    final Object E = D[k];
+                    final int E = D[k];
                     v[k] = ds.v(0, 1, E);
                     ds.undefineOp(0, E);
                 }
                 
                 // --- add new elements for augmentation to array
-                final List newElements = ds.grow(added);
+                final List<Integer> newElements = ds.grow(added);
                 for (int k = 0; k < added; ++k) {
                     D[size + k] = newElements.get(k);
                 }
@@ -298,10 +294,10 @@ public class FaceTransitive extends IteratorAdapter {
                 int idx = 0;
                 for (int k = 0; k <= n; ++k) {
                     for (int m = 0; m < size; ++m)  {
-                        final Object E = D[k*size + m];
-                        final Object E2 = D[k*size + op2[m]];
+                        final int E = D[k*size + m];
+                        final int E2 = D[k*size + op2[m]];
                         ds.redefineOp(2, E, E2);
-                        final Object Ei;
+                        final int Ei;
                         if (k < n) {
                             Ei = D[(k+1)*size + m];
                         } else {
@@ -314,7 +310,7 @@ public class FaceTransitive extends IteratorAdapter {
 
                 // --- set more v values
                 for (int k = size; k < D.length; ++k) {
-                    final Object E = D[k];
+                    final int E = D[k];
                     ds.redefineV(1, 2, E, 2 / ds.r(1, 2, E));
                 }
             }
@@ -528,8 +524,8 @@ public class FaceTransitive extends IteratorAdapter {
                     if (!ds.isSpherical2D()) {
                         continue;
                     }
-                    for (final Iterator elms = ds.elements(); elms.hasNext();) {
-                        if (ds.m(1, 2, elms.next()) > 2) {
+                    for (final int D: ds.elements()) {
+                        if (ds.m(1, 2, D) > 2) {
                             time4BaseSingleFaced.stop();
                             ++countBaseSingleFaced;
                             return ds;
@@ -560,9 +556,8 @@ public class FaceTransitive extends IteratorAdapter {
             time4BaseDoubleFaced.start();
         	this.minVert = minVert;
         	boolean good = false;
-        	for (final Iterator reps = ds.orbitReps(idcsFace2d); reps
-					.hasNext();) {
-        		if (ds.m(0, 1, reps.next()) <= 5) {
+        	for (final int D: ds.orbitReps(idcsFace2d)) {
+        		if (ds.m(0, 1, D) <= 5) {
         			good = true;
         		}
 			}
@@ -585,8 +580,8 @@ public class FaceTransitive extends IteratorAdapter {
                     if (!ds.isSpherical2D()) {
                         continue;
                     }
-                    for (final Iterator elms = ds.elements(); elms.hasNext();) {
-                        if (ds.m(1, 2, elms.next()) > 2) {
+                    for (final int D: ds.elements()) {
+                        if (ds.m(1, 2, D) > 2) {
                             time4BaseDoubleFaced.stop();
                             ++countBaseDoubleFaced;
                             return ds;
@@ -630,8 +625,8 @@ public class FaceTransitive extends IteratorAdapter {
                     if (!ds.isSpherical2D()) {
                         continue;
                     }
-                    for (final Iterator elms = ds.elements(); elms.hasNext();) {
-                        if (ds.m(1, 2, elms.next()) > 2) {
+                    for (final int D: ds.elements()) {
+                        if (ds.m(1, 2, D) > 2) {
                             return ds;
                         }
                     }
@@ -647,27 +642,25 @@ public class FaceTransitive extends IteratorAdapter {
 
     private class Glue extends IteratorAdapter {
     	final DSymbol ds;
-		final Object D0;
-		final Iterator targets;
+		final int D0;
+		final Iterator<Integer> targets;
 		final Set seen = new HashSet();
 
 		public Glue(final DSymbol ds) {
 			this.ds = ds;
-			final Iterator reps = ds.orbitReps(idcsFace2d);
-			final Object firstRep = reps.next();
-			final Object targetRep = (reps.hasNext() ? reps.next() : firstRep);
+			final Iterator<Integer> reps = ds.orbitReps(idcsFace2d);
+			final int firstRep = reps.next();
+			final int targetRep = (reps.hasNext() ? reps.next() : firstRep);
 			if (ds.orbitIsLoopless(idcsFace2d, firstRep)) {
 				this.D0 = firstRep;
 				this.targets = ds.orbit(idcsFace2d, targetRep);
 			} else {
-				final List loops0 = new ArrayList();
-				final List loops1 = new ArrayList();
-				for (final Iterator orb = ds.orbit(idcsFace2d, firstRep); orb
-						.hasNext();) {
-					final Object D = orb.next();
-					if (D.equals(ds.op(0, D))) {
+				final List<Integer> loops0 = new ArrayList<Integer>();
+				final List<Integer> loops1 = new ArrayList<Integer>();
+				for (final int D: ds.orbit(idcsFace2d, firstRep)) {
+					if (D == ds.op(0, D)) {
 						loops0.add(D);
-					} else if (D.equals(ds.op(1, D))) {
+					} else if (D == ds.op(1, D)) {
 						loops1.add(D);
 					}
 				}
@@ -679,12 +672,10 @@ public class FaceTransitive extends IteratorAdapter {
 				}
 				loops0.clear();
 				loops1.clear();
-				for (final Iterator orb = ds.orbit(idcsFace2d, targetRep); orb
-						.hasNext();) {
-					final Object D = orb.next();
-					if (D.equals(ds.op(0, D))) {
+				for (final int D: ds.orbit(idcsFace2d, targetRep)) {
+					if (D == ds.op(0, D)) {
 						loops0.add(D);
-					} else if (D.equals(ds.op(1, D))) {
+					} else if (D == ds.op(1, D)) {
 						loops1.add(D);
 					}
 				}
@@ -704,21 +695,21 @@ public class FaceTransitive extends IteratorAdapter {
 		protected Object findNext() throws NoSuchElementException {
 			while (true) {
 				if (this.targets.hasNext()) {
-					final Object E0 = this.targets.next();
+					final int E0 = this.targets.next();
 					final DynamicDSymbol tmp = new DynamicDSymbol(3);
 					tmp.append(this.ds);
-					Object D = D0;
-					Object E = E0;
+					int D = D0;
+					int E = E0;
 					do {
 						for (int k = 0; k <= 1; ++k) {
 							tmp.redefineOp(3, D, E);
 							D = tmp.op(k, D);
 							E = tmp.op(k, E);
 						}
-					} while (!D.equals(D0));
+					} while (D != D0);
 					boolean bad = false;
-					for (final Iterator elms = tmp.elements(); elms.hasNext();) {
-						if (!tmp.definesOp(3, elms.next())) {
+					for (final int elm: tmp.elements()) {
+						if (!tmp.definesOp(3, elm)) {
 							bad = true;
 							break;
 						}
@@ -935,9 +926,8 @@ public class FaceTransitive extends IteratorAdapter {
 
     final static DSymbol baseTile(final DSymbol tile) {
         final DynamicDSymbol ds = new DynamicDSymbol(tile);
-        final List reps = Iterators.asList(ds.orbitReps(idcsVert2d));
-        for (final Iterator iter = reps.iterator(); iter.hasNext();) {
-            final Object D = iter.next();
+        final List<Integer> reps = Iterators.asList(ds.orbitReps(idcsVert2d));
+        for (final int D: reps) {
             if (ds.m(1, 2, D) == 2) {
                 ds.redefineV(1, 2, D, 1);
                 ds.collapse(Iterators.asList(ds.orbit(idcsVert2d, D)), 1);
@@ -1067,20 +1057,17 @@ public class FaceTransitive extends IteratorAdapter {
      */
     private static int minVert(final DSymbol tile) {
         int min = Integer.MAX_VALUE;
-        for (final Iterator iter = tile.orbitReps(idcsVert2d); iter
-                .hasNext();) {
-            min = Math.min(min, tile.m(1, 2, iter.next()));
+        for (final int D: tile.orbitReps(idcsVert2d)) {
+            min = Math.min(min, tile.m(1, 2, D));
         }
         return min;
     }
     
 	private boolean hasTrivialVertices(final DSymbol ds) {
-        for (final Iterator reps = ds.orbitReps(idcsVert3d); reps
-                .hasNext();) {
+        for (final int D: ds.orbitReps(idcsVert3d)) {
             boolean bad = true;
-            for (final Iterator elms = ds.orbit(idcsVert3d, reps.next()); elms
-                    .hasNext();) {
-                if (ds.m(1, 2, elms.next()) > 2) {
+            for (final int E: ds.orbit(idcsVert3d, D)) {
+                if (ds.m(1, 2, E) > 2) {
                     bad = false;
                     break;
                 }

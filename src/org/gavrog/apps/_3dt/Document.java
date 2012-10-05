@@ -1,5 +1,5 @@
 /**
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -71,8 +71,6 @@ import org.gavrog.joss.tilings.Tiling;
 import de.jreality.scene.Transformation;
 
 /**
- * @author Olaf Delgado
- * @version $Id: Document.java,v 1.44 2008/05/29 06:22:34 odf Exp $
  */
 public class Document extends DisplayList {
     // --- the cache keys
@@ -139,13 +137,13 @@ public class Document extends DisplayList {
 		final int s = ds.size();
 		
 		final DynamicDSymbol tmp = new DynamicDSymbol(3);
-		final List elms_new = tmp.grow(s * 3);
-		final List elms_old = Iterators.asList(ds.elements());
+		final List<Integer> elms_new = tmp.grow(s * 3);
+		final List<Integer> elms_old = Iterators.asList(ds.elements());
 		
 		for (int i = 0; i < ds.size(); ++i) {
-			final Object Da = elms_new.get(i);
-			final Object Db = elms_new.get(i + s);
-			final Object Dc = elms_new.get(i + s + s);
+			final int Da = elms_new.get(i);
+			final int Db = elms_new.get(i + s);
+			final int Dc = elms_new.get(i + s + s);
 			
 			final Object D  = elms_old.get(i);
 			final int i0 = elms_old.indexOf(ds.op(0, D));
@@ -169,9 +167,9 @@ public class Document extends DisplayList {
 		}
 		
 		for (int i = 0; i < ds.size(); ++i) {
-			final Object Da = elms_new.get(i);
-			final Object Db = elms_new.get(i + s);
-			final Object Dc = elms_new.get(i + s + s);
+			final int Da = elms_new.get(i);
+			final int Db = elms_new.get(i + s);
+			final int Dc = elms_new.get(i + s + s);
 			
 			final Object D  = elms_old.get(i);
 			tmp.redefineV(0, 1, Da, ds.v(0, 1, D));
@@ -227,11 +225,11 @@ public class Document extends DisplayList {
 		}
 		
 		// -- initialize the Delaney symbol; map oriented net edges to chambers
-		final Map<IEdge, Object> edge2chamber = new HashMap<IEdge, Object>();
+		final Map<IEdge, Integer> edge2chamber = new HashMap<IEdge, Integer>();
 		final DynamicDSymbol ds = new DynamicDSymbol(2);
 		for (final Iterator iter = net.edges(); iter.hasNext();) {
 			final IEdge e = ((IEdge) iter.next()).oriented();
-			final List elms = ds.grow(4);
+			final List<Integer> elms = ds.grow(4);
 			edge2chamber.put(e, elms.get(0));
 			edge2chamber.put(e.reverse(), elms.get(2));
 			ds.redefineOp(2, elms.get(0), elms.get(1));
@@ -269,8 +267,7 @@ public class Document extends DisplayList {
 		}
 		
 		// -- set branching to one everywhere
-		for (final Iterator iter = ds.elements(); iter.hasNext();) {
-			final Object D = iter.next();
+		for (final int D: ds.elements()) {
 			ds.redefineV(0, 1, D, 1);
 			ds.redefineV(1, 2, D, 1);
 		}
