@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -49,9 +49,6 @@ import buoy.event.EventProcessor;
  * 
  * For each isomorphism class of extended symbols, only one representative is
  * produced. The order or naming of elements is not preserved.
- * 
- * @author Olaf Delgado
- * @version $Id: CombineTiles.java,v 1.8 2007/04/26 20:21:58 odf Exp $
  */
 public class CombineTiles extends ResumableGenerator<DSymbol> {
     // TODO test local euclidicity where possible
@@ -97,14 +94,14 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
      * d-neighbor values. These become the entries of the trial stack.
      */
     protected class Move {
-        final public Object element;
-        final public Object neighbor;
+        final public int element;
+        final public int neighbor;
         final public int newType;
         final public int newForm;
         final public boolean isChoice;
         final public int choiceNr;
 
-        public Move(final Object element, final Object neighbor, int newType,
+        public Move(final int element, final int neighbor, int newType,
                 int newForm, final boolean isChoice, int choiceNr) {
             this.element = element;
             this.neighbor = neighbor;
@@ -301,8 +298,8 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
 							replaceAll("\\n","\n#  "));
 				}
                 if (isCanonical()) {
-                	final Object D = nextFreeElement(choice.element);
-                	if (D == null) {
+                	final int D = nextFreeElement(choice.element);
+                	if (D == 0) {
                 		if (LOGGING) {
                 			System.out.println("#  no more moves found");
                 		}
@@ -393,10 +390,8 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
                 this.current.undefineOp(this.dim, last.element);
             }
             if (last.newType >= 0 && (Integer) last.neighbor > 0) {
-                final Iterator disposable = this.current.orbit(idcs,
-                        last.neighbor);
-                while (disposable.hasNext()) {
-                    this.current.removeElement(disposable.next());
+                for (final int D: this.current.orbit(idcs, last.neighbor)) {
+                    this.current.removeElement(D);
                 }
                 this.current.renumber();
                 this.unused[last.newType] += 1;
@@ -473,8 +468,8 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
             Move move = queue.removeFirst();
             final int type = move.newType;
             final int form = move.newForm;
-            final Object D = move.element;
-            final Object E = move.neighbor;
+            final int D = move.element;
+            final int E = move.neighbor;
             final int d = this.dim;
 
             // --- see if the move would contradict the current state
@@ -521,8 +516,8 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
 
             // --- add default deductions
             for (int i = 0; i <= d - 2; ++i) {
-                final Object Di = ds.op(i, D);
-                final Object Ei = ds.op(i, E);
+                final int Di = ds.op(i, D);
+                final int Ei = ds.op(i, E);
                 if (LOGGING) {
                     System.out.println(
                     		"#    found deduction " + Di + "<-->" + Ei);
@@ -567,11 +562,11 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
      * @param element to start the search at.
      * @return the next unconnected element.
      */
-    private Object nextFreeElement(final Object element) {
-        int D = (Integer) element;
+    private int nextFreeElement(final int element) {
+    	int D = element;
         do {
             if (++D > this.size) {
-                return null;
+                return 0;
             }
         } while (this.current.definesOp(this.dim, D));
 

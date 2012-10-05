@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -51,9 +51,6 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
  * 
  * For each isomorphism class of resulting symbols, only one respresentative is
  * produced. The order or naming of elements is not preserved.
- * 
- * @author Olaf Delgado
- * @version $Id: DefineBranching3d.java,v 1.4 2007/04/26 20:21:58 odf Exp $
  */
 public class DefineBranching3d extends IteratorAdapter {
     // --- set to true to enable logging
@@ -179,8 +176,7 @@ public class DefineBranching3d extends IteratorAdapter {
         for (int i = 0; i < this.dim; ++i) {
             final int j = i+1;
             final List idcs = new IndexList(i, j);
-            for (final Iterator reps = this.current.orbitReps(idcs); reps.hasNext();) {
-                final Object D = reps.next();
+            for (final int D: this.current.orbitReps(idcs)) {
                 if (this.current.definesV(i, j, D)) {
                     final boolean success = performMove(new Move(i, ((Integer) D)
                             .intValue(), new Integer(this.current.v(i, j, D)), true));
@@ -425,7 +421,7 @@ public class DefineBranching3d extends IteratorAdapter {
             // --- get some info on the next move in the queue
             final Move move = (Move) queue.removeFirst();
             final int i = move.index;
-            final Object D = new Integer(move.element);
+            final int D = move.element;
 
             // --- see if the move would contradict the current state
             if (ds.definesV(i, i+1, D)) {

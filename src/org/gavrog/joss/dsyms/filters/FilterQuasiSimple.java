@@ -126,9 +126,8 @@ public class FilterQuasiSimple {
 				return false;
 			}
 			final DSymbol cov = Covers.finiteUniversalCover(sub);
-			for (final Iterator rFace = cov.orbitReps(iFace); rFace.hasNext();) {
-				final Object E0 = rFace.next();
-				Object E = E0;
+			for (final int E0: cov.orbitReps(iFace)) {
+				int E = E0;
 				int d = 0;
 				do {
 					final int m = cov.m(1, 2, E);
@@ -139,7 +138,7 @@ public class FilterQuasiSimple {
 							|| (!extended && cov.m(1, 2, E) == 2)) {
 						return false;
 					}
-				} while (!E0.equals(E));
+				} while (E0 != E);
 				if (d != 3) {
 					return false;
 				}

@@ -1,5 +1,5 @@
 /*
-   Copyright 2006 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 
 /**
- * @author Olaf Delgado
  */
 public class Azulenoids extends IteratorAdapter {
 
@@ -119,10 +118,12 @@ public class Azulenoids extends IteratorAdapter {
 			final DynamicDSymbol tmp = new DynamicDSymbol(template);
 
 			// --- map template chambers to octagon chambers
-			final Map tmp2oct = new HashMap();
-			final Map oct2tmp = new HashMap();
-			final Object E0 = new Integer(1);
-			Object E = E0;
+			final Map<Integer, Integer> tmp2oct =
+					new HashMap<Integer, Integer>();
+			final Map<Integer, Integer> oct2tmp =
+					new HashMap<Integer, Integer>();
+			final int E0 = 1;
+			int E = E0;
 			int k = (3 - p + 16) % 16 + 1;
 			do {
 				tmp2oct.put(E, new Integer(k));
@@ -136,17 +137,15 @@ public class Azulenoids extends IteratorAdapter {
 					E = tmp.op(1, tmp.op(2, E));
 				}
 				k = k % 16 + 1;
-			} while (!E0.equals(E));
+			} while (E0 != E);
 
 			// --- complete the template based on the octagon tiling
-			for (final Iterator iter = tmp.elements(); iter.hasNext();) {
-				final Object D = iter.next();
+			for (final int D: tmp.elements()) {
 				if (!tmp.definesOp(2, D)) {
 					tmp.redefineOp(2, D, oct2tmp.get(this.ds.op(2, tmp2oct.get(D))));
 				}
 			}
-			for (final Iterator iter = tmp2oct.keySet().iterator(); iter.hasNext();) {
-				final Object D = iter.next();
+			for (final int D: tmp2oct.keySet()) {
 				if (!tmp.definesV(1, 2, D)) {
 					tmp.redefineV(1, 2, D, this.ds.v(1, 2, tmp2oct.get(D)));
 				}

@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,8 +25,6 @@ import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.generators.InputIterator;
 
 /**
- * @author Olaf Delgado
- * @version $Id: FilterFaceDegrees.java,v 1.1 2008/03/15 05:59:02 odf Exp $
  */
 public class FilterFaceDegrees {
     public static void main(String[] args) {
@@ -41,8 +39,7 @@ public class FilterFaceDegrees {
 			final DSymbol ds = (DSymbol) iter.next();
 			boolean good = true;
 			++inCount;
-			for (Iterator reps = ds.orbitReps(idcs); reps.hasNext();) {
-				final Object D = reps.next();
+			for (final int D: ds.orbitReps(idcs)) {
 				final int m = ds.m(0, 1, D);
 				if (m < min || m > max) {
 					good = false;

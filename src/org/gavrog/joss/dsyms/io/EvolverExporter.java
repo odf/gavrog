@@ -1,5 +1,5 @@
 /**
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -50,7 +50,6 @@ import org.gavrog.joss.tilings.Tiling;
 
 /**
  * @author Olaf Delgado
- * @version $Id: EvolverExporter.java,v 1.8 2008/05/21 07:57:24 odf Exp $
  */
 public class EvolverExporter {
     static {
@@ -256,11 +255,11 @@ public class EvolverExporter {
 	    outf.write("faces\n");
 	    final DSymbol cover = this.til.getCover();
 	    final Map ch2faceNr = new HashMap();
-	    final Iterator iterF = cover.orbitReps(new IndexList(0, 1, 3));
+	    final Iterator<Integer> iterF = cover.orbitReps(new IndexList(0, 1, 3));
 	    i = 0;
 	    while (iterF.hasNext()) {
-	    	final Object entry = iterF.next();
-	    	final Object D0;
+	    	final int entry = iterF.next();
+	    	final int D0;
 	    	if (chamberVolume(entry) > 1e-3) {
 	    		D0 = entry;
 	    	} else if (chamberVolume(entry) < -1e-3){
@@ -269,7 +268,7 @@ public class EvolverExporter {
 	    		throw new RuntimeException("degenerate chamber found");
 	    	}
 	    	outf.write(++i + " ");
-	    	Object D = D0;
+	    	int D = D0;
 	    	while (true) {
 	    		final IEdge e = this.net.edgeForChamber(D);
 	    		final int k = ((Integer) edgeNumbers.get(e)).intValue();
@@ -284,7 +283,7 @@ public class EvolverExporter {
 	    		ch2faceNr.put(D, new Integer(i));
 	    		ch2faceNr.put(cover.op(3, D), new Integer(-i));
 	    		D = cover.op(1, D);
-	    		if (D0.equals(D)) {
+	    		if (D0 == D) {
 	    			break;
 	    		}
 	    	}

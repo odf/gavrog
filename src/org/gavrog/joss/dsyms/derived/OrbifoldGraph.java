@@ -1,5 +1,5 @@
 /*
-   Copyright 2006 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -36,9 +36,7 @@ import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 
 /**
- * @author Olaf Delgado
- * @version $Id: OrbifoldGraph.java,v 1.18 2007/04/26 20:21:58 odf Exp $
- */
+*/
 public class OrbifoldGraph {
     final private String[] stabilizers;
     final private List edges;
@@ -66,8 +64,7 @@ public class OrbifoldGraph {
         
         // --- process 0-dimensional orbits (chamber faces)
         for (int i = 0; i <= d; ++i) {
-            for (final Iterator elms = ds.elements(); elms.hasNext();) {
-                final Object D = elms.next();
+            for (final int D: ds.elements()) {
                 if (ds.op(i, D).equals(D)) {
                     final Pair orb = new Pair(new IndexList(i), D);
                     orb2type.put(orb, "1*");
@@ -82,16 +79,11 @@ public class OrbifoldGraph {
             final List ili = new IndexList(i);
             for (int j = i+1; j <= d; ++j) {
                 final List ilj = new IndexList(j);
-                final List idcs = new IndexList(i, j);
-                for (final Iterator reps = ds.orbitReps(idcs); reps
-                        .hasNext();) {
-                    final Object D = reps.next();
-                    
+                final List<Integer> idcs = new IndexList(i, j);
+                for (final int D: ds.orbitReps(idcs)) {
                     // --- find the 0-dim orbits of type "*" in this orbit
                     final List cuts = new ArrayList();
-                    for (final Iterator iter = ds.orbit(idcs, D); iter
-                            .hasNext();) {
-                        final Object E = iter.next();
+                    for (final int E: ds.orbit(idcs, D)) {
                         final Pair ci = new Pair(ili, E);
                         final Pair cj = new Pair(ilj, E);
                         if (orb2type.containsKey(ci)) {
@@ -148,11 +140,10 @@ public class OrbifoldGraph {
 
         // --- add 2-dimensional orbits (chamber vertices)
         for (int i = 0; i <= 3; ++i) {
-            final List idcs = new IndexList(ds);
+            final List<Integer> idcs = new IndexList(ds);
             idcs.remove(new Integer(i));
-            for (final Iterator reps = ds.orbitReps(idcs); reps
-                    .hasNext();) {
-                final List sub = Iterators.asList(ds.orbit(idcs, reps.next()));
+            for (final int E: ds.orbitReps(idcs)) {
+                final List<Integer> sub = Iterators.asList(ds.orbit(idcs, E));
                 final List cones = new ArrayList();
                 final List corners = new ArrayList();
                 final List neighbors = new ArrayList();
@@ -164,8 +155,7 @@ public class OrbifoldGraph {
                     final List ilnm = new IndexList(Math.min(n, m), Math.max(n,
                             m));
                     final Set seen = new HashSet();
-                    for (final Iterator elms = sub.iterator(); elms.hasNext();) {
-                        final Object D = elms.next();
+                    for (final int D: sub) {
                         if (!seen.contains(D)) {
                             final Pair orb0 = new Pair(ilnm, D);
                             final Pair orb = (Pair) orb2rep.get(orb0);    
@@ -191,7 +181,7 @@ public class OrbifoldGraph {
                 Collections.reverse(corners);
                 
                 // --- assemble the string specifying the stabilizer type
-                final Object D = sub.get(0);
+                final int D = sub.get(0);
                 
                 final StringBuffer buf = new StringBuffer(20);
                 for (final Iterator iter = cones.iterator(); iter.hasNext();) {

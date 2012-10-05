@@ -62,9 +62,8 @@ public class Patterns {
         }
         final List iFace = new IndexList(0, 1, 3);
         final List iTile = new IndexList(0, 1, 2);
-        for (final Iterator reps = ds.orbitReps(iFace); reps.hasNext();) {
-            final Object D = reps.next();
-            final Object E = ds.op(3, D);
+        for (final int D: ds.orbitReps(iFace)) {
+            final int E = ds.op(3, D);
             if (ds.m(0, 1, ds.op(2, D)) == 4 && ds.m(0, 1, ds.op(2, E)) == 4) {
                 if (isDoubleRing(new Subsymbol(ds, iTile, D), ds.m(0, 1, D))
                         && isDoubleRing(new Subsymbol(ds, iTile, E), ds.m(0, 1, E))) {
@@ -89,8 +88,7 @@ public class Patterns {
         }
         final List iHalfFace = new IndexList(0, 1);
         final List iTile = new IndexList(0, 1, 2);
-        for (final Iterator reps = ds.orbitReps(iHalfFace); reps.hasNext();) {
-            final Object D = reps.next();
+        for (final int D: ds.orbitReps(iHalfFace)) {
             if (ds.m(0, 1, ds.op(2, D)) != 4) {
                 continue;
             }
@@ -100,9 +98,9 @@ public class Patterns {
             int count = 0;
             final int v = ds.v(0, 1, D);
             final boolean oriented = ds.orbitIsOriented(iHalfFace, D);
-            Object E = D;
+            int E = D;
             do {
-                final Object F = ds.op(2, ds.op(3, ds.op(2, E)));
+                final int F = ds.op(2, ds.op(3, ds.op(2, E)));
                 if (isDoubleRing(new Subsymbol(ds, iTile, F), ds.m(0, 1, F))) {
                     if (!oriented && !ds.op(0, E).equals(E)) {
                         count += 2 * v;
@@ -114,7 +112,7 @@ public class Patterns {
                     }
                 }
                 E = ds.op(1, ds.op(0, E));
-            } while (!E.equals(D));
+            } while (E != D);
         }
         return false;
     }

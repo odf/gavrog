@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,31 +20,35 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
 
+import org.gavrog.box.collections.FilteredIterator;
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Iterators;
 
 
 /**
  * Represents subsymbols of Delaney symbols.
- * @author Olaf Delgado
- * @version $Id: Subsymbol.java,v 1.4 2007/04/22 06:31:43 odf Exp $
  */
 public class Subsymbol<T> extends DelaneySymbol<T> {
-	private DelaneySymbol ds;
-	private TreeSet indices;
-	private TreeSet elements;
+	private DelaneySymbol<T> ds;
+	private TreeSet<Integer> indices;
+	private TreeSet<T> elements;
 	private int dim;
 	private int size;
 	
-	public Subsymbol(DelaneySymbol ds, List indices, Object seed) {
+	public Subsymbol(
+			final DelaneySymbol<T> ds,
+			final List<Integer> indices,
+			final T seed)
+	{
 		this.ds = ds;
-		this.indices = new TreeSet();
+		this.indices = new TreeSet<Integer>();
 		this.indices.addAll(indices);
 		this.dim = this.indices.size() - 1;
-		this.elements = new TreeSet();
-		Iterator elms = new Traversal(ds, indices, Iterators.singleton(seed));
-		while (elms.hasNext()) {
-			this.elements.add(((DSPair) elms.next()).getElement());
+		this.elements = new TreeSet<T>();
+		for (final DSPair<T> p:
+			new Traversal<T>(ds, indices, Iterators.singleton(seed)))
+		{
+			this.elements.add(p.getElement());
 		}
 		this.size = this.elements.size();
 	}
@@ -58,7 +62,10 @@ public class Subsymbol<T> extends DelaneySymbol<T> {
 	}
 
 	public IteratorAdapter<T> elements() {
-		return elements.iterator();
+		return new FilteredIterator<T, T>(elements.iterator()) {
+			public T filter(final T item) {
+				return item;
+			}};
 	}
 
 	public boolean hasElement(Object D) {
@@ -66,18 +73,21 @@ public class Subsymbol<T> extends DelaneySymbol<T> {
 	}
 
 	public IteratorAdapter<Integer> indices() {
-		return indices.iterator();
+		return new FilteredIterator<Integer, Integer>(indices.iterator()) {
+			public Integer filter(final Integer item) {
+				return item;
+			}};
 	}
 
-	public boolean hasIndex(int i) {
+	public boolean hasIndex(final int i) {
 		return indices.contains(new Integer(i));
 	}
 
-	public boolean definesOp(int i, Object D) {
+	public boolean definesOp(final int i, final T D) {
 		return ds.definesOp(i, D);
 	}
 	
-	public Object op(int i, Object D) {
+	public T op(final int i, final T D) {
         if (!hasElement(D)) {
             throw new IllegalArgumentException("not an element: " + D);
         }
@@ -87,11 +97,11 @@ public class Subsymbol<T> extends DelaneySymbol<T> {
         return ds.op(i, D);
 	}
 
-	public boolean definesV(int i, int j, Object D) {
+	public boolean definesV(final int i, final int j, final T D) {
 		return ds.definesV(i, j, D);
 	}
 	
-	public int v(int i, int j, Object D) {
+	public int v(final int i, final int j, final T D) {
         if (!hasElement(D)) {
             throw new IllegalArgumentException("not an element: " + D);
         }
@@ -109,7 +119,7 @@ public class Subsymbol<T> extends DelaneySymbol<T> {
 	    buf.append("Subsymbol(");
 	    buf.append(ds);
 	    buf.append(", (");
-	    Iterator iter = indices();
+	    Iterator<Integer> iter = indices();
 	    boolean first = true;
 	    while (iter.hasNext()) {
 	        if (first) {

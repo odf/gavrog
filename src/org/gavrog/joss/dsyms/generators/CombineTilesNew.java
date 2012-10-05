@@ -66,12 +66,12 @@ public class CombineTilesNew extends BranchAndCut<DSymbol> {
      * d-neighbor values. These become the entries of the trial stack.
      */
     protected class CMove implements Move{
-        final public Object element;
-        final public Object neighbor;
+        final public int element;
+        final public int neighbor;
         final public int newType;
         final public int newForm;
 
-        public CMove(final Object element, final Object neighbor, int newType,
+        public CMove(final int element, final int neighbor, int newType,
 				int newForm) {
             this.element = element;
             this.neighbor = neighbor;
@@ -380,8 +380,8 @@ public class CombineTilesNew extends BranchAndCut<DSymbol> {
 	 */
 	@Override
 	protected Status checkMove(final Move move) {
-        final Object D = ((CMove) move).element;
-        final Object E = ((CMove) move).neighbor;
+        final int D = ((CMove) move).element;
+        final int E = ((CMove) move).neighbor;
         final int d = this.dim;
 
         if (current.definesOp(d, D) || current.definesOp(d, E)) {
@@ -401,8 +401,8 @@ public class CombineTilesNew extends BranchAndCut<DSymbol> {
 	@Override
 	protected List<Move> deductions(final Move move) {
 		final List<Move> res = new LinkedList<Move>();
-        final Object D = ((CMove) move).element;
-        final Object E = ((CMove) move).neighbor;
+        final int D = ((CMove) move).element;
+        final int E = ((CMove) move).neighbor;
 		final List<Move> extra = getExtraDeductions(this.current, move);
 		if (extra != null) {
 			res.addAll(extra);
@@ -410,8 +410,8 @@ public class CombineTilesNew extends BranchAndCut<DSymbol> {
 			//TODO in the old version, a null result signals a contradiction
 		}
         for (int i = 0; i <= this.dim - 2; ++i) {
-            final Object Di = this.current.op(i, D);
-            final Object Ei = this.current.op(i, E);
+            final int Di = this.current.op(i, D);
+            final int Ei = this.current.op(i, E);
             res.add(new CMove(Di, Ei, -1, -1));
         }
 		return res;
@@ -422,8 +422,7 @@ public class CombineTilesNew extends BranchAndCut<DSymbol> {
 	 */
 	@Override
 	protected boolean isComplete() {
-		for (final Iterator iter = this.current.elements(); iter.hasNext();) {
-			final Object D = iter.next();
+		for (final int D: this.current.elements()) {
 			if (!this.current.definesOp(this.dim, D)) {
 				return false;
 			}

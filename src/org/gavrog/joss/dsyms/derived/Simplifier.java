@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package org.gavrog.joss.dsyms.derived;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,11 +44,8 @@ import org.gavrog.joss.dsyms.basic.Traversal;
  * symbols with trivial branching. Handle reductions are currently not reported,
  * but can be detected by comparing the abelian invariants of the fundamental
  * groups.
- * 
- * @author Olaf Delgado
- * @version $Id: Simplifyer.java,v 1.4 2007/04/26 20:21:58 odf Exp $
  */
-public class Simplifyer {
+public class Simplifier {
     private static final int LOGGING_LEVEL = 0;
     
     // --- The input symbol.
@@ -62,7 +60,7 @@ public class Simplifyer {
      * 
      * @param symbol the input symbol.
      */
-    public Simplifyer(DelaneySymbol symbol) {
+    public Simplifier(DelaneySymbol symbol) {
         if (LOGGING_LEVEL > 0) {
             System.out.println("Simplifyer: constructor called"
                     + " on symbol of size " + symbol.size());
@@ -162,10 +160,10 @@ public class Simplifyer {
                 disposable.clear();
                 final Iterator fund = new FundamentalEdges(ds);
                 while (fund.hasNext()) {
-                    final DSPair e = (DSPair) fund.next();
+                    final DSPair<Integer> e = (DSPair) fund.next();
                     final int i = e.getIndex();
                     if (i == 3) {
-                        final Object D = e.getElement();
+                        final int D = e.getElement();
                         disposable.add(D);
                         disposable.add(ds.op(3, D));
                     }
@@ -182,8 +180,7 @@ public class Simplifyer {
             // --- remove edges of degree 2
             disposable.clear();
             idcs = new IndexList(2, 3);
-            for (final Iterator reps = ds.orbitReps(idcs); reps.hasNext();) {
-                final Object D = reps.next();
+            for (final int D: ds.orbitReps(idcs)) {
                 if (ds.r(2, 3, D) == 2) {
                     disposable.add(D);
                     disposable.add(ds.op(2, D));
@@ -207,10 +204,10 @@ public class Simplifyer {
                 final Traversal trav = new Traversal(ds, idcs, ds.elements());
                 final Iterator fund = new FundamentalEdges(ds, trav);
                 while (fund.hasNext()) {
-                    final DSPair e = (DSPair) fund.next();
+                    final DSPair<Integer> e = (DSPair) fund.next();
                     final int i = e.getIndex();
                     if (i == 0) {
-                        final Object D = e.getElement();
+                        final int D = e.getElement();
                         disposable.add(D);
                         disposable.add(ds.op(0, D));
                     }
@@ -227,8 +224,7 @@ public class Simplifyer {
             // --- remove faces of degree 2
             disposable.clear();
             idcs = new IndexList(0, 1);
-            for (final Iterator reps = ds.orbitReps(idcs); reps.hasNext();) {
-                final Object D = reps.next();
+            for (final int D: ds.orbitReps(idcs)) {
                 if (ds.r(0, 1, D) == 2) {
                     disposable.add(D);
                     disposable.add(ds.op(0, D));
@@ -246,24 +242,21 @@ public class Simplifyer {
             
             // --- remove vertex of local (i.e., 2d) degree 1
             if (!modified) {
-                final Iterator reps =
-                    ds.orbitReps(new IndexList(1, 2));
-                while (reps.hasNext()) {
-                    final Object C = reps.next();
+                for (final int C: ds.orbitReps(new IndexList(1, 2))) {
                     if (ds.m(1, 2, C) == 1) {
                         if (LOGGING_LEVEL > 0) {
                             log("removing local degree one vertex");
                         }
 
-                        final Object D  = ds.op(0, ds.op(1, C));
-                        final Object E  = ds.op(1, ds.op(0, C));
-                        final Object F  = ds.op(3, D);
-                        final Object G  = ds.op(3, E);
+                        final int D  = ds.op(0, ds.op(1, C));
+                        final int E  = ds.op(1, ds.op(0, C));
+                        final int F  = ds.op(3, D);
+                        final int G  = ds.op(3, E);
 
-                        final Object D1 = ds.op(1, D);
-                        final Object E1 = ds.op(1, E);
-                        final Object F1 = ds.op(1, F);
-                        final Object G1 = ds.op(1, G);
+                        final int D1 = ds.op(1, D);
+                        final int E1 = ds.op(1, E);
+                        final int F1 = ds.op(1, F);
+                        final int G1 = ds.op(1, G);
 
                         ds.redefineOp(1, D, E1);
                         ds.redefineOp(1, E, D1);
@@ -284,13 +277,12 @@ public class Simplifyer {
             // --- remove vertex of local (i.e., 2d) degree 2
             if (!modified) {
                 idcs = new IndexList(1, 2);
-                for (final Iterator reps = ds.orbitReps(idcs); reps.hasNext();) {
-                    final Object D = reps.next();
+                for (final int D: ds.orbitReps(idcs)) {
                     if (ds.r(1, 2, D) == 2) {
-                        Object E = ds.op(3, ds.op(2, D));
-                        if (D.equals(E)
-                                || D.equals(ds.op(1, ds.op(0, E)))
-                                || D.equals(ds.op(0, ds.op(1, E)))) {
+                        int E = ds.op(3, ds.op(2, D));
+                        if (D == E
+                        		|| D == ds.op(1, ds.op(0, E))
+                                || D == ds.op(0, ds.op(1, E))) {
                             continue;
                         }
                         if (LOGGING_LEVEL > 0) {
@@ -324,9 +316,7 @@ public class Simplifyer {
                 final Map vert2rep = new HashMap();
                 
                 final IndexList idcsFace = new IndexList(0, 1);
-                final Iterator faceReps = ds.orbitReps(idcsFace);
-                while (faceReps.hasNext()) {
-                    final Object D = faceReps.next();
+                for (final int D: ds.orbitReps(idcsFace)) {
                     final Iterator orb = ds.orbit(idcsFace, D);
                     while (orb.hasNext()) {
                         face2rep.put(orb.next(), D);
@@ -334,9 +324,7 @@ public class Simplifyer {
                 }
                 
                 final IndexList idcsVert = new IndexList(1, 2);
-                final Iterator vertReps = ds.orbitReps(idcsVert);
-                while (vertReps.hasNext()) {
-                    final Object D = vertReps.next();
+                for (final int D: ds.orbitReps(idcsVert)) {
                     final Iterator orb = ds.orbit(idcsVert, D);
                     while (orb.hasNext()) {
                         vert2rep.put(orb.next(), D);
@@ -344,20 +332,20 @@ public class Simplifyer {
                 }
                 
                 // --- maps face,vertex pairs to their first seen chamber
-                final Map sig2chamber = new HashMap();
+                final Map<Pair<Integer, Integer>, Integer> sig2chamber =
+                		new HashMap<Pair<Integer, Integer>, Integer>();
                 
                 // --- loop through positive representatives for 1-orbits
-                final Map sign = ds.partialOrientation();
-                for (Iterator elms = ds.elements(); elms.hasNext();) {
-                    final Object D = elms.next();
-                    if (((Integer) sign.get(D)).intValue() < 0) {
+                final Map<Integer, Integer> sign = ds.partialOrientation();
+                for (final int D: ds.elements()) {
+                    if (sign.get(D) < 0) {
                         continue;
                     }
                     final Pair signature =
                         new Pair(face2rep.get(D), vert2rep.get(D));
-                    final Object E = sig2chamber.get(signature);
+                    final int E = sig2chamber.get(signature);
                     
-                    if (E == null) {
+                    if (E == 0) {
                         sig2chamber.put(signature, D);
                     } else {
                         // --- we have seen the same signature twice here
@@ -365,13 +353,13 @@ public class Simplifyer {
                             log("removing non-cellular face");
                         }
 
-                        final Object F  = ds.op(3, D);
-                        final Object G  = ds.op(3, E);
+                        final int F  = ds.op(3, D);
+                        final int G  = ds.op(3, E);
 
-                        final Object D1 = ds.op(1, D);
-                        final Object E1 = ds.op(1, E);
-                        final Object F1 = ds.op(1, F);
-                        final Object G1 = ds.op(1, G);
+                        final int D1 = ds.op(1, D);
+                        final int E1 = ds.op(1, E);
+                        final int F1 = ds.op(1, F);
+                        final int G1 = ds.op(1, G);
 
                         ds.redefineOp(1, D, E1);
                         ds.redefineOp(1, E, D1);
@@ -386,15 +374,15 @@ public class Simplifyer {
             
             // --- remove disconnected face intersection
             if (!modified) {
-                final Object cut[] = firstLiftableTwoCut();
+                final int cut[] = firstLiftableTwoCut();
                 if (cut != null) {
                     if (LOGGING_LEVEL > 0) {
                         log("removing disconnected face intersection");
                     }
-                    final Object D[] = new Object[2];
+                    final int D[] = new int[2];
                     for (int i = 0; i < 2; ++i) {
-                        final Object A = cut[2*i];
-                        final Object B = cut[2*i+1];
+                        final int A = cut[2*i];
+                        final int B = cut[2*i+1];
                         if (ds.op(0, A).equals(B)) {
                             D[i] = ds.op(2, A);
                         } else {
@@ -442,10 +430,8 @@ public class Simplifyer {
     private void log(String action) {
         if (LOGGING_LEVEL >= 2) {
             int kfComplexity = 0;
-            final Iterator reps = 
-                ds.orbitReps(new IndexList(0, 1, 3));
-            while (reps.hasNext()) {
-                kfComplexity += ds.r(0, 1, reps.next()) - 2;
+            for (final int D: ds.orbitReps(new IndexList(0, 1, 3))) {
+                kfComplexity += ds.r(0, 1, D) - 2;
             }
             System.out.println("  Symbol of size " + ds.size()
                                + " and kf-complexity " + kfComplexity + " with");
@@ -493,9 +479,7 @@ public class Simplifyer {
      * @return true if a 2-element orbit exists.
      */
     private boolean hasSize2Orbit(final int i, final int j) {
-        final Iterator reps = ds.orbitReps(new IndexList(i, j));
-        while (reps.hasNext()) {
-            final Object D = reps.next();
+        for (final int D: ds.orbitReps(new IndexList(i, j))) {
             if (ds.op(i, D).equals(ds.op(j, D))) {
                 return true;
             }
@@ -510,35 +494,35 @@ public class Simplifyer {
      * @param D1 the element specifying the first vertex.
      * @param D2 the element specifying the second vertex.
      */
-    private void cutFace3D(final Object D1, Object D2) {
+    private void cutFace3D(final int D1, int D2) {
         // --- check the arguments and modify D1, if necessary
         
-        if (D1.equals(D2) || D1.equals(ds.op(1, D2))) {
+        if (D1 == D2 || D1 == ds.op(1, D2)) {
             throw new IllegalArgumentException("vertices not distinct");
         }
         
-        Object E = D1;
+        int E = D1;
         while (true) {
             E = ds.op(0, E);
-            if (E.equals(D2)) {
+            if (E == D2) {
                 break;
             }
             E = ds.op(1, E);
-            if (E.equals(D2)) {
+            if (E == D2) {
                 D2 = ds.op(1, D2);
                 break;
             }
-            if (E.equals(D1)) {
+            if (E == D1) {
                 throw new IllegalArgumentException("vertices not in a common face");
             }
         }
         
         // --- create new symbol elements
-        final Object[] nu = ds.grow(8).toArray();
+        final Integer[] nu = ds.grow(8).toArray(new Integer[0]);
         
         // --- establish trivial branching for the new elements
         for (int k = 0; k < 8; ++k) {
-            final Object D = nu[k];
+            final int D = nu[k];
             for (int i = 0; i <= 2; ++i) {
                 ds.redefineV(i, i + 1, D, 1);
             }
@@ -561,7 +545,7 @@ public class Simplifyer {
         ds.redefineOp(2, nu[3], nu[7]);
         
         // --- connect the new elements with old ones
-        final Object old[] = new Object[] {
+        final int old[] = new int[] {
                 D1, D2,
                 ds.op(3, D2), ds.op(3, D1),
                 ds.op(1, D1), ds.op(1, D2),
@@ -580,14 +564,14 @@ public class Simplifyer {
      * @param D specifies the first edge.
      * @param E specifies the second edge.
      */
-    private void squeezeTile3D(final Object D, final Object E) {
+    private void squeezeTile3D(final int D, final int E) {
         // TODO add a parameter check here
-        final Object d = ds.op(0, E);
-        final Object e = ds.op(0, D);
-        final Object d2 = ds.op(2, d);
-        final Object e2 = ds.op(2, e);
-        final Object E2 = ds.op(2, E);
-        final Object D2 = ds.op(2, D);
+        final int d = ds.op(0, E);
+        final int e = ds.op(0, D);
+        final int d2 = ds.op(2, d);
+        final int e2 = ds.op(2, e);
+        final int E2 = ds.op(2, E);
+        final int D2 = ds.op(2, D);
         
         ds.redefineOp(2, d, D);
         ds.redefineOp(2, e, E);
@@ -605,37 +589,34 @@ public class Simplifyer {
      * @return a quartet of chambers specifying the first liftable disconnected
      *         intersection found, if any.
      */
-    private Object[] firstLiftableTwoCut() {
+    private int[] firstLiftableTwoCut() {
         final IndexList idcsFace = new IndexList(0, 1);
         final IndexList idcsVertex = new IndexList(1, 2);
         final int n = ds.numberOfOrbits(idcsFace);
         
         // --- collect the faces of the symbol
-        final Object faces[] = new Object[n];
-        final Iterator faceReps = ds.orbitReps(idcsFace);
+        final List<Set<Integer>> faces = new ArrayList<Set<Integer>>();
+        final Iterator<Integer> faceReps = ds.orbitReps(idcsFace);
         for (int i = 0; i < n; ++i) {
-            final Object D = faceReps.next();
-            final Set f = new HashSet();
-            final Iterator iter = ds.orbit(idcsFace, D);
+            final int D = faceReps.next();
+            final Set<Integer> f = new HashSet<Integer>();
+            final Iterator<Integer> iter = ds.orbit(idcsFace, D);
             while (iter.hasNext()) {
                 f.add(iter.next());
             }
-            faces[i] = f;
+            faces.add(f);
         }
         
         // --- loop through the faces
         for (int i = 0; i < n-1; ++i) {
             // --- the current first face
-            final Set f1 = (Set) faces[i];
+            final Set<Integer> f1 = faces.get(i);
             
             // --- Mark the chambers at all vertices incident to this face,
             //     but only those not adjacent to it.
             final Set marked = new HashSet();
-            for (final Iterator inF1 = f1.iterator(); inF1.hasNext();) {
-                final Object D = inF1.next();
-                final Iterator incident = ds.orbit(idcsVertex, D);
-                while (incident.hasNext()) {
-                    final Object E = incident.next();
+            for (final int D: f1) {
+                for (final int E: ds.orbit(idcsVertex, D)) {
                     if (!f1.contains(ds.op(2, E))) {
                         marked.add(E);
                     }
@@ -645,7 +626,7 @@ public class Simplifyer {
             // --- loop through the faces with higher index
             for (int j = i+1; j < n; ++j) {
                 // --- the current second face
-                final Set f2 = (Set) faces[j];
+                final Set<Integer> f2 = faces.get(j);
                 
                 // --- find marked chambers in this face
                 final Set intersection = new HashSet();
@@ -663,34 +644,34 @@ public class Simplifyer {
                 // TODO make sure we don't actually have a 1-cut
                            
                 // --- determine the characterizing chambers
-                Object D1 = null;
-                final Iterator iter = intersection.iterator();
+                int D1 = 0;
+                final Iterator<Integer> iter = intersection.iterator();
                 while (iter.hasNext()) {
                     D1 = iter.next();
                     if (!intersection.contains(ds.op(0, D1))) {
                         break;
                     }
                 }
-                Object D2 = ds.op(0, D1);
+                int D2 = ds.op(0, D1);
                 while (!intersection.contains(D2)) {
                     D2 = ds.op(0, ds.op(1, D2));
                 }
-                Object D3 = ds.op(2, D2);
+                int D3 = ds.op(2, D2);
                 while (!f1.contains(D3)) {
                     D3 = ds.op(2, ds.op(1, D3));
                 }
-                Object D4 = ds.op(2, D1);
+                int D4 = ds.op(2, D1);
                 while (!f1.contains(D4)) {
                     D4 = ds.op(2, ds.op(1, D4));
                 }
                 
                 // --- see if this 2-cut is liftable
-                Object E = D4;
+                int E = D4;
                 int count = 0;
                 while (!ds.op(0, E).equals(D3)) {
                     E = ds.op(1, ds.op(0, E));
-                    final Object E3 = ds.op(3, E);
-                    if (E3.equals(D1) || E3.equals(ds.op(1, D2))) {
+                    final int E3 = ds.op(3, E);
+                    if (E3 == D1 || E3 == ds.op(1, D2)) {
                         ++count;
                     }
                 }
@@ -700,7 +681,7 @@ public class Simplifyer {
                 }
 
                 // --- return the chamber quartet for the cut
-                return new Object[] { D1, D2, D3, D4 };
+                return new int[] { D1, D2, D3, D4 };
             }
         }
         

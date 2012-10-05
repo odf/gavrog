@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package org.gavrog.joss.dsyms.basic;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,9 +33,6 @@ import org.gavrog.box.collections.Iterators;
  * elements of such a symbol are {@link java.lang.Integer}s starting at 1. The
  * numbers stay consecutive as long as no elements are deleted. In any case, the
  * sequence of elements produced by {@link #elements()} is strictly growing.
- * 
- * @author Olaf Delgado
- * @version $Id: DynamicDSymbol.java,v 1.3 2007/04/22 06:31:43 odf Exp $
  */
 public class DynamicDSymbol extends DelaneySymbol<Integer> {
     final private int dim;

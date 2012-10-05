@@ -19,7 +19,7 @@ package org.gavrog.joss.dsyms.derived;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.derived.Covers;
-import org.gavrog.joss.dsyms.derived.Simplifyer;
+import org.gavrog.joss.dsyms.derived.Simplifier;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
@@ -63,7 +63,7 @@ public class TestSimplifyer extends TestCase {
     
     public void testSimplifyer(final DelaneySymbol ds, final boolean good) {
         final DelaneySymbol cover = Covers.pseudoToroidalCover3D(ds);
-        final DelaneySymbol simpler = new Simplifyer(cover).getSimplifiedSymbol();
+        final DelaneySymbol simpler = new Simplifier(cover).getSimplifiedSymbol();
         Assert.assertEquals(good, simpler.equals(good1) || simpler.equals(good2));
     }
 }

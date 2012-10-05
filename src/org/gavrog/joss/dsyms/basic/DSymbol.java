@@ -418,26 +418,21 @@ public class DSymbol extends DelaneySymbol<Integer> implements Cloneable {
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#elements()
      */
-    public IteratorAdapter elements() {
+    public IteratorAdapter<Integer> elements() {
         return Iterators.range(1, size() + 1);
     }
 
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#isElement(java.lang.Object)
      */
-    public boolean hasElement(Object D) {
-        if (D instanceof Integer) {
-            int DD = ((Integer) D).intValue();
-            return DD >= 1 && DD <= size();
-        } else {
-            return false;
-        }
+    public boolean hasElement(final Integer D) {
+    	return D >= 1 && D <= size();
     }
 
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#indices()
      */
-    public IteratorAdapter indices() {
+    public IteratorAdapter<Integer> indices() {
         return Iterators.range(0, dim() + 1);
     }
 
@@ -451,44 +446,37 @@ public class DSymbol extends DelaneySymbol<Integer> implements Cloneable {
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#op(int, java.lang.Object)
      */
-    public boolean definesOp(int i, Object D) {
-		return hasElement(D) && hasIndex(i)
-				&& op[i][((Integer) D).intValue()] != 0;
+    public boolean definesOp(final int i, final Integer D) {
+		return hasElement(D) && hasIndex(i) && op[i][D] != 0;
 	}
     
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#op(int, java.lang.Object)
      */
-    public Object op(int i, Object D) {
+    public Integer op(final int i, final Integer D) {
         if (!hasElement(D)) {
             throw new IllegalArgumentException("not an element: " + D);
         }
         if (!hasIndex(i)) {
             throw new IllegalArgumentException("invalid index: " + i);
         }
-        int Di = op[i][((Integer) D).intValue()];
-        if (Di == 0) {
-            return null;
-        } else {
-            return new Integer(Di);
-        }
+        return op[i][D];
     }
 
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#v(int, int, java.lang.Object)
      */
-    public boolean definesV(int i, int j, Object D) {
+    public boolean definesV(final int i, final int j, final Integer D) {
 		return hasElement(D)
 				&& hasIndex(i)
 				&& hasIndex(j)
-				&& (Math.abs(i - j) != 1
-						|| v[Math.min(i, j)][((Integer) D).intValue()] != 0);
+				&& (Math.abs(i - j) != 1 || v[Math.min(i, j)][D] != 0);
 	}
     
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#v(int, int, java.lang.Object)
      */
-    public int v(int i, int j, Object D) {
+    public int v(final int i, final int j, final Integer D) {
         if (!hasElement(D)) {
             throw new IllegalArgumentException("not an element: " + D);
         }
@@ -500,10 +488,10 @@ public class DSymbol extends DelaneySymbol<Integer> implements Cloneable {
         }
         final int val;
         if (j == i+1) {
-            val = v[i][((Integer) D).intValue()];
+            val = v[i][D];
         } else if (j == i-1) {
-            val = v[j][((Integer) D).intValue()];
-        } else if (i != j && op(i, D).equals(op(j, D))) {
+            val = v[j][D];
+        } else if (i != j && op(i, D) == op(j, D)) {
             val = 2;
         } else {
             val = 1;

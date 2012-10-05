@@ -176,7 +176,7 @@ public class EuclidicityTester {
      * input symbol in order to find one on which euclidicity can be determined
      * easier. In the current implementation, this is derived from a
      * pseudo-toroidal cover of the input symbol by applying a
-     * {@link Simplifyer}.
+     * {@link Simplifier}.
      * 
      * @return Returns the outcome.
      */
@@ -232,7 +232,7 @@ public class EuclidicityTester {
             System.err.print("Simplifying cover ...");
             System.err.flush();
         }
-        final DelaneySymbol simpl = new Simplifyer(cover).getSimplifiedSymbol();
+        final DelaneySymbol simpl = new Simplifier(cover).getSimplifiedSymbol();
         if (LOGGING) {
             System.err.println(" done.");
             System.err.flush();
