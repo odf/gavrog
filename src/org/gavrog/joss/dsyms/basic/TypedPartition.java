@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -39,22 +39,19 @@ import org.gavrog.box.collections.Partition;
  * image is the smallest symbol to which there is a Delaney morphism (i.e., a
  * map which respects both indexed neighbor operations and m-values) from the
  * original symbol.
- * 
- * @author Olaf Delgado
- * @version $Id: TypedPartition.java,v 1.2 2005/07/18 23:32:57 odf Exp $
  */
 public class TypedPartition<T> {
 	private DelaneySymbol<T> ds;
-	private List indices;
+	private List<Integer> indices;
 	private Partition<T> P = new Partition<T>();
-	private HashMap M = new HashMap();
+	private HashMap<T, int[]> M = new HashMap<T, int[]>();
 	
 	public TypedPartition(DelaneySymbol<T> ds) {
 		this.ds = ds;
 		this.indices = new IndexList(ds);
 	}
 	
-	private int[] preliminaryType(Object D) {
+	private int[] preliminaryType(final T D) {
 		if (!M.containsKey(D)) {
 			int tmp[] = new int[ds.dim()];
 			M.put(D, tmp);
@@ -70,13 +67,11 @@ public class TypedPartition<T> {
 		
 		for (int k = 0; k < ds.dim(); ++k) {
 			if (result[k] < 0) {
-				int i = ((Integer) indices.get(k)).intValue();
-				int j = ((Integer) indices.get(k + 1)).intValue();
+				int i = indices.get(k);
+				int j = indices.get(k + 1);
 				int m = ds.m(i, j, D);
 				result[k] = m;
-				Iterator orb = ds.orbit(new IndexList(i, j), D);
-				while (orb.hasNext()) {
-					Object E = orb.next();
+				for (final T E: ds.orbit(new IndexList(i, j), D)) {
 					preliminaryType(E)[k] = m;
 				}
 			}
@@ -116,9 +111,7 @@ public class TypedPartition<T> {
 				E = stack.removeLast();
 				D = stack.removeLast();
 				
-				Iterator idcs = ds.indices();
-				while (idcs.hasNext()) {
-					int i = ((Integer) idcs.next()).intValue();
+				for (final int i: ds.indices()) {
 					T Di = newP.find(ds.op(i, D));
 					T Ei = newP.find(ds.op(i, E));
 					if (Di == Ei) {
@@ -159,7 +152,7 @@ public class TypedPartition<T> {
 		return P.areEquivalent(D, E);
 	}
 	
-	public Map representativeMap() {
+	public Map<T, T> representativeMap() {
 		return P.representativeMap();
 	}
 }

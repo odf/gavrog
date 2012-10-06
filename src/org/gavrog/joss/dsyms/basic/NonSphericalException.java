@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -19,13 +19,11 @@ package org.gavrog.joss.dsyms.basic;
 /**
  * Exception thrown by methods for spherical symbols when called on a
  * nonspherical one.
- * 
- * @author Olaf Delgado
- * @version $Id: NonSphericalException.java,v 1.1.1.1 2005/07/15 21:58:38 odf Exp $
  */
 public class NonSphericalException extends RuntimeException {
+	private static final long serialVersionUID = 961909284025114251L;
 
-    /**
+	/**
      * Constructs a NonSphericalException instance.
      */
     public NonSphericalException() {

@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,8 +16,9 @@
 
 package org.gavrog.joss.dsyms.basic;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.gavrog.box.collections.IteratorAdapter;
@@ -25,8 +26,6 @@ import org.gavrog.box.collections.Iterators;
 
 
 /**
- * @author Olaf Delgado
- * @version $Id: DSymbol.java,v 1.9 2008/01/21 03:53:37 odf Exp $
  */
 public class DSymbol extends DelaneySymbol<Integer> implements Cloneable {
     
@@ -128,9 +127,7 @@ public class DSymbol extends DelaneySymbol<Integer> implements Cloneable {
         if (buf.length() == 0) {
             for (int i = 0; i <= dim; ++i) {
                 for (int j = i + 2; j <= dim; ++j) {
-                    Iterator reps = orbitReps(new IndexList(i, j));
-                    while (reps.hasNext()) {
-                        int D = ((Integer) reps.next()).intValue();
+                    for (final int D: orbitReps(new IndexList(i, j))) {
                         int E1 = op[j][op[i][D]];
                         int E2 = op[i][op[j][D]];
                         // TODO correct this test
@@ -154,7 +151,7 @@ public class DSymbol extends DelaneySymbol<Integer> implements Cloneable {
      * @param op the operation array.
      * @param v the branching array.
      */
-    public DSymbol(int[][] op, int[][] v) {
+    public DSymbol(final int[][] op, final int[][] v) {
     	this.dim = op.length - 1;
     	this.size = op[0].length - 1;
     	this.op = (int[][]) op.clone();
@@ -166,8 +163,8 @@ public class DSymbol extends DelaneySymbol<Integer> implements Cloneable {
      * Constructs a new DSymbol from a textual representation.
      * @param code the text specifying the symbol.
      */
-    public DSymbol(String code) {
-    	code = code.trim();
+    public DSymbol(final String input) {
+    	final String code = input.trim();
         int start = 0;
         int end = code.length();
         if (code.startsWith("<")) {
@@ -268,7 +265,7 @@ public class DSymbol extends DelaneySymbol<Integer> implements Cloneable {
      * 
      * @param source the symbol to use as a model.
      */
-    public DSymbol(final DelaneySymbol source) {
+    public <T> DSymbol(final DelaneySymbol<T> source) {
         this.dim = source.dim();
         this.size = source.size();
         
@@ -280,32 +277,29 @@ public class DSymbol extends DelaneySymbol<Integer> implements Cloneable {
         
     	this.op = new int[dim() + 1][size() + 1];
     	this.v = new int[dim()][size() + 1];
-    	final Object num2elm[] = new Object[size() + 1];
-    	final Map elm2num = new HashMap();
+    	final List<T> num2elm = new ArrayList<T>();
+    	final Map<T, Integer> elm2num = new HashMap<T, Integer>();
     	final int num2idx[] = new int[dim() + 1];
     	
-    	int k = 1;
-    	for (final Iterator elms = source.elements(); elms.hasNext();) {
-    	    final Object D = elms.next();
-    	    num2elm[k] = D;
-    	    elm2num.put(D, new Integer(k));
-    	    ++k;
+    	num2elm.add(null);
+    	for (final T D: source.elements()) {
+    	    elm2num.put(D, num2elm.size());
+    	    num2elm.add(D);
     	}
     	
-    	k = 0;
-    	for (final Iterator idcs = source.indices(); idcs.hasNext();) {
-    	    final int i = ((Integer) idcs.next()).intValue();
+    	int k = 0;
+    	for (final int i: source.indices()) {
     	    num2idx[k] = i;
     	    ++k;
     	}
         
         for (k = 1; k <= size(); ++k) {
-            final Object D = num2elm[k];
+            final T D = num2elm.get(k);
             for (int m = 0; m <= dim(); ++m) {
                 final int i = num2idx[m];
                 if (source.definesOp(i, D)) {
-                    final Object E = source.op(i, D);
-                    op[m][k] = ((Integer) elm2num.get(E)).intValue();
+                    final T E = source.op(i, D);
+                    op[m][k] = elm2num.get(E);
                 }
             }
         }
@@ -314,15 +308,11 @@ public class DSymbol extends DelaneySymbol<Integer> implements Cloneable {
             final int i = num2idx[m];
             final int j = num2idx[m+1];
             final IndexList idcs = new IndexList(i, j);
-            for (Iterator iter = source
-                    .orbitReps(idcs); iter.hasNext();) {
-                final Object D = iter.next();
+            for (final T D: source.orbitReps(idcs)) {
                 if (source.definesV(i, j, D)) {
                     final int vD = source.v(i, j, D);
-                    for (Iterator elms = source.orbit(idcs, D); elms
-                            .hasNext();) {
-                        final int n = ((Integer) elm2num.get(elms.next())).intValue();
-                        v[m][n] = vD;
+                    for (final T E: source.orbit(idcs, D)) {
+                        v[m][elm2num.get(E)] = vD;
                     }
                 }
             }
@@ -506,7 +496,7 @@ public class DSymbol extends DelaneySymbol<Integer> implements Cloneable {
      * but the method may serve as a template to be used in derived classes.
      */
     public Object clone() {
-        DSymbol ds = new DSymbol();
+        final DSymbol ds = new DSymbol();
         ds.dim = this.dim;
         ds.size = this.size;
         ds.op = new int[dim+1][size+1];
@@ -526,7 +516,7 @@ public class DSymbol extends DelaneySymbol<Integer> implements Cloneable {
      * @return the dual symbol.
      */
     public DSymbol dual() {
-        DSymbol ds = new DSymbol();
+        final DSymbol ds = new DSymbol();
         ds.dim = this.dim;
         ds.size = this.size;
         ds.op = new int[dim+1][size+1];
