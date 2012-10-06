@@ -1,5 +1,5 @@
 /*
-   Copyright 2009 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import org.gavrog.jane.fpgroups.FreeWord;
 import org.gavrog.joss.dsyms.basic.DSCover;
 import org.gavrog.joss.dsyms.basic.DSMorphism;
 import org.gavrog.joss.dsyms.basic.DSPair;
+import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.basic.Traversal;
@@ -52,11 +53,8 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 
 /**
  * An instance of this class represents a tiling.
- * 
- * @author Olaf Delgado
- * @version $Id: Tiling.java,v 1.42 2007/07/27 06:07:15 odf Exp $
  */
-public class Tiling {
+public class Tiling<T> {
     // --- the cache keys
     final protected static Object TRANSLATION_GROUP = new Tag();
     final protected static Object TRANSLATION_VECTORS = new Tag();
@@ -74,7 +72,7 @@ public class Tiling {
     final protected Cache cache = new Cache();
 
     // --- the symbol this tiling is based on and its (pseudo-) toroidal cover
-    final protected DelaneySymbol ds;
+    final protected DelaneySymbol<T> ds;
     final protected DSCover cov;
 
 	/**
@@ -256,12 +254,12 @@ public class Tiling {
             final HashMap<DSPair, Vector> c2s = new HashMap<DSPair, Vector>();
             for (int i = 0; i <= dim; ++i) {
                 final List idcs = IndexList.except(getCover(), i);
-                final Traversal trav = new Traversal(getCover(), idcs,
-                        getCover().elements());
-                while (trav.hasNext()) {
-                    final DSPair e = (DSPair) trav.next();
+                for (final DSPair<Integer> e: 
+                	new Traversal<Integer>(getCover(), idcs,
+                			getCover().elements()))
+                {
                     final int k = e.getIndex();
-                    final Object D = e.getElement();
+                    final int D = e.getElement();
                     if (k < 0) {
                         c2s.put(new DSPair(i, D), Vector.zero(dim));
                     } else {
@@ -298,8 +296,8 @@ public class Tiling {
         	new HashMap<INode, Object>();
 		final private Map<Object, INode> chamber2node =
 			new HashMap<Object, INode>();
-        final private Map<IEdge, Object> edge2chamber =
-        	new HashMap<IEdge, Object>();
+        final private Map<IEdge, Integer> edge2chamber =
+        	new HashMap<IEdge, Integer>();
         final private Map<Object, IEdge> chamber2edge =
         	new HashMap<Object, IEdge>();
         final private List nodeIdcs;
@@ -349,15 +347,15 @@ public class Tiling {
          * @return the newly created edge.
          */
         private IEdge newEdge(final INode v, final INode w, final Vector s,
-                final Object D) {
-            final DelaneySymbol cover = getCover();
+                final int D) {
+            final DSymbol cover = getCover();
             final IEdge e = super.newEdge(v, w, s, !this.dual);
             this.edge2chamber.put(e, D);
             for (final Iterator orb = cover.orbit(halfEdgeIdcs, D); orb.hasNext();) {
                 this.chamber2edge.put(orb.next(), e);
             }
             final IEdge er = e.reverse();
-            final Object Dr = dual ? cover.op(cover.dim(), D) : cover.op(0, D);
+            final int Dr = dual ? cover.op(cover.dim(), D) : cover.op(0, D);
             this.edge2chamber.put(er, Dr);
             for (final Iterator orb = cover.orbit(halfEdgeIdcs, Dr); orb
                     .hasNext();) {
@@ -456,7 +454,7 @@ public class Tiling {
          * @param e the edge.
          * @return a chamber associated to edge e.
          */
-        public Object chamberAtEdge(final IEdge e) {
+        public int chamberAtEdge(final IEdge e) {
             return this.edge2chamber.get(e);
         }
 
@@ -532,7 +530,7 @@ public class Tiling {
 	 * @return the resulting skeleton graph.
 	 */
 	private Skeleton makeSkeleton(final boolean dual) {
-        final DelaneySymbol cover = getCover();
+        final DSymbol cover = getCover();
         final Skeleton G = new Skeleton(dual);
         final int d = cover.dim();
         final int idx0 = dual ? d : 0;
@@ -547,8 +545,7 @@ public class Tiling {
 
         // --- create the edges
         idcs = IndexList.except(cover, idx1);
-        for (final Iterator iter = cover.orbitReps(idcs); iter.hasNext();) {
-            final Object D = iter.next();
+        for (final int D: cover.orbitReps(idcs)) {
             final Object E = cover.op(idx0, D);
             final INode v = G.nodeForChamber(D);
             final INode w = G.nodeForChamber(E);
@@ -675,28 +672,28 @@ public class Tiling {
      */
     public class Facet {
     	final private int tilingId = Tiling.this.hashCode();
-        final private List<Object> chambers;
+        final private List<Integer> chambers;
         final private int tile;
         final private int index;
     	
-    	private Facet(final Object D, final int tile, final int index) {
-    		final DelaneySymbol cover = getCover();
+    	private Facet(final int D, final int tile, final int index) {
+    		final DSymbol cover = getCover();
     		final int d = cover.dim();
-            final Object E0 = coverOrientation(D) < 0 ? cover.op(0, D) : D;
-            this.chambers = new LinkedList<Object>();
+            final int E0 = coverOrientation(D) < 0 ? cover.op(0, D) : D;
+            this.chambers = new LinkedList<Integer>();
             if (d == 3) {
-	            Object E = E0;
+	            int E = E0;
 	            do {
 	                this.chambers.add(E);
 	                E = cover.op(1, cover.op(0, E));
-	            } while (!E.equals(E0));
+	            } while (E != E0);
             } else if (d == 2) {
             	this.chambers.add(E0);
             	this.chambers.add(cover.op(0, E0));
             } else {
             	throw new UnsupportedOperationException("dimension must be 2 or 3");
             }
-            for (final Object E: chambers) {
+            for (final int E: chambers) {
             	chamber2facet.put(E, index);
             	chamber2facet.put(cover.op(0, E), index);
             }
@@ -708,7 +705,7 @@ public class Tiling {
     		return this.chambers.size();
     	}
     	
-        public Object chamber(final int i) {
+        public int chamber(final int i) {
             return this.chambers.get(i);
         }
         
@@ -761,7 +758,7 @@ public class Tiling {
     	final private int tilingId = Tiling.this.hashCode();
         final private int index;
         final private int kind;
-        final private Facet facets[];
+        final private List<Facet> facets;
         final private int neighbors[];
         final private Vector neighborShifts[];
 
@@ -775,26 +772,26 @@ public class Tiling {
             this.kind = chamber2kind.get(cover.image(D));
 
             final int deg = v.degree();
-        	this.facets = new Facet[deg];
+        	this.facets = new ArrayList<Facet>();
         	this.neighbors = new int[deg];
         	this.neighborShifts = new Vector[deg];
         	
             int i = 0;
             for (final Iterator conn = v.incidences(); conn.hasNext();) {
                 final IEdge e = (IEdge) conn.next();
-                Object Df = skel.chamberAtEdge(e);
+                int Df = skel.chamberAtEdge(e);
                 if (!chamber2tile.get(Df).equals(k)) {
                     Df = cover.op(d, Df);
                 }
                 final Vector t = edgeTranslation(d, Df);
-                this.facets[i] = new Facet(Df, this.index, i);
+                this.facets.add(new Facet(Df, this.index, i));
                 final Object Dn = skel.chamberAtNode(e.target());
                 this.neighbors[i] = chamber2tile.get(Dn);
                 this.neighborShifts[i] = t;
                 ++i;
                 if (e.source().equals(e.target())) {
                 	Df = cover.op(d, Df);
-                    this.facets[i] = new Facet(Df, this.index, i);
+                    this.facets.add(new Facet(Df, this.index, i));
                     this.neighbors[i] = this.index;
                     this.neighborShifts[i] = (Vector) t.negative();
                     ++i;
@@ -802,7 +799,7 @@ public class Tiling {
             }
         }
         
-        public Object getChamber() {
+        public int getChamber() {
             return facet(0).chamber(0);
         }
 
@@ -815,11 +812,11 @@ public class Tiling {
         }
 
         public int size() {
-            return this.facets.length;
+            return this.facets.size();
         }
         
         public Facet facet(final int i) {
-            return this.facets[i];
+            return this.facets.get(i);
         }
         
         public Tile neighbor(final int i) {

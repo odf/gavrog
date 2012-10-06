@@ -134,7 +134,7 @@ public class Traversal<T> extends IteratorAdapter<DSPair<T>> {
 				} else {
 					D = buffer[k].removeFirst();
 				}
-				if (D != null) {
+				if (ds.hasElement(D)) {
 					if (!elm2num.containsKey(D)) {
 						elm2num.put(D, new Integer(nextNum++));
 

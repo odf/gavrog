@@ -63,6 +63,9 @@ public class DSMorphism implements Map {
         if (!Iterators.equal(src.indices(), img.indices())) {
             throw new UnsupportedOperationException("index lists must be equal");
         }
+        if (srcBase == null || imgBase == null) {
+        	throw new IllegalArgumentException("elements must not be null");
+        }
         
         final List indices = new IndexList(src);
         boolean bijective = img.isConnected();

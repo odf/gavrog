@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -41,9 +41,6 @@ import buoy.event.EventProcessor;
 /**
  * Generates all minimal, locally euclidean, tile-k-transitive tilings by a
  * given combinatorial tile.
- * 
- * @author Olaf Delgado
- * @version $Id: TileKTransitiveDuo.java,v 1.1 2008/06/16 08:02:50 odf Exp $
  */
 public class TileKTransitiveDuo extends ResumableGenerator<DSymbol> {
     private final boolean verbose;
@@ -243,8 +240,7 @@ public class TileKTransitiveDuo extends ResumableGenerator<DSymbol> {
 		if (this.simple) {
 			final DynamicDSymbol out = new DynamicDSymbol(new DSymbol(ds));
 			final IndexList idx = new IndexList(2, 3);
-			for (final Iterator reps = out.orbitReps(idx); reps.hasNext();) {
-				final Object D = reps.next();
+			for (final int D: out.orbitReps(idx)) {
 				final int r = out.r(2, 3, D);
 				if (r == 3) {
 					out.redefineV(2, 3, D, 1);
@@ -276,13 +272,13 @@ public class TileKTransitiveDuo extends ResumableGenerator<DSymbol> {
     protected Iterator extendTo3d(final DSymbol ds) {
 		if (this.simple) {
 			return new CombineTiles(ds) {
-				protected List<Move> getExtraDeductions(final DelaneySymbol ds,
+				protected List<Move> getExtraDeductions(final DSymbol ds,
 						final Move move) {
 					final List<Move> out = new ArrayList<Move>();
-					final Object D = move.element;
-					Object E = D;
+					final int D = move.element;
+					int E = D;
 					int r = 0;
-					List<Object> cuts = new ArrayList<Object>();
+					List<Integer> cuts = new ArrayList<Integer>();
 					do {
 						E = ds.op(2, E);
 						if (ds.definesOp(3, E)) {
@@ -303,7 +299,7 @@ public class TileKTransitiveDuo extends ResumableGenerator<DSymbol> {
 						if (r > 3) {
 							return null;
 						} else if (r == 3) {
-							final Object A = cuts.get(0);
+							final int A = cuts.get(0);
 							out.add(new Move(A, A, -1, -1, false, 0));
 						}
 						break;
@@ -311,8 +307,8 @@ public class TileKTransitiveDuo extends ResumableGenerator<DSymbol> {
 						if (r > 6) {
 							return null;
 						} else if (r == 6) {
-							final Object A = cuts.get(0);
-							final Object B = cuts.get(1);
+							final int A = cuts.get(0);
+							final int B = cuts.get(1);
 							out.add(new Move(A, B, -1, -1, false, 0));
 						}
 						break;

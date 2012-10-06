@@ -100,7 +100,7 @@ public class TestDynamicDSymbol extends TestCase {
 
 	public void testOp() {
 		Assert.assertEquals(ds1.op(1, one), two);
-		Assert.assertEquals(ds2.op(0, four), null);
+		Assert.assertEquals(ds2.op(0, four), new Integer(0));
 		try {
 			ds1.op(0, new Integer(7));
 			fail("Should raise an IllegalArgumentException");
@@ -141,7 +141,7 @@ public class TestDynamicDSymbol extends TestCase {
 	    Assert.assertTrue(ds1.definesOp(0, two));
 	    Assert.assertTrue(ds1.definesOp(0, three));
 	    ds1.undefineOp(0, two);
-	    Assert.assertNull(ds1.op(0, two));
+	    Assert.assertEquals(new Integer(0), ds1.op(0, two));
 	    Assert.assertTrue(ds1.definesOp(0, one));
 	    Assert.assertTrue(ds1.definesOp(1, two));
 	    Assert.assertFalse(ds1.definesOp(0, two));
@@ -156,7 +156,7 @@ public class TestDynamicDSymbol extends TestCase {
 	    ds1.redefineOp(0, one, two);
 	    Assert.assertEquals(two, ds1.op(0, one));
 	    Assert.assertEquals(one, ds1.op(0, two));
-	    Assert.assertNull(ds1.op(0, three));
+	    Assert.assertEquals(new Integer(0), ds1.op(0, three));
 	}
 	
 	public void testUndefineV() {

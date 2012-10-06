@@ -1,5 +1,5 @@
 /*
-   Copyright 2007 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -39,9 +39,6 @@ import org.gavrog.joss.pgraphs.io.NetParser.Face;
 
 /**
  * Implements a periodic face set meant to define a tiling.
- * 
- * @author Olaf Delgado
- * @version $Id: FaceList.java,v 1.14 2007/11/29 05:17:20 odf Exp $
  */
 public class FaceList {
 	final private static boolean DEBUG = false;
@@ -152,7 +149,7 @@ public class FaceList {
         }
 	}
 	
-    final private List faces;
+    final private List<Face> faces;
     final private List tiles;
     final private Map tilesAtFace;
     final private Map indexToPos;
@@ -222,11 +219,10 @@ public class FaceList {
         // --- initialize the intermediate symbol
         final Map faceElements = new HashMap();
         final DynamicDSymbol ds = new DynamicDSymbol(this.dim);
-        for (final Iterator iter = this.faces.iterator(); iter.hasNext();) {
-            final Face f = (Face) iter.next();
+        for (final Face f: this.faces) {
             final int n = f.size();
             final int _2n = 2 * n;
-            final List elms = ds.grow(4 * n);
+            final List<Integer> elms = ds.grow(4 * n);
             faceElements.put(f, elms);
             for (int i = 0; i < 4 * n; i += 2) {
                 ds.redefineOp(0, elms.get(i), elms.get(i + 1));
@@ -257,8 +253,7 @@ public class FaceList {
         
         // --- set all v values to 1
         for (int i = 0; i < dim; ++i) {
-        	for (final Iterator iter = ds.elements(); iter.hasNext();) {
-        		final Object D = iter.next();
+        	for (final int D: ds.elements()) {
         		if (!ds.definesV(i, i + 1, D)) {
 					ds.redefineV(i, i + 1, D, 1);
 				}
@@ -392,7 +387,8 @@ public class FaceList {
 		return facesAtEdge;
 	}
 
-    private void set2opPlainMode(final DynamicDSymbol ds, final Map faceElms) {
+    private void set2opPlainMode(final DynamicDSymbol ds,
+    		final Map<Face, List<Integer>> faceElms) {
         // --- determine sector normals for each face
         final Map normals = new HashMap();
         for (final Iterator iter = this.faces.iterator(); iter.hasNext();) {
@@ -460,12 +456,12 @@ public class FaceList {
                 if (inc2.angle - inc1.angle < 1e-3) {
                     throw new RuntimeException("tiny dihedral angle");
                 }
-                final List elms1 = (List) faceElms.get(faces
+                final List<Integer> elms1 = faceElms.get(faces
 						.get(inc1.faceIndex));
-				final List elms2 = (List) faceElms.get(faces
+				final List<Integer> elms2 = faceElms.get(faces
 						.get(inc2.faceIndex));
                 
-                final Object A, B, C, D;
+                final int A, B, C, D;
                 if (inc1.reverse) {
                     final int k = 2 * (inc1.edgeIndex + ((Face) faces
 							.get(inc1.faceIndex)).size());
@@ -492,7 +488,8 @@ public class FaceList {
         }
     }
     
-    private void set2opTileMode(final DynamicDSymbol ds, final Map faceElms) {
+    private void set2opTileMode(final DynamicDSymbol ds,
+    		final Map<Face, List<Integer>> faceElms) {
         for (int i = 0; i < this.tiles.size(); ++i) {
 			final List tile = (List) this.tiles.get(i);
 			final Map facesAtEdge = collectEdges(tile, true);
@@ -502,8 +499,8 @@ public class FaceList {
 					final String msg = flist.size() + " faces at an edge";
 					throw new UnsupportedOperationException(msg);
 				}
-				final Object D[] = new Object[2];
-                final Object E[] = new Object[2];
+				final int D[] = new int[2];
+                final int E[] = new int[2];
                 boolean reverse = false;
 				for (int k = 0; k <= 1; ++k) {
 					final Incidence inc = (Incidence) flist.get(k);
@@ -513,8 +510,8 @@ public class FaceList {
                     final List taf = (List) this.tilesAtFace.get(face);
                     final int t = taf.indexOf(new Pair(new Integer(i), shift));
                     final int x = 2 * (t * face.size() + inc.edgeIndex);
-                    D[k] = ((List) faceElms.get(face)).get(x);
-                    E[k] = ((List) faceElms.get(face)).get(x + 1);
+                    D[k] = faceElms.get(face).get(x);
+                    E[k] = faceElms.get(face).get(x + 1);
                     if (inc.reverse) {
                         reverse = !reverse;
                     }

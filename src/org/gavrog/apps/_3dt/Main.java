@@ -1,5 +1,5 @@
 /*
-   Copyright 2009 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -1934,12 +1934,11 @@ public class Main extends EventSource {
     	final DSCover cover = til.getCover();
     	final List idcsB = new IndexList(0, 1, 2);
     	final List idcsV = new IndexList(1, 2);
-    	final Object D = b.getChamber();
+    	final int D = b.getChamber();
     	
     	// --- generate and map vertices on the body's edges
     	final Map<Object,Integer> ch2edge = new HashMap<Object,Integer>();
-    	for (final Iterator elms = cover.orbit(idcsB, D); elms.hasNext();) {
-    		final Object E = elms.next();
+    	for (final int E: cover.orbit(idcsB, D)) {
     		if (til.coverOrientation(E) < 0) {
     			continue;
     		}
@@ -1956,15 +1955,13 @@ public class Main extends EventSource {
 
     	// --- generate and map vertices for the body's corners
     	final Map<Object,Integer> ch2vertex = new HashMap<Object,Integer>();
-    	for (final Iterator elms = cover.orbit(idcsB, D); elms.hasNext();) {
-    		final Object E = elms.next();
+    	for (final int E: cover.orbit(idcsB, D)) {
     		if (ch2vertex.containsKey(E)) {
     			continue;
     		}
     		double sum[] = new double[3];
     		int n = 0;
-    		for (final Iterator orb = cover.orbit(idcsV, E); orb.hasNext();) {
-    			final Object C = orb.next();
+    		for (final int C: cover.orbit(idcsV, E)) {
     			ch2vertex.put(C, vertices.size());
     			Rn.add(sum, sum, vertices.get(ch2edge.get(C)));
     			++n;
@@ -1984,7 +1981,7 @@ public class Main extends EventSource {
     	for (int k = 0; k < b.size(); ++k) {
     		final Facet face = b.facet(k);
             for (int i = 0; i < face.size(); ++i) {
-            	final Object E = face.chamber(i);
+            	final int E = face.chamber(i);
             	final int pos = fStart[k] + i;
             	ch2inner.put(E, pos);
     			ch2inner.put(cover.op(1, E), pos);
@@ -1997,9 +1994,9 @@ public class Main extends EventSource {
             final int n = face.size();
             
             for (int i = 0; i < n; ++i) {
-            	final Object E = face.chamber(i);
-            	final Object E0 = cover.op(0, E);
-            	final Object E1 = cover.op(1, E);
+            	final int E = face.chamber(i);
+            	final int E0 = cover.op(0, E);
+            	final int E1 = cover.op(1, E);
             	if (getEdgeRoundingLevel() > 0) {
 					faces.add(new int[] { ch2edge.get(E), ch2edge.get(E0),
 							ch2inner.get(E0), ch2inner.get(E) });
@@ -3586,16 +3583,15 @@ public class Main extends EventSource {
 		final Object D0 = f.getChamber();
 		final DSCover ds = doc().getTiling().getCover();
 		final Set<Object> orb = new HashSet<Object>();
-		for (Iterator it = ds.elements(); it.hasNext();) {
-			final Object E0 = it.next();
+		for (final int E0: ds.elements()) {
 			if (ds.image(E0).equals(ds.image(D0))) {
-				Object E = E0;
+				int E = E0;
 				do {
 					orb.add(E);
 					E = ds.op(0, E);
 					orb.add(E);
 					E = ds.op(1, E);
-				} while (!E0.equals(E));
+				} while (E0 != E);
 			}
 		}
 		

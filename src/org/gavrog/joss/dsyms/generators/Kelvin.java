@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -93,9 +93,8 @@ public class Kelvin extends FrankKasperExtended {
 		} else {
 			final DynamicDSymbol t = new DynamicDSymbol(ds.dual());
 			final IndexList idx = new IndexList(0, 1);
-			final List<Object> choices = new LinkedList<Object>();
-			for (final Iterator reps = t.orbitReps(idx); reps.hasNext();) {
-				final Object D = reps.next();
+			final List<Integer> choices = new LinkedList<Integer>();
+			for (final int D: t.orbitReps(idx)) {
 				final int r = t.r(0, 1, D);
 				if (r == 4 || r == 5) {
 					t.redefineV(0, 1, D, 1);
@@ -142,7 +141,7 @@ public class Kelvin extends FrankKasperExtended {
 				}
 
 				private void choose(final int i, final int m) {
-					final Object D = choices.get(i);
+					final int D = choices.get(i);
 					final int r = t.r(0, 1, D);
 					t.redefineV(0, 1, D, m / r);
 					a[i] = m;

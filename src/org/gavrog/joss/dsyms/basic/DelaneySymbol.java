@@ -179,7 +179,7 @@ public abstract class DelaneySymbol<T> implements Comparable<DelaneySymbol<T>>
             buf.append(" |");
             for (int i = 0; i <= dim(); i++) {
                 final T Di = op(idcs.get(i), D);
-                final String s = (Di == null) ? "-" : Di.toString();
+                final String s = hasElement(Di) ? Di.toString() : "-";
                 buf.append(" ");
                 buf.append(rjust(s, elmSize));
             }
@@ -249,10 +249,10 @@ public abstract class DelaneySymbol<T> implements Comparable<DelaneySymbol<T>>
         T Di = D;
         int k = 0;
         while (true) {
-            if (op(i, Di) != null) {
+            if (definesOp(i, Di)) {
                 Di = op(i, Di);
             }
-            if (op(j, Di) != null) {
+            if (definesOp(j, Di)) {
                 Di = op(j, Di);
             }
             k++;
@@ -772,7 +772,7 @@ public abstract class DelaneySymbol<T> implements Comparable<DelaneySymbol<T>>
     	final List<Integer> idcs = new IndexList(this);
    	
     	for (int D = 1; D <= newSize; ++D) {
-    		final T E = new2old.get(D);
+    		final T E = new2old.get(D-1);
     		for (int i = 0; i <= dim(); ++i) {
     		    int ii = idcs.get(i);
     			op[i][D] = old2new.get(op(ii, E));
@@ -788,7 +788,7 @@ public abstract class DelaneySymbol<T> implements Comparable<DelaneySymbol<T>>
     	for (int i = 0; i < dim(); ++i) {
     		final List<Integer> idcsI = new IndexList(i, i+1);
     		for (final int D: tmp.orbitReps(idcsI)) {
-        		final T E = new2old.get(D);
+        		final T E = new2old.get(D-1);
     		    final int ii = idcs.get(i);
     		    final int ii1 = idcs.get(i+1);
         		final int m = this.m(ii, ii1, E);

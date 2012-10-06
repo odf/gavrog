@@ -90,7 +90,7 @@ public class TestDSymbol extends TestCase {
 
 	public void testOp() {
 		Assert.assertEquals(ds1.op(1, new Integer(1)), new Integer(2));
-		Assert.assertEquals(ds2.op(0, new Integer(4)), null);
+		Assert.assertEquals(ds2.op(0, new Integer(4)), new Integer(0));
 		try {
 			ds1.op(0, new Integer(7));
 			fail("Should raise an IllegalArgumentException");

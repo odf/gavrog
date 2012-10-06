@@ -312,12 +312,14 @@ public class Simplifier {
             // --- remove non-disk face
             if (!modified) {
                 // --- assign to each chamber its face and vertex
-                final Map face2rep = new HashMap();
-                final Map vert2rep = new HashMap();
+                final Map<Integer, Integer> face2rep =
+                		new HashMap<Integer, Integer>();
+                final Map<Integer, Integer> vert2rep =
+                		new HashMap<Integer, Integer>();
                 
                 final IndexList idcsFace = new IndexList(0, 1);
                 for (final int D: ds.orbitReps(idcsFace)) {
-                    final Iterator orb = ds.orbit(idcsFace, D);
+                    final Iterator<Integer> orb = ds.orbit(idcsFace, D);
                     while (orb.hasNext()) {
                         face2rep.put(orb.next(), D);
                     }
@@ -325,7 +327,7 @@ public class Simplifier {
                 
                 final IndexList idcsVert = new IndexList(1, 2);
                 for (final int D: ds.orbitReps(idcsVert)) {
-                    final Iterator orb = ds.orbit(idcsVert, D);
+                    final Iterator<Integer> orb = ds.orbit(idcsVert, D);
                     while (orb.hasNext()) {
                         vert2rep.put(orb.next(), D);
                     }
@@ -341,11 +343,11 @@ public class Simplifier {
                     if (sign.get(D) < 0) {
                         continue;
                     }
-                    final Pair signature =
-                        new Pair(face2rep.get(D), vert2rep.get(D));
-                    final int E = sig2chamber.get(signature);
+                    final Pair<Integer, Integer> signature =
+                        new Pair<Integer, Integer>(face2rep.get(D), vert2rep.get(D));
+                    final Integer E = sig2chamber.get(signature);
                     
-                    if (E == 0) {
+                    if (E == null) {
                         sig2chamber.put(signature, D);
                     } else {
                         // --- we have seen the same signature twice here
