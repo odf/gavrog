@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,12 +21,11 @@ import java.util.Iterator;
 
 /**
  * Convenience class to represent lists of Delaney symbol indices.
- * @author Olaf Delgado
- * @version $Id: IndexList.java,v 1.2 2007/04/19 23:07:42 odf Exp $
  */
 public class IndexList extends ArrayList<Integer> {
+	private static final long serialVersionUID = 1924390897509081370L;
 
-    public IndexList(final DelaneySymbol ds) {
+	public IndexList(final DelaneySymbol<?> ds) {
         this(ds.indices());
     }
 
@@ -37,27 +36,27 @@ public class IndexList extends ArrayList<Integer> {
     }
 
     public IndexList(final int i) {
-        add(new Integer(i));
+        add(i);
     }
 
     public IndexList(final int i, final int j) {
-        add(new Integer(i));
-        add(new Integer(j));
+        add(i);
+        add(j);
     }
 
     public IndexList(final int i, final int j, final int k) {
-        add(new Integer(i));
-        add(new Integer(j));
-        add(new Integer(k));
+        add(i);
+        add(j);
+        add(k);
     }
 
-    public static IndexList except(final DelaneySymbol ds, final int i) {
+    public static IndexList except(final DelaneySymbol<?> ds, final int i) {
         final IndexList res = new IndexList(ds);
         res.remove(new Integer(i));
         return res;
     }
 
-    public static IndexList except(final DelaneySymbol ds, final int i,
+    public static IndexList except(final DelaneySymbol<?> ds, final int i,
             final int j) {
         final IndexList res = new IndexList(ds);
         res.remove(new Integer(i));
