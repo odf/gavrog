@@ -28,6 +28,7 @@ import org.gavrog.box.collections.FilteredIterator;
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.NiftyList;
+import org.gavrog.box.simple.Strings;
 import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.Rational;
 
@@ -49,7 +50,7 @@ public abstract class DelaneySymbol<T> implements Comparable<DelaneySymbol<T>>
      * Sets vDefaultToOne.
      * @param value the new value of vDefaultToOne.
      */
-    public void setVDefaultToOne(boolean value) {
+    public void setVDefaultToOne(final boolean value) {
         this.vDefaultToOne = value;
     }
     
@@ -93,38 +94,6 @@ public abstract class DelaneySymbol<T> implements Comparable<DelaneySymbol<T>>
 
     /* --- Default implementations for the rest of the interface. */
 
-    /**
-     * Helper method: adjusts a string to a given length by filling from the
-     * left. If the string is already longer, it is returned unchanged.
-     * @param s the string to adjust.
-     * @param n the new length.
-     * @param fill the fill character to use. 
-     * @return the adjusted string.
-     */
-    private static String rjust(String s, int n, char fill) {
-        if (s.length() >= n) {
-            return s;
-        } else {
-            StringBuffer buf = new StringBuffer(n);
-            for (int i = n - s.length(); i > 0; --i) {
-                buf.append(fill);
-            }
-            buf.append(s);
-            return buf.toString();
-        }
-    }
-    
-    /**
-     * Helper method: adjusts a string to a given length by filling with blanks
-     * from the left. If the string is already longer, it is returned unchanged.
-     * @param s the string to adjust.
-     * @param n the new length.
-     * @return the adjusted string.
-     */
-    private String rjust(String s, int n) {
-        return rjust(s, n, ' ');
-    }
-    
     /* (non-Javadoc)
      * @see javaDSym.DelaneySymbol#tabularDisplay()
      */
@@ -135,7 +104,7 @@ public abstract class DelaneySymbol<T> implements Comparable<DelaneySymbol<T>>
             throw new UnsupportedOperationException("symbol must be finite");
         }
         
-        StringBuffer buf = new StringBuffer(500);
+        final StringBuffer buf = new StringBuffer(500);
         final List<Integer> idcs = new IndexList(this);
         
         int elmSize = 4;
@@ -149,48 +118,48 @@ public abstract class DelaneySymbol<T> implements Comparable<DelaneySymbol<T>>
             }
         }
         
-        buf.append(rjust("D", elmSize));
+        buf.append(Strings.rjust("D", elmSize));
         buf.append(" |");
 
         for (int i = 0; i <= dim(); ++i) {
             buf.append(" ");
-            buf.append(rjust("op" + idcs.get(i), elmSize));
+            buf.append(Strings.rjust("op" + idcs.get(i), elmSize));
         }
         buf.append(" |");
         for (int i = 0; i < dim(); ++i) {
             buf.append(" ");
-            buf.append(rjust("v" + idcs.get(i) + idcs.get(i+1), vSize));
+            buf.append(Strings.rjust("v" + idcs.get(i) + idcs.get(i+1), vSize));
         }
         buf.append("\n");
 
-        buf.append(rjust("", elmSize, '-'));
+        buf.append(Strings.rjust("", elmSize, '-'));
         buf.append("-+");
         for (int i = 0; i <= dim(); ++i) {
-            buf.append(rjust("", elmSize+1, '-'));
+            buf.append(Strings.rjust("", elmSize+1, '-'));
         }
         buf.append("-+");
         for (int i = 0; i < dim(); ++i) {
-            buf.append(rjust("", vSize+1, '-'));
+            buf.append(Strings.rjust("", vSize+1, '-'));
         }
         buf.append("-\n");
 
         for (final T D: this.elements()) {
-            buf.append(rjust(D.toString(), elmSize));
+            buf.append(Strings.rjust(D.toString(), elmSize));
             buf.append(" |");
             for (int i = 0; i <= dim(); i++) {
-                final T Di = op(idcs.get(i), D);
-                final String s = hasElement(Di) ? Di.toString() : "-";
+            	final int ii = idcs.get(i);
+            	final String s = definesOp(ii, D) ? ("" + op(ii, D)) : "-";
                 buf.append(" ");
-                buf.append(rjust(s, elmSize));
+                buf.append(Strings.rjust(s, elmSize));
             }
             buf.append(" |");
             for (int i = 0; i < dim(); i++) {
-                buf.append(" ");
                 final int i1 = idcs.get(i);
                 final int i2 = idcs.get(i+1);
-                final int v = v(i1, i2, D);
-                final String s = (v == 0) ? "-" : String.valueOf(v);
-                buf.append(rjust(s, vSize));
+                final String s =
+                		definesV(i1, i2, D) ? ("" + v(i1, i2, D)) : "-";
+                buf.append(" ");
+                buf.append(Strings.rjust(s, vSize));
             }
             buf.append("\n");
         }

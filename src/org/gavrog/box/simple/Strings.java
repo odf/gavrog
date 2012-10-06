@@ -1,5 +1,5 @@
 /*
-Copyright 2005 Olaf Delgado-Friedrichs
+Copyright 2012 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,12 +18,41 @@ package org.gavrog.box.simple;
 
 /**
  * Contains some simple utilities for strings.
- * 
- * @author Olaf Delgado
- * @version $Id: Strings.java,v 1.2 2006/05/22 22:27:47 odf Exp $
  */
 
 public class Strings {
+    /**
+     * Helper method: adjusts a string to a given length by filling from the
+     * left. If the string is already longer, it is returned unchanged.
+     * @param s the string to adjust.
+     * @param n the new length.
+     * @param fill the fill character to use. 
+     * @return the adjusted string.
+     */
+    public static String rjust(final String s, final int n, final char fill) {
+        if (s.length() >= n) {
+            return s;
+        } else {
+            final StringBuffer buf = new StringBuffer(n);
+            for (int i = n - s.length(); i > 0; --i) {
+                buf.append(fill);
+            }
+            buf.append(s);
+            return buf.toString();
+        }
+    }
+    
+    /**
+     * Helper method: adjusts a string to a given length by filling with blanks
+     * from the left. If the string is already longer, it is returned unchanged.
+     * @param s the string to adjust.
+     * @param n the new length.
+     * @return the adjusted string.
+     */
+    public static String rjust(final String s, final int n) {
+        return rjust(s, n, ' ');
+    }
+    
     /**
      * Turns a string's first letter to upper case.
      * 
