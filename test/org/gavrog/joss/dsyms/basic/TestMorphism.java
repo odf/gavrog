@@ -166,85 +166,10 @@ public class TestMorphism extends TestCase {
         assertEquals(map.size(), cover.size());
     }
 
-    public void testClear() {
-        try {
-            map.clear();
-            fail("should throw an UnsupportedOperationException");
-        } catch (UnsupportedOperationException success) {
-        }
-    }
-
-    public void testIsEmpty() {
-        assertFalse(map.isEmpty());
-    }
-
-    public void testContainsKey() {
-        for (final Iterator iter = cover.elements(); iter.hasNext();) {
-            assertTrue(map.containsKey(iter.next()));
-        }
-        assertFalse(map.containsKey("four"));
-    }
-
-    public void testContainsValue() {
-        for (final Iterator iter = ds.elements(); iter.hasNext();) {
-            assertTrue(map.containsValue(iter.next()));
-        }
-        assertFalse(map.containsValue(new Integer(4)));
-    }
-
-    public void testValues() {
-        final Collection values = map.values();
-        for (final Iterator iter = ds.elements(); iter.hasNext();) {
-            assertTrue(values.contains(iter.next()));
-        }
-        assertFalse(values.contains(new Integer(4)));
-    }
-
-    public void testPutAll() {
-        try {
-            map.putAll(new HashMap());
-            fail("should throw an UnsupportedOperationException");
-        } catch (UnsupportedOperationException success) {
-        }
-    }
-
-    public void testEntrySet() {
-        final Map testMap = new HashMap();
-        for (final Iterator iter = cover.elements(); iter.hasNext();) {
-            final Object x = iter.next();
-            testMap.put(x, getImage(x));
-        }
-        assertEquals(map.entrySet(), testMap.entrySet());
-    }
-
-    public void testKeySet() {
-        final Set keySet = map.keySet();
-        for (final Iterator iter = cover.elements(); iter.hasNext();) {
-            assertTrue(keySet.contains(iter.next()));
-        }
-        assertFalse(keySet.contains("four"));
-    }
-
     public void testGet() {
         for (final Iterator iter = cover.elements(); iter.hasNext();) {
             final Object x = iter.next();
             assertEquals(map.get(x), getImage(x));
-        }
-    }
-
-    public void testRemove() {
-        try {
-            map.remove(cover.elements().next());
-            fail("should throw an UnsupportedOperationException");
-        } catch (UnsupportedOperationException success) {
-        }
-    }
-
-    public void testPut() {
-        try {
-            map.put("a", "b");
-            fail("should throw an UnsupportedOperationException");
-        } catch (UnsupportedOperationException success) {
         }
     }
 

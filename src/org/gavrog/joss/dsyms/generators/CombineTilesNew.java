@@ -336,7 +336,7 @@ public class CombineTilesNew extends BranchAndCut<DSymbol> {
                 if (classes.areEquivalent(first, D)) {
                     continue;
                 }
-                final Map morphism;
+                final DSMorphism morphism;
                 try {
                     morphism = new DSMorphism(ds, ds, first, D);
                 } catch (IllegalArgumentException ex) {

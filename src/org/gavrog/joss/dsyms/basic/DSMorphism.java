@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,13 +16,11 @@
 
 package org.gavrog.joss.dsyms.basic;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.Pair;
@@ -32,14 +30,11 @@ import org.gavrog.box.collections.Pair;
  * This class implements a morphism from a connected, finite Delaney symbol to
  * another symbol. A Delaney symbol morphism is a map which respects the
  * neighbor relations and m-values.
- * 
- * @author Olaf Delgado
- * @version $Id: DSMorphism.java,v 1.1 2007/04/23 20:57:06 odf Exp $
  */
 
-public class DSMorphism implements Map {
-    final private Map src2img;
-    final Map img2src;
+public class DSMorphism<S, T> {
+    final private Map<S, T> src2img;
+    final Map<T, S> img2src;
     final private boolean bijective;
 
     /**
@@ -50,8 +45,8 @@ public class DSMorphism implements Map {
      * @param srcBase a base element in the source symbol.
      * @param imgBase what to map the source base element to.
      */
-    public DSMorphism(final DelaneySymbol src, final DelaneySymbol img,
-            final Object srcBase, final Object imgBase) {
+    public DSMorphism(final DelaneySymbol<S> src, final DelaneySymbol<T> img,
+            final S srcBase, final T imgBase) {
         try {
             src.size();
         } catch (UnsupportedOperationException ex) {
@@ -67,24 +62,23 @@ public class DSMorphism implements Map {
         	throw new IllegalArgumentException("elements must not be null");
         }
         
-        final List indices = new IndexList(src);
+        final List<Integer> indices = new IndexList(src);
         boolean bijective = img.isConnected();
-        src2img = new HashMap();
-        img2src = new HashMap();
+        src2img = new HashMap<S, T>();
+        img2src = new HashMap<T, S>();
         src2img.put(srcBase, imgBase);
         img2src.put(imgBase, srcBase);
-        final LinkedList queue = new LinkedList();
-        queue.addLast(new Pair(srcBase, imgBase));
+        final LinkedList<Pair<S, T>> queue = new LinkedList<Pair<S, T>>();
+        queue.addLast(new Pair<S, T>(srcBase, imgBase));
         
         while (queue.size() > 0) {
-            final Pair entry = (Pair) queue.removeFirst();
-            final Object D = entry.getFirst();
-            final Object E = entry.getSecond();
+            final Pair<S, T> entry = queue.removeFirst();
+            final S D = entry.getFirst();
+            final T E = entry.getSecond();
             
-            for (final Iterator idcs = src.indices(); idcs.hasNext();) {
-                final int i = ((Integer) idcs.next()).intValue();
-                final Object Di = src.op(i, D);
-                final Object Ei = img.op(i, E);
+            for (final int i: src.indices()) {
+                final S Di = src.op(i, D);
+                final T Ei = img.op(i, E);
                 
                 if (correspond(Di, Ei)) {
                     continue;
@@ -96,15 +90,15 @@ public class DSMorphism implements Map {
                     bijective = false;
                 }
                 for (int k = 0; k < src.dim(); ++k) {
-    				int r = ((Integer) indices.get(k)).intValue();
-    				int s = ((Integer) indices.get(k + 1)).intValue();
+    				int r = indices.get(k);
+    				int s = indices.get(k + 1);
     				if (src.m(r, s, Di) != img.m(r, s, Ei)) {
                         throw new IllegalArgumentException("no such morphism");
     				}
                 }
                 src2img.put(Di, Ei);
                 img2src.put(Ei, Di);
-                queue.addLast(new Pair(Di, Ei));
+                queue.addLast(new Pair<S, T>(Di, Ei));
             }
         }
         
@@ -117,46 +111,42 @@ public class DSMorphism implements Map {
      * @param src the source symbol.
      * @param img the image symbol.
      */
-    public DSMorphism(final DelaneySymbol src, final DelaneySymbol img) {
+    public DSMorphism(final DelaneySymbol<S> src, final DelaneySymbol<T> img) {
         this(src, img, src.elements().next(), img.elements().next());
-    }
-    
-    /**
-     * Creates an instance modelled after a given one or its inverse.
-     * 
-     * @param morphism the model morphism.
-     * @param inverse if true, try to construct the inverse.
-     */
-    private DSMorphism(final DSMorphism morphism, final boolean inverse) {
-        if (inverse) {
-            if (!morphism.isIsomorphism()) {
-                throw new IllegalArgumentException("not invertible");
-            } else {
-                this.src2img = morphism.img2src;
-                this.img2src = morphism.src2img;
-                this.bijective = true;
-            }
-        } else {
-            this.src2img = morphism.src2img;
-            this.img2src = morphism.img2src;
-            this.bijective = morphism.bijective;
-        }
     }
     
     /**
      * Creates an instance after a given one.
      * @param model the model morphism.
      */
-    public DSMorphism(final DSMorphism model) {
-        this(model, false);
+    public DSMorphism(final DSMorphism<S, T> model) {
+        this.src2img = model.src2img;
+        this.img2src = model.img2src;
+        this.bijective = model.bijective;
+    }
+    
+    /**
+     * Creates an instance as the inverse of a given one.
+     * 
+     * @param morphism the model morphism.
+     * @param dummy value does not matter.
+     */
+    private DSMorphism(final DSMorphism<T, S> model, final boolean dummy) {
+    	if (!model.isIsomorphism()) {
+    		throw new IllegalArgumentException("not invertible");
+    	} else {
+    		this.src2img = model.img2src;
+    		this.img2src = model.src2img;
+    		this.bijective = true;
+    	}
     }
     
     /**
      * Returns the inverse of a given morphism.
      * @return the morphism to invert.
      */
-    public DSMorphism inverse() {
-        return new DSMorphism(this, true);
+    public DSMorphism<T, S> inverse() {
+        return new DSMorphism<T, S>(this, true);
     }
     
     /**
@@ -166,7 +156,7 @@ public class DSMorphism implements Map {
      * @param img the possible image element.
      * @return true if img is the image of src or both are null.
      */
-    private boolean correspond(Object src, Object img) {
+    private boolean correspond(final S src, final T img) {
         if (img == null) {
             return src == null;
         } else {
@@ -188,114 +178,39 @@ public class DSMorphism implements Map {
      * @param x the image.
      * @return a source for that image.
      */
-    public Object getASource(final Object x) {
+    public S getASource(final T x) {
         return img2src.get(x);
     }
     
-    // --- Implementation of map interface starts here.
-    
-    /* (non-Javadoc)
-     * @see java.util.Map#size()
-     */
     public int size() {
         return src2img.size();
     }
 
-    /* (non-Javadoc)
-     * @see java.util.Map#clear()
-     */
-    public void clear() {
-        throw new UnsupportedOperationException("morphisms are immutable");
-    }
-
-    /* (non-Javadoc)
-     * @see java.util.Map#isEmpty()
-     */
-    public boolean isEmpty() {
-        return src2img.isEmpty();
-    }
-
-    /* (non-Javadoc)
-     * @see java.util.Map#containsKey(java.lang.Object)
-     */
-    public boolean containsKey(final Object arg0) {
-        return src2img.containsKey(arg0);
-    }
-
-    /* (non-Javadoc)
-     * @see java.util.Map#containsValue(java.lang.Object)
-     */
-    public boolean containsValue(final Object arg0) {
-        return src2img.containsValue(arg0);
-    }
-
-    /* (non-Javadoc)
-     * @see java.util.Map#values()
-     */
-    public Collection values() {
-        return src2img.values();
-    }
-
-    /* (non-Javadoc)
-     * @see java.util.Map#putAll(java.util.Map)
-     */
-    public void putAll(final Map arg0) {
-        throw new UnsupportedOperationException("morphisms are immutable");
-    }
-
-    /* (non-Javadoc)
-     * @see java.util.Map#entrySet()
-     */
-    public Set entrySet() {
-        return src2img.entrySet();
-    }
-
-    /* (non-Javadoc)
-     * @see java.util.Map#keySet()
-     */
-    public Set keySet() {
-        return src2img.keySet();
-    }
-
-    /* (non-Javadoc)
-     * @see java.util.Map#get(java.lang.Object)
-     */
-    public Object get(final Object arg0) {
+    public T get(final S arg0) {
         return src2img.get(arg0);
     }
 
-    /* (non-Javadoc)
-     * @see java.util.Map#remove(java.lang.Object)
-     */
-    public Object remove(final Object arg0) {
-        throw new UnsupportedOperationException("morphisms are immutable");
-    }
-
-    /* (non-Javadoc)
-     * @see java.util.Map#put(java.lang.Object, java.lang.Object)
-     */
-    public Object put(final Object arg0, final Object arg1) {
-        throw new UnsupportedOperationException("morphisms are immutable");
-    }
-    
     /**
      * Computes all the automorphisms of a given Delaney Symbol.
      * 
      * @param ds the input symbol.
      * @return the list of all automorphisms of ds.
      */
-    public static List automorphisms(final DelaneySymbol ds) {
-        final List result = new LinkedList();
-        final Iterator elms = ds.elements();
-        
+    public static <T> List<DSMorphism<T, T>> automorphisms(
+    		final DelaneySymbol<T> ds)
+    {
+        final List<DSMorphism<T, T>> result =
+        		new LinkedList<DSMorphism<T, T>>();
+
+        final Iterator<T> elms = ds.elements();
         if (elms.hasNext()) {
-            final Object first = elms.next();
-            result.add(new DSMorphism(ds, ds, first, first));
+            final T first = elms.next();
+            result.add(new DSMorphism<T, T>(ds, ds, first, first));
             
             while (elms.hasNext()) {
-                final Object D = elms.next();
+                final T D = elms.next();
                 try {
-                    result.add(new DSMorphism(ds, ds, first, D));
+                    result.add(new DSMorphism<T, T>(ds, ds, first, D));
                 } catch (IllegalArgumentException ex) {
                     continue;
                 }

@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -43,10 +43,6 @@ import buoy.event.EventProcessor;
  * 
  * For each isomorphism class of resulting symbols, only one respresentative is
  * produced. The order or naming of elements is not preserved.
- * 
- * @author Olaf Delgado
- * @version $Id: DefineBranching2d.java,v 1.10 2007/04/23 20:57:06 odf Exp $
- * 
  */
 public class DefineBranching2d extends BranchAndCut<DSymbol> {
     //TODO add option to change the set of branching numbers tried
@@ -55,7 +51,7 @@ public class DefineBranching2d extends BranchAndCut<DSymbol> {
 	private final int minVertDeg;
 	private final Rational minCurv;
 	private DynamicDSymbol current;
-	private List<DSMorphism> inputAutomorphisms;
+	private List<DSMorphism<Integer, Integer>> inputAutomorphisms;
 
     /**
 	 * The instances of this class represent individual moves of setting branch
