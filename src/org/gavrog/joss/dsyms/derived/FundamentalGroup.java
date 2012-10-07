@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.gavrog.joss.dsyms.derived;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -30,79 +29,75 @@ import org.gavrog.jane.fpgroups.FiniteAlphabet;
 import org.gavrog.jane.fpgroups.FpGroup;
 import org.gavrog.jane.fpgroups.FreeWord;
 import org.gavrog.jane.fpgroups.PrefixAlphabet;
-import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DSPair;
+import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.derived.Boundary.Face;
 
 
 /**
  * The fundamental group of a {@link org.gavrog.joss.dsyms.basic.DelaneySymbol}.
- * 
- * @author Olaf Delgado
- * @version $Id: FundamentalGroup.java,v 1.5 2007/04/26 20:21:58 odf Exp $
  */
-public class FundamentalGroup {
+public class FundamentalGroup<T> {
 
-    final private DelaneySymbol symbol;
+    final private DelaneySymbol<T> symbol;
 
-    final private Map edgeToWord;
+    final private Map<DSPair<T>, FreeWord<String>> edgeToWord;
 
-    final private Map generatorToEdge;
+    final private Map<FreeWord<String>, DSPair<T>> generatorToEdge;
 
-    final private Set axes;
+    final private Set<Pair<FreeWord<String>, Integer>> axes;
     
-    final private FpGroup presentation;
+    final private FpGroup<String> presentation;
 
     /**
      * Constructs a FundementalGroup instance for a given symbol.
      * 
      * @param ds the symbol.
      */
-    public FundamentalGroup(final DelaneySymbol ds) {
+    public FundamentalGroup(final DelaneySymbol<T> ds) {
         // --- initialize
-        final Boundary boundary = new Boundary(ds);
-        final Alphabet A = new PrefixAlphabet("g_");
-        final FreeWord IdWord = new FreeWord(A);
+        final Boundary<T> boundary = new Boundary<T>(ds);
+        final Alphabet<String> A = new PrefixAlphabet("g_");
+        final FreeWord<String> IdWord = new FreeWord<String>(A);
         
         this.symbol = ds;
-        this.edgeToWord = new HashMap();
-        this.generatorToEdge = new HashMap();
+        this.edgeToWord = new HashMap<DSPair<T>, FreeWord<String>>();
+        this.generatorToEdge = new HashMap<FreeWord<String>, DSPair<T>>();
 
         // --- glue fundamental ("inner") edges
-        final FundamentalEdges fund = new FundamentalEdges(ds);
-        while (fund.hasNext()) {
-            final DSPair e = (DSPair) fund.next();
+        for (final DSPair<T> e: new FundamentalEdges<T>(ds)) {
             boundary.glue(e);
             edgeToWord.put(e, IdWord);
         }
 
         // --- find generators for the fundamental group
         int nrGens = 0;
-        for (final Iterator elms = ds.elements(); elms.hasNext();) {
-            final Object D0 = elms.next();
-            for (final Iterator idcs = ds.indices(); idcs.hasNext();) {
-                final int i0 = ((Integer) idcs.next()).intValue();
+        for (final T D0: ds.elements()) {
+            for (final int i0: ds.indices()) {
                 if (boundary.isOnBoundary(i0, D0)) {
-                    final DSPair e0 = new DSPair(i0, D0);
-                    final LinkedList Q = new LinkedList();
-                    final FreeWord gen = new FreeWord(A, ++nrGens);
+                    final DSPair<T> e0 = new DSPair<T>(i0, D0);
+                    final LinkedList<Face<T>> Q = new LinkedList<Face<T>>();
+                    final FreeWord<String> gen =
+                    		new FreeWord<String>(A, ++nrGens);
                     boundary.glueAndEnqueue(i0, D0, Q);
                     edgeToWord.put(e0, gen);
                     generatorToEdge.put(gen, e0);
 
                     while (Q.size() > 0) {
-                        final Face f = (Face) Q.removeFirst();
-                        final Object D = f.getElement();
+                        final Face<T> f = Q.removeFirst();
+                        final T D = f.getElement();
                         final int i = f.getFirstIndex();
                         final int j = f.getSecondIndex();
                         if (!boundary.isOnBoundary(i, D)) {
                             continue;
                         }
-                        if (boundary.glueCountAtRidge(i, D, j) == 2 * ds.m(i,
-                                j, D)) {
-                            final DSPair e = new DSPair(i, D);
-                            final FreeWord w = traceWord(ds, f, edgeToWord);
+                        if (boundary.glueCountAtRidge(i, D, j) ==
+                        		2 * ds.m(i, j, D))
+                        {
+                            final DSPair<T> e = new DSPair<T>(i, D);
+                            final FreeWord<String> w =
+                            		traceWord(ds, f, edgeToWord);
                             edgeToWord.put(e, w.inverse());
                             boundary.glueAndEnqueue(i, D, Q);
                         }
@@ -112,67 +107,67 @@ public class FundamentalGroup {
         }
 
         // --- complete edgeToWord and convert to a finite alphabet
-        final FiniteAlphabet B = FiniteAlphabet.fromPrefix("g_", nrGens);
-        final Set edges = new HashSet(edgeToWord.keySet());
-        final Iterator edgeIter = edges.iterator();
-        while (edgeIter.hasNext()) {
-            final DSPair e = (DSPair) edgeIter.next();
-            final FreeWord w = (FreeWord) edgeToWord.get(e);
-            edgeToWord.put(e, new FreeWord(B, w));
+        final FiniteAlphabet<String> B =
+        		FiniteAlphabet.fromPrefix("g_", nrGens);
+        final Set<DSPair<T>> edges =
+        		new HashSet<DSPair<T>>(edgeToWord.keySet());
+        for (final DSPair<T> e: edges) {
+            final FreeWord<String> w = edgeToWord.get(e);
+            edgeToWord.put(e, new FreeWord<String>(B, w));
             if (!e.equals(e.reverse(ds))) {
-                edgeToWord.put(e.reverse(ds), new FreeWord(B, w.inverse()));
+                edgeToWord.put(e.reverse(ds),
+                		new FreeWord<String>(B, w.inverse()));
             }
         }
 
         // --- convert genToEdge to the same finite alphabet
-        final Set oldGens = new HashSet(generatorToEdge.keySet());
-        for (final Iterator iter = oldGens.iterator(); iter.hasNext();) {
-            final FreeWord gen = (FreeWord) iter.next();
-            final DSPair e = (DSPair) generatorToEdge.get(gen);
+        final Set<FreeWord<String>> oldGens =
+        		new HashSet<FreeWord<String>>(generatorToEdge.keySet());
+        for (final FreeWord<String> gen: oldGens) {
+            final DSPair<T> e = generatorToEdge.get(gen);
             generatorToEdge.remove(gen);
-            generatorToEdge.put(new FreeWord(B, gen), e);
+            generatorToEdge.put(new FreeWord<String>(B, gen), e);
         }
 
         // --- collect relators for the fundamental group
-        final List relators = new LinkedList();
-        this.axes = new HashSet();
-        for (final Iterator idcs = ds.indices(); idcs.hasNext();) {
-            final int i = ((Integer) idcs.next()).intValue();
-            for (final Iterator idcs1 = ds.indices(); idcs1.hasNext();) {
-                final int j = ((Integer) idcs1.next()).intValue();
+        final List<FreeWord<String>> relators =
+        		new LinkedList<FreeWord<String>>();
+        this.axes = new HashSet<Pair<FreeWord<String>, Integer>>();
+        for (final int i: ds.indices()) {
+            for (final int j: ds.indices()) {
                 if (j <= i) {
                     continue;
                 }
-                final List idx = new IndexList(i, j);
-                final Iterator reps = ds.orbitReps(idx);
-                while (reps.hasNext()) {
-                    final Object D = reps.next();
-                    final Face f = new Face(i, D, j);
-                    final FreeWord w = traceWord(ds, f, edgeToWord);
+                final List<Integer> idx = new IndexList(i, j);
+                for (final T D: ds.orbitReps(idx)) {
+                    final Face<T> f = new Face<T>(i, D, j);
+                    final FreeWord<String> w = traceWord(ds, f, edgeToWord);
                     if (w != null) {
                         final int v = ds.v(i, j, D);
-                        final FreeWord wRep = FpGroup.relatorRepresentative(w);
+                        final FreeWord<String> wRep =
+                        		FpGroup.relatorRepresentative(w);
                         relators.add(wRep.raisedTo(v));
                         if (v > 1) {
-                            axes.add(new Pair(wRep, new Integer(v)));
+                            axes.add(new Pair<FreeWord<String>, Integer>(
+                            		wRep, v));
                         }
                     }
                 }
             }
         }
-        final Set gens = new HashSet(generatorToEdge.keySet());
-        for (final Iterator gensIter = gens.iterator(); gensIter.hasNext();) {
-            final FreeWord gen = (FreeWord) gensIter.next();
-            final DSPair e = (DSPair) generatorToEdge.get(gen);
+        final Set<FreeWord<String>> gens =
+        		new HashSet<FreeWord<String>>(generatorToEdge.keySet());
+        for (final FreeWord<String> gen: gens) {
+            final DSPair<T> e = generatorToEdge.get(gen);
             final int i = e.getIndex();
-            final Object D = e.getElement();
+            final T D = e.getElement();
             if (ds.op(i, D).equals(D)) {
                 relators.add(gen.raisedTo(2));
             }
         }
 
         // --- construct the presentation
-        this.presentation = new FpGroup(B, relators);
+        this.presentation = new FpGroup<String>(B, relators);
     }
 
     /**
@@ -183,19 +178,23 @@ public class FundamentalGroup {
      * @param edgeToWord a mapping of symbol edges to words.
      * @return the product of all words read along the orbit.
      */
-    protected static FreeWord traceWord(DelaneySymbol ds, Face f, Map edgeToWord) {
-        FreeWord w = null;
+    protected static <T> FreeWord<String> traceWord(
+    		final DelaneySymbol<T> ds,
+    		final Face<T> f,
+    		final Map<DSPair<T>, FreeWord<String>> edgeToWord)
+    {
+        FreeWord<String> w = null;
         final int i = f.getFirstIndex();
         final int j = f.getSecondIndex();
-        final Object D = f.getElement();
+        final T D = f.getElement();
 
-        Object E = D;
+        T E = D;
         int k = i;
         while (true) {
-            final Object Ek = ds.op(k, E);
-            final FreeWord u = (FreeWord) edgeToWord.get(new DSPair(k, E));
-            final FreeWord uinv = (FreeWord) edgeToWord.get(new DSPair(k, Ek));
-            final FreeWord factor;
+            final T Ek = ds.op(k, E);
+            final FreeWord<String> u = edgeToWord.get(new DSPair<T>(k, E));
+            final FreeWord<String> uinv = edgeToWord.get(new DSPair<T>(k, Ek));
+            final FreeWord<String> factor;
             if (u != null) {
                 factor = u;
             } else if (uinv != null) {
@@ -222,7 +221,7 @@ public class FundamentalGroup {
      * 
      * @return a reference to edgeToWord, which is an unmodifiable map.
      */
-    public Map getEdgeToWord() {
+    public Map<DSPair<T>, FreeWord<String>> getEdgeToWord() {
         return this.edgeToWord;
     }
 
@@ -231,7 +230,7 @@ public class FundamentalGroup {
      * 
      * @return a reference to generatorToEdge, which is an unmodifiable map.
      */
-    public Map getGeneratorToEdge() {
+    public Map<FreeWord<String>, DSPair<T>> getGeneratorToEdge() {
         return this.generatorToEdge;
     }
 
@@ -240,7 +239,7 @@ public class FundamentalGroup {
      * 
      * @return the current value of symbol.
      */
-    public DelaneySymbol getSymbol() {
+    public DelaneySymbol<T> getSymbol() {
         return this.symbol;
     }
 
@@ -249,14 +248,14 @@ public class FundamentalGroup {
      * 
      * @return the set of axes, which is read-only..
      */
-    public Set getAxes() {
+    public Set<Pair<FreeWord<String>, Integer>> getAxes() {
         return this.axes;
     }
     
     /**
      * @return the presentation.
      */
-    public FpGroup getPresentation() {
+    public FpGroup<String> getPresentation() {
         return presentation;
     }
 }
