@@ -1,5 +1,5 @@
 /*
-   Copyright 2007 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,9 +17,8 @@
 
 package org.gavrog.joss.dsyms.derived;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -32,8 +31,6 @@ import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.basic.Subsymbol;
 
 /**
- * @author Olaf Delgado
- * @version $Id: Signature.java,v 1.3 2007/07/27 02:24:13 odf Exp $
  */
 public class Signature {
 	private static int gcd(int a, int b) {
@@ -53,21 +50,21 @@ public class Signature {
 		return a;
 	}
 	
-	private static List faceSizes(final DelaneySymbol ds) {
-		final List idcs = new IndexList(0, 1);
-		final List sizes = new LinkedList();
-		for (final Iterator reps = ds.orbitReps(idcs); reps.hasNext();) {
-			sizes.add(new Integer(ds.m(0, 1, reps.next())));
+	private static <T> List<Integer> faceSizes(final DelaneySymbol<T> ds) {
+		final List<Integer> idcs = new IndexList(0, 1);
+		final List<Integer> sizes = new LinkedList<Integer>();
+		for (final T D: ds.orbitReps(idcs)) {
+			sizes.add(new Integer(ds.m(0, 1, D)));
 		}
 		Collections.sort(sizes);
-		return new NiftyList(sizes);
+		return new NiftyList<Integer>(sizes);
 	}
 	
-	private static String faceSizeToTileSig(final List sig) {
-		final int max = ((Integer) sig.get(sig.size() - 1)).intValue() + 1;
+	private static String faceSizeToTileSig(final List<Integer> sig) {
+		final int max = sig.get(sig.size() - 1) + 1;
 		final int mult[] = new int[max];
-		for (final Iterator iter = sig.iterator(); iter.hasNext();) {
-			++mult[((Integer) iter.next()).intValue()];
+		for (final int m: sig) {
+			++mult[m];
 		}
 		
 		final StringBuffer buf = new StringBuffer(100);
@@ -91,7 +88,7 @@ public class Signature {
 		return buf.toString();
 	}
 
-	public static String ofTiling(final DelaneySymbol base) {
+	public static <T> String ofTiling(final DelaneySymbol<T> base) {
 		if (base.dim() == 3) {
 			return ofTiling3d(base);
 		} else if (base.dim() == 2) {
@@ -104,43 +101,45 @@ public class Signature {
 		throw new UnsupportedOperationException("unsupported kind of tiling");
 	}
 	
-	private static String ofTiling2dSpherical(final DelaneySymbol base) {
+	private static <T> String ofTiling2dSpherical(final DelaneySymbol<T> base) {
 		assert base.dim() == 2 : "must be two-dimensional";
 		final DSymbol ds = Covers.finiteUniversalCover(new DSymbol(base));
 		return faceSizeToTileSig(faceSizes(ds));
 	}
 	
-	private static String ofTiling2dEuclidean(final DelaneySymbol base) {
+	private static <T> String ofTiling2dEuclidean(final DelaneySymbol<T> base) {
 		assert base.dim() == 2 : "must be two-dimensional";
 		final DSymbol ds = Covers.toroidalCover2D(new DSymbol(base));
 		return faceSizeToTileSig(faceSizes(ds));
 	}
 	
-	private static String ofTiling3d(final DelaneySymbol base) {
+	private static <T> String ofTiling3d(final DelaneySymbol<T> base) {
 		final DSymbol ds = Covers.pseudoToroidalCover3D(base);
-		final Map countSigs = new HashMapWithDefault() {
-			public Object makeDefault() {
-				return new Integer(0);
+		final Map<List<Integer>, Integer> countSigs =
+				new HashMapWithDefault<List<Integer>, Integer>() {
+			private static final long serialVersionUID = -7426228956696237260L;
+			public Integer makeDefault() {
+				return 0;
 			}
 		};
-		final List idcs = new IndexList(0, 1, 2);
-		for (final Iterator reps = ds.orbitReps(idcs); reps.hasNext();) {
-			final List s = new NiftyList(faceSizes(new Subsymbol(ds, idcs,
-					reps.next())));
-			final int n = ((Integer) countSigs.get(s)).intValue();
+		final List<Integer> idcs = new IndexList(0, 1, 2);
+		for (final int D: ds.orbitReps(idcs)) {
+			final List<Integer> s = new NiftyList<Integer>(
+					faceSizes(new Subsymbol<Integer>(ds, idcs, D)));
+			final int n = countSigs.get(s);
 			countSigs.put(s, new Integer(n + 1));
 		}
-		final List keys[] = new List[countSigs.keySet().size()];
-		countSigs.keySet().toArray(keys);
-		Arrays.sort(keys);
+		final List<List<Integer>> keys =
+				new ArrayList<List<Integer>>(countSigs.keySet());
+		Collections.sort(keys, NiftyList.<Integer>lexicographicComparator());
 		int t = 0;
-		for (int i = 0; i < keys.length; ++i) {
-			t = gcd(t, ((Integer) countSigs.get(keys[i])).intValue());
+		for (final List<Integer> key: keys) {
+			t = gcd(t, countSigs.get(key));
 		}
 		final StringBuffer buf = new StringBuffer(100);
-		for (int i = 0; i < keys.length; ++i) {
-			final List s = keys[i];
-			final int k = ((Integer) countSigs.get(s)).intValue() / t;
+		for (int i = 0; i < keys.size(); ++i) {
+			final List<Integer> s = keys.get(i);
+			final int k = countSigs.get(s) / t;
 			if (i > 0) {
 				buf.append(" + ");
 			}
