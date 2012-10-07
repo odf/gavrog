@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -26,29 +26,25 @@ import org.gavrog.joss.dsyms.basic.Traversal;
 import org.gavrog.joss.dsyms.derived.Boundary.Face;
 
 
-
 /**
  * An iterator which generates the fundamental edges of a
  * {@link org.gavrog.joss.dsyms.basic.DelaneySymbol} corresponding to its standard
  * {@link org.gavrog.joss.dsyms.basic.Traversal}. The fundamental edges are the interior
  * edges of one possible abstract fundamental domain for the symbol.
- * 
- * @author Olaf Delgado
- * @version $Id: FundamentalEdges.java,v 1.4 2007/04/18 20:19:08 odf Exp $
  */
-public class FundamentalEdges extends IteratorAdapter {
-	final private DelaneySymbol ds;
-	final private Boundary boundary;
-	final private Traversal traversal;
-	final private LinkedList Q;
+public class FundamentalEdges<T> extends IteratorAdapter<DSPair<T>> {
+	final private DelaneySymbol<T> ds;
+	final private Boundary<T> boundary;
+	final private Traversal<T> traversal;
+	final private LinkedList<Face<T>> Q;
 	
 	/**
 	 * Constructs an instance with a default spanning tree.
 	 * 
 	 * @param ds the Delaney symbol to process.
 	 */
-	public FundamentalEdges(final DelaneySymbol ds) {
-	    this(ds, new Traversal(ds));
+	public FundamentalEdges(final DelaneySymbol<T> ds) {
+	    this(ds, new Traversal<T>(ds));
 	}
 	
 	/**
@@ -57,23 +53,26 @@ public class FundamentalEdges extends IteratorAdapter {
 	 * @param ds the Delaney symbol to process.
 	 * @param trav a traversal representing a spanning tree of <code>ds</code>.
 	 */
-	public FundamentalEdges(final DelaneySymbol ds, final Traversal trav) {
+	public FundamentalEdges(
+			final DelaneySymbol<T> ds,
+			final Traversal<T> trav)
+	{
 	    if (ds == null) {
 	        throw new NullPointerException("null argument");
 	    }
 	    this.ds = ds;
 	    this.traversal = trav;
-	    this.boundary = new Boundary(this.ds);
-	    this.Q = new LinkedList();
+	    this.boundary = new Boundary<T>(this.ds);
+	    this.Q = new LinkedList<Face<T>>();
 	}
 	
 	/**
      * This methods finds the next result.
      */
-	protected Object findNext() {
+	protected DSPair<T> findNext() {
         while (Q.size() > 0) {
-            final Face f = (Face) Q.removeFirst();
-            final Object D = f.getElement();
+            final Face<T> f = Q.removeFirst();
+            final T D = f.getElement();
             final int i = f.getFirstIndex();
             final int j = f.getSecondIndex();
             if (!boundary.isOnBoundary(i, D)) {
@@ -81,12 +80,12 @@ public class FundamentalEdges extends IteratorAdapter {
             }
             if (boundary.glueCountAtRidge(i, D, j) == 2 * ds.m(i, j, D)) {
                 boundary.glueAndEnqueue(i, D, Q);
-                return new DSPair(i, D);
+                return new DSPair<T>(i, D);
             }
         }
         while (traversal.hasNext()) {
-            final DSPair e = (DSPair) traversal.next();
-            final Object D = e.getElement();
+            final DSPair<T> e = traversal.next();
+            final T D = e.getElement();
             final int i = e.getIndex();
             if (i < 0) {
                 continue;
@@ -95,7 +94,7 @@ public class FundamentalEdges extends IteratorAdapter {
                 throw new RuntimeException("this should not happen");
             }
             boundary.glueAndEnqueue(i, D, Q);
-            return new DSPair(i, D);
+            return new DSPair<T>(i, D);
         }
         throw new NoSuchElementException("at end");
     }
