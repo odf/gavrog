@@ -26,10 +26,10 @@ import org.gavrog.box.collections.Iterators;
 import org.gavrog.jane.fpgroups.FpGroup;
 import org.gavrog.jane.fpgroups.GroupAction;
 import org.gavrog.jane.fpgroups.SmallActionsIterator;
-import org.gavrog.joss.dsyms.basic.DSCover;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
+import org.gavrog.joss.dsyms.derived.DSCover;
 import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 import org.gavrog.joss.dsyms.derived.FundamentalGroup;
 

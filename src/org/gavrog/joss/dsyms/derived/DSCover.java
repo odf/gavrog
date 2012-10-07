@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package org.gavrog.joss.dsyms.basic;
+package org.gavrog.joss.dsyms.derived;
 
 import java.util.Iterator;
 import java.util.List;
@@ -23,7 +23,11 @@ import java.util.Map;
 import org.gavrog.jane.fpgroups.FreeWord;
 import org.gavrog.jane.fpgroups.GroupAction;
 import org.gavrog.jane.fpgroups.GroupActions;
-import org.gavrog.joss.dsyms.derived.FundamentalGroup;
+import org.gavrog.joss.dsyms.basic.DSMorphism;
+import org.gavrog.joss.dsyms.basic.DSPair;
+import org.gavrog.joss.dsyms.basic.DSymbol;
+import org.gavrog.joss.dsyms.basic.DelaneySymbol;
+import org.gavrog.joss.dsyms.basic.IndexList;
 
 /**
  * @author Olaf Delgado

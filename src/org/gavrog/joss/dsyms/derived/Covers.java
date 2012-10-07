@@ -33,7 +33,6 @@ import org.gavrog.jane.fpgroups.GroupActions;
 import org.gavrog.jane.fpgroups.SmallActionsIterator;
 import org.gavrog.jane.fpgroups.Stabilizer;
 import org.gavrog.jane.numbers.Whole;
-import org.gavrog.joss.dsyms.basic.DSCover;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;

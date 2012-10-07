@@ -29,8 +29,8 @@ import java.util.Set;
 
 import org.gavrog.apps._3dt.DisplayList.Item;
 import org.gavrog.box.collections.Pair;
-import org.gavrog.joss.dsyms.basic.DSCover;
 import org.gavrog.joss.dsyms.basic.DSymbol;
+import org.gavrog.joss.dsyms.derived.DSCover;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.INode;
