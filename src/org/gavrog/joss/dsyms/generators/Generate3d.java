@@ -111,7 +111,7 @@ public class Generate3d extends IteratorAdapter {
 				}
 			} else if (actions.hasNext()) {
 				final GroupAction action = (GroupAction) actions.next();
-				final DSymbol set = new DSCover(G, action);
+				final DSymbol set = DSCover.fromFundamentalGroupAction(G, action);
 				if (this.edgeTransitive && set.numberOfOrbits(edgeIndices) > 1) {
 					continue;
 				}

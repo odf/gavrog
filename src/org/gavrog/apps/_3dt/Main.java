@@ -3584,7 +3584,7 @@ public class Main extends EventSource {
 		final DSCover ds = doc().getTiling().getCover();
 		final Set<Object> orb = new HashSet<Object>();
 		for (final int E0: ds.elements()) {
-			if (ds.image(E0).equals(ds.image(D0))) {
+			if (ds.image(E0).equals(ds.image((Integer) D0))) {
 				int E = E0;
 				do {
 					orb.add(E);

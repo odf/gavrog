@@ -1,5 +1,5 @@
 /*
-   Copyright 2007 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -40,9 +40,6 @@ import org.gavrog.joss.dsyms.basic.IndexList;
 
 /**
  * Utility methods for constructing Delaney symbol covers.
- * 
- * @author Olaf Delgado
- * @version $Id: Covers.java,v 1.13 2007/11/28 03:31:53 odf Exp $
  */
 public class Covers {
     /**
@@ -69,7 +66,7 @@ public class Covers {
             final int sz = ds.sphericalGroupSize2D();
             assert sz == n : "group size is " + n + ", but should be " + sz;
         }
-        return new DSCover(fg, T);
+        return DSCover.fromFundamentalGroupAction(fg, T);
     }
     
     /**
@@ -101,7 +98,7 @@ public class Covers {
         
         return new IteratorAdapter() {
             protected Object findNext() throws NoSuchElementException {
-                return new DSCover(F, (GroupAction) actions.next());
+                return DSCover.fromFundamentalGroupAction(F, (GroupAction) actions.next());
             }
         };
     }
@@ -143,7 +140,7 @@ public class Covers {
         while (actions.hasNext()) {
             final GroupAction action = (GroupAction) actions.next();
             if (annihilatesAxes(action, G.getAxes())) {
-                final DSymbol cov = new DSCover(G, action);
+                final DSymbol cov = DSCover.fromFundamentalGroupAction(G, action);
                 return new DSCover(cov, ds, ds.elements().next());
             }
         }
@@ -294,7 +291,7 @@ public class Covers {
                 final Object base = action.domain().next();
                 final Stabilizer stab = new Stabilizer(action, base);
                 if (stab.getPresentation().abelianInvariants().equals(expected)) {
-                    final DSymbol cov = new DSCover(G, action);
+                    final DSymbol cov = DSCover.fromFundamentalGroupAction(G, action);
                     return new DSCover(cov, ds, ds.elements().next());
                 }
             }

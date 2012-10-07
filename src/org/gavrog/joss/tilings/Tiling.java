@@ -391,10 +391,10 @@ public class Tiling<T> {
 
                 // --- compute affine maps from start chamber to its images
                 final Set<Morphism> syms = new HashSet<Morphism>();
-                final Object E = cover.image(D0);
+                final Object E = cover.image((Integer) D0);
                 for (final Iterator elms = cover.elements(); elms.hasNext();) {
                     final Object D = elms.next();
-                    if (cover.image(D).equals(E)) {
+                    if (cover.image((Integer) D).equals(E)) {
                         syms.add(derivedMorphism(D0, D));
                     }
                 }
@@ -769,7 +769,7 @@ public class Tiling<T> {
             final Object D = skel.chamberAtNode(v);
         	final Integer k = chamber2tile.get(D);
             this.index = k.intValue();
-            this.kind = chamber2kind.get(cover.image(D));
+            this.kind = chamber2kind.get(cover.image((Integer) D));
 
             final int deg = v.degree();
         	this.facets = new ArrayList<Facet>();
