@@ -88,11 +88,11 @@ public class DSCover<T> extends DSymbol {
      * @param G a fundamental group of a symbol.
      * @param action an action of the fundamental group.
      */
-    public static DSCover<Integer> fromFundamentalGroupAction(
-    		final FundamentalGroup<Integer> G,
-    		final GroupAction<String, Integer> action)
+    public DSCover(
+            final FundamentalGroup<T> G,
+    		final GroupAction<String, ?> action)
     {
-        return new DSCover<Integer>(make(G, action));
+        this(make(G, action));
     }
 
     /**
@@ -107,25 +107,19 @@ public class DSCover<T> extends DSymbol {
      * 
      * @return a descriptor for the new symbol to pass to the constructor.
      */
-    private static Descriptor<Integer> make(
-    		final FundamentalGroup<Integer> G,
-            final GroupAction<String, Integer> action) {
+    private static <T> Descriptor<T> make(
+    		final FundamentalGroup<T> G,
+            final GroupAction<String, ?> action) {
 
         if (action.getGroup() != G.getPresentation()) {
             final String s = "the action must be by the same group";
             throw new IllegalArgumentException(s);
         }
         
-        if (!(G.getSymbol() instanceof DSymbol)) {
-            // TODO fix this
-            final String s = "only DSymbols are supported as base symbols";
-            throw new UnsupportedOperationException(s);
-        }
-        
         // --- preliminaries
-        final DelaneySymbol<Integer> ds = (DSymbol) G.getSymbol();
-        final Map<DSPair<Integer>, FreeWord<String>> edge2word =
-        		G.getEdgeToWord();
+        final DelaneySymbol<T> symbol = G.getSymbol();
+        final DelaneySymbol<Integer> ds = symbol.flat();
+        final Map<DSPair<T>, FreeWord<String>> edge2word = G.getEdgeToWord();
         final GroupAction<String, Integer> flatAction =
         		GroupActions.flat(action);
         
@@ -166,7 +160,7 @@ public class DSCover<T> extends DSymbol {
             }
         }
         
-        return new Descriptor<Integer>(op, v, ds, ds.elements().next());
+        return new Descriptor<T>(op, v, symbol, symbol.elements().next());
     }
     
     /**

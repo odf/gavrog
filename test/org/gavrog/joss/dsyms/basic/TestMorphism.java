@@ -36,7 +36,7 @@ import junit.framework.TestCase;
  * @version $Id: TestMorphism.java,v 1.1 2007/04/23 20:57:07 odf Exp $
  */
 public class TestMorphism extends TestCase {
-    private DelaneySymbol ds;
+    private DSymbol ds;
     private DelaneySymbol renumbered;
     private DelaneySymbol unconnected;
     private DelaneySymbol cover;

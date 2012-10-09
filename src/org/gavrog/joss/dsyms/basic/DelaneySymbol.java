@@ -958,7 +958,7 @@ public abstract class DelaneySymbol<T> implements Comparable<DelaneySymbol<T>>
      * 
      * @return the oriented cover of this symbol.
      */
-    public DelaneySymbol<?> orientedCover() {
+    public DelaneySymbol<Integer> orientedCover() {
         try {
             size();
         } catch (UnsupportedOperationException ex) {
@@ -966,7 +966,7 @@ public abstract class DelaneySymbol<T> implements Comparable<DelaneySymbol<T>>
         }
 
         if (isOriented()) {
-            return this;
+            return this.flat();
         } else {
             final int n = size();
             final int d = dim();

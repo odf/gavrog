@@ -113,7 +113,7 @@ public class TestCovers extends TestCase {
         testPseudoToroidalCover3D(new DSymbol("3 3:1 2 3,1 3,2 3,1 2 3:6 4,3,4 3"), 72);
     }
     
-    private void testFiniteUniversalCover(final DelaneySymbol ds, final int n) {
+    private void testFiniteUniversalCover(final DSymbol ds, final int n) {
         final DSCover cov = Covers.finiteUniversalCover(ds);
         assertEquals(n, cov.size());
         if (ds.dim() == 2 && ds.isSpherical2D()) {

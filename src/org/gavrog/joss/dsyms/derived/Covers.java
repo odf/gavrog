@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Pair;
+import org.gavrog.jane.fpgroups.Coset;
 import org.gavrog.jane.fpgroups.CosetAction;
 import org.gavrog.jane.fpgroups.FpGroup;
 import org.gavrog.jane.fpgroups.FreeWord;
@@ -53,20 +54,23 @@ public class Covers {
      * @param ds a Delaney symbol.
      * @return the universal cover of ds.
      */
-    public static DSCover finiteUniversalCover(final DelaneySymbol ds) {
+    public static <T> DSCover<T> finiteUniversalCover(
+            final DelaneySymbol<T> ds)
+    {
         if (ds.dim() == 2 && !ds.curvature2D().isPositive()) {
             // --- we can check for a finite cover in 2d
             throw new UnsupportedOperationException("result would be infinite");
         }
-        final FundamentalGroup fg = new FundamentalGroup(ds);
-        final GroupAction T = new CosetAction(fg.getPresentation());
+        final FundamentalGroup<T> fg = new FundamentalGroup<T>(ds);
+        final GroupAction<String, Coset<String, T>> T =
+                new CosetAction<String, T>(fg.getPresentation());
         final int n = T.size();
         if (ds.dim() == 2 && ds.isSpherical2D()) {
             // --- another quick check for a special case
             final int sz = ds.sphericalGroupSize2D();
             assert sz == n : "group size is " + n + ", but should be " + sz;
         }
-        return DSCover.fromFundamentalGroupAction(fg, T);
+        return new DSCover<T>(fg, T);
     }
     
     /**
@@ -81,24 +85,27 @@ public class Covers {
      * @param ds a Delaney symbol.
      * @return an iterator over the covers of ds.
      */
-    public static Iterator allCovers(final DelaneySymbol ds) {
+    public static <T> Iterator<DSCover<T>> allCovers(
+            final DelaneySymbol<T> ds)
+    {
         if (ds.dim() == 2 && !ds.curvature2D().isPositive()) {
             // --- we can check for a finite cover in 2d
             throw new UnsupportedOperationException("result would be infinite");
         }
-        final FundamentalGroup F = new FundamentalGroup(ds);
-        final FpGroup G = F.getPresentation();
-        final int n = new CosetAction(G).size();
+        final FundamentalGroup<T> F = new FundamentalGroup<T>(ds);
+        final FpGroup<String> G = F.getPresentation();
+        final int n = new CosetAction<String, T>(G).size();
         if (ds.dim() == 2 && ds.isSpherical2D()) {
             // --- another quick check for a special case
             final int sz = ds.sphericalGroupSize2D();
             assert sz == n : "group size is " + n + ", but should be " + sz;
         }
-        final Iterator actions = new SmallActionsIterator(G, n, false);
+        final Iterator<GroupAction<String, Integer>> actions =
+                new SmallActionsIterator<String>(G, n, false);
         
-        return new IteratorAdapter() {
-            protected Object findNext() throws NoSuchElementException {
-                return DSCover.fromFundamentalGroupAction(F, (GroupAction) actions.next());
+        return new IteratorAdapter<DSCover<T>>() {
+            protected DSCover<T> findNext() throws NoSuchElementException {
+                return new DSCover<T>(F, actions.next());
             }
         };
     }
@@ -110,7 +117,7 @@ public class Covers {
      * @param ds the original symbol.
      * @return the toroidal cover.
      */
-    public static DSCover toroidalCover2D(final DelaneySymbol ds) {
+    public static <T> DSCover<T> toroidalCover2D(final DelaneySymbol<T> ds) {
         if (ds.dim() != 2) {
             final String s = "symbol must be 2-dimensional";
             throw new UnsupportedOperationException(s);
@@ -120,28 +127,28 @@ public class Covers {
             throw new UnsupportedOperationException(s);
         }
         
-        final List idcs = new IndexList(ds);
+        final List<Integer> idcs = new IndexList(ds);
         int deg = 1;
 		for (int k = 0; k < ds.dim(); ++k) {
-			final int i = ((Integer) idcs.get(k)).intValue();
+			final int i = idcs.get(k);
 			for (int l = k + 1; l <= ds.dim(); ++l) {
-				final int j = ((Integer) idcs.get(l)).intValue();
-				final Iterator reps = ds.orbitReps(new IndexList(i, j));
-				while (reps.hasNext()) {
-					deg = Math.max(deg, ds.v(i, j, reps.next()));
+				final int j = idcs.get(l);
+				for (final T D: ds.orbitReps(new IndexList(i, j))) {
+					deg = Math.max(deg, ds.v(i, j, D));
 				}
 			}
 		}
         
-        final DelaneySymbol dso = ds.orientedCover();
-        final FundamentalGroup G = new FundamentalGroup(dso);
-        final Iterator actions = new SmallActionsIterator(G.getPresentation(),
-                deg, true);
+        final DelaneySymbol<Integer> dso = ds.orientedCover();
+        final FundamentalGroup<Integer> G = new FundamentalGroup<Integer>(dso);
+        final FpGroup<String> pres = G.getPresentation();
+        final Iterator<GroupAction<String, Integer>> actions =
+                new SmallActionsIterator<String>(pres, deg, true);
         while (actions.hasNext()) {
-            final GroupAction action = (GroupAction) actions.next();
+            final GroupAction<String, Integer> action = actions.next();
             if (annihilatesAxes(action, G.getAxes())) {
-                final DSymbol cov = DSCover.fromFundamentalGroupAction(G, action);
-                return new DSCover(cov, ds, ds.elements().next());
+                final DSymbol cov = new DSCover<Integer>(G, action);
+                return new DSCover<T>(cov, ds, ds.elements().next());
             }
         }
         
@@ -161,7 +168,9 @@ public class Covers {
      * @param ds a 3-dimensional Delaney symbol.
      * @return the pseudo-toroidal cover or null.
      */
-    public static DSCover pseudoToroidalCover3D(final DelaneySymbol ds) {
+    public static <T> DSCover<T> pseudoToroidalCover3D(
+            final DelaneySymbol<T> ds)
+    {
         if (ds.dim() != 3) {
             final String s = "symbol must be 3-dimensional";
             throw new UnsupportedOperationException(s);
@@ -171,34 +180,61 @@ public class Covers {
             throw new UnsupportedOperationException(s);
         }
 
-        final List z1 = new LinkedList();
-        final List z2 = new LinkedList();
-        final List z2a = new LinkedList();
-        final List z2b = new LinkedList();
-        final List z3 = new LinkedList();
-        final List z3a = new LinkedList();
-        final List z4 = new LinkedList();
-        final List v4 = new LinkedList();
-        final List s3 = new LinkedList();
-        final List s3a = new LinkedList();
-        final List z6 = new LinkedList();
-        final List d4 = new LinkedList();
-        final List d6 = new LinkedList();
-        final List a4 = new LinkedList();
-        final List s4 = new LinkedList();
+        final List<GroupAction<String, Integer>> z1 =
+                new LinkedList<GroupAction<String, Integer>>();
+        final List<GroupAction<String, Integer>> z2 =
+                new LinkedList<GroupAction<String, Integer>>();
+        final List<GroupAction<String, Integer>> z2a =
+                new LinkedList<GroupAction<String, Integer>>();
+        final List<GroupAction<String, Integer>> z2b =
+                new LinkedList<GroupAction<String, Integer>>();
+        final List<GroupAction<String, Integer>> z3 =
+                new LinkedList<GroupAction<String, Integer>>();
+        final List<GroupAction<String, Integer>> z3a =
+                new LinkedList<GroupAction<String, Integer>>();
+        final List<GroupAction<String, Integer>> z4 =
+                new LinkedList<GroupAction<String, Integer>>();
+        final List<GroupAction<String, Integer>> v4 =
+                new LinkedList<GroupAction<String, Integer>>();
+        final List<GroupAction<String, Integer>> s3 =
+                new LinkedList<GroupAction<String, Integer>>();
+        final List<GroupAction<String, Integer>> s3a =
+                new LinkedList<GroupAction<String, Integer>>();
+        final List<GroupAction<String, Integer>> z6 =
+                new LinkedList<GroupAction<String, Integer>>();
+        final List<GroupAction<String, Integer>> d4 =
+                new LinkedList<GroupAction<String, Integer>>();
+        final List<GroupAction<String, Integer>> d6 =
+                new LinkedList<GroupAction<String, Integer>>();
+        final List<GroupAction<String, Integer>> a4 =
+                new LinkedList<GroupAction<String, Integer>>();
+        final List<GroupAction<String, Integer>> s4 =
+                new LinkedList<GroupAction<String, Integer>>();
         
-        final List lists[] =
-            new List[] { z1, z2, z3, z4, v4, s3, z6, d4, d6, a4, s4 };
+        final List<List<GroupAction<String, Integer>>> lists =
+            new LinkedList<List<GroupAction<String, Integer>>>();
+        lists.add(z1);
+        lists.add(z2);
+        lists.add(z3);
+        lists.add(z4);
+        lists.add(v4);
+        lists.add(s3);
+        lists.add(z6);
+        lists.add(d4);
+        lists.add(d6);
+        lists.add(a4);
+        lists.add(s4);
         
-        final DelaneySymbol dso = ds.orientedCover();
-        final FundamentalGroup G = new FundamentalGroup(dso);
+        final DelaneySymbol<Integer> dso = ds.orientedCover();
+        final FundamentalGroup<Integer> G = new FundamentalGroup<Integer>(dso);
         
-        final Set allAxes = G.getAxes();
-        final Set o2Axes = new HashSet();
-        final Set o3Axes = new HashSet();
-        for (final Iterator iter = allAxes.iterator(); iter.hasNext();) {
-            final Pair axis = (Pair) iter.next();
-            final int order = ((Integer) axis.getSecond()).intValue();
+        final Set<Pair<FreeWord<String>, Integer>> allAxes = G.getAxes();
+        final Set<Pair<FreeWord<String>, Integer>> o2Axes =
+                new HashSet<Pair<FreeWord<String>, Integer>>();
+        final Set<Pair<FreeWord<String>, Integer>> o3Axes =
+                new HashSet<Pair<FreeWord<String>, Integer>>();
+        for (final Pair<FreeWord<String>, Integer> axis: allAxes) {
+            final int order = axis.getSecond();
             if (order == 2) {
                 o2Axes.add(axis);
             } else if (order == 3) {
@@ -208,15 +244,15 @@ public class Covers {
             }
         }
         
-        final FpGroup pres = G.getPresentation();
-        final Iterator actions = new SmallActionsIterator(pres, 4, false);
-        int count = 0;
+        final FpGroup<String> pres = G.getPresentation();
+        final Iterator<GroupAction<String, Integer>> actions =
+                new SmallActionsIterator<String>(pres, 4, false);
 
         while (actions.hasNext()) {
-            ++count;
-            final GroupAction action = (GroupAction) actions.next();
-            final GroupAction core = GroupActions.flat(GroupActions
-                    .orbit(GroupActions.cover(action)));
+            final GroupAction<String, Integer> core =
+                    GroupActions.flat(
+                            GroupActions.orbit(
+                                    GroupActions.cover(actions.next())));
             final int index = core.size();
             
             if (index == 2) {
@@ -255,44 +291,45 @@ public class Covers {
             }
         }
             
-        for (final Iterator it1 = z3a.iterator(); it1.hasNext();) {
-            final GroupAction a = (GroupAction) it1.next();
-            for (final Iterator it2 = z2a.iterator(); it2.hasNext();) {
-                final GroupAction b = (GroupAction) it2.next();
-                final GroupAction prod = GroupActions.flat(GroupActions
-                        .orbit(GroupActions.product(a, b)));
+        for (final GroupAction<String, Integer> a: z3a) {
+            for (final GroupAction<String, Integer> b: z2a) {
+                final GroupAction<String, Integer> prod =
+                        GroupActions.flat(
+                                GroupActions.orbit(
+                                        GroupActions.product(a, b)));
                 if (prod.size() == 6 && annihilatesAxes(prod, allAxes)) {
                     z6.add(prod);
                 }
             }
         }
         
-        for (final Iterator it1 = s3a.iterator(); it1.hasNext();) {
-            final GroupAction a = (GroupAction) it1.next();
-            for (final Iterator it2 = z2b.iterator(); it2.hasNext();) {
-                final GroupAction b = (GroupAction) it2.next();
-                final GroupAction prod =
-                    GroupActions.orbit(GroupActions.product(a, b));
+        for (final GroupAction<String, Integer> a: s3a) {
+            for (final GroupAction<String, Integer> b: z2b) {
+                final GroupAction<String, Integer> prod =
+                        GroupActions.flat(
+                                GroupActions.orbit(
+                                        GroupActions.product(a, b)));
                 if (prod.size() == 12 && annihilatesAxes(prod, allAxes)) {
                     d6.add(prod);
                 }
             }
         }
         
-        final List expected = new LinkedList();
+        final List<Whole> expected = new LinkedList<Whole>();
         expected.add(Whole.ZERO);
         expected.add(Whole.ZERO);
         expected.add(Whole.ZERO);
         
-        for (int i = 0; i < lists.length; ++i) {
-            final List list = lists[i];
-            for (final Iterator iter = list.iterator(); iter.hasNext();) {
-                final GroupAction action = (GroupAction) iter.next();
-                final Object base = action.domain().next();
-                final Stabilizer stab = new Stabilizer(action, base);
-                if (stab.getPresentation().abelianInvariants().equals(expected)) {
-                    final DSymbol cov = DSCover.fromFundamentalGroupAction(G, action);
-                    return new DSCover(cov, ds, ds.elements().next());
+        for (final List<GroupAction<String, Integer>> list: lists) {
+            for (final GroupAction<String, Integer> action: list) {
+                final int base = action.domain().next();
+                final Stabilizer<String, Integer> stab =
+                        new Stabilizer<String, Integer>(action, base);
+                if (stab.getPresentation().abelianInvariants()
+                        .equals(expected))
+                {
+                    final DSymbol cov = new DSCover<Integer>(G, action);
+                    return new DSCover<T>(cov, ds, ds.elements().next());
                 }
             }
         }
@@ -307,12 +344,16 @@ public class Covers {
      * @param action the group action.
      * @return true if a noninvolutive generator exists.
      */
-    private static boolean hasNonInvolutiveGenerator(GroupAction action) {
-        final List generators = action.getGroup().getGenerators();
-        for (final Iterator domain = action.domain(); domain.hasNext();) {
-            final Object x = domain.next();
-            for (final Iterator gens = generators.iterator(); gens.hasNext();) {
-                final FreeWord g = (FreeWord) gens.next();
+    private static boolean hasNonInvolutiveGenerator(
+            final GroupAction<String, Integer> action)
+    {
+        final List<FreeWord<String>> generators =
+                action.getGroup().getGenerators();
+        for (final Iterator<Integer> domain = action.domain();
+                domain.hasNext();)
+        {
+            final int x = domain.next();
+            for (final FreeWord<String> g: generators) {
                 if (!action.apply(x, g.raisedTo(2)).equals(x)) {
                     return true;
                 }
@@ -339,21 +380,21 @@ public class Covers {
      * 
      * @return true if the given axis is annihilated.
      */
-    private static boolean annihilatesAxes(final GroupAction action,
-            final Set axes) {
-        
-        final Object x0 = action.domain().next();
-        for (final Iterator iter = axes.iterator(); iter.hasNext();) {
-            final Pair pair = (Pair) iter.next();
-            final FreeWord w = (FreeWord) pair.getFirst();
-            final int expected = ((Integer) pair.getSecond()).intValue();
+    private static boolean annihilatesAxes(
+            final GroupAction<String, Integer> action,
+            final Set<Pair<FreeWord<String>, Integer>> axes)
+    {
+        final int x0 = action.domain().next();
+        for (final Pair<FreeWord<String>, Integer> pair: axes) {
+            final FreeWord<String> w = pair.getFirst();
+            final int expected = pair.getSecond();
             
-            Object x = x0;
+            int x = x0;
             int order = 0;
             do {
                 x = action.apply(x, w);
                 ++order;
-            } while (!x.equals(x0));
+            } while (x != x0);
             if (expected % order != 0) {
                 throw new RuntimeException("this should never happen");
             }
