@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,11 +38,19 @@ import org.gavrog.joss.dsyms.basic.IndexList;
 /**
 */
 public class OrbifoldGraph {
+    private final class Orbit extends Pair<IndexList, Integer>
+    {
+        public Orbit(final IndexList idcs, final int elm)
+        {
+            super(idcs, elm);
+        }
+    }
+    
     final private String[] stabilizers;
-    final private List edges;
-	final private List[] neighbors;
+    final private List<int[]> edges;
+	final private List<List<Integer>> neighbors;
 
-    public OrbifoldGraph(final DelaneySymbol input) {
+    public <T> OrbifoldGraph(final DelaneySymbol<T> input) {
         final DSymbol ds = new DSymbol(input);
         
         // --- check argument
@@ -57,18 +65,19 @@ public class OrbifoldGraph {
         
         // --- initialize
         final int d = ds.dim();
-        final Map edges = new HashMap();
-        final Map orb2type = new HashMap();
-        final Map orb2rep = new HashMap();
-        final Map orb2elms = new HashMap();
+        final Map<Orbit, List<Orbit>> edges = new HashMap<Orbit, List<Orbit>>();
+        final Map<Orbit, String> orb2type = new HashMap<Orbit, String>();
+        final Map<Orbit, Orbit> orb2rep = new HashMap<Orbit, Orbit>();
+        final Map<Orbit, List<Integer>> orb2elms =
+                new HashMap<Orbit, List<Integer>>();
         
         // --- process 0-dimensional orbits (chamber faces)
         for (int i = 0; i <= d; ++i) {
             for (final int D: ds.elements()) {
                 if (ds.op(i, D).equals(D)) {
-                    final Pair orb = new Pair(new IndexList(i), D);
+                    final Orbit orb = new Orbit(new IndexList(i), D);
                     orb2type.put(orb, "1*");
-                    edges.put(orb, new ArrayList());
+                    edges.put(orb, new ArrayList<Orbit>());
                 }
             }
         }
@@ -76,16 +85,16 @@ public class OrbifoldGraph {
         // --- add 1-dimensional orbits (chamber edges)
         
         for (int i = 0; i < d; ++i) {
-            final List ili = new IndexList(i);
+            final IndexList ili = new IndexList(i);
             for (int j = i+1; j <= d; ++j) {
-                final List ilj = new IndexList(j);
-                final List<Integer> idcs = new IndexList(i, j);
+                final IndexList ilj = new IndexList(j);
+                final IndexList idcs = new IndexList(i, j);
                 for (final int D: ds.orbitReps(idcs)) {
                     // --- find the 0-dim orbits of type "*" in this orbit
-                    final List cuts = new ArrayList();
+                    final List<Orbit> cuts = new ArrayList<Orbit>();
                     for (final int E: ds.orbit(idcs, D)) {
-                        final Pair ci = new Pair(ili, E);
-                        final Pair cj = new Pair(ilj, E);
+                        final Orbit ci = new Orbit(ili, E);
+                        final Orbit cj = new Orbit(ilj, E);
                         if (orb2type.containsKey(ci)) {
                             cuts.add(ci);
                         }
@@ -111,13 +120,12 @@ public class OrbifoldGraph {
                     	}
                     }
                     
-                    final Pair orb = new Pair(idcs, D);
+                    final Orbit orb = new Orbit(idcs, D);
                     orb2elms.put(orb, Iterators.asList(ds.orbit(idcs, D)));
                     
                     // --- let this orbit be represented by element D
-                    for (final Iterator iter = ds.orbit(idcs, D); iter
-                            .hasNext();) {
-                        orb2rep.put(new Pair(idcs, iter.next()), orb);
+                    for (final int E: ds.orbit(idcs, D)) {
+                        orb2rep.put(new Orbit(idcs, E), orb);
                     }
                                         
                     // --- store and link this orbit if stabilizer not trivial
@@ -125,13 +133,13 @@ public class OrbifoldGraph {
                         orb2type.put(orb, type);
                         
                         if (cuts.size() > 0) {
-                            final Pair ca = (Pair) cuts.get(0);
-                            final Pair cb = (Pair) cuts.get(1);
-                            ((List) edges.get(ca)).add(orb);
-                            ((List) edges.get(cb)).add(orb);
+                            final Orbit ca = cuts.get(0);
+                            final Orbit cb = cuts.get(1);
+                            edges.get(ca).add(orb);
+                            edges.get(cb).add(orb);
                             edges.put(orb, cuts);
                         } else {
-                            edges.put(orb, new ArrayList());
+                            edges.put(orb, new ArrayList<Orbit>());
                         }
                     }
                 }
@@ -140,27 +148,26 @@ public class OrbifoldGraph {
 
         // --- add 2-dimensional orbits (chamber vertices)
         for (int i = 0; i <= 3; ++i) {
-            final List<Integer> idcs = new IndexList(ds);
+            final IndexList idcs = new IndexList(ds);
             idcs.remove(new Integer(i));
             for (final int E: ds.orbitReps(idcs)) {
                 final List<Integer> sub = Iterators.asList(ds.orbit(idcs, E));
-                final List cones = new ArrayList();
-                final List corners = new ArrayList();
-                final List neighbors = new ArrayList();
+                final List<String> cones = new ArrayList<String>();
+                final List<String> corners = new ArrayList<String>();
+                final List<Orbit> neighbors = new ArrayList<Orbit>();
                 
                 // --- collect all relevant 1-dim orbits this one contains
                 for (int j = 0; j <= 2; ++j) {
-                    final int n = ((Integer) idcs.get((j + 1) % 3)).intValue();
-                    final int m = ((Integer) idcs.get((j + 2) % 3)).intValue();
-                    final List ilnm = new IndexList(Math.min(n, m), Math.max(n,
-                            m));
-                    final Set seen = new HashSet();
+                    final int n = idcs.get((j + 1) % 3);
+                    final int m = idcs.get((j + 2) % 3);
+                    final IndexList ilnm =
+                            new IndexList(Math.min(n, m), Math.max(n, m));
+                    final Set<Integer> seen = new HashSet<Integer>();
                     for (final int D: sub) {
                         if (!seen.contains(D)) {
-                            final Pair orb0 = new Pair(ilnm, D);
-                            final Pair orb = (Pair) orb2rep.get(orb0);    
-                            final String t = (String) orb2type.get(orb);
-                            seen.addAll((List) orb2elms.get(orb));
+                            final Orbit orb = orb2rep.get(new Orbit(ilnm, D));
+                            final String t = orb2type.get(orb);
+                            seen.addAll(orb2elms.get(orb));
                             if (t != null) {
                                 if (t.charAt(0) == '*') {
                                     corners.add(t.substring(1, 2));
@@ -168,7 +175,7 @@ public class OrbifoldGraph {
                                     cones.add(t.substring(0, 1));
                                 }
                                 neighbors.add(orb);
-                                seen.addAll((List) orb2elms.get(orb));
+                                seen.addAll(orb2elms.get(orb));
                             }
                         }
                     }
@@ -184,14 +191,13 @@ public class OrbifoldGraph {
                 final int D = sub.get(0);
                 
                 final StringBuffer buf = new StringBuffer(20);
-                for (final Iterator iter = cones.iterator(); iter.hasNext();) {
-                	buf.append(iter.next());
+                for (final String s: cones) {
+                	buf.append(s);
                 }
                 if (!ds.orbitIsLoopless(idcs, D)) {
                 	buf.append('*');
-                    for (final Iterator iter = corners.iterator(); iter
-							.hasNext();) {
-						buf.append(iter.next());
+                    for (final String s: corners) {
+						buf.append(s);
 					}
                 }
                 if (!ds.orbitIsWeaklyOriented(idcs, D)) {
@@ -207,52 +213,47 @@ public class OrbifoldGraph {
                 }
                 
                 // --- store and link new orbit
-                final Pair orb = new Pair(idcs, D);
+                final Orbit orb = new Orbit(idcs, D);
                 orb2type.put(orb, type);
                 edges.put(orb, neighbors);
-                for (final Iterator iter = neighbors.iterator(); iter.hasNext();) {
-                	final Object n = iter.next();
-                	((List) edges.get(n)).add(orb);
+                for (final Orbit n: neighbors) {
+                	edges.get(n).add(orb);
                 }
             }
         }
 
         // --- sort orbits by types
-        final List orbs = new ArrayList();
+        final List<Orbit> orbs = new ArrayList<Orbit>();
         orbs.addAll(orb2type.keySet());
-        Collections.sort(orbs, new Comparator() {
-            public int compare(final Object arg0, final Object arg1) {
-                final String type0 = (String) orb2type.get(arg0);
-                final String type1 = (String) orb2type.get(arg1);
+        Collections.sort(orbs, new Comparator<Orbit>() {
+            public int compare(final Orbit arg0, final Orbit arg1) {
+                final String type0 = orb2type.get(arg0);
+                final String type1 = orb2type.get(arg1);
                 return type0.compareTo(type1);
             }
         });
         
         // --- determine equivalence classes of orbits
-        final Partition p = new Partition();
-        for (int i = 0; i < orbs.size(); ++i) {
-            final Object orb = orbs.get(i);
+        final Partition<Orbit> p = new Partition<Orbit>();
+        for (final Orbit orb: orbs) {
             p.unite(orb, orb); //make sure the partition sees this orbit
-            final String type = (String) orb2type.get(orb);
-            final List neighbors = (List) edges.get(orb);
-            for (final Iterator iter = neighbors.iterator(); iter.hasNext();) {
-                final Object n = iter.next();
+            final String type = orb2type.get(orb);
+            for (final Orbit n: edges.get(orb)) {
                 if (type.equals(orb2type.get(n))) {
                     p.unite(orb, n);
                 }
             }
         }
-        final Map reps = p.representativeMap();
+        final Map<Orbit, Orbit> reps = p.representativeMap();
         
         // --- reduce equivalence classes to single nodes
-        final Map orb2class = new HashMap();
-        final Map class2nr = new HashMap();
+        final Map<Orbit, Integer> orb2class = new HashMap<Orbit, Integer>();
+        final Map<Orbit, Integer> class2nr = new HashMap<Orbit, Integer>();
         int nrOfClasses = 0;
-        for (int i = 0; i < orbs.size(); ++i) {
-            final Object orb = orbs.get(i);
-            final Object cl = reps.get(orb);
+        for (final Orbit orb: orbs) {
+            final Orbit cl = reps.get(orb);
             if (!class2nr.containsKey(cl)) {
-                class2nr.put(cl, new Integer(nrOfClasses));
+                class2nr.put(cl, nrOfClasses);
                 ++nrOfClasses;
             }
             orb2class.put(orb, class2nr.get(cl));
@@ -261,14 +262,11 @@ public class OrbifoldGraph {
         // --- collect stabilizer types and adjacency matrix for new nodes
         final String class2type[] = new String[nrOfClasses];
         final boolean adj[][] = new boolean[nrOfClasses][nrOfClasses];
-        for (final Iterator iter = orb2class.keySet().iterator(); iter
-                .hasNext();) {
-            final Object orb = iter.next();
-            final int cl = ((Integer) orb2class.get(orb)).intValue();
-            class2type[cl] = (String) orb2type.get(orb);
-            final List neighbors = (List) edges.get(orb);
-            for (final Iterator it2 = neighbors.iterator(); it2.hasNext();) {
-                final int v = ((Integer) orb2class.get(it2.next())).intValue();
+        for (final Orbit orb: orb2class.keySet()) {
+            final int cl = orb2class.get(orb);
+            class2type[cl] = orb2type.get(orb);
+            for (final Orbit n: edges.get(orb)) {
+                final int v = orb2class.get(n);
                 adj[cl][v] = true;
                 adj[v][cl] = true;
             }
@@ -288,17 +286,17 @@ public class OrbifoldGraph {
         }
         
         // --- turn adjacency matrix into edge list
-        final List edgeList = new ArrayList();
-        final List neighbors[] = new List[nrOfClasses];
+        final List<int[]> edgeList = new ArrayList<int[]>();
+        final List<List<Integer>> neighbors = new LinkedList<List<Integer>>();
         for (int i = 0; i < nrOfClasses; ++i) {
-        	neighbors[i] = new ArrayList();
+        	neighbors.add(new ArrayList<Integer>());
         }
         for (int i = 0; i < nrOfClasses; ++i) {
             for (int j = i+1; j < nrOfClasses; ++j) {
                 if (adj[i][j]) {
                     edgeList.add(new int[] {i, j});
-                    neighbors[i].add(new Integer(j));
-                    neighbors[j].add(new Integer(i));
+                    neighbors.get(i).add(j);
+                    neighbors.get(j).add(i);
                 }
             }
         }
@@ -313,11 +311,11 @@ public class OrbifoldGraph {
         return this.stabilizers;
     }
     
-    public List getEdges() {
+    public List<int[]> getEdges() {
         return this.edges;
     }
 
-    public List[] getNeighbors() {
+    public List<List<Integer>> getNeighbors() {
 		return this.neighbors;
 	}
 
@@ -335,11 +333,13 @@ public class OrbifoldGraph {
         System.out.println(stabs.length + " nodes");
         System.out.println(Arrays.asList(stabs));
         System.out.println(og.getEdges().size() + " edges");
-        for (final Iterator iter = og.getEdges().iterator(); iter.hasNext();) {
-            final int e[] = (int[]) iter.next();
+        for (final int e[]: og.getEdges()) {
             System.out.println(e[0] + "(" + stabs[e[0]] + ") <-> " + e[1] + "("
                     + stabs[e[1]] + ")");
         }
-        System.out.println(Arrays.asList(og.getNeighbors()));
+        for (final List<Integer> list: og.getNeighbors())
+        {
+            System.out.println(list);
+        }
     }
 }

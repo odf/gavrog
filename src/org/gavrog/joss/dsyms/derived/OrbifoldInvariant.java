@@ -1,5 +1,5 @@
 /*
-   Copyright 2006 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,27 +25,25 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.generators.InputIterator;
 
 /**
- * @author Olaf Delgado
- * @version $Id: OrbifoldInvariant.java,v 1.3 2006/11/18 08:13:45 odf Exp $
  */
-public class OrbifoldInvariant {
-	final private DelaneySymbol ds;
+public class OrbifoldInvariant<T> {
+	final private DelaneySymbol<T> ds;
 	final private OrbifoldGraph ograph;
-	final private List abelian;
+	final private List<Whole> abelian;
 
-	public OrbifoldInvariant(final DelaneySymbol ds) {
+	public OrbifoldInvariant(final DelaneySymbol<T> ds) {
 		this.ds = ds;
 		this.ograph = new OrbifoldGraph(ds);
-		this.abelian = new FundamentalGroup(ds).getPresentation()
+		this.abelian = new FundamentalGroup<T>(ds).getPresentation()
 				.abelianInvariants();
 	}
 	
@@ -69,8 +67,8 @@ public class OrbifoldInvariant {
 		buf.append('/');
 		buf.append(this.abelian.size());
 		buf.append('/');
-		for (final Iterator iter = this.abelian.iterator(); iter.hasNext();) {
-			buf.append(iter.next());
+		for (final Whole n: this.abelian) {
+			buf.append(n);
 			buf.append('/');
 		}
 		return buf.toString();
@@ -98,17 +96,14 @@ public class OrbifoldInvariant {
 			}
 
 			final long before = System.currentTimeMillis();
-			final Set seen = new HashSet();
+			final Set<String> seen = new HashSet<String>();
 			int inCount = 0;
 			int dups = 0;
 			
-			for (final Iterator input = new InputIterator(in); input.hasNext();) {
-				final DSymbol ds = (DSymbol) input.next();
+			for (final DSymbol ds: new InputIterator(in)) {
 				++inCount;
-//				out.write("# ");
-//				out.write(ds.toString());
-//				out.write('\n');
-				final String inv = new OrbifoldInvariant(ds).toString();
+				final String inv =
+				        new OrbifoldInvariant<Integer>(ds).toString();
 				if (seen.contains(inv)) {
 					out.write("# Dup: ");
 					++dups;
