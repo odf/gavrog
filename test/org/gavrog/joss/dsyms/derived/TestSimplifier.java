@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,10 +25,8 @@ import junit.framework.Assert;
 import junit.framework.TestCase;
 
 /**
- * @author Olaf Delgado
- * @version $Id: TestSimplifyer.java,v 1.1.1.1 2005/07/15 21:58:40 odf Exp $
  */
-public class TestSimplifyer extends TestCase {
+public class TestSimplifier extends TestCase {
     final private DSymbol good1 = new DSymbol("48 3:"
             + "2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40 42 44 46 48,"
             + "8 3 5 7 16 11 13 15 24 19 21 23 32 27 29 31 40 35 37 39 48 43 45 47,"
@@ -46,24 +44,28 @@ public class TestSimplifyer extends TestCase {
             + " 45 46 54 53 58 57 56 55:"
             + "3 3 3 4 3 3 4 3 3 3,3 5 5 5 3 3 3 5,4 4 3 3 3 3 3 3 3 3");
 
-    public void testSimplifyer1() {
-        testSimplifyer(new DSymbol("2 3:1 2,1 2,1 2,2:3 3,3 4,4"), true);
+    public void testSimplifier1() {
+        testSimplifier(new DSymbol("2 3:1 2,1 2,1 2,2:3 3,3 4,4"), true);
     }
     
-    public void testSimplifyer2() {
-        testSimplifyer(new DSymbol("1 3:1,1,1,1:4,3,4"), true);
+    public void testSimplifier2() {
+        testSimplifier(new DSymbol("1 3:1,1,1,1:4,3,4"), true);
     }
     
-    public void testSimplifyer3() {
-        testSimplifyer(new DSymbol("20 3:"
+    public void testSimplifier3() {
+        testSimplifier(new DSymbol("20 3:"
                 + "2 4 6 8 10 12 14 16 18 20, 10 3 5 7 9 20 13 15 17 19,"
                 + "4 3 11 12 16 15 19 20 17 18,16 15 14 13 12 11 20 19 18 17:"
                 + "5 5,3 6 3 3,4 4 4"), false);
     }
     
-    public void testSimplifyer(final DelaneySymbol ds, final boolean good) {
-        final DelaneySymbol cover = Covers.pseudoToroidalCover3D(ds);
-        final DelaneySymbol simpler = new Simplifier(cover).getSimplifiedSymbol();
+    public <T> void testSimplifier(
+            final DelaneySymbol<T> ds,
+            final boolean good)
+    {
+        final DelaneySymbol<Integer> cover = Covers.pseudoToroidalCover3D(ds);
+        final DelaneySymbol<Integer> simpler =
+                new Simplifier(cover).getSimplifiedSymbol();
         Assert.assertEquals(good, simpler.equals(good1) || simpler.equals(good2));
     }
 }

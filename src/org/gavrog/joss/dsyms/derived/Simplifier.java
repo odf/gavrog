@@ -46,40 +46,38 @@ import org.gavrog.joss.dsyms.basic.Traversal;
  * groups.
  */
 public class Simplifier {
-    private static final int LOGGING_LEVEL = 0;
+    private static int LOGGING_LEVEL = 0;
     
     // --- The input symbol.
     final DSymbol originalSymbol;
     // --- The current symbol.
     DynamicDSymbol ds;
     // --- The final result.
-    DelaneySymbol simplifiedSymbol = null;
+    DSymbol simplifiedSymbol = null;
     
     /**
      * Constructs an instance.
      * 
      * @param symbol the input symbol.
      */
-    public Simplifier(DelaneySymbol symbol) {
+    public <T> Simplifier(final DelaneySymbol<T> inputSymbol) {
         if (LOGGING_LEVEL > 0) {
             System.out.println("Simplifyer: constructor called"
-                    + " on symbol of size " + symbol.size());
+                    + " on symbol of size " + inputSymbol.size());
         }
-        if (symbol == null) {
+        if (inputSymbol == null) {
             throw new IllegalArgumentException("null pointer received");
         }
-        if (symbol.dim() != 3) {
+        if (inputSymbol.dim() != 3) {
             final String s = "symbol must be 3-dimensional";
             throw new UnsupportedOperationException(s);
         }
 
-        symbol = new DSymbol(symbol);
+        final DSymbol symbol = new DSymbol(inputSymbol);
 
-        for (final Iterator idcs = symbol.indices(); idcs.hasNext();) {
-            final int i = ((Integer) idcs.next()).intValue();
-            final Iterator elms = symbol.elements();
-            while (elms.hasNext()) {
-                if (!symbol.definesOp(i, elms.next())) {
+        for (final int i: symbol.indices()) {
+            for (final int D: symbol.elements()) {
+                if (!symbol.definesOp(i, D)) {
                     final String s = "symbol must define all neighbors";
                     throw new UnsupportedOperationException(s);
                 }
@@ -91,13 +89,10 @@ public class Simplifier {
 
         for (int i = 0; i < symbol.dim() - 1; ++i) {
             for (int j = i + 2; j <= symbol.dim(); ++j) {
-                final IndexList idcs = new IndexList(i, j);
-                final Iterator reps = symbol.orbitReps(idcs);
-                while (reps.hasNext()) {
-                    final Object D = reps.next();
-                    final Object E1 = symbol.op(j, symbol.op(i, D));
-                    final Object E2 = symbol.op(i, symbol.op(j, D));
-                    if (!E1.equals(E2)) {
+                for (final int D: symbol.orbitReps(new IndexList(i, j))) {
+                    final int E1 = symbol.op(j, symbol.op(i, D));
+                    final int E2 = symbol.op(i, symbol.op(j, D));
+                    if (E1 != E2) {
                         final String s = "symbol has oversized (" + i + "," + j
                                          + ") orbit";
                         throw new IllegalArgumentException(s);
@@ -106,10 +101,8 @@ public class Simplifier {
             }
         }
         for (int i = 0; i < symbol.dim(); ++i) {
-            final IndexList idcs = new IndexList(i, i + 1);
-            final Iterator reps = symbol.orbitReps(idcs);
-            while (reps.hasNext()) {
-                if (symbol.v(i, i + 1, reps.next()) != 1) {
+            for (final int D: symbol.orbitReps(new IndexList(i, i + 1))) {
+                if (symbol.v(i, i + 1, D) != 1) {
                     final String s = "symbol must be trivially branched";
                     throw new UnsupportedOperationException(s);
                 }
@@ -124,7 +117,7 @@ public class Simplifier {
      * 
      * @return a simpler symbol.
      */
-    public DelaneySymbol getSimplifiedSymbol() {
+    public DelaneySymbol<Integer> getSimplifiedSymbol() {
         if (simplifiedSymbol == null) {
             compute();
         }
@@ -147,7 +140,7 @@ public class Simplifier {
             ds = ds.dual();
         }
 
-        final List disposable = new LinkedList();
+        final List<Integer> disposable = new LinkedList<Integer>();
         IndexList idcs;
         boolean dualized = false;
         boolean modified = true;
@@ -158,9 +151,9 @@ public class Simplifier {
             // --- merge volumes and remove intruding faces
             if (countOrbits(0, 1, 2) > 1 || hasSize2Orbit(2, 3)) {
                 disposable.clear();
-                final Iterator fund = new FundamentalEdges(ds);
-                while (fund.hasNext()) {
-                    final DSPair<Integer> e = (DSPair) fund.next();
+                for (final DSPair<Integer> e:
+                    new FundamentalEdges<Integer>(ds))
+                {
                     final int i = e.getIndex();
                     if (i == 3) {
                         final int D = e.getElement();
@@ -201,10 +194,11 @@ public class Simplifier {
                 disposable.clear();
                 idcs = new IndexList(ds);
                 Collections.reverse(idcs);
-                final Traversal trav = new Traversal(ds, idcs, ds.elements());
-                final Iterator fund = new FundamentalEdges(ds, trav);
-                while (fund.hasNext()) {
-                    final DSPair<Integer> e = (DSPair) fund.next();
+                final Traversal<Integer> trav =
+                        new Traversal<Integer>(ds, idcs, ds.elements());
+                for (final DSPair<Integer> e:
+                    new FundamentalEdges<Integer>(ds, trav))
+                {
                     final int i = e.getIndex();
                     if (i == 0) {
                         final int D = e.getElement();
@@ -344,7 +338,8 @@ public class Simplifier {
                         continue;
                     }
                     final Pair<Integer, Integer> signature =
-                        new Pair<Integer, Integer>(face2rep.get(D), vert2rep.get(D));
+                        new Pair<Integer, Integer>(
+                                face2rep.get(D), vert2rep.get(D));
                     final Integer E = sig2chamber.get(signature);
                     
                     if (E == null) {
@@ -436,8 +431,8 @@ public class Simplifier {
                 kfComplexity += ds.r(0, 1, D) - 2;
             }
             System.out.println("  Symbol of size " + ds.size()
-                               + " and kf-complexity " + kfComplexity + " with");
-            System.out.println("    " 
+                               + " and kf-complexity " + kfComplexity);
+            System.out.println(" with    " 
                     + countComponents() + " components, "
                     + countOrbits(0, 1, 2) + " tiles, "
                     + countOrbits(0, 1, 3) + " faces, "
@@ -616,7 +611,7 @@ public class Simplifier {
             
             // --- Mark the chambers at all vertices incident to this face,
             //     but only those not adjacent to it.
-            final Set marked = new HashSet();
+            final Set<Integer> marked = new HashSet<Integer>();
             for (final int D: f1) {
                 for (final int E: ds.orbit(idcsVertex, D)) {
                     if (!f1.contains(ds.op(2, E))) {
@@ -631,9 +626,8 @@ public class Simplifier {
                 final Set<Integer> f2 = faces.get(j);
                 
                 // --- find marked chambers in this face
-                final Set intersection = new HashSet();
-                for (final Iterator inF2 = f2.iterator(); inF2.hasNext();) {
-                    final Object D = inF2.next();
+                final Set<Integer> intersection = new HashSet<Integer>();
+                for (final int D: f2) {
                     if (marked.contains(D)) {
                         intersection.add(D);
                     }
