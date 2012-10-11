@@ -76,7 +76,7 @@ public class DefineBranching2d extends BranchAndCut<DSymbol> {
 	/**
 	 * Constructs a new instance.
 	 */
-	public DefineBranching2d(final DelaneySymbol ds, int minFaceDeg,
+	public <T> DefineBranching2d(final DelaneySymbol<T> ds, int minFaceDeg,
             final int minVertDeg, final Rational minCurv) {
 		super();
         this.minFaceDeg = minFaceDeg;
@@ -197,7 +197,7 @@ public class DefineBranching2d extends BranchAndCut<DSymbol> {
 		if (curv.isLessThan(this.minCurv)) {
 			return false;
 		}
-		for (final DSMorphism map: this.inputAutomorphisms) {
+		for (final DSMorphism<Integer, Integer> map: this.inputAutomorphisms) {
             if (compareWithPermuted(this.current, map) > 0) {
                 return false;
             }
@@ -217,11 +217,11 @@ public class DefineBranching2d extends BranchAndCut<DSymbol> {
      * @param map the automorphism.
      * @return an integer indicating if the result.
      */
-    private static int compareWithPermuted(final DelaneySymbol ds,
-			final DSMorphism map) {
-        for (final Iterator elms = ds.elements(); elms.hasNext();) {
-            final Object D1 = elms.next();
-            final Object D2 = map.getASource(D1);
+    private static int compareWithPermuted(
+            final DelaneySymbol<Integer> ds,
+			final DSMorphism<Integer, Integer> map) {
+        for (final int D1: ds.elements()) {
+            final int D2 = map.getASource(D1);
             for (int i = 0; i < ds.dim(); ++i) {
                 int v1 = ds.definesV(i, i + 1, D1) ? ds.v(i, i + 1, D1) : 0;
                 int v2 = ds.definesV(i, i + 1, D2) ? ds.v(i, i + 1, D2) : 0;
@@ -248,7 +248,7 @@ public class DefineBranching2d extends BranchAndCut<DSymbol> {
 		// --- check for completeness
 		for (int i = 0; i < ds.dim(); ++i) {
 			for (int D = 1; D <= ds.size(); ++D) {
-				if (!ds.definesV(i, i+1, new Integer(D))) {
+				if (!ds.definesV(i, i+1, D)) {
 					return false;
 				}
 			}
@@ -285,7 +285,7 @@ public class DefineBranching2d extends BranchAndCut<DSymbol> {
             ++i;
         }
         
-        final Iterator syms;
+        final Iterator<DSymbol> syms;
         if (args.length > i) {
             final DSymbol ds = new DSymbol(args[i]);
             syms = Iterators.singleton(ds);
