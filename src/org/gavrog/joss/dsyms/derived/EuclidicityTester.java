@@ -1,5 +1,5 @@
 /*
-   Copyright 2009 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -42,14 +41,11 @@ import org.gavrog.joss.dsyms.basic.Subsymbol;
 
 /**
  * Tests if a 3-dimensional Delaney symbol encodes a tiling of ordinary space.
- * 
- * @author Olaf Delgado
- * @version $Id: EuclidicityTester.java,v 1.10 2007/04/26 20:21:58 odf Exp $
  */
 public class EuclidicityTester {
     final private static boolean LOGGING = false;
     
-    final private static DelaneySymbol goodlist[] = new DelaneySymbol[] {
+    final private static DSymbol goodlist[] = new DSymbol[] {
             new DSymbol("48 3:"
                     + "2 4 6 8 10 12 14 16 18 20 22 24 "
                     + "26 28 30 32 34 36 38 40 42 44 46 48,"
@@ -71,19 +67,19 @@ public class EuclidicityTester {
                     + "50 51 52 39 40 41 42 43 44 45 46 54 53 58 57 56 55:"
                     + "3 3 3 4 3 3 4 3 3 3,3 5 5 5 3 3 3 5,4 4 3 3 3 3 3 3 3 3")
     };
-    final private static List Z3 = Arrays.asList(new Whole[] {
+    final private static List<Whole> Z3 = Arrays.asList(new Whole[] {
             Whole.ZERO, Whole.ZERO, Whole.ZERO });
-    final private static List empty = new LinkedList();
+    final private static List<Whole> empty = new LinkedList<Whole>();
 
     final private static Set<String> goodInvariants = new HashSet<String>();
     static {
         final Package pkg = EuclidicityTester.class.getPackage();
         final String packagePath = pkg.getName().replaceAll("\\.", "/");
         final String filePath = packagePath + "/euclideanInvariants.data";
-        final InputStream inStream = ClassLoader
-                .getSystemResourceAsStream(filePath);
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(
-                inStream));
+        final InputStream inStream =
+                ClassLoader.getSystemResourceAsStream(filePath);
+        final BufferedReader reader =
+                new BufferedReader(new InputStreamReader(inStream));
         while (true) {
             final String line;
             try {
@@ -101,7 +97,7 @@ public class EuclidicityTester {
         }
     }
     
-    final private DelaneySymbol ds;
+    final private DSymbol ds;
     final private boolean useInvariant;
     final private int choicesFactor;
     
@@ -109,7 +105,7 @@ public class EuclidicityTester {
     private boolean good = false;
     private boolean bad = false;
     
-    private DelaneySymbol outcome = null;
+    private DelaneySymbol<Integer> outcome = null;
     private String cause = null;
     
     /**
@@ -118,13 +114,16 @@ public class EuclidicityTester {
      * @param ds the Delaney symbol to test.
      * @param useInvars if true, orbifold invariants are compared first
      */
-    public EuclidicityTester(final DelaneySymbol ds, final boolean useInvars,
-            final int factor) {
+    public <T> EuclidicityTester(
+            final DelaneySymbol<T> ds,
+            final boolean useInvars,
+            final int factor)
+    {
         if (ds.dim() != 3) {
             final String s = "symbol must be 3-dimensional";
             throw new UnsupportedOperationException(s);
         }
-        this.ds = ds;
+        this.ds = new DSymbol(ds);
         this.useInvariant = useInvars;
         this.choicesFactor = factor;
     }
@@ -134,7 +133,7 @@ public class EuclidicityTester {
      * 
      * @param ds the Delaney symbol to test.
      */
-    public EuclidicityTester(final DelaneySymbol ds) {
+    public <T> EuclidicityTester(final DelaneySymbol<T> ds) {
     	this(ds, true, 10000);
     }
     
@@ -180,12 +179,12 @@ public class EuclidicityTester {
      * 
      * @return Returns the outcome.
      */
-    public DelaneySymbol getOutcome() {
+    public DelaneySymbol<Integer> getOutcome() {
         return outcome;
     }
     
-    public static boolean invariantOkay(final DelaneySymbol ds) {
-    	return goodInvariants.contains(new OrbifoldInvariant(ds).toString());
+    public static <T> boolean invariantOkay(final DelaneySymbol<T> ds) {
+    	return goodInvariants.contains(new OrbifoldInvariant<T>(ds).toString());
     }
     
     /**
@@ -204,7 +203,7 @@ public class EuclidicityTester {
 				System.err.print("Computing orbifold invariant ...");
 				System.err.flush();
 			}
-			final String invar = new OrbifoldInvariant(ds).toString();
+			final String invar = new OrbifoldInvariant<Integer>(ds).toString();
 			if (LOGGING) {
 				System.err.println(" done.");
 				System.err.flush();
@@ -218,7 +217,7 @@ public class EuclidicityTester {
             System.err.print("Computing pseudo-toroidal cover ...");
             System.err.flush();
         }
-        final DelaneySymbol cover = Covers.pseudoToroidalCover3D(ds);
+        final DelaneySymbol<Integer> cover = Covers.pseudoToroidalCover3D(ds);
         if (LOGGING) {
             System.err.println(" done.");
             System.err.flush();
@@ -232,7 +231,8 @@ public class EuclidicityTester {
             System.err.print("Simplifying cover ...");
             System.err.flush();
         }
-        final DelaneySymbol simpl = new Simplifier(cover).getSimplifiedSymbol();
+        final DelaneySymbol<Integer> simpl =
+                new Simplifier(cover).getSimplifiedSymbol();
         if (LOGGING) {
             System.err.println(" done.");
             System.err.flush();
@@ -243,7 +243,7 @@ public class EuclidicityTester {
         }
         
         if (!simpl.isConnected()) {
-            // --- cover is a connected sum, but some parts may be trivial (spheres)
+            // --- cover is a connected sum, but parts may be trivial (spheres)
             if (LOGGING) {
                 System.err.print("Cover is a sum - checking components ...");
                 System.err.flush();
@@ -285,7 +285,8 @@ public class EuclidicityTester {
             System.err.print("Computing fundamental group of cover...");
             System.err.flush();
         }
-        final FpGroup G = new FundamentalGroup(simpl).getPresentation();
+        final FpGroup<String> G =
+                new FundamentalGroup<Integer>(simpl).getPresentation();
         if (LOGGING) {
             System.err.println(" done.");
             System.err.flush();
@@ -295,20 +296,21 @@ public class EuclidicityTester {
             System.err.print("Checking for handle reductions ...");
             System.err.flush();
         }
-        final List invariants = G.abelianInvariants();
+        final List<Whole> invariants = G.abelianInvariants();
         if (LOGGING) {
             System.err.println(" done.");
             System.err.flush();
         }
         if (!invariants.equals(Z3)) {
-            // --- a handle reduction in the simplification process changes the homology
+            // --- handle reduction in simplification process changes homology
             decide(false, "cover has at least one handle");
             return;
         }
         
         if (G.getRelators().size() == 0) {
             if (LOGGING) {
-                System.err.println("Pseudotoroidal cover has free fundamental group:");
+                System.err.println("Pseudotoroidal cover has free fundamental "
+                        + "group:");
                 System.err.println("    " + cover);
                 System.err.flush();
             }
@@ -332,8 +334,8 @@ public class EuclidicityTester {
         
         try {
             if (LOGGING) {
-                System.err
-                        .print("Counting subgroups of fundamental group up to index 3 ...");
+                System.err.print("Counting subgroups of fundamental group up "
+                        + "to index 3 ...");
                 System.err.flush();
             }
             final boolean index3Ok = checkSubgroupCount(G, 3, 21);
@@ -343,8 +345,8 @@ public class EuclidicityTester {
             }
 
             if (LOGGING) {
-                System.err
-                        .print("Counting subgroups of fundamental group up to index 4 ...");
+                System.err.print("Counting subgroups of fundamental group up "
+                        + "to index 4 ...");
                 System.err.flush();
             }
             final boolean index4Ok = checkSubgroupCount(G, 4, 56);
@@ -366,14 +368,16 @@ public class EuclidicityTester {
      * 
      * @return true if the above was successfully shown.
      */
-    private static boolean badComponents(final DelaneySymbol ds) {
-        final List idcs = new IndexList(ds);
+    private static <T> boolean badComponents(final DelaneySymbol<T> ds) {
+        final IndexList idcs = new IndexList(ds);
         int countZ3 = 0;
         
-        for (final Iterator reps = ds.orbitReps(idcs); reps.hasNext();) {
-            final DSymbol component = new DSymbol(new Subsymbol(ds, idcs, reps.next()));
-            final FpGroup G = new FundamentalGroup(component).getPresentation();
-            final List invars = G.abelianInvariants();
+        for (final T D: ds.orbitReps(idcs)) {
+            final DSymbol component =
+                    new DSymbol(new Subsymbol<T>(ds, idcs, D));
+            final FpGroup<String> G =
+                    new FundamentalGroup<Integer>(component).getPresentation();
+            final List<Whole> invars = G.abelianInvariants();
             if (invars.equals(Z3)) {
                 ++countZ3;
                 if (countZ3 > 1 || !checkAbelianInvariantsSubgroups(G, 2, Z3)) {
@@ -400,13 +404,17 @@ public class EuclidicityTester {
      * 
      * @return true if all abelian invariants are okay.
      */
-    private static boolean checkAbelianInvariantsSubgroups(final FpGroup G,
-            final int index, final List expected) {
-        final SmallActionsIterator actions = new SmallActionsIterator(G, index, false);
-        while (actions.hasNext()) {
-            final GroupAction action = (GroupAction) actions.next();
-            final Stabilizer stab = new Stabilizer(action, action.domain().next());
-            final List invar = stab.getPresentation().abelianInvariants();
+    private static boolean checkAbelianInvariantsSubgroups(
+            final FpGroup<String> G,
+            final int index,
+            final List<Whole> expected)
+    {
+        for (final GroupAction<String, Integer> a:
+                new SmallActionsIterator<String>(G, index, false))
+        {
+            final List<Whole> invar =
+                    new Stabilizer<String, Integer>(a, a.domain().next())
+                        .getPresentation().abelianInvariants();
             if (!invar.equals(expected)) {
                 return false;
             }
@@ -422,9 +430,14 @@ public class EuclidicityTester {
      * @param expected the expected number of conjugacy classes.
      * @return true if the actual number matches the expected.
      */
-    private boolean checkSubgroupCount(FpGroup G, int index, int expected) {
+    private boolean checkSubgroupCount(
+            final FpGroup<String> G,
+            final int index,
+            final int expected)
+    {
         int count = 0;
-        final SmallActionsIterator actions = new SmallActionsIterator(G, index, false);
+        final SmallActionsIterator<String> actions =
+                new SmallActionsIterator<String>(G, index, false);
 
         // --- restrict the number of average choice moves per expected result
         actions.setMaximalNumberOfChoices(expected * this.choicesFactor);
@@ -453,8 +466,8 @@ public class EuclidicityTester {
             }
             if (count > expected) {
                 if (LOGGING) {
-                    System.err.println("\n    ... found more than expected after "
-                            + stats(actions));
+                    System.err.println("\n    ... found more than expected "
+                            + "after " + stats(actions));
                     System.err.flush();
                 }
                 return false;
@@ -463,7 +476,7 @@ public class EuclidicityTester {
         return (count == expected);
     }
 
-    private String stats(final SmallActionsIterator actions) {
+    private String stats(final SmallActionsIterator<String> actions) {
         return actions.getChoicesSoFar() + " choices performed in "
                 + (actions.getTimeElapsed() / 1000.0) + " seconds.";
     }
@@ -490,7 +503,10 @@ public class EuclidicityTester {
      * @param outcome the last derived symbol considered in the test.
      * @param cause the cause for the decision.
      */
-    private void giveUp(final String cause, final DelaneySymbol outcome) {
+    private void giveUp(
+            final String cause,
+            final DelaneySymbol<Integer> outcome)
+    {
         this.outcome = outcome;
         this.cause = cause;
         this.done = true;
