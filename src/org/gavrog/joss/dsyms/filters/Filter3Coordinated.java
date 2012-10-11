@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,9 +16,6 @@
 
 package org.gavrog.joss.dsyms.filters;
 
-import java.util.Iterator;
-import java.util.List;
-
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.basic.Subsymbol;
@@ -30,9 +27,6 @@ import org.gavrog.joss.dsyms.generators.InputIterator;
  * Extracts the tilings that carry 3-coordinated nets from a file. Also looks at
  * the duals of the tilings in the input file. Currently, no attempt is made to
  * avoid duplicates, unless a tiling is self-dual.
- * 
- * @author Olaf Delgado
- * @version $Id: Filter3Coordinated.java,v 1.2 2007/04/26 20:21:58 odf Exp $
  */
 public class Filter3Coordinated {
 
@@ -42,8 +36,7 @@ public class Filter3Coordinated {
         int inCount = 0;
         int outCount = 0;
 
-        for (final InputIterator input = new InputIterator(filename); input.hasNext();) {
-            final DSymbol ds = (DSymbol) input.next();
+        for (final DSymbol ds: new InputIterator(filename)) {
             final DSymbol dual = ds.dual();
             ++inCount;
             if (is3coordinated(ds)) {
@@ -66,10 +59,10 @@ public class Filter3Coordinated {
      * @return true or false according to the result of the test.
      */
     private static boolean is3coordinated(final DSymbol ds) {
-        final List idcs = new IndexList(1, 2, 3);
-        for (Iterator reps = ds.orbitReps(idcs); reps.hasNext();) {
-            final Object D = reps.next();
-            final DSymbol sub = new DSymbol(new Subsymbol(ds, idcs, D));
+        final IndexList idcs = new IndexList(1, 2, 3);
+        for (int D: ds.orbitReps(idcs)) {
+            final DSymbol sub =
+                    new DSymbol(new Subsymbol<Integer>(ds, idcs, D));
             final DSymbol cov = new DSymbol(Covers.finiteUniversalCover(sub));
             final int nrEdges = cov.numberOfOrbits(new IndexList(1, 2));
             if (nrEdges != 3) {

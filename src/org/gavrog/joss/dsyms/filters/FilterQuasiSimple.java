@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -23,8 +23,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
-import java.util.Iterator;
-import java.util.List;
 
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
@@ -37,9 +35,6 @@ import org.gavrog.joss.dsyms.generators.InputIterator;
  * Extracts the quasi-simple tilings from a file. A tiling is quasi-simple if
  * all the tiles of its dual can be derived from simplices by subdividing each
  * edge at most once.
- * 
- * @author Olaf Delgado
- * @version $Id: FilterQuasiSimple.java,v 1.1 2008/01/16 04:46:17 odf Exp $
  */
 public class FilterQuasiSimple {
     public static void main(String[] args) {
@@ -88,9 +83,7 @@ public class FilterQuasiSimple {
 			int inCount = 0;
 			int outCount = 0;
 
-			for (final InputIterator input = new InputIterator(in); input
-					.hasNext();) {
-				final DSymbol ds = (DSymbol) input.next();
+			for (final DSymbol ds: new InputIterator(in)) {
 				++inCount;
 				if (isQuasiSimple(ds, extended, simple) != reverse) {
 					++outCount;
@@ -117,11 +110,11 @@ public class FilterQuasiSimple {
 	 */
     private static boolean isQuasiSimple(final DSymbol ds,
 			final boolean extended, final boolean simple) {
-		final List iVert = new IndexList(1, 2, 3);
-		final List iFace = new IndexList(0, 1);
-		for (final Iterator rVert = ds.orbitReps(iVert); rVert.hasNext();) {
-			final Object D = rVert.next();
-			final DSymbol sub = new DSymbol(new Subsymbol(ds, iVert, D)).dual();
+		final IndexList iVert = new IndexList(1, 2, 3);
+		final IndexList iFace = new IndexList(0, 1);
+		for (final int D: ds.orbitReps(iVert)) {
+			final DSymbol sub =
+			        new DSymbol(new Subsymbol<Integer>(ds, iVert, D)).dual();
 			if (!sub.curvature2D().isPositive()) {
 				return false;
 			}

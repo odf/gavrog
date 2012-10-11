@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -28,19 +28,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 import org.gavrog.joss.dsyms.basic.DSymbol;
+import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.generators.InputIterator;
 
 /**
- * Generic filter application that can sort, minimize, compute canonical forms
+ * Generic filter application that can sort, minimize, compute canonical forms,
  * remove duplicates.
- * 
- * @author Olaf Delgado
- * @version $Id: Filter.java,v 1.1 2008/01/22 04:06:11 odf Exp $
  */
 public class Filter {
     public static void main(String[] args) {
@@ -81,30 +78,34 @@ public class Filter {
 
 			int inCount = 0;
 			int outCount = 0;
-			final List syms = new ArrayList();
+			final List<DelaneySymbol<Integer>> syms =
+			        new ArrayList<DelaneySymbol<Integer>>();
 
-			for (final Iterator input = new InputIterator(in); input.hasNext();) {
-				DSymbol ds = (DSymbol) input.next();
+			for (DSymbol symbol: new InputIterator(in)) {
+			    DelaneySymbol<Integer> ds = symbol;
 				++inCount;
 				if (minimize) {
-					ds = (DSymbol) ds.minimal().flat();
+					ds = ds.minimal();
 				}
 				if (canonical) {
-					ds = (DSymbol) ds.canonical().flat();
+					ds = ds.canonical();
 				}
 				syms.add(ds);
 			}
 			if (unique) {
-				final Set set = new HashSet();
+				final Set<DelaneySymbol<Integer>> set =
+				        new HashSet<DelaneySymbol<Integer>>();
 				set.addAll(syms);
 				syms.clear();
 				syms.addAll(set);
 			}
 			if (sort) {
-				Collections.sort(syms, new Comparator() {
-					public int compare(final Object arg0, final Object arg1) {
-						final DSymbol ds1 = (DSymbol) arg0;
-						final DSymbol ds2 = (DSymbol) arg1;
+				Collections.sort(syms, new Comparator<DelaneySymbol<Integer>>()
+				{
+					public int compare(
+					        final DelaneySymbol<Integer> ds1,
+					        final DelaneySymbol<Integer> ds2)
+					{
 						if (ds1.size() == ds2.size()) {
 							return ds1.compareTo(ds2);
 						} else {
@@ -113,12 +114,13 @@ public class Filter {
 					}
 				});
 			}
-			for (final Iterator iter = syms.iterator(); iter.hasNext();) {
-				out.write(iter.next().toString());
+			for (final DelaneySymbol<Integer> ds: syms) {
+				out.write(ds.toString());
 				++outCount;
 				out.write("\n");
 			}
-			out.write("### Read " + inCount + " and wrote " + outCount + " symbols.\n");
+			out.write("### Read " + inCount + " and wrote " + outCount
+			        + " symbols.\n");
 			out.flush();
 		} catch (final IOException ex) {
 			ex.printStackTrace();

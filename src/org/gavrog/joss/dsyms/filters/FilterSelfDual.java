@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,8 +21,6 @@ import org.gavrog.joss.dsyms.generators.InputIterator;
 
 
 /**
- * @author Olaf Delgado
- * @version $Id: FilterSelfDual.java,v 1.1 2006/08/29 03:47:20 odf Exp $
  */
 public class FilterSelfDual {
 
@@ -32,8 +30,7 @@ public class FilterSelfDual {
         int inCount = 0;
         int outCount = 0;
 
-        for (final InputIterator input = new InputIterator(filename); input.hasNext();) {
-            final DSymbol ds = (DSymbol) input.next();
+        for (final DSymbol ds: new InputIterator(filename)) {
             ++inCount;
             if (ds.equals(ds.dual())) {
                 ++outCount;

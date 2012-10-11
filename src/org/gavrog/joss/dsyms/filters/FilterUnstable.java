@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,9 +25,6 @@ import org.gavrog.joss.tilings.Tiling;
 
 /**
  * Extracts tilings the graphs of which have collisions.
- * 
- * @author Olaf Delgado
- * @version $Id: FilterUnstable.java,v 1.4 2007/04/18 23:06:22 odf Exp $
  */
 public class FilterUnstable {
 
@@ -37,8 +34,7 @@ public class FilterUnstable {
         int inCount = 0;
         int outCount = 0;
 
-        for (final InputIterator input = new InputIterator(filename); input.hasNext();) {
-            final DSymbol ds = (DSymbol) input.next();
+        for (final DSymbol ds: new InputIterator(filename)) {
             ++inCount;
             if (isUnstable(ds)) {
                 ++outCount;
@@ -51,9 +47,10 @@ public class FilterUnstable {
     }
 
     private static boolean isUnstable(final DSymbol ds) {
-        final DelaneySymbol cov = Covers.pseudoToroidalCover3D(ds.minimal());
+        final DelaneySymbol<Integer> cov =
+                Covers.pseudoToroidalCover3D(ds.minimal());
         try {
-            return !new Tiling(cov).getSkeleton().isLocallyStable();
+            return !new Tiling<Integer>(cov).getSkeleton().isLocallyStable();
         } catch (final Exception ex) {
             System.out.println("??? " + ds);
             return false;

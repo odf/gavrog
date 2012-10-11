@@ -1,5 +1,5 @@
 /*
-   Copyright 2006 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -24,9 +24,9 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
+import org.gavrog.box.collections.NiftyList;
 import org.gavrog.box.simple.Misc;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.derived.Covers;
@@ -37,9 +37,6 @@ import org.gavrog.joss.tilings.Tiling;
 
 /**
  * A tiling is proper if it has the same symmetry as its underlying net.
- * 
- * @author Olaf Delgado
- * @version $Id: FilterProper.java,v 1.12 2008/01/16 02:32:48 odf Exp $
  */
 public class FilterProper {
 
@@ -81,22 +78,20 @@ public class FilterProper {
 
 			int inCount = 0;
 			int outCount = 0;
-			final Set seen = new HashSet();
+			final Set<NiftyList<Integer>> seen =
+			        new HashSet<NiftyList<Integer>>();
 
-			for (final Iterator input = new InputIterator(in); input.hasNext();) {
-				DSymbol ds = (DSymbol) input.next();
-				++inCount;
-				if (dualize) {
-					ds = ds.dual();
-				}
+			for (final DSymbol symbol: new InputIterator(in)) {
+                ++inCount;
+			    final DSymbol ds = dualize ? symbol.dual() : symbol;
 				try {
 					final DSymbol min = new DSymbol(ds.minimal());
 					final DSymbol cov = new DSymbol(Covers
 							.pseudoToroidalCover3D(min));
 					
 					// IMPORTANT: use copy of skeleton to obtain full symmetry
-					final PeriodicGraph gr = new PeriodicGraph(new Tiling(cov)
-							.getSkeleton());
+					final Tiling<Integer> t = new Tiling<Integer>(cov);
+					final PeriodicGraph gr =new PeriodicGraph(t.getSkeleton());
 					
 					if (!gr.isStable()) {
 						if (verbose) {
@@ -125,7 +120,8 @@ public class FilterProper {
 							System.err.print("# --- Symbol " + inCount
 									+ " is not proper - "
 									+ gr.symmetries().size() + " vs. "
-									+ cov.size() / min.size() + " point ops.\n");
+									+ cov.size() / min.size()
+									+ " point ops.\n");
 						}
 						continue;
 					}
@@ -149,7 +145,8 @@ public class FilterProper {
 				out.write('\n');
 				out.flush();
 			}
-	        out.write("### Read " + inCount + " and wrote " + outCount + " symbols.\n");
+	        out.write("### Read " + inCount + " and wrote " + outCount
+	                + " symbols.\n");
 	        out.flush();
 		} catch (final IOException ex) {
 			ex.printStackTrace();

@@ -17,9 +17,6 @@
 
 package org.gavrog.joss.dsyms.filters;
 
-import java.util.Iterator;
-import java.util.List;
-
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.generators.InputIterator;
@@ -31,12 +28,11 @@ public class FilterFaceDegrees {
         final String filename = args[0];
         final int min = Integer.parseInt(args[1]);
         final int max = Integer.parseInt(args[2]);
-        final List idcs = new IndexList(0, 1, 3);
+        final IndexList idcs = new IndexList(0, 1, 3);
         int inCount = 0;
         int outCount = 0;
 
-        for (InputIterator iter = new InputIterator(filename); iter.hasNext();) {
-			final DSymbol ds = (DSymbol) iter.next();
+        for (final DSymbol ds: new InputIterator(filename)) {
 			boolean good = true;
 			++inCount;
 			for (final int D: ds.orbitReps(idcs)) {
