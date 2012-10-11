@@ -20,12 +20,12 @@ package org.gavrog.joss.dsyms.generators;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.gavrog.box.collections.IteratorAdapter;
+import org.gavrog.box.collections.NiftyList;
 import org.gavrog.jane.numbers.Rational;
 import org.gavrog.jane.numbers.Whole;
 import org.gavrog.joss.dsyms.basic.DSymbol;
@@ -33,13 +33,13 @@ import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 
 /**
  */
-public class Azulenoids extends IteratorAdapter {
+public class Azulenoids extends IteratorAdapter<DSymbol> {
 
-	private Iterator sets;
+	private Iterator<DSymbol> sets;
 	private DefineBranching2d syms;
 	private int pos;
 	private DSymbol ds;
-	private Set seenInvariants;
+	private Set<NiftyList<Integer>> seenInvariants;
 
 	private int nrOctaSets = 0;
 	private int nrOctaSyms = 0;
@@ -76,13 +76,13 @@ public class Azulenoids extends IteratorAdapter {
         this.sets = new CombineTiles(ds);
         this.syms = null;
         this.pos = 0;
-        this.seenInvariants = new HashSet();
+        this.seenInvariants = new HashSet<NiftyList<Integer>>();
 	}
 
 	/* (non-Javadoc)
 	 * @see org.gavrog.box.collections.IteratorAdapter#findNext()
 	 */
-	protected Object findNext() throws NoSuchElementException {
+	protected DSymbol findNext() throws NoSuchElementException {
 		while (true) {
 			// --- if necessary, find the next octagon tiling to subdivide
 			if (this.pos < 1 || this.pos > 16) {
@@ -152,11 +152,11 @@ public class Azulenoids extends IteratorAdapter {
 			}
 
 			final DSymbol result = new DSymbol(tmp);
-			final List key = result.minimal().invariant();
+			final NiftyList<Integer> key = result.minimal().invariant();
 			if (!this.seenInvariants.contains(key)) {
 				this.seenInvariants.add(key);
 				++nrAzulSyms;
-				return result.dual().minimal().canonical();
+				return new DSymbol(result.dual().minimal().canonical());
 			}
 		}
 	}
