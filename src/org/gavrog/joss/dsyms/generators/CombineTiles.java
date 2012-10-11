@@ -754,7 +754,8 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
 
         final List<Integer> reps = firstRepresentatives(ds);
         for (final int seed: reps) {
-            final Traversal trav = new Traversal(ds, idcs, seed, true);
+            final Traversal<Integer> trav =
+                    new Traversal<Integer>(ds, idcs, seed, true);
 
             // --- elements will be numbered in the order they appear
             final HashMap<Object, Integer> old2new =
@@ -764,8 +765,8 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
             int nextE = 1;
             while (trav.hasNext()) {
                 // --- retrieve the next edge
-                final DSPair e = (DSPair) trav.next();
-                final Object D = e.getElement();
+                final DSPair<Integer> e = trav.next();
+                final int D = e.getElement();
 
                 // --- determine a running number E for the target element D
                 final Integer tmp = old2new.get(D);
@@ -806,12 +807,14 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
      * @return the list of deductions (may be empty) or null in case of a
      *         contradiction.
      */
-    protected List<Move> getExtraDeductions(final DelaneySymbol ds,
-			final Move move) {
+    protected List<Move> getExtraDeductions(
+            final DelaneySymbol<Integer> ds,
+			final Move move)
+	{
 		return new ArrayList<Move>();
 	}
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         DSymbol ds;
         boolean verbose = false;
         boolean useCover = false;
@@ -841,9 +844,11 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
         final Stopwatch timer = new Stopwatch();
         final CombineTiles iter = new CombineTiles(ds);
         iter.addEventLink(CheckpointEvent.class, new EventProcessor() {
-			@Override
-			public void handleEvent(final Object event) {
-				final CheckpointEvent ev = (CheckpointEvent) event;
+            @Override
+            public void handleEvent(final Object event) {
+				@SuppressWarnings("unchecked")
+                final CheckpointEvent<DSymbol> ev =
+				        (CheckpointEvent<DSymbol>) event;
 				timer.reset();
 				System.out.format("#@@@ %sCheckpoint %s\n", ev.isOld() ? "Old "
 						: "", ev.getSource().getCheckpoint());
