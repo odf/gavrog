@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.gavrog.joss.dsyms.generators;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import org.gavrog.joss.dsyms.basic.DSymbol;
@@ -28,10 +27,8 @@ import org.gavrog.joss.dsyms.basic.Subsymbol;
 
 
 /**
- * A collection of utility methods to be used by the generator classes in this package.
- * 
- * @author Olaf Delgado
- * @version $Id: Utils.java,v 1.2 2007/04/26 20:21:58 odf Exp $
+ * A collection of utility methods to be used by the generator classes in this
+ * package.
  */
 public class Utils {
     /**
@@ -42,11 +39,13 @@ public class Utils {
      * @param ds the input symbol.
      * @return true if the symbol may still be made spherical.
      */
-    public static boolean mayBecomeSpherical2D(DelaneySymbol ds) {
-        if (ds.dim() != 2) {
+    public static <T> boolean mayBecomeSpherical2D(
+    		final DelaneySymbol<T> symbol)
+    {
+        if (symbol.dim() != 2) {
             throw new IllegalArgumentException("symbol must be 2-dimensional");
         }
-        ds = new DSymbol(ds.orientedCover());
+        final DSymbol ds = new DSymbol(symbol.orientedCover());
         ds.setVDefaultToOne(true);
         if (!ds.curvature2D().isPositive()) {
             return false;
@@ -56,9 +55,8 @@ public class Utils {
         int undefined = 0;
         for (int i = 0; i < 2; ++i) {
             for (int j = i+1; j <= 2; ++j) {
-                final List idcs = new IndexList(i, j);
-                for (final Iterator reps = ds.orbitReps(idcs); reps.hasNext();) {
-                    final Object D = reps.next();
+                final IndexList idcs = new IndexList(i, j);
+                for (final int D: ds.orbitReps(idcs)) {
                     if (ds.definesV(i, j, D)) {
                         final int v = ds.v(i, j, D);
                         if (v > 1) {
@@ -95,16 +93,19 @@ public class Utils {
      * @param ds the input symbol.
      * @return true if the symbol may still be made locally euclidean.
      */
-    public static boolean mayBecomeLocallyEuclidean3D(DelaneySymbol ds) {
-        if (ds.dim() != 3) {
+    public static <T >boolean mayBecomeLocallyEuclidean3D(
+    		final DelaneySymbol<T> symbol)
+    {
+        if (symbol.dim() != 3) {
             throw new IllegalArgumentException("symbol must be 3-dimensional");
         }
-        ds = new DSymbol(ds);
+        final DSymbol ds = new DSymbol(symbol);
         for (int k = 0; k <= ds.dim(); ++k) {
-            final List idcs = new IndexList(ds);
+            final IndexList idcs = new IndexList(ds);
             idcs.remove(k);
-            for (final Iterator reps = ds.orbitReps(idcs); reps.hasNext();) {
-                final DelaneySymbol sub = new Subsymbol(ds, idcs, reps.next());
+            for (final int D: ds.orbitReps(idcs)) {
+                final DelaneySymbol<Integer> sub =
+                		new Subsymbol<Integer>(ds, idcs, D);
                 if (!mayBecomeSpherical2D(sub)) {
                     return false;
                 }
