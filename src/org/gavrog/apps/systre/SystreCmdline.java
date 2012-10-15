@@ -71,9 +71,7 @@ import org.gavrog.joss.pgraphs.io.NetParser;
 import buoy.event.EventSource;
 
 /**
- * The basic commandlne version of Gavrog Systre.
- * 
- * @author Olaf Delgado
+ * The basic command line version of Gavrog Systre.
  */
 public class SystreCmdline extends EventSource {
     final static boolean DEBUG = false;
@@ -737,7 +735,8 @@ public class SystreCmdline extends EventSource {
             if (det.isLessThan(new FloatingPoint(0.001))) {
                 out.println("==================================================");
                 final String msg = "!!! WARNING (INTERNAL) - "
-						+ "Unit cell degenerated in relaxation.";
+						+ "Unit cell degenerated in relaxation."
+                        + "Reverting to default unit cell.";
                 out.println(msg);
                 out.println("==================================================");
                 embedder.reset();
