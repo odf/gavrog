@@ -52,13 +52,12 @@ import org.gavrog.joss.dsyms.derived.EuclidicityTester;
  * For each isomorphism class of resulting symbols, only one respresentative is
  * produced. The order or naming of elements is not preserved.
  */
-public class DefineBranching3d extends IteratorAdapter {
+public class DefineBranching3d extends IteratorAdapter<DSymbol> {
     // --- set to true to enable logging
     final private static boolean LOGGING = false;
     
     // --- the input data
-    final private DelaneySymbol input;
-    final private List acceptedValues;
+    final private List<Integer> acceptedValues;
     final private boolean allowEdgeDegreeTwo;
     
     // --- properties of the input symbol
@@ -66,15 +65,15 @@ public class DefineBranching3d extends IteratorAdapter {
     final private int dim;
     
     // --- auxiliary data
-    final private Map nextValue;
-    final private List inputAutomorphisms;
+    final private Map<Integer, Integer> nextValue;
+    final private List<DSMorphism<Integer, Integer>> inputAutomorphisms;
 
     // --- true if current sybmol is complete and has not yet been delivered
     boolean immediate = false;
     
     // --- the current state
     final private DynamicDSymbol current;
-    final private LinkedList stack;
+    final private LinkedList<Move> stack;
     
     // --- statistics
     int countNonSpherical = 0;
@@ -86,11 +85,12 @@ public class DefineBranching3d extends IteratorAdapter {
     protected class Move {
         final public int index;
         final public int element;
-        final public Integer value;
+        final public int value;
         final public boolean isChoice;
         
-        public Move(final int index, final int element, final Integer value,
-                final boolean isChoice) {
+        public Move(final int index, final int element, final int value,
+                final boolean isChoice)
+        {
             this.index = index;
             this.element = element;
             this.value = value;
@@ -107,52 +107,59 @@ public class DefineBranching3d extends IteratorAdapter {
      * The accepted branch values for a symbol fullfilling the crystallographic
      * restriction.
      */
-    private final static List standardValues
-        = Collections.unmodifiableList(Arrays.asList(new Integer[] { new Integer(1),
-                new Integer(2), new Integer(3), new Integer(4), new Integer(6) }));
+    private final static List<Integer> standardValues =
+            Collections.unmodifiableList(
+                    Arrays.asList(new Integer[] { 1, 2, 3, 4, 6 }));
     
     /**
      * Constructs an instance with standard options.
      */
-    public DefineBranching3d(final DelaneySymbol ds) {
+    public <T> DefineBranching3d(final DelaneySymbol<T> ds) {
         this(ds, standardValues, false);
     }
     
     /**
      * Constructs an instance with the standard set of accepted branch values.
      */
-    public DefineBranching3d(final DelaneySymbol ds, final boolean allowEdgeDegreeTwo) {
+    public <T> DefineBranching3d(
+            final DelaneySymbol<T> ds,
+            final boolean allowEdgeDegreeTwo)
+    {
         this(ds, standardValues, allowEdgeDegreeTwo);
     }
     
     /**
      * Constructs an instance with no edges of degree two allowed.
      */
-    public DefineBranching3d(final DelaneySymbol ds, final List acceptedValues) {
+    public <T> DefineBranching3d(
+            final DelaneySymbol<T> ds,
+            final List<Integer> acceptedValues)
+    {
         this(ds, acceptedValues, false);
     }
     
     /**
      * Constructs an instance.
      */
-    public DefineBranching3d(final DelaneySymbol ds, final List acceptedValues,
-    		final boolean allowEdgeDegreeTwo) {
+    public <T> DefineBranching3d(
+            final DelaneySymbol<T> ds,
+            final List<Integer> acceptedValues,
+    		final boolean allowEdgeDegreeTwo)
+    {
         // --- check the argument
         check(ds, acceptedValues);
         
         // --- store the input parameters
-        this.input = ds;
         this.acceptedValues = acceptedValues;
         this.allowEdgeDegreeTwo = allowEdgeDegreeTwo;
         
         // --- compute successors for acepted values
-        this.nextValue = new HashMap();
-        final Set seen = new HashSet();
+        this.nextValue = new HashMap<Integer, Integer>();
+        final Set<Integer> seen = new HashSet<Integer>();
         seen.add(null);
         
-        Object previous = null;
-        for (final Iterator iter = this.acceptedValues.iterator(); iter.hasNext();) {
-            final Object v = iter.next();
+        int previous = 0;
+        for (final int v: this.acceptedValues) {
             if (!seen.contains(v)) {
                 this.nextValue.put(previous, v);
                 seen.add(v);
@@ -161,10 +168,10 @@ public class DefineBranching3d extends IteratorAdapter {
         }
         
         // --- initialize the state
-        this.size = this.input.size();
-        this.dim = this.input.dim();
-        this.stack = new LinkedList();
-        this.current = new DynamicDSymbol(new DSymbol(this.input.canonical()));
+        this.size = ds.size();
+        this.dim = ds.dim();
+        this.stack = new LinkedList<Move>();
+        this.current = new DynamicDSymbol(new DSymbol(ds.canonical()));
 
         // --- compute more auxiliary data
         this.inputAutomorphisms = DSMorphism.automorphisms(this.current);
@@ -175,14 +182,14 @@ public class DefineBranching3d extends IteratorAdapter {
         }
         for (int i = 0; i < this.dim; ++i) {
             final int j = i+1;
-            final List idcs = new IndexList(i, j);
+            final IndexList idcs = new IndexList(i, j);
             for (final int D: this.current.orbitReps(idcs)) {
                 if (this.current.definesV(i, j, D)) {
-                    final boolean success = performMove(new Move(i, ((Integer) D)
-                            .intValue(), new Integer(this.current.v(i, j, D)), true));
+                    final boolean success = performMove(
+                            new Move(i, D, this.current.v(i, j, D), true));
                     this.stack.clear();
                     if (!success) {
-                        // --- given branching number lead to inconsistencies, so no solution
+                        // --- no solution since given branching inconsistent
                         return;
                     }
                 }
@@ -209,7 +216,9 @@ public class DefineBranching3d extends IteratorAdapter {
      * @param ds the symbol to check.
      * @param acceptedValues list of accepted branching values.
      */
-    private void check(DelaneySymbol ds, java.util.List acceptedValues) {
+    private <T> void check(final DelaneySymbol<T> ds,
+            final List<Integer> acceptedValues)
+    {
         // --- check simple properties
         if (ds == null) {
             throw new IllegalArgumentException("null argument");
@@ -227,12 +236,11 @@ public class DefineBranching3d extends IteratorAdapter {
         }
         
         // --- check that all neighbor relations (ops) are defined.
-        for (final Iterator elms = ds.elements(); elms.hasNext();) {
-            final Object D = elms.next();
-            for (final Iterator idcs = ds.indices(); idcs.hasNext();) {
-                final int i = ((Integer) idcs.next()).intValue();
+        for (final T D: ds.elements()) {
+            for (final int i: ds.indices()) {
                 if (!ds.definesOp(i, D)) {
-                    throw new UnsupportedOperationException("symbol must define all ops");
+                    throw new UnsupportedOperationException(
+                            "symbol must define all ops");
                 }
             }
         }
@@ -246,7 +254,7 @@ public class DefineBranching3d extends IteratorAdapter {
                     "2 must be an accepted branching value.");
         }
         
-        // --- check local curvatures (must be positive for locally euclidean end result)
+        // --- local curvatures must be positive for locally Euclidean result
         if (!Utils.mayBecomeLocallyEuclidean3D(ds)) {
             throw new IllegalArgumentException(
                     "symbol must have positive local curvatures");
@@ -271,7 +279,7 @@ public class DefineBranching3d extends IteratorAdapter {
      * 
      * @return the next symbol, if any.
      */
-    protected Object findNext() throws NoSuchElementException {
+    protected DSymbol findNext() throws NoSuchElementException {
         if (LOGGING) {
             System.err.println("findNext(): stack size = " + this.stack.size());
         }
@@ -343,8 +351,8 @@ public class DefineBranching3d extends IteratorAdapter {
         while (D <= this.size) {
             while (i < this.dim-1) {
                 ++i;
-                if (!this.current.definesV(i, i+1, new Integer(D))) {
-                    return new Move(i, D, null, true);
+                if (!this.current.definesV(i, i+1, D)) {
+                    return new Move(i, D, 0, true);
                 }
             }
             ++D;
@@ -374,7 +382,7 @@ public class DefineBranching3d extends IteratorAdapter {
             if (LOGGING) {
                 System.err.println("Undoing " + last);
             }
-            this.current.undefineV(last.index, last.index+1, new Integer(last.element));
+            this.current.undefineV(last.index, last.index+1, last.element);
         } while (!last.isChoice);
     
         return last;
@@ -412,26 +420,27 @@ public class DefineBranching3d extends IteratorAdapter {
         final DynamicDSymbol ds = this.current;
 
         // --- we maintain a queue of deductions, starting with the initial move
-        final LinkedList queue = new LinkedList();
+        final LinkedList<Move> queue = new LinkedList<Move>();
         queue.addLast(initial);
         
         boolean firstMove = true;
 
         while (queue.size() > 0) {
             // --- get some info on the next move in the queue
-            final Move move = (Move) queue.removeFirst();
+            final Move move = queue.removeFirst();
             final int i = move.index;
             final int D = move.element;
 
             // --- see if the move would contradict the current state
             if (ds.definesV(i, i+1, D)) {
-                if (ds.v(i, i+1, D) == move.value.intValue()) {
+                if (ds.v(i, i+1, D) == move.value) {
                     if (!firstMove) {
                         continue;
                     }
                 } else {
                     if (LOGGING) {
-                        System.err.println("    found contradiction at " + move);
+                        System.err.println(
+                                "    found contradiction at " + move);
                     }
                     if (move == initial) {
                         // --- the initial move was impossible
@@ -445,7 +454,7 @@ public class DefineBranching3d extends IteratorAdapter {
             firstMove = false;
             
             // --- perform the move
-            ds.redefineV(i, i+1, D, move.value.intValue());
+            ds.redefineV(i, i+1, D, move.value);
 
             // --- record the move we have performed
             this.stack.addLast(move);
@@ -466,28 +475,28 @@ public class DefineBranching3d extends IteratorAdapter {
                 return false;
             }
             
-            // --- handle deductions or contradictions specified by a derived class
-            final List extraDeductions = getExtraDeductions(ds, move);
+            // --- handle deductions or contradictions in a derived class
+            final List<Move> extraDeductions = getExtraDeductions(ds, move);
             if (extraDeductions == null) {
                 return false;
             } else {
                 if (LOGGING) {
-                    for (final Iterator iter = extraDeductions.iterator(); iter.hasNext();) {
-                        final Move ded = (Move) iter.next();
+                    for (final Move ded: extraDeductions) {
                         System.err.println("    found extra deduction " + ded);
                     }
                 }
                 queue.addAll(extraDeductions);
             }
             
-            // --- look for problems or deductions from the required local euclidicity
+            // --- look for problems or deductions from local euclidicity
             for (int j = 0; j <= this.dim; ++j) {
                 if (j != i-1 && j != i+2) {
                     continue;
                 }
-                final List idcs = new IndexList(i, i+1, j);
-                final DelaneySymbol sub = new Subsymbol(ds, idcs, D);
-                final List deductions = getDeductions(sub);
+                final IndexList idcs = new IndexList(i, i+1, j);
+                final DelaneySymbol<Integer> sub =
+                        new Subsymbol<Integer>(ds, idcs, D);
+                final List<Move> deductions = getDeductions(sub);
                 if (deductions == null) {
                     if (LOGGING) {
                         System.err.println("    found invalid 2d subsymbol");
@@ -496,8 +505,7 @@ public class DefineBranching3d extends IteratorAdapter {
                     return false;
                 } else {
                     if (LOGGING) {
-                        for (final Iterator iter = deductions.iterator(); iter.hasNext();) {
-                            final Move ded = (Move) iter.next();
+                        for (final Move ded: deductions) {
                             System.err.println("    found deduction " + ded);
                         }
                     }
@@ -515,11 +523,13 @@ public class DefineBranching3d extends IteratorAdapter {
                 continue;
             }
             final Integer Dk = (Integer) this.current.op(k, D);
-            final Move deduction = new Move(i, Dk.intValue(), move.value, false);
+            final Move deduction =
+                    new Move(i, Dk.intValue(), move.value, false);
             if (ds.definesV(i, i + 1, Dk)) {
-                if (ds.v(i, i + 1, Dk) != move.value.intValue()) {
+                if (ds.v(i, i + 1, Dk) != move.value) {
                     if (LOGGING) {
-                        System.err.println("    found contradiction at " + deduction);
+                        System.err.println("    found contradiction at "
+                                + deduction);
                     }
                     return false;
                 }
@@ -542,8 +552,7 @@ public class DefineBranching3d extends IteratorAdapter {
      * @return true if the symbol is canonical.
      */
     private boolean isCanonical() {
-        for (final Iterator iter = this.inputAutomorphisms.iterator(); iter.hasNext();) {
-            final DSMorphism map = (DSMorphism) iter.next();
+        for (final DSMorphism<Integer, Integer> map: this.inputAutomorphisms) {
             if (compareWithPermuted(this.current, map) > 0) {
                 return false;
             }
@@ -563,13 +572,16 @@ public class DefineBranching3d extends IteratorAdapter {
      * @param map the automorphism.
      * @return an integer indicating if the result.
      */
-    private static int compareWithPermuted(final DelaneySymbol ds, final DSMorphism map) {
-        for (final Iterator elms = ds.elements(); elms.hasNext();) {
-            final Object D1 = elms.next();
-            final Object D2 = map.getASource(D1);
+    private static <T> int compareWithPermuted(
+            final DelaneySymbol<T> ds,
+            final DSMorphism<T, T> map) {
+        for (final T D1: ds.elements()) {
+            final T D2 = map.getASource(D1);
             for (int i = 0; i < ds.dim(); ++i) {
-                final int v1 = ds.definesV(i, i + 1, D1) ? ds.v(i, i + 1, D1) : 0;
-                final int v2 = ds.definesV(i, i + 1, D2) ? ds.v(i, i + 1, D2) : 0;
+                final int v1 =
+                        ds.definesV(i, i + 1, D1) ? ds.v(i, i + 1, D1) : 0;
+                final int v2 =
+                        ds.definesV(i, i + 1, D2) ? ds.v(i, i + 1, D2) : 0;
                 if (v1 != v2) {
                     if (v1 == 0) {
                         return 1;
@@ -585,13 +597,14 @@ public class DefineBranching3d extends IteratorAdapter {
     }
     
     /**
-     * Computes those settings for undefined branching numbers which are deducible
-     * from the defined ones in the given 2-dimensional Delaney symbol.
+     * Computes those settings for undefined branching numbers which are
+     * deducible from the defined ones in the given 2-dimensional Delaney
+     * symbol.
      * 
      * @param ds the input symbol.
-     * @return the list of deductions (may be empty) or null in case of a contradiction.
+     * @return the list of deductions (may be empty) or null if contradiction.
      */
-    private List getDeductions(final DelaneySymbol ds) {
+    private List<Move> getDeductions(final DelaneySymbol<Integer> ds) {
         if (ds.dim() != 2) {
             throw new IllegalArgumentException("symbol must be 2-dimensional");
         }
@@ -602,43 +615,44 @@ public class DefineBranching3d extends IteratorAdapter {
         
         class Undefined {
             final public int i;
-            final public Object D;
+            final public int D;
             final public boolean twice;
             
-            public Undefined(final int i, final Object D, final boolean twice) {
+            public Undefined(final int i, final int D, final boolean twice) {
                 this.i = i;
                 this.D = D;
                 this.twice = twice;
             }
         }
         
-        final List allIndices = new IndexList(ds);
+        final IndexList allIndices = new IndexList(ds);
         final boolean oriented = ds.isOriented();
 
-        final List result = new LinkedList();
-        final List degrees = new ArrayList();
-        final List undefined = new ArrayList();
+        final List<Move> result = new LinkedList<Move>();
+        final List<Integer> degrees = new ArrayList<Integer>();
+        final List<Undefined> undefined = new ArrayList<Undefined>();
         boolean singleUndefinedExists = false;
         
         for (int ii = 0; ii < 2; ++ii) {
-            final int i = ((Integer) allIndices.get(ii)).intValue();
+            final int i = allIndices.get(ii);
             for (int jj = ii+1; jj <= 2; ++jj) {
-                final int j = ((Integer) allIndices.get(jj)).intValue();
-                final List idcs = new IndexList(i, j);
-                for (final Iterator reps = ds.orbitReps(idcs); reps.hasNext();) {
-                    final Object D = reps.next();
-                    final boolean twice = !oriented && ds.orbitIsOriented(idcs, D);
+                final int j = allIndices.get(jj);
+                final IndexList idcs = new IndexList(i, j);
+                for (final int D: ds.orbitReps(idcs)) {
+                    final boolean twice =
+                            !oriented && ds.orbitIsOriented(idcs, D);
                     if (ds.definesV(i, j, D)) {
                         final int v = ds.v(i, j, D);
                         if (v > 1) {
-                            degrees.add(new Integer(v));
+                            degrees.add(v);
                             if (twice) { 
-                                degrees.add(new Integer(v));
+                                degrees.add(v);
                             }
                         }
                     } else {
                         if (j != i+1) {
-                            throw new RuntimeException("this should not happen");
+                            throw new RuntimeException(
+                                    "this should not happen");
                         }
                         undefined.add(new Undefined(i, D, twice));
                         if (!twice) {
@@ -653,52 +667,50 @@ public class DefineBranching3d extends IteratorAdapter {
         final int n = degrees.size();
         
         if (n == 3) {
-            for (final Iterator iter = undefined.iterator(); iter.hasNext();) {
-                final Undefined orb = (Undefined) iter.next();
-                result.add(new Move(orb.i, ((Integer) orb.D).intValue(), new Integer(1), false));
+            for (final Undefined orb: undefined) {
+                result.add(new Move(orb.i, orb.D, 1, false));
             }
         } else if (n == 2) {
-            final int a = ((Integer) Collections.max(degrees)).intValue();
-            final int b = ((Integer) Collections.min(degrees)).intValue();
+            final int a = Collections.max(degrees);
+            final int b = Collections.min(degrees);
             if (a != b) {
                 if ((a > 5 && b > 2) || b > 3 || undefined.size() == 0
                         || !singleUndefinedExists) {
                     return null;
                 } else if (undefined.size() == 1) {
-                    final Undefined orb = (Undefined) undefined.get(0);
+                    final Undefined orb = undefined.get(0);
                     if (!orb.twice) {
                         if ((a <= 5 && b == 3) || (a >= 5 && b == 2)) {
-                            result.add(new Move(orb.i, ((Integer) orb.D).intValue(), new Integer(2), false));
+                            result.add(new Move(orb.i, orb.D, 2, false));
                         }
                     }
                 }
             } else {
                 if (a >= 4 || !singleUndefinedExists) {
-                    for (final Iterator iter = undefined.iterator(); iter.hasNext();) {
-                        final Undefined orb = (Undefined) iter.next();
-                        result.add(new Move(orb.i, ((Integer) orb.D).intValue(), new Integer(1), false));
+                    for (final Undefined orb: undefined) {
+                        result.add(new Move(orb.i, orb.D, 1, false));
                     }
                 }
             }
         } else if (n == 1) {
-            final int a = ((Integer) degrees.get(0)).intValue();
+            final int a = degrees.get(0);
             if (undefined.size() == 0) {
                 return null;
             } else if (undefined.size() == 1) {
-                final Undefined orb = (Undefined) undefined.get(0);
+                final Undefined orb = undefined.get(0);
                 if (orb.twice) {
                     if (a != 2) {
-                        result.add(new Move(orb.i, ((Integer) orb.D).intValue(), new Integer(2), false));
+                        result.add(new Move(orb.i, orb.D, 2, false));
                     }
                 } else {
-                    result.add(new Move(orb.i, ((Integer) orb.D).intValue(), (Integer) degrees.get(0), false));
+                    result.add(new Move(orb.i, orb.D, degrees.get(0), false));
                 }
             }
         } else if (n == 0) {
             if (undefined.size() == 1) {
-                final Undefined orb = (Undefined) undefined.get(0);
+                final Undefined orb = undefined.get(0);
                 if (!orb.twice) {
-                    result.add(new Move(orb.i, ((Integer) orb.D).intValue(), new Integer(1), false));
+                    result.add(new Move(orb.i, orb.D, 1, false));
                 }
             }
         }
@@ -711,10 +723,12 @@ public class DefineBranching3d extends IteratorAdapter {
      * 
      * @param ds the current symbol.
      * @param move the last move performed.
-     * @return the list of deductions (may be empty) or null in case of a contradiction.
+     * @return the list of deductions (may be empty) or null if contradiction.
      */
-    protected List getExtraDeductions(final DelaneySymbol ds, final Move move) {
-        return new ArrayList();
+    protected <T> List<Move> getExtraDeductions(
+            final DelaneySymbol<T> ds,
+            final Move move) {
+        return new ArrayList<Move>();
     }
     
     public static void main(String[] args) {
@@ -732,12 +746,12 @@ public class DefineBranching3d extends IteratorAdapter {
             ++i;
         }
         
-        final Iterator syms;
+        final Iterator<DSymbol> syms;
         if (args.length > i) {
-            final DSymbol ds = new DSymbol(args[i]);
-            syms = Iterators.singleton(ds);
+            syms = Iterators.singleton(new DSymbol(args[i]));
         } else {
-            syms = new InputIterator(new BufferedReader(new InputStreamReader(System.in)));
+            syms = new InputIterator(
+                    new BufferedReader(new InputStreamReader(System.in)));
         }
         
         int inCount = 0;
@@ -746,16 +760,17 @@ public class DefineBranching3d extends IteratorAdapter {
         int countAmbiguous = 0;
         
         while (syms.hasNext()) {
-            final DSymbol ds = (DSymbol) syms.next();
-            final Iterator iter = new DefineBranching3d(ds);
+            final DSymbol ds = syms.next();
+            final Iterator<DSymbol> iter = new DefineBranching3d(ds);
             ++inCount;
 
             try {
                 while (iter.hasNext()) {
-                    final DSymbol out = (DSymbol) iter.next();
+                    final DSymbol out = iter.next();
                     ++outCount;
                     if (check) {
-                        final EuclidicityTester tester = new EuclidicityTester(out);
+                        final EuclidicityTester tester =
+                                new EuclidicityTester(out);
                         if (tester.isAmbiguous()) {
                             System.out.println("??? " + out);
                             ++countAmbiguous;
@@ -774,13 +789,15 @@ public class DefineBranching3d extends IteratorAdapter {
         System.err.println("Processed " + inCount + " input symbols.");
         System.err.println("Produced " + outCount + " output symbols.");
         if (check) {
-            System.err.println("Of the latter, " + countGood + " were found euclidean.");
+            System.err.println("Of the latter, " + countGood
+                    + " were found euclidean.");
             if (countAmbiguous > 0) {
                 System.err.println("For " + countAmbiguous
-                                   + " symbols, euclidicity could not yet be decided.");
+                        + " symbols, euclidicity could not yet be decided.");
             }
         }
-        System.err.println("Options: " + (check ? "" : "no") + " euclidicity check, "
-                           + (verbose ? "verbose" : "quiet") + ".");
+        System.err.println("Options: " + (check ? "" : "no")
+                + " euclidicity check, "
+                + (verbose ? "verbose" : "quiet") + ".");
     }
 }
