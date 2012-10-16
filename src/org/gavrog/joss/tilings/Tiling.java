@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -54,33 +53,33 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 /**
  * An instance of this class represents a tiling.
  */
-public class Tiling<T> {
+public class Tiling {
     // --- the cache keys
-    final protected static Object TRANSLATION_GROUP = new Tag();
-    final protected static Object TRANSLATION_VECTORS = new Tag();
-    final protected static Object EDGE_TRANSLATIONS = new Tag();
-    final protected static Object CORNER_SHIFTS = new Tag();
-    final protected static Object SKELETON = new Tag();
-    final protected static Object DUAL_SKELETON = new Tag();
-    final protected static Object BARYCENTRIC_POS_BY_VERTEX = new Tag();
-    final protected static Object SPACEGROUP = new Tag();
-    final protected static Object TILES = new Tag();
-	final protected static Object SYMMETRIES = new Tag();
-	final protected static Object COVER_ORIENTATION = new Tag();
+    final protected static Tag TRANSLATION_GROUP = new Tag();
+    final protected static Tag TRANSLATION_VECTORS = new Tag();
+    final protected static Tag EDGE_TRANSLATIONS = new Tag();
+    final protected static Tag CORNER_SHIFTS = new Tag();
+    final protected static Tag SKELETON = new Tag();
+    final protected static Tag DUAL_SKELETON = new Tag();
+    final protected static Tag BARYCENTRIC_POS_BY_VERTEX = new Tag();
+    final protected static Tag SPACEGROUP = new Tag();
+    final protected static Tag TILES = new Tag();
+	final protected static Tag SYMMETRIES = new Tag();
+	final protected static Tag COVER_ORIENTATION = new Tag();
     
     // --- cache for this instance
-    final protected Cache cache = new Cache();
+    final protected Cache<Tag, Object> cache = new Cache<Tag, Object>();
 
     // --- the symbol this tiling is based on and its (pseudo-) toroidal cover
-    final protected DelaneySymbol<T> ds;
-    final protected DSCover cov;
+    final protected DelaneySymbol<Integer> ds;
+    final protected DSCover<Integer> cov;
 
 	/**
 	 * Constructs an instance.
 	 * 
 	 * @param ds the Delaney symbol for the tiling.
 	 */
-	public Tiling(final DelaneySymbol ds) {
+	public Tiling(final DelaneySymbol<Integer> ds) {
 		this(ds, null);
 	}
 	
@@ -90,7 +89,10 @@ public class Tiling<T> {
 	 * @param ds the Delaney symbol for the tiling.
 	 * @param cover a pre-computed (pseudo-)toroidal cover of the tiling.
 	 */
-	public Tiling(final DelaneySymbol ds, final DSCover cover) {
+	public Tiling(
+	        final DelaneySymbol<Integer> ds,
+	        final DSCover<Integer> cover)
+	{
         // --- check basic properties
         if (!ds.isComplete()) {
             throw new IllegalArgumentException("symbol must be complete");
@@ -106,7 +108,7 @@ public class Tiling<T> {
 		final int dim = ds.dim();
 
 		// --- compute a torus cover
-		DSCover cov;
+		DSCover<Integer> cov;
 		if (dim == 2) {
 			cov = Covers.toroidalCover2D(ds);
 		} else if (dim == 3) {
@@ -122,11 +124,12 @@ public class Tiling<T> {
 		
 		if (cover != null) {
 			// --- if a cover is given, check if it's legal
-			final Object D = ds.elements().next();
-			final Object E1 = cov.getCoverMorphism().getASource(D);
-			final Object E2 = cover.getCoverMorphism().getASource(D);
-			assert new DSMorphism(cov, cover, E1, E2).isIsomorphism();
-			new DSMorphism(cover, ds, E2, D);
+			final int D = ds.elements().next();
+			final int E1 = cov.getCoverMorphism().getASource(D);
+			final int E2 = cover.getCoverMorphism().getASource(D);
+			assert new DSMorphism<Integer, Integer>(cov, cover, E1, E2)
+			    .isIsomorphism();
+			new DSMorphism<Integer, Integer>(cover, ds, E2, D);
 			this.cov = cover;
 		} else {
 			// --- otherwise use the computed cover
@@ -137,27 +140,30 @@ public class Tiling<T> {
     /**
      * @return the original symbol.
      */
-    public DelaneySymbol getSymbol() {
+    public DelaneySymbol<Integer> getSymbol() {
         return this.ds;
     }
     
     /**
      * @return the toroidal or pseudo-toroidal cover.
      */
-    public DSCover getCover() {
+    public DSCover<Integer> getCover() {
         return this.cov;
     }
     
     /**
      * @return a map assigning orientations to cover chambers.
      */
-    public Map getCoverOrientation() {
-    	try {
-    		return (Map) this.cache.get(COVER_ORIENTATION);
+    public Map<Integer, Integer> getCoverOrientation() {
+        try {
+    	    @SuppressWarnings("unchecked")
+            final Map<Integer, Integer> result =
+    	            (Map<Integer, Integer>) this.cache.get(COVER_ORIENTATION);
+    	    return result;
     	} catch (CacheMissException ex) {
-    		final DSCover cover = getCover();
-    		final Map ori = cover.partialOrientation();
-    		return (Map) this.cache.put(COVER_ORIENTATION, ori);
+    		final Map<Integer, Integer> ori = getCover().partialOrientation();
+    		this.cache.put(COVER_ORIENTATION, ori);
+    		return ori;
     	}
     }
     
@@ -172,12 +178,18 @@ public class Tiling<T> {
     /**
      * @return the fundamental group of the toroidal or pseudo-toroidal cover.
      */
-    public FundamentalGroup getTranslationGroup() {
+    public FundamentalGroup<Integer> getTranslationGroup() {
         try {
-            return (FundamentalGroup) this.cache.get(TRANSLATION_GROUP);
+            @SuppressWarnings("unchecked")
+            final FundamentalGroup<Integer> result =
+                (FundamentalGroup<Integer>)
+                    this.cache.get(TRANSLATION_GROUP);
+            return result;
         } catch (CacheMissException ex) {
-            final FundamentalGroup fg = new FundamentalGroup(getCover());
-            return (FundamentalGroup) this.cache.put(TRANSLATION_GROUP, fg);
+            final FundamentalGroup<Integer> fg =
+                    new FundamentalGroup<Integer>(getCover());
+            this.cache.put(TRANSLATION_GROUP, fg);
+            return fg;
         }
     }
     
@@ -196,24 +208,30 @@ public class Tiling<T> {
                 throw new RuntimeException(msg);
             }
             final Vector[] result = Vector.fromMatrix(N);
-            return (Vector[]) this.cache.put(TRANSLATION_VECTORS, result);
+            this.cache.put(TRANSLATION_VECTORS, result);
+            return result;
         }
     }
     
     /**
      * @return a mapping of cover-edges to their associated translations
      */
-    public Map getEdgeTranslations() {
+    public Map<DSPair<Integer>, Vector> getEdgeTranslations() {
         try {
-            return (Map) this.cache.get(EDGE_TRANSLATIONS);
+            @SuppressWarnings("unchecked")
+            final Map<DSPair<Integer>, Vector> result =
+                    (Map<DSPair<Integer>, Vector>)
+                        this.cache.get(EDGE_TRANSLATIONS);
+            return result;
         } catch (CacheMissException ex) {
             final int dim = getCover().dim();
             final Vector[] t = getTranslationVectors();
-            final Map e2w = (Map) getTranslationGroup().getEdgeToWord();
-            final Map<Object, Vector> e2t = new HashMap<Object, Vector>();
-            for (Iterator edges = e2w.keySet().iterator(); edges.hasNext();) {
-                final Object e = edges.next();
-                final FreeWord w = (FreeWord) e2w.get(e);
+            final Map<DSPair<Integer>, FreeWord<String>> e2w =
+                    getTranslationGroup().getEdgeToWord();
+            final Map<DSPair<Integer>, Vector> e2t =
+                    new HashMap<DSPair<Integer>, Vector>();
+            for (final DSPair<Integer> e: e2w.keySet()) {
+                final FreeWord<String> w = e2w.get(e);
                 Vector s = Vector.zero(dim);
                 for (int i = 0; i < w.length(); ++i) {
                     final int k = w.getLetter(i) - 1;
@@ -226,8 +244,10 @@ public class Tiling<T> {
                 }
                 e2t.put(e, s);
             }
-            return (Map) this.cache.put(EDGE_TRANSLATIONS, Collections
-                    .unmodifiableMap(e2t));
+            final Map<DSPair<Integer>, Vector> result =
+                    Collections.unmodifiableMap(e2t);
+            this.cache.put(EDGE_TRANSLATIONS, result);
+            return result;
         }
     }
     
@@ -239,21 +259,26 @@ public class Tiling<T> {
      * @param D the source element of the edge.
      * @return the translation vector associated to the edge.
      */
-    public Vector edgeTranslation(final int i, final Object D) {
-        return (Vector) getEdgeTranslations().get(new DSPair(i, D));
+    public Vector edgeTranslation(final int i, final int D) {
+        return getEdgeTranslations().get(new DSPair<Integer>(i, D));
     }
 
     /**
      * @return shifts to obtain chamber corner positions from node positions.
      */
-    public Map getCornerShifts() {
+    public Map<DSPair<Integer>, Vector> getCornerShifts() {
         try {
-            return (Map) this.cache.get(CORNER_SHIFTS);
+            @SuppressWarnings("unchecked")
+            final Map<DSPair<Integer>, Vector> result =
+                    (Map<DSPair<Integer>, Vector>)
+                        this.cache.get(CORNER_SHIFTS);
+            return result;
         } catch (CacheMissException ex) {
             final int dim = getCover().dim();
-            final HashMap<DSPair, Vector> c2s = new HashMap<DSPair, Vector>();
+            final HashMap<DSPair<Integer>, Vector> c2s =
+                    new HashMap<DSPair<Integer>, Vector>();
             for (int i = 0; i <= dim; ++i) {
-                final List idcs = IndexList.except(getCover(), i);
+                final IndexList idcs = IndexList.except(getCover(), i);
                 for (final DSPair<Integer> e: 
                 	new Traversal<Integer>(getCover(), idcs,
                 			getCover().elements()))
@@ -261,18 +286,20 @@ public class Tiling<T> {
                     final int k = e.getIndex();
                     final int D = e.getElement();
                     if (k < 0) {
-                        c2s.put(new DSPair(i, D), Vector.zero(dim));
+                        c2s.put(new DSPair<Integer>(i, D), Vector.zero(dim));
                     } else {
-                        final Object Dk = getCover().op(k, D);
-                        final Vector v = (Vector) c2s.get(new DSPair(i, Dk));
-                        c2s.put(new DSPair(i, D),
+                        final int Dk = getCover().op(k, D);
+                        final Vector v = c2s.get(new DSPair<Integer>(i, Dk));
+                        c2s.put(new DSPair<Integer>(i, D),
                         		(Vector) v.minus(edgeTranslation(k, Dk)));
                     }
                 }
 
             }
-            return (Map) cache.put(CORNER_SHIFTS, Collections
-                    .unmodifiableMap(c2s));
+            final Map<DSPair<Integer>, Vector> result =
+                    Collections.unmodifiableMap(c2s);
+            cache.put(CORNER_SHIFTS, result);
+            return result;
         }
     }
     
@@ -284,24 +311,24 @@ public class Tiling<T> {
      * @param D the chamber the corner belongs to.
      * @return shifts for this corner.
      */
-    public Vector cornerShift(final int i, final Object D) {
-    	return (Vector) getCornerShifts().get(new DSPair(i, D));
+    public Vector cornerShift(final int i, final int D) {
+    	return getCornerShifts().get(new DSPair<Integer>(i, D));
     }
     
     /**
      * Class to represent a skeleton graph for this tiling.
      */
     public class Skeleton extends PeriodicGraph {
-        final private Map<INode, Object> node2chamber =
-        	new HashMap<INode, Object>();
-		final private Map<Object, INode> chamber2node =
-			new HashMap<Object, INode>();
+        final private Map<INode, Integer> node2chamber =
+        	new HashMap<INode, Integer>();
+		final private Map<Integer, INode> chamber2node =
+			new HashMap<Integer, INode>();
         final private Map<IEdge, Integer> edge2chamber =
         	new HashMap<IEdge, Integer>();
-        final private Map<Object, IEdge> chamber2edge =
-        	new HashMap<Object, IEdge>();
-        final private List nodeIdcs;
-        final private List halfEdgeIdcs;
+        final private Map<Integer, IEdge> chamber2edge =
+        	new HashMap<Integer, IEdge>();
+        final private IndexList nodeIdcs;
+        final private IndexList halfEdgeIdcs;
         final private boolean dual;
         
         /**
@@ -311,7 +338,7 @@ public class Tiling<T> {
          */
         private Skeleton(boolean dual) {
             super(getCover().dim());
-            final DelaneySymbol cover = getCover();
+            final DelaneySymbol<Integer> cover = getCover();
             final int d = cover.dim();
             if (dual) {
             	nodeIdcs = IndexList.except(cover, d);
@@ -328,12 +355,12 @@ public class Tiling<T> {
          * @param D the chamber the corner belongs to.
          * @return the newly created node.
          */
-        private INode newNode(final Object D) {
-            final DelaneySymbol cover = getCover();
+        private INode newNode(final int D) {
+            final DelaneySymbol<Integer> cover = getCover();
             final INode v = super.newNode();
             this.node2chamber.put(v, D);
-            for (final Iterator orb = cover.orbit(nodeIdcs, D); orb.hasNext();) {
-                this.chamber2node.put(orb.next(), v);
+            for (final int E: cover.orbit(nodeIdcs, D)) {
+                this.chamber2node.put(E, v);
             }
             return v;
         }
@@ -346,20 +373,23 @@ public class Tiling<T> {
          * @param D chamber the ridge belongs to.
          * @return the newly created edge.
          */
-        private IEdge newEdge(final INode v, final INode w, final Vector s,
-                final int D) {
+        private IEdge newEdge(
+                final INode v,
+                final INode w,
+                final Vector s,
+                final int D)
+        {
             final DSymbol cover = getCover();
             final IEdge e = super.newEdge(v, w, s, !this.dual);
             this.edge2chamber.put(e, D);
-            for (final Iterator orb = cover.orbit(halfEdgeIdcs, D); orb.hasNext();) {
-                this.chamber2edge.put(orb.next(), e);
+            for (final int E: cover.orbit(halfEdgeIdcs, D)) {
+                this.chamber2edge.put(E, e);
             }
             final IEdge er = e.reverse();
             final int Dr = dual ? cover.op(cover.dim(), D) : cover.op(0, D);
             this.edge2chamber.put(er, Dr);
-            for (final Iterator orb = cover.orbit(halfEdgeIdcs, Dr); orb
-                    .hasNext();) {
-                this.chamber2edge.put(orb.next(), er);
+            for (final int E: cover.orbit(halfEdgeIdcs, Dr)) {
+                this.chamber2edge.put(E, er);
             }
             return e;
         }
@@ -369,54 +399,56 @@ public class Tiling<T> {
          * 
          * @return the space group.
          */
-        public Set symmetries() {
+        public Set<Morphism> symmetries() {
             try {
-                return (Set) this.cache.get(SYMMETRIES);
+                @SuppressWarnings("unchecked")
+                final Set<Morphism> result =
+                        (Set<Morphism>) this.cache.get(SYMMETRIES);
+                return result;
             } catch (CacheMissException ex) {
                 // --- get the toroidal cover of the base symbol
-                final DSCover cover = getCover();
+                final DSCover<Integer> cover = getCover();
 
                 // --- find a chamber with nonzero volume
-                Object D0 = null;
-                for (final Iterator elms = cover.elements(); elms.hasNext();) {
-                    final Object D = elms.next();
+                int D0 = 0;
+                for (final int D: cover.elements()) {
                     if (!spanningMatrix(D).determinant().isZero()) {
                         D0 = D;
                         break;
                     }
                 }
-                if (D0 == null) {
+                if (D0 == 0) {
                     throw new RuntimeException("all chambers have zero volume");
                 }
 
                 // --- compute affine maps from start chamber to its images
                 final Set<Morphism> syms = new HashSet<Morphism>();
-                final Object E = cover.image((Integer) D0);
-                for (final Iterator elms = cover.elements(); elms.hasNext();) {
-                    final Object D = elms.next();
-                    if (cover.image((Integer) D).equals(E)) {
+                final int E = cover.image(D0);
+                for (final int D: cover.elements()) {
+                    if (cover.image(D) == E) {
                         syms.add(derivedMorphism(D0, D));
                     }
                 }
 
                 // --- construct the group, cache and return it
-                final Set result = Collections.unmodifiableSet(syms);
-                return (Set) this.cache.put(SYMMETRIES, result);
+                final Set<Morphism> result = Collections.unmodifiableSet(syms);
+                this.cache.put(SYMMETRIES, result);
+                return result;
             }
         }
         
-        private Morphism derivedMorphism(final Object D, final Object E) {
-            final DSCover cover = getCover();
-            final DSMorphism map = new DSMorphism(cover, cover, D, E);
+        private Morphism derivedMorphism(final int D, final int E) {
+            final DSCover<Integer> cover = getCover();
+            final DSMorphism<Integer, Integer> map =
+                    new DSMorphism<Integer, Integer>(cover, cover, D, E);
             final Operator op = Operator.fromLinear((Matrix) spanningMatrix(D)
                     .inverse().times(spanningMatrix(E)));
             final Map<IGraphElement, IGraphElement> src2img =
             	new HashMap<IGraphElement, IGraphElement>();
             final Map<IGraphElement, IGraphElement> img2src =
             	new HashMap<IGraphElement, IGraphElement>();
-            for (final Iterator elms = cover.elements(); elms.hasNext();) {
-                final Object src = elms.next();
-                final Object img = map.get(src);
+            for (final int src: cover.elements()) {
+                final int img = map.get(src);
                 final INode v = nodeForChamber(src);
                 final INode w = nodeForChamber(img);
                 src2img.put(v, w);
@@ -436,7 +468,7 @@ public class Tiling<T> {
          * @param v the node.
          * @return a chamber associated to node v.
          */
-        public Object chamberAtNode(final INode v) {
+        public int chamberAtNode(final INode v) {
             return this.node2chamber.get(v);
         }
         
@@ -535,18 +567,18 @@ public class Tiling<T> {
         final int d = cover.dim();
         final int idx0 = dual ? d : 0;
         final int idx1 = dual ? d-1 : 1;
-        List idcs;
+        IndexList idcs;
 
         // --- create nodes of the graph and map Delaney chambers to nodes
         idcs = IndexList.except(cover, idx0);
-        for (final Iterator iter = cover.orbitReps(idcs); iter.hasNext();) {
-            G.newNode(iter.next());
+        for (final int D: cover.orbitReps(idcs)) {
+            G.newNode(D);
         }
 
         // --- create the edges
         idcs = IndexList.except(cover, idx1);
         for (final int D: cover.orbitReps(idcs)) {
-            final Object E = cover.op(idx0, D);
+            final int E = cover.op(idx0, D);
             final INode v = G.nodeForChamber(D);
             final INode w = G.nodeForChamber(E);
             final Vector t = edgeTranslation(idx0, D);
@@ -566,12 +598,18 @@ public class Tiling<T> {
      * 
      * @return a mapping from corners to positions
      */
-    public Map getVertexBarycentricPositions() {
+    public Map<DSPair<Integer>, Point> getVertexBarycentricPositions() {
         try {
-            return (Map) this.cache.get(BARYCENTRIC_POS_BY_VERTEX);
+            @SuppressWarnings("unchecked")
+            final Map<DSPair<Integer>, Point> result =
+                    (Map<DSPair<Integer>, Point>)
+                        this.cache.get(BARYCENTRIC_POS_BY_VERTEX);
+            return result;
         } catch (CacheMissException ex) {
-            final Map p = cornerPositions(getSkeleton().barycentricPlacement());
-            return (Map) cache.put(BARYCENTRIC_POS_BY_VERTEX, p);
+            final Map<DSPair<Integer>, Point> p =
+                    cornerPositions(getSkeleton().barycentricPlacement());
+            cache.put(BARYCENTRIC_POS_BY_VERTEX, p);
+            return p;
         }
     }
     
@@ -583,38 +621,37 @@ public class Tiling<T> {
      * @param nodePositions maps skeleton nodes to positions.
      * @return a map containing the positions for all corners.
      */
-    public Map cornerPositions(final Map nodePositions) {
-        final DelaneySymbol cover = getCover();
+    public Map<DSPair<Integer>, Point> cornerPositions(
+            final Map<INode, Point> nodePositions)
+    {
+        final DelaneySymbol<Integer> cover = getCover();
         final Skeleton skel = getSkeleton();
-        final Map<DSPair, Point> result = new HashMap<DSPair, Point>();
+        final Map<DSPair<Integer>, Point> result =
+                new HashMap<DSPair<Integer>, Point>();
 
-        for (final Iterator elms = cover.elements(); elms.hasNext();) {
-            final Object D = elms.next();
-            final Point p = (Point) nodePositions.get(skel.nodeForChamber(D));
+        for (final int D: cover.elements()) {
+            final Point p = nodePositions.get(skel.nodeForChamber(D));
             final Vector t = cornerShift(0, D);
-            result.put(new DSPair(0, D), (Point) p.plus(t));
+            result.put(new DSPair<Integer>(0, D), (Point) p.plus(t));
         }
         final int dim = cover.dim();
         List<Integer> idcs = new LinkedList<Integer>();
         for (int i = 1; i <= dim; ++i) {
             idcs.add(i-1);
-            for (final Iterator reps = cover.orbitReps(idcs); reps.hasNext();) {
-                final Object D = reps.next();
+            for (final int D: cover.orbitReps(idcs)) {
                 Matrix s = Point.origin(dim).getCoordinates();
                 int n = 0;
-                for (Iterator orb = cover.orbit(idcs, D); orb.hasNext();) {
-                    final Object E = orb.next();
-                    final Point p = (Point) result.get(new DSPair(0, E));
+                for (final int E: cover.orbit(idcs, D)) {
+                    final Point p = result.get(new DSPair<Integer>(0, E));
                     final Vector t = cornerShift(i, E);
                     final Point pt = (Point) p.minus(t);
                     s = (Matrix) s.plus(pt.getCoordinates());
                     ++n;
                 }
                 final Point p = new Point((Matrix) s.dividedBy(n));
-                for (Iterator orb = cover.orbit(idcs, D); orb.hasNext();) {
-                    final Object E = orb.next();
+                for (final int E: cover.orbit(idcs, D)) {
                     final Vector t = cornerShift(i, E);
-                    result.put(new DSPair(i, E), (Point) p.plus(t));
+                    result.put(new DSPair<Integer>(i, E), (Point) p.plus(t));
                 }
             }
         }
@@ -629,8 +666,8 @@ public class Tiling<T> {
 	 * @param D the chamber which the corner belongs to.
 	 * @return the position of the corner.
 	 */
-    public Point vertexBarycentricPosition(final int i, final Object D) {
-    	return (Point) getVertexBarycentricPositions().get(new DSPair(i, D));
+    public Point vertexBarycentricPosition(final int i, final int D) {
+    	return getVertexBarycentricPositions().get(new DSPair<Integer>(i, D));
     }
     
     /**
@@ -649,7 +686,7 @@ public class Tiling<T> {
 	 * @param D a chamber.
 	 * @return the matrix of edge vectors.
 	 */
-    private Matrix spanningMatrix(final Object D) {
+    private Matrix spanningMatrix(final int D) {
         final int d = getCover().dim();
         final Point p = vertexBarycentricPosition(0, D);
         final Vector dif[] = new Vector[d];
@@ -691,7 +728,8 @@ public class Tiling<T> {
             	this.chambers.add(E0);
             	this.chambers.add(cover.op(0, E0));
             } else {
-            	throw new UnsupportedOperationException("dimension must be 2 or 3");
+            	throw new UnsupportedOperationException(
+            	        "dimension must be 2 or 3");
             }
             for (final int E: chambers) {
             	chamber2facet.put(E, index);
@@ -717,7 +755,7 @@ public class Tiling<T> {
 			return (Vector) cornerShift(0, chamber(i));
 		}
 		
-		public Object getChamber() {
+		public int getChamber() {
 			return chamber(0);
 		}
 
@@ -734,8 +772,8 @@ public class Tiling<T> {
         }
         
         public Facet opposite() {
-        	final DelaneySymbol cov = getCover();
-        	final Object E = cov.op(cov.dim(), getChamber());
+        	final DelaneySymbol<Integer> cov = getCover();
+        	final int E = cov.op(cov.dim(), getChamber());
         	final Tile t = getTiles().get(chamber2tile.get(E));
         	return t.facet(chamber2facet.get(E));
         }
@@ -764,12 +802,11 @@ public class Tiling<T> {
 
         private Tile(final INode v) {
         	final int d = getSymbol().dim();
-        	final DSCover cover = getCover();
+        	final DSCover<Integer> cover = getCover();
         	final Skeleton skel = getDualSkeleton();
-            final Object D = skel.chamberAtNode(v);
-        	final Integer k = chamber2tile.get(D);
-            this.index = k.intValue();
-            this.kind = chamber2kind.get(cover.image((Integer) D));
+            final int D = skel.chamberAtNode(v);
+            this.index = chamber2tile.get(D);
+            this.kind = chamber2kind.get(cover.image(D));
 
             final int deg = v.degree();
         	this.facets = new ArrayList<Facet>();
@@ -777,15 +814,14 @@ public class Tiling<T> {
         	this.neighborShifts = new Vector[deg];
         	
             int i = 0;
-            for (final Iterator conn = v.incidences(); conn.hasNext();) {
-                final IEdge e = (IEdge) conn.next();
+            for (final IEdge e: v.incidences()) {
                 int Df = skel.chamberAtEdge(e);
-                if (!chamber2tile.get(Df).equals(k)) {
+                if (chamber2tile.get(Df) != this.index) {
                     Df = cover.op(d, Df);
                 }
                 final Vector t = edgeTranslation(d, Df);
                 this.facets.add(new Facet(Df, this.index, i));
-                final Object Dn = skel.chamberAtNode(e.target());
+                final int Dn = skel.chamberAtNode(e.target());
                 this.neighbors[i] = chamber2tile.get(Dn);
                 this.neighborShifts[i] = t;
                 ++i;
@@ -847,38 +883,36 @@ public class Tiling<T> {
         } catch (CacheMissException ex) {
         }
         
-        final DelaneySymbol cover = getCover();
-        final DelaneySymbol image = getSymbol();
-        final List idcs = IndexList.except(cover, image.dim());
+        final DelaneySymbol<Integer> cover = getCover();
+        final DelaneySymbol<Integer> image = getSymbol();
+        final IndexList idcs = IndexList.except(cover, image.dim());
         
         // --- map image chambers to tile kinds
         int m = 0;
-        for (final Iterator elms = image.elements(); elms.hasNext();) {
-            final Object D = elms.next();
+        for (final int D: image.elements()) {
             if (!chamber2kind.containsKey(D)) {
-                final Integer mm = new Integer(m++);
-                for (final Iterator orb = image.orbit(idcs, D); orb.hasNext();) {
-                    chamber2kind.put(orb.next(), mm);
+                for (final int E: image.orbit(idcs, D)) {
+                    chamber2kind.put(E, m);
                 }
+                ++m;
             }
         }
         
         // --- map chambers to tile indices and vice versa
         int n = 0;
-        for (final Iterator elms = cover.elements(); elms.hasNext();) {
-            final Object D = elms.next();
+        for (final int D: cover.elements()) {
             if (!chamber2tile.containsKey(D)) {
-                final Integer nn = new Integer(n++);
-                for (final Iterator orb = cover.orbit(idcs, D); orb.hasNext();) {
-                    chamber2tile.put(orb.next(), nn);
+                for (final int E: cover.orbit(idcs, D)) {
+                    chamber2tile.put(E, n);
                 }
+                ++n;
             }
         }
         
         // --- construct the list of tiles with associated data
         final List<Tile> tiles = new ArrayList<Tile>();
-        for (Iterator nodes = getDualSkeleton().nodes(); nodes.hasNext();) {
-            tiles.add(new Tile((INode) nodes.next()));
+        for (final INode v: getDualSkeleton().nodes()) {
+            tiles.add(new Tile(v));
         }
         
         // --- cache and return

@@ -1,5 +1,5 @@
 /*
-   Copyright 2007 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -33,8 +33,6 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
 import org.gavrog.joss.tilings.Tiling.Tile;
 
 /**
- * @author Olaf Delgado
- * @version $Id: TestTiling.java,v 1.24 2007/07/27 06:07:18 odf Exp $
  */
 public class TestTiling extends TestCase {
 	final private Tiling t1 = new Tiling(new DSymbol("1 3:1,1,1,1:4,3,4"));
@@ -76,12 +74,11 @@ public class TestTiling extends TestCase {
     }
     
     public void testCornerShifts(final Tiling til) {
-        final DelaneySymbol cover = til.getCover();
+        final DelaneySymbol<Integer> cover = til.getCover();
         final int dim = cover.dim();
-        for (final Iterator elms = cover.elements(); elms.hasNext();) {
-            final Object D = elms.next();
+        for (final int D: cover.elements()) {
             for (int i = 0; i <= dim; ++i) {
-                final Object Di = cover.op(i, D);
+                final int Di = cover.op(i, D);
                 final Vector t = til.edgeTranslation(i, D);
                 // --- make sure tiles stay connected
                 if (i != cover.dim()) {
@@ -107,12 +104,11 @@ public class TestTiling extends TestCase {
     }
     
     public void testVertexBarycentricPositions(final Tiling til) {
-        final DelaneySymbol cover = til.getCover();
+        final DelaneySymbol<Integer> cover = til.getCover();
         final int dim = cover.dim();
-        for (final Iterator elms = cover.elements(); elms.hasNext();) {
-        	final Object D = elms.next();
+        for (final int D: cover.elements()) {
         	for (int i = 0; i <= dim; ++i) {
-        		final Object Di = cover.op(i, D);
+        		final int Di = cover.op(i, D);
         		final Vector t = til.edgeTranslation(i, D);
                 // --- make sure tiles stay connected
         		if (i != cover.dim()) {

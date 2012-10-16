@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ package org.gavrog.apps._3dt;
 import java.awt.Color;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -48,8 +47,6 @@ import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import de.jreality.scene.Transformation;
 
 /**
- * @author Olaf Delgado
- * @version $Id:$
  */
 public class DocumentXStream extends XStream {
 	private static DocumentXStream _instance = null;
@@ -96,10 +93,8 @@ public class DocumentXStream extends XStream {
 				writer.startNode("cover");
 				context.convertAnother(til.getCover().flat());
 				writer.endNode();
-				for (final Iterator idcs = cov.indices(); idcs.hasNext();) {
-					final int i = (Integer) idcs.next();
-					for (final Iterator elms = cov.elements(); elms.hasNext();) {
-						final Object D = (Integer) elms.next();
+				for (final int i: cov.indices()) {
+					for (final int D: cov.elements()) {
 						final Vector s = til.edgeTranslation(i, D);
 						if (!s.isZero()) {
 							writer.startNode("edgeShift");

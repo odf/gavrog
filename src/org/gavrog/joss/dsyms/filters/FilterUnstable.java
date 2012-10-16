@@ -50,7 +50,7 @@ public class FilterUnstable {
         final DelaneySymbol<Integer> cov =
                 Covers.pseudoToroidalCover3D(ds.minimal());
         try {
-            return !new Tiling<Integer>(cov).getSkeleton().isLocallyStable();
+            return !new Tiling(cov).getSkeleton().isLocallyStable();
         } catch (final Exception ex) {
             System.out.println("??? " + ds);
             return false;

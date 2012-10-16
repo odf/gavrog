@@ -90,7 +90,7 @@ public class FilterProper {
 							.pseudoToroidalCover3D(min));
 					
 					// IMPORTANT: use copy of skeleton to obtain full symmetry
-					final Tiling<Integer> t = new Tiling<Integer>(cov);
+					final Tiling t = new Tiling(cov);
 					final PeriodicGraph gr =new PeriodicGraph(t.getSkeleton());
 					
 					if (!gr.isStable()) {
