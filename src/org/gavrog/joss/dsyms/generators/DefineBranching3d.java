@@ -725,8 +725,8 @@ public class DefineBranching3d extends IteratorAdapter<DSymbol> {
      * @param move the last move performed.
      * @return the list of deductions (may be empty) or null if contradiction.
      */
-    protected <T> List<Move> getExtraDeductions(
-            final DelaneySymbol<T> ds,
+    protected List<Move> getExtraDeductions(
+            final DelaneySymbol<Integer> ds,
             final Move move) {
         return new ArrayList<Move>();
     }
