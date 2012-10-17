@@ -1,5 +1,5 @@
 /*
-Copyright 2006 Olaf Delgado-Friedrichs
+Copyright 2012 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,12 +18,14 @@ package org.gavrog.apps.systre;
 
 /**
  * Exceptions thrown by Systre's methods.
- * 
- * @author Olaf Delgado
- * @version $Id: SystreException.java,v 1.1 2007/05/12 01:32:24 odf Exp $
  */
 public class SystreException extends RuntimeException {
-    public static class Type {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 4185699059252373163L;
+
+	public static class Type {
         final private String text;
         
         /**

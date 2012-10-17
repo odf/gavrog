@@ -13,6 +13,7 @@ import de.jreality.ui.viewerapp.actions.AbstractJrAction;
 import de.jreality.writer.WriterOBJ;
 
 public class ExportOBJ extends AbstractJrAction {
+	private static final long serialVersionUID = -728178540191377982L;
 
 	private Viewer viewer;
 

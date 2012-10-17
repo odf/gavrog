@@ -1,5 +1,5 @@
 /**
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -35,8 +35,6 @@ import org.gavrog.joss.tilings.Tiling.Facet;
 import buoy.event.EventSource;
 
 /**
- * @author Olaf Delgado
- * @version $Id: DisplayList.java,v 1.11 2008/03/13 11:25:56 odf Exp $
  */
 public class DisplayList extends EventSource implements
 		Iterable<DisplayList.Item> {
@@ -456,7 +454,6 @@ public class DisplayList extends EventSource implements
 		return add(tile.facet(face).opposite(), newShift);
 	}
 
-	@SuppressWarnings("unchecked")
 	public int addIncident(final Item item) {
 		int count = 0;
 		if (item.isEdge()) {
@@ -488,7 +485,6 @@ public class DisplayList extends EventSource implements
 		return count;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public int connectToExisting(final Item item) {
 		int count = 0;
 		if (item.isNode()) {

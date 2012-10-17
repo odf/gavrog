@@ -1,5 +1,5 @@
 /*
-   Copyright 2009 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -62,10 +62,10 @@ import de.jreality.util.Rectangle3D;
 import de.jreality.util.RenderTrigger;
 
 /**
- * @author Olaf Delgado
- * @version $Id:$
  */
 public class ViewerFrame extends JFrame {
+	private static final long serialVersionUID = -2113428321285684234L;
+
 	final private SceneGraphComponent rootNode = new SceneGraphComponent();
 	final private SceneGraphComponent cameraNode = new SceneGraphComponent();
 	final private SceneGraphComponent geometryNode = new SceneGraphComponent();
