@@ -25,7 +25,6 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -49,7 +48,6 @@ import org.gavrog.joss.pgraphs.embed.Embedder;
 import org.gavrog.joss.tilings.Tiling;
 
 /**
- * @author Olaf Delgado
  */
 public class EvolverExporter {
     static {
@@ -61,7 +59,7 @@ public class EvolverExporter {
 	final private Tiling.Skeleton net;
 	final private Embedder embedder;
 	final private CoordinateChange embedderToWorld;
-	final private Map pos;
+	final private Map<DSPair<Integer>, Point> pos;
 	final private double cell[][];
 	final private CoordinateChange worldToCell;
 	
@@ -126,7 +124,7 @@ public class EvolverExporter {
 				+ c[0][2] * c[1][0] * c[2][1] - c[0][1] * c[1][0] * c[2][2];
 	}
 	
-	private double chamberVolume(final Object D) {
+	private double chamberVolume(final int D) {
 		final double c[] = cornerPosition(3, D);
 		final double v[][] = new double[3][3];
 		for (int i = 0; i < 3; ++i) {
@@ -138,15 +136,15 @@ public class EvolverExporter {
 		return volume(v);
 	}
 	
-    public double[] cornerPosition(final int i, final Object D) {
-        final Point p0 = (Point) this.pos.get(new DSPair(i, D));
+    public double[] cornerPosition(final int i, final int D) {
+        final Point p0 = this.pos.get(new DSPair<Integer>(i, D));
         final Point p = (Point) p0.times(this.embedderToWorld);
         return p.getCoordinates().asDoubleArray()[0];
     }
     
 	public void writeTo(final Writer writer) throws IOException {
 		final BufferedWriter outf = new BufferedWriter(writer);
-	    final List tiles = this.til.getTiles();
+	    final List<Tiling.Tile> tiles = this.til.getTiles();
 	    final double vol = volume(this.cell) / tiles.size();
 	    final double tvol;
 	    if (getUnitVolumes()) {
@@ -187,19 +185,18 @@ public class EvolverExporter {
 	    
 	    // --- write the vertices
 	    outf.write("vertices\n");
-	    final List nodes = new ArrayList();
+	    final List<INode> nodes = new ArrayList<INode>();
 	    nodes.add(null);
 	    Iterators.addAll(nodes, this.net.nodes());
 	    final double[][] shifts = new double[nodes.size()][];
-	    final Map nodeNumbers = new HashMap();
+	    final Map<INode, Integer> nodeNumbers = new HashMap<INode, Integer>();
 	    int i = 0;
-	    for (final Iterator iter = nodes.iterator(); iter.hasNext();) {
-	    	final INode v = (INode) iter.next();
+	    for (final INode v: nodes) {
 	    	if (v == null) {
 	    		continue;
 	    	}
-	    	nodeNumbers.put(v, new Integer(++i));
-	    	final Object D = this.net.chamberAtNode(v);
+	    	nodeNumbers.put(v, ++i);
+	    	final int D = this.net.chamberAtNode(v);
 	    	final double p[] = cornerPosition(0, D);
 	    	final double s[] = vertexShift(p);
 	    	shifts[i] = s;
@@ -216,19 +213,18 @@ public class EvolverExporter {
 	    outf.write("edges\n");
 	    final CoordinateChange e2w = this.embedderToWorld;
 	    final CoordinateChange w2c = (CoordinateChange) this.worldToCell;
-	    final List edges = new ArrayList();
+	    final List<IEdge> edges = new ArrayList<IEdge>();
 	    edges.add(null);
 	    Iterators.addAll(edges, this.net.edges());
-	    final Map edgeNumbers = new HashMap();
+	    final Map<IEdge, Integer> edgeNumbers = new HashMap<IEdge, Integer>();
 	    i = 0;
-	    for (final Iterator iter = edges.iterator(); iter.hasNext();) {
-	    	final IEdge e = (IEdge) iter.next();
+	    for (final IEdge e: edges) {
 	    	if (e == null) {
 	    		continue;
 	    	}
-	    	edgeNumbers.put(e, new Integer(++i));
-	    	final int v = ((Integer) nodeNumbers.get(e.source())).intValue();
-	    	final int w = ((Integer) nodeNumbers.get(e.target())).intValue();
+	    	edgeNumbers.put(e, ++i);
+	    	final int v = nodeNumbers.get(e.source());
+	    	final int w = nodeNumbers.get(e.target());
 	    	outf.write(i + "  " + v + ' ' + w + ' ');
 	    	final Vector se = (Vector) this.net.getShift(e).times(e2w);
 	    	final Vector sv = new Vector(shifts[v]);
@@ -254,11 +250,9 @@ public class EvolverExporter {
 	    // --- write the faces
 	    outf.write("faces\n");
 	    final DSymbol cover = this.til.getCover();
-	    final Map ch2faceNr = new HashMap();
-	    final Iterator<Integer> iterF = cover.orbitReps(new IndexList(0, 1, 3));
+	    final Map<Integer, Integer> ch2faceNr = new HashMap<Integer, Integer>();
 	    i = 0;
-	    while (iterF.hasNext()) {
-	    	final int entry = iterF.next();
+	    for (final int entry: cover.orbitReps(new IndexList(0, 1, 3))) {
 	    	final int D0;
 	    	if (chamberVolume(entry) > 1e-3) {
 	    		D0 = entry;
@@ -271,17 +265,17 @@ public class EvolverExporter {
 	    	int D = D0;
 	    	while (true) {
 	    		final IEdge e = this.net.edgeForChamber(D);
-	    		final int k = ((Integer) edgeNumbers.get(e)).intValue();
-	    		if (e.oriented().equals(((IEdge) edges.get(k)).oriented())) {
+	    		final int k = edgeNumbers.get(e);
+	    		if (e.oriented().equals((edges.get(k)).oriented())) {
 		    		outf.write(" " + k);
 	    		} else {
 		    		outf.write(" " + (-k));
 	    		}
-	    		ch2faceNr.put(D, new Integer(i));
-	    		ch2faceNr.put(cover.op(3, D), new Integer(-i));
+	    		ch2faceNr.put(D, i);
+	    		ch2faceNr.put(cover.op(3, D), -i);
 	    		D = cover.op(0, D);
-	    		ch2faceNr.put(D, new Integer(i));
-	    		ch2faceNr.put(cover.op(3, D), new Integer(-i));
+	    		ch2faceNr.put(D, i);
+	    		ch2faceNr.put(cover.op(3, D), -i);
 	    		D = cover.op(1, D);
 	    		if (D0 == D) {
 	    			break;
@@ -294,12 +288,11 @@ public class EvolverExporter {
 	    // --- write the bodies
 	    outf.write("bodies\n");
 	    i = 0;
-	    for (Iterator iter = this.til.getTiles().iterator(); iter.hasNext();) {
-	    	final Tiling.Tile t = (Tiling.Tile) iter.next();
+	    for (final Tiling.Tile t: this.til.getTiles()) {
 	    	outf.write(++i + " ");
 	    	for (int k = 0; k < t.size(); ++k) {
-	    		final Object D = t.facet(k).getChamber();
-	    		final int n = ((Integer) ch2faceNr.get(D)).intValue();
+	    		final int D = t.facet(k).getChamber();
+	    		final int n = ch2faceNr.get(D);
 	    		outf.write(" " + n);
 	    	}
 	    	outf.write("   volume " + fmt.format(tvol) + "\n");
@@ -388,8 +381,7 @@ public class EvolverExporter {
 		
 		final NumberFormat suffix = new DecimalFormat("-000.fe");
 		int k = 0;
-		for (Iterator it = new InputIterator(name); it.hasNext();) {
-			final DSymbol ds = (DSymbol) it.next();
+		for (final DSymbol ds: new InputIterator(name)) {
 			final Tiling til = new Tiling(ds);
 			
 			final EvolverExporter exporter = new EvolverExporter(til);
