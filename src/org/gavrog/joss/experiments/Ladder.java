@@ -1,5 +1,5 @@
 /*
-   Copyright 2006 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -42,8 +42,8 @@ import org.gavrog.joss.pgraphs.io.Output;
 
 public class Ladder {
 	private final PeriodicGraph graph;
-	private final Partition rungPartition;
-	private final List stileMaps;
+	private final Partition<INode> rungPartition;
+	private final List<Morphism> stileMaps;
 	
     public Ladder(final PeriodicGraph G) {
         // --- check prerequisites
@@ -59,15 +59,15 @@ public class Ladder {
         
         // --- find equivalence classes w.r.t. ladder translations
         final Operator I = Operator.identity(G.getDimension());
-        final Partition P = new Partition();
-        final Iterator iter = G.nodes();
-        final INode start = (INode) iter.next();
-        final Map pos = G.barycentricPlacement();
-        final Point pos0 = (Point) pos.get(start);
+        final Partition<INode> P = new Partition<INode>();
+        final Iterator<INode> iter = G.nodes();
+        final INode start = iter.next();
+        final Map<INode, Point> pos = G.barycentricPlacement();
+        final Point pos0 = pos.get(start);
         
         while (iter.hasNext()) {
-			final INode v = (INode) iter.next();
-			final Point posv = (Point) pos.get(v);
+			final INode v = iter.next();
+			final Point posv = pos.get(v);
 			if (!((Vector) posv.minus(pos0)).modZ().isZero()) {
 				continue;
 			}
@@ -81,9 +81,8 @@ public class Ladder {
 				continue;
 			}
 			boolean hasFixedPoints = false;
-			for (final Iterator it = G.nodes(); it.hasNext();) {
-				final INode w = (INode) it.next();
-				final INode u = (INode) iso.get(w);
+			for (final INode w: G.nodes()) {
+				final INode u = iso.getImage(w);
 				if (w.equals(u)) {
 					hasFixedPoints = true;
 					break;
@@ -92,20 +91,20 @@ public class Ladder {
 			if (hasFixedPoints) {
 				continue;
 			}
-			for (final Iterator it = G.nodes(); it.hasNext();) {
-				final INode w = (INode) it.next();
-				P.unite(w, iso.get(w));
+			for (final INode w: G.nodes()) {
+				P.unite(w, iso.getImage(w));
 			}
 		}
         this.rungPartition = P;
         
         // --- collect morphisms from the start node to each node in its rung
-		final List maps = new LinkedList();
-        for (final Iterator classes = P.classes(); classes.hasNext();) {
-        	final Set A = (Set) classes.next();
+		final List<Morphism> maps = new LinkedList<Morphism>();
+        for (final Iterator<Set<INode>> classes = P.classes();
+        		classes.hasNext();)
+        {
+        	final Set<INode> A = classes.next();
         	if (A.contains(start)) {
-        		for (final Iterator nodes = A.iterator(); nodes.hasNext();) {
-        			final INode v = (INode) nodes.next();
+        		for (final INode v: A) {
         			maps.add(new Morphism(start, v, I));
         		}
     			break;
@@ -124,14 +123,14 @@ public class Ladder {
 	/**
 	 * @return the stileMaps
 	 */
-	public List getStileMaps() {
+	public List<Morphism> getStileMaps() {
 		return stileMaps;
 	}
 
 	/**
 	 * @return the rungPartition
 	 */
-	public Partition getRungPartition() {
+	public Partition<INode> getRungPartition() {
 		return rungPartition;
 	}
 
