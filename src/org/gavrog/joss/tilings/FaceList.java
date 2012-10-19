@@ -46,7 +46,7 @@ public class FaceList {
 	/**
 	 * Hashable class for edges in the tiling to be constructed.
 	 */
-	private static class Edge implements Comparable {
+	private static class Edge implements Comparable<Edge> {
 		final public int source;
 		final public int target;
 		final public Vector shift;
@@ -73,19 +73,14 @@ public class FaceList {
 					&& shift.equals(e.shift);
 		}
 		
-        public int compareTo(final Object arg) {
-            if (arg instanceof Edge) {
-                final Edge other = (Edge) arg;
-                if (this.source != other.source) {
-                    return this.source - other.source;
-                }
-                if (this.target != other.target) {
-                    return this.target - other.target;
-                }
-                return this.shift.compareTo(other.shift);
-            } else {
-                throw new IllegalArgumentException("argument must be an Edge");
-            }
+        public int compareTo(final Edge other) {
+        	if (this.source != other.source) {
+        		return this.source - other.source;
+        	}
+        	if (this.target != other.target) {
+        		return this.target - other.target;
+        	}
+        	return this.shift.compareTo(other.shift);
         }
         
 		public String toString() {
@@ -93,7 +88,7 @@ public class FaceList {
 		}
 	}
 	
-	private static class Incidence implements Comparable {
+	private static class Incidence implements Comparable<Incidence> {
 		final public int faceIndex;
 		final public int edgeIndex;
 		final public boolean reverse;
@@ -117,31 +112,26 @@ public class FaceList {
             this(source.faceIndex, source.edgeIndex, source.reverse, angle);
         }
 
-        public int compareTo(final Object arg) {
-            if (arg instanceof Incidence) {
-                final Incidence other = (Incidence) arg;
-                if (this.angle < other.angle) {
-                    return -1;
-                } else if (this.angle > other.angle) {
-                    return 1;
-                }
-                if (this.faceIndex != other.faceIndex) {
-                	return this.faceIndex - other.faceIndex;
-                }
-                if (this.edgeIndex != other.edgeIndex) {
-                    return this.edgeIndex - other.edgeIndex;
-                }
-                if (!this.reverse && other.reverse) {
-                    return -1;
-                } else if (this.reverse && !other.reverse) {
-                    return 1;
-                } else {
-                    return 0;
-                }
-            } else {
-                throw new IllegalArgumentException("Incidence expected");
-            }
-        }
+		public int compareTo(final Incidence other) {
+			if (this.angle < other.angle) {
+				return -1;
+			} else if (this.angle > other.angle) {
+				return 1;
+			}
+			if (this.faceIndex != other.faceIndex) {
+				return this.faceIndex - other.faceIndex;
+			}
+			if (this.edgeIndex != other.edgeIndex) {
+				return this.edgeIndex - other.edgeIndex;
+			}
+			if (!this.reverse && other.reverse) {
+				return -1;
+			} else if (this.reverse && !other.reverse) {
+				return 1;
+			} else {
+				return 0;
+			}
+		}
         
         public String toString() {
         	return "(" + faceIndex + "," + edgeIndex + "," + reverse + ","
@@ -150,13 +140,16 @@ public class FaceList {
 	}
 	
     final private List<Face> faces;
-    final private List tiles;
-    final private Map tilesAtFace;
-    final private Map indexToPos;
+    final private List<List<Pair<Face, Vector>>> tiles;
+    final private Map<Face, List<Pair<Integer, Vector>>> tilesAtFace;
+    final private Map<Integer, Point> indexToPos;
     final private int dim;
     final private DSymbol ds;
     
-	public FaceList(final List input, final Map indexToPosition) {
+	public FaceList(
+			final List<Object> input,
+			final Map<Integer, Point> indexToPosition)
+	{
 		if (DEBUG) {
 			System.err.println("\nStarting FaceList constructor");
 		}
@@ -165,30 +158,34 @@ public class FaceList {
         }
         
         if (input.get(0) instanceof List) {
-            this.tiles = new ArrayList();
-            this.tilesAtFace = new HashMap();
+            this.tiles = new ArrayList<List<Pair<Face, Vector>>>();
+            this.tilesAtFace = new HashMap<Face, List<Pair<Integer, Vector>>>();
             for (int i = 0; i < input.size(); ++i) {
-                final List tile = (List) input.get(i);
-                final List newTile = new ArrayList();
-                for (int j = 0; j < tile.size(); ++j) {
-                    final Pair entry = (Pair) tile.get(j);
-                    final Face face = (Face) entry.getFirst();
-                    final Pair normal = NetParser.normalizedFace(face);
-                    final Vector shift = (Vector) ((Vector) entry.getSecond())
-                            .plus(normal.getSecond());
+                @SuppressWarnings("unchecked")
+				final List<Pair<Face, Vector>> tile =
+                		(List<Pair<Face, Vector>>) input.get(i);
+                final List<Pair<Face, Vector>> newTile =
+                		new ArrayList<Pair<Face, Vector>>();
+                for (final Pair<Face, Vector> entry: tile) {
+                    final Face face = entry.getFirst();
+                    final Pair<Face, Vector> normal =
+                    		NetParser.normalizedFace(face);
+                    final Vector shift =
+                    		(Vector) entry.getSecond().plus(normal.getSecond());
                     if (!this.tilesAtFace.containsKey(face)) {
-                        this.tilesAtFace.put(face, new ArrayList());
+                        this.tilesAtFace.put(face,
+                        		new ArrayList<Pair<Integer, Vector>>());
                     }
-                    ((List) this.tilesAtFace.get(face)).add(new Pair(new Integer(i),
-                            shift));
-                    newTile.add(new Pair(face, shift));
+                    this.tilesAtFace.get(face).add(
+                    		new Pair<Integer, Vector>(i, shift));
+                    newTile.add(new Pair<Face, Vector>(face, shift));
                 }
                 this.tiles.add(newTile);
             }
             // --- make sure each face is in exactly two tiles
-            for (Iterator iter = this.tilesAtFace.values().iterator();
-            		iter.hasNext();) {
-            	final List tlist = (List) iter.next();
+            for (final List<Pair<Integer, Vector>> tlist:
+            	this.tilesAtFace.values())
+            {
             	final int n = tlist.size();
             	if (n != 2) {
             		throw new IllegalArgumentException("Face incident to " + n
@@ -196,16 +193,17 @@ public class FaceList {
             	}
             }
             
-            this.faces = new ArrayList();
+            this.faces = new ArrayList<Face>();
             this.faces.addAll(this.tilesAtFace.keySet());
         } else {
             this.tiles = null;
             this.tilesAtFace = null;
-            this.faces = new ArrayList();
-            this.faces.addAll(input);
+            this.faces = new ArrayList<Face>();
+            for (final Object x: input)
+            	this.faces.add((Face) x);
         }
         
-        final Face f0 = (Face) this.faces.get(0);
+        final Face f0 = this.faces.get(0);
         if (f0.size() < 3) {
             throw new IllegalArgumentException("minimal face-size is 3");
         }
@@ -217,7 +215,8 @@ public class FaceList {
         this.indexToPos = indexToPosition;
         
         // --- initialize the intermediate symbol
-        final Map faceElements = new HashMap();
+        final Map<Face, List<Integer>> faceElements =
+        		new HashMap<Face, List<Integer>>();
         final DynamicDSymbol ds = new DynamicDSymbol(this.dim);
         for (final Face f: this.faces) {
             final int n = f.size();
@@ -279,8 +278,8 @@ public class FaceList {
         this.ds = new DSymbol(ds.minimal());
 	}
 	
-    private FaceList(final Pair p) {
-        this((List) p.getFirst(), (Map) p.getSecond());
+    private FaceList(final Pair<List<Object>, Map<Integer, Point>> p) {
+        this(p.getFirst(), p.getSecond());
     }
     
     public FaceList(final GenericParser.Block data) {
@@ -298,7 +297,10 @@ public class FaceList {
      * @param indexToPos maps symbolic corners to positions.
      * @return the array of sector normals.
      */
-    private static Vector[] sectorNormals(final Face f, final Map indexToPos) {
+    private static Vector[] sectorNormals(
+    		final Face f,
+    		final Map<Integer, Point> indexToPos)
+    {
         final int n = f.size();
         if (DEBUG) {
         	System.err.println("Computing normals for face " + f);
@@ -308,7 +310,7 @@ public class FaceList {
         Matrix sum = null;
         final Point corners[] = new Point[n];
         for (int i = 0; i < n; ++i) {
-            final Integer v = new Integer(f.vertex(i));
+            final int v = f.vertex(i);
             final Vector s = f.shift(i);
             final Point p = (Point) s.plus(indexToPos.get(v));
             corners[i] = p;
@@ -335,7 +337,10 @@ public class FaceList {
         return normals;
     }
     
-	private static Map collectEdges(final List faces, final boolean useShifts) {
+	private static Map collectEdges(
+			final List<?> faces,
+			final boolean useShifts)
+	{
 		final Map facesAtEdge = new HashMap();
 		for (int i = 0; i < faces.size(); ++i) {
             final Face f;
