@@ -19,6 +19,7 @@ package org.gavrog.joss.tilings;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -39,6 +40,8 @@ import org.gavrog.joss.pgraphs.io.NetParser.Face;
 
 /**
  * Implements a periodic face set meant to define a tiling.
+ * 
+ * TODO Remove ? and Object as type parameters.
  */
 public class FaceList {
 	final private static boolean DEBUG = false;
@@ -337,18 +340,21 @@ public class FaceList {
         return normals;
     }
     
-	private static Map collectEdges(
+	private static Map<?, List<Incidence>> collectEdges(
 			final List<?> faces,
 			final boolean useShifts)
 	{
-		final Map facesAtEdge = new HashMap();
+		final Map<Object, List<Incidence>> facesAtEdge =
+				new HashMap<Object, List<Incidence>>();
 		for (int i = 0; i < faces.size(); ++i) {
             final Face f;
             final Vector fShift;
             if (useShifts) {
-                final Pair entry = (Pair) faces.get(i);
-                f = (Face) entry.getFirst();
-                fShift = (Vector) entry.getSecond();
+                @SuppressWarnings("unchecked")
+				final Pair<Face, Vector> entry =
+                		(Pair<Face, Vector>) faces.get(i);
+                f = entry.getFirst();
+                fShift = entry.getSecond();
             } else {
                 f = (Face) faces.get(i);
                 fShift = null;
@@ -364,25 +370,38 @@ public class FaceList {
                 final Object key;
                 if (useShifts) {
                     final Vector vShift = rev ? f.shift(j1) : f.shift(j);
-                    key = new Pair(e, fShift.plus(vShift));
+                    key = new Pair<Edge, Vector>(e,
+                    		(Vector) fShift.plus(vShift));
                 } else {
                     key = e;
                 }
 				if (!facesAtEdge.containsKey(key)) {
-					facesAtEdge.put(key, new ArrayList());
+					facesAtEdge.put(key, new ArrayList<Incidence>());
 				}
-				((List) facesAtEdge.get(key)).add(new Incidence(i, j, rev));
+				facesAtEdge.get(key).add(new Incidence(i, j, rev));
 			}
 		}
 		
 		if (DEBUG) {
 			System.err.println("Edge to incident faces mapping:");
-            final List edges = new ArrayList();
+            final List<Object> edges = new ArrayList<Object>();
             edges.addAll(facesAtEdge.keySet());
-            Collections.sort(edges);
-			for (Iterator iter = edges.iterator(); iter.hasNext();) {
-				final Object e = iter.next();
-				final List inc = (List) facesAtEdge.get(e);
+            Collections.sort(edges, new Comparator<Object>() {
+				public int compare(final Object arg0, final Object arg1) {
+					if (useShifts) {
+						@SuppressWarnings("unchecked")
+						final Pair<Edge, Vector> p0 = (Pair<Edge, Vector>) arg0;
+						@SuppressWarnings("unchecked")
+						final Pair<Edge, Vector> p1 = (Pair<Edge, Vector>) arg1;
+						if (p0.getFirst().equals(p1.getFirst()))
+							return p0.getSecond().compareTo(p1.getSecond());
+						else
+							return p0.getFirst().compareTo(p1.getFirst());
+					} else 
+						return ((Edge) arg0).compareTo((Edge) arg1);
+				}});
+			for (final Object e: edges) {
+				final List<Incidence> inc = facesAtEdge.get(e);
 				System.err.println("  " + inc.size() + " at edge " + e + ":");
 				for (int i = 0; i < inc.size(); ++i) {
 					System.err.println("    " + inc.get(i));
