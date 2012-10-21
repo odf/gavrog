@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -411,31 +410,33 @@ public class FaceList {
 		return facesAtEdge;
 	}
 
-    private void set2opPlainMode(final DynamicDSymbol ds,
-    		final Map<Face, List<Integer>> faceElms) {
+    private void set2opPlainMode(
+    		final DynamicDSymbol ds,
+    		final Map<Face, List<Integer>> faceElms)
+    {
         // --- determine sector normals for each face
-        final Map normals = new HashMap();
-        for (final Iterator iter = this.faces.iterator(); iter.hasNext();) {
-            final Face f = (Face) iter.next();
+        final Map<Face, Vector[]> normals = new HashMap<Face, Vector[]>();
+        for (final Face f: this.faces) {
             normals.put(f, sectorNormals(f, this.indexToPos));
         }
         
         // --- set 2 operator according to cyclic orders of faces around edges
-        final Map facesAtEdge = collectEdges(this.faces, false);
+        final Map<?, List<Incidence>> facesAtEdge =
+        		collectEdges(this.faces, false);
 
-        for (Iterator iter = facesAtEdge.keySet().iterator(); iter.hasNext();) {
-            final Edge e = (Edge) iter.next();
-            final Point p = (Point) this.indexToPos.get(new Integer(e.source));
-            final Point q = (Point) this.indexToPos.get(new Integer(e.target));
+        for (final Object obj: facesAtEdge.keySet()) {
+        	final Edge e = (Edge) obj;
+            final Point p = this.indexToPos.get(e.source);
+            final Point q = this.indexToPos.get(e.target);
             final Vector a = Vector.unit((Vector) q.plus(e.shift).minus(p));
             
             // --- augment all incidences at this edge with their angles
-            final List incidences = (List) facesAtEdge.get(e);
+            final List<Incidence> incidences = facesAtEdge.get(e);
             Vector n0 = null;
             for (int i = 0; i < incidences.size(); ++i) {
-                final Incidence inc = (Incidence) incidences.get(i);
-                Vector normal = ((Vector[]) normals.get(faces
-						.get(inc.faceIndex)))[inc.edgeIndex];
+                final Incidence inc = incidences.get(i);
+                Vector normal =
+                		(normals.get(faces.get(inc.faceIndex)))[inc.edgeIndex];
                 if (inc.reverse) {
                     normal = (Vector) normal.negative();
                 }
@@ -464,7 +465,7 @@ public class FaceList {
             Collections.sort(incidences);
             
             // --- top off with a copy of the first incidences
-            final Incidence inc = (Incidence) incidences.get(0);
+            final Incidence inc = incidences.get(0);
             incidences.add(new Incidence(inc, inc.angle + 2 * Math.PI));
             if (DEBUG) {
                 System.err.println("Sorted incidences at edge " + e + ":");
@@ -475,20 +476,20 @@ public class FaceList {
             
             // --- now set all the connections around this edge
             for (int i = 0; i < incidences.size() - 1; ++i) {
-                final Incidence inc1 = (Incidence) incidences.get(i);
-                final Incidence inc2 = (Incidence) incidences.get(i + 1);
+                final Incidence inc1 = incidences.get(i);
+                final Incidence inc2 = incidences.get(i + 1);
                 if (inc2.angle - inc1.angle < 1e-3) {
                     throw new RuntimeException("tiny dihedral angle");
                 }
-                final List<Integer> elms1 = faceElms.get(faces
-						.get(inc1.faceIndex));
-				final List<Integer> elms2 = faceElms.get(faces
-						.get(inc2.faceIndex));
+                final List<Integer> elms1 =
+                		faceElms.get(faces.get(inc1.faceIndex));
+				final List<Integer> elms2 =
+						faceElms.get(faces.get(inc2.faceIndex));
                 
                 final int A, B, C, D;
                 if (inc1.reverse) {
-                    final int k = 2 * (inc1.edgeIndex + ((Face) faces
-							.get(inc1.faceIndex)).size());
+                    final int k =
+                    	2 * (inc1.edgeIndex + faces.get(inc1.faceIndex).size());
                     A = elms1.get(k + 1);
                     B = elms1.get(k);
                 } else {
@@ -501,8 +502,8 @@ public class FaceList {
                     C = elms2.get(k + 1);
                     D = elms2.get(k);
                 } else {
-                    final int k = 2 * (inc2.edgeIndex + ((Face) faces
-							.get(inc2.faceIndex)).size());
+                    final int k =
+                    	2 * (inc2.edgeIndex + faces.get(inc2.faceIndex).size());
                     C = elms2.get(k);
                     D = elms2.get(k + 1);
                 }
@@ -512,13 +513,15 @@ public class FaceList {
         }
     }
     
-    private void set2opTileMode(final DynamicDSymbol ds,
-    		final Map<Face, List<Integer>> faceElms) {
+    private void set2opTileMode(
+    		final DynamicDSymbol ds,
+    		final Map<Face, List<Integer>> faceElms)
+    {
         for (int i = 0; i < this.tiles.size(); ++i) {
-			final List tile = (List) this.tiles.get(i);
-			final Map facesAtEdge = collectEdges(tile, true);
-			for (Iterator i2 = facesAtEdge.values().iterator(); i2.hasNext();) {
-				final List flist = (List) i2.next();
+			final List<Pair<Face, Vector>> tile = this.tiles.get(i);
+			final Map<?, List<Incidence>> facesAtEdge =
+					collectEdges(tile, true);
+			for (final List<Incidence> flist: facesAtEdge.values()) {
 				if (flist.size() != 2) {
 					final String msg = flist.size() + " faces at an edge";
 					throw new UnsupportedOperationException(msg);
@@ -527,12 +530,14 @@ public class FaceList {
                 final int E[] = new int[2];
                 boolean reverse = false;
 				for (int k = 0; k <= 1; ++k) {
-					final Incidence inc = (Incidence) flist.get(k);
-                    final Pair p = (Pair) tile.get(inc.faceIndex);
-                    final Face face = (Face) p.getFirst();
-                    final Vector shift = (Vector) p.getSecond();
-                    final List taf = (List) this.tilesAtFace.get(face);
-                    final int t = taf.indexOf(new Pair(new Integer(i), shift));
+					final Incidence inc = flist.get(k);
+                    final Pair<Face, Vector> p = tile.get(inc.faceIndex);
+                    final Face face = p.getFirst();
+                    final Vector shift = p.getSecond();
+                    final List<Pair<Integer, Vector>> taf =
+                    		this.tilesAtFace.get(face);
+                    final int t =
+                    		taf.indexOf(new Pair<Integer, Vector>(i, shift));
                     final int x = 2 * (t * face.size() + inc.edgeIndex);
                     D[k] = faceElms.get(face).get(x);
                     E[k] = faceElms.get(face).get(x + 1);
@@ -551,18 +556,18 @@ public class FaceList {
 		}
     }
     
-    private void assertCompleteness(final DelaneySymbol ds) {
-        final List idcs = new IndexList(ds);
-        for (final Iterator elms = ds.elements(); elms.hasNext();) {
-            final Object D = elms.next();
+    private void assertCompleteness(final DelaneySymbol<Integer> ds)
+    {
+        final IndexList idcs = new IndexList(ds);
+        for (final int D: ds.elements()) {
             for (int i = 0; i < idcs.size()-1; ++i) {
-                final int ii = ((Integer) idcs.get(i)).intValue();
+                final int ii = idcs.get(i);
                 if (!ds.definesOp(ii, D)) {
                 	throw new AssertionError(
                 			"op(" + ii + ", " + D + ") undefined");
                 }
                 for (int j = i+1; j < idcs.size(); ++j) {
-                    final int jj = ((Integer) idcs.get(j)).intValue();
+                    final int jj = idcs.get(j);
                     if (!ds.definesV(ii, jj, D)) {
                     	throw new AssertionError(
                     			"v(" + ii + ", " + jj + ", " + D +
