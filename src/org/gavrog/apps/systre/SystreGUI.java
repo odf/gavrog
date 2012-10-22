@@ -1,5 +1,5 @@
 /*
-Copyright 2008 Olaf Delgado-Friedrichs
+Copyright 2012 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -76,9 +76,6 @@ import buoy.widget.LayoutInfo;
 
 /**
  * A simple GUI for Gavrog Systre.
- * 
- * @author Olaf Delgado
- * @version $Id: SystreGUI.java,v 1.13 2008/07/12 11:19:59 odf Exp $
  */
 public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
@@ -92,10 +89,10 @@ public class SystreGUI extends BFrame {
 	final private static Insets defaultInsets = new Insets(5, 5, 5, 5);
 
 	// --- file choosers
-    final private BFileChooser inFileChooser = new BFileChooser(BFileChooser.OPEN_FILE,
-            "Open data file");
-    final private BFileChooser outFileChooser = new BFileChooser(BFileChooser.SAVE_FILE,
-            "Save output");
+    final private BFileChooser inFileChooser =
+            new BFileChooser(BFileChooser.OPEN_FILE, "Open data file");
+    final private BFileChooser outFileChooser =
+            new BFileChooser(BFileChooser.SAVE_FILE, "Save output");
 
     // --- GUI elements that need to be accessed by more than one method
     final private BTextArea output;
@@ -110,13 +107,14 @@ public class SystreGUI extends BFrame {
     private final SystreCmdline systre = new SystreCmdline();
     
     // --- fields to store some temporary information
-    private Iterator netsToProcess = null;
+    private Iterator<Net> netsToProcess = null;
 	private Exception inputException = null;
 	private String strippedFileName;
     private String fullFileName;
     private StringBuffer currentTranscript = new StringBuffer();
     private String lastFinishedTranscript = null;
-    private List bufferedNets = new LinkedList();
+    private List<Pair<ProcessedNet, String>> bufferedNets =
+            new LinkedList<Pair<ProcessedNet, String>>();
     private int count;
 	private TaskController taskController = null;
     
@@ -133,8 +131,8 @@ public class SystreGUI extends BFrame {
 		super("Systre " + Version.full);
         
 		final BorderContainer main = new BorderContainer();
-		main.setDefaultLayout(new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.BOTH, null,
-                null));
+		main.setDefaultLayout(
+		        new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.BOTH, null, null));
 		main.setBackground(textColor);
 
 		final BorderContainer top = new BorderContainer();
@@ -149,14 +147,18 @@ public class SystreGUI extends BFrame {
                 LayoutInfo.HORIZONTAL, null, null));
         buttonBar.add(openButton = makeButton("Open...", this, "doOpen"), 0, 0);
         buttonBar.add(nextButton = makeButton("Next", this, "doNext"), 1, 0);
-        buttonBar.add(saveButton = makeButton("Save as...", this, "doSave"), 2, 0);
-        buttonBar.add(optionsButton = makeButton("Options...", this, "doOptions"), 3, 0);
+        buttonBar.add(saveButton =
+                makeButton("Save as...", this, "doSave"), 2, 0);
+        buttonBar.add(optionsButton =
+                makeButton("Options...", this, "doOptions"), 3, 0);
         buttonBar.add(makeButton("Help", this, "doHelp"), 4, 0);
-        top.add(buttonBar, BorderContainer.CENTER, new LayoutInfo(LayoutInfo.CENTER,
+        top.add(buttonBar, BorderContainer.CENTER,
+                new LayoutInfo(LayoutInfo.CENTER,
 				LayoutInfo.HORIZONTAL, null, null));
 
         statusBar = new BLabel();
-        final BOutline outline = BOutline.createLineBorder(statusBar, Color.BLACK, 2);
+        final BOutline outline =
+                BOutline.createLineBorder(statusBar, Color.BLACK, 2);
         outline.setBackground(Color.WHITE);
         top.add(outline, BorderContainer.SOUTH, new LayoutInfo(LayoutInfo.WEST,
                 LayoutInfo.HORIZONTAL, null, null));
@@ -176,36 +178,44 @@ public class SystreGUI extends BFrame {
 		final BButton cancelButton = makeButton("Cancel", this, "doCancel");
 		final BButton exitButton = makeButton("Exit", this, "doQuit");
 		final BorderContainer bottom = new BorderContainer();
-        bottom.setDefaultLayout(new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.NONE,
-                defaultInsets, null));
+        bottom.setDefaultLayout(
+                new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.NONE,
+                        defaultInsets, null));
 		bottom.setBackground(null);
 		bottom.add(cancelButton, BorderContainer.WEST);
 		bottom.add(exitButton, BorderContainer.EAST);
 
-        main.add(bottom, BorderContainer.SOUTH, new LayoutInfo(LayoutInfo.CENTER,
-				LayoutInfo.HORIZONTAL, null, null));
+        main.add(bottom, BorderContainer.SOUTH,
+                new LayoutInfo(LayoutInfo.CENTER,
+                        LayoutInfo.HORIZONTAL, null, null));
         
         nextButton.setEnabled(false);
         saveButton.setEnabled(false);
         
-        final JFileChooser inchsr = (JFileChooser) inFileChooser.getComponent();
+        final JFileChooser inchsr = inFileChooser.getComponent();
         inchsr.addChoosableFileFilter(new ExtensionFilter(new String[] {
         		"ds", "tgs" }, "Delaney-Dress Symbol Files"));
-        inchsr.addChoosableFileFilter(new ExtensionFilter("arc", "Systre Archives"));
-        inchsr.addChoosableFileFilter(new ExtensionFilter(new String[] {"cgd", "pgr" },
+        inchsr.addChoosableFileFilter(
+                new ExtensionFilter("arc", "Systre Archives"));
+        inchsr.addChoosableFileFilter(
+                new ExtensionFilter(new String[] {"cgd", "pgr" },
         		"Systre Input Files"));
-        final JFileChooser outchsr = (JFileChooser) outFileChooser.getComponent();
-        outchsr.addChoosableFileFilter(new ExtensionFilter("arc", "Systre Archive Files"));
-        outchsr.addChoosableFileFilter(new ExtensionFilter("cgd", "Embedded Nets"));
-        outchsr.addChoosableFileFilter(new ExtensionFilter("pgr", "Abstract Topologies"));
-        outchsr.addChoosableFileFilter(new ExtensionFilter("out", "Systre Transcripts"));
+        final JFileChooser outchsr = outFileChooser.getComponent();
+        outchsr.addChoosableFileFilter(
+                new ExtensionFilter("arc", "Systre Archive Files"));
+        outchsr.addChoosableFileFilter(
+                new ExtensionFilter("cgd", "Embedded Nets"));
+        outchsr.addChoosableFileFilter(
+                new ExtensionFilter("pgr", "Abstract Topologies"));
+        outchsr.addChoosableFileFilter(
+                new ExtensionFilter("out", "Systre Transcripts"));
         
         systre.addEventLink(String.class, this, "status");
         statusBar.setText("...");
 
         setContent(main);
         pack();
-		final JFrame jf = (JFrame) getComponent();
+		final JFrame jf = getComponent();
 		jf.setSize(700, 600);
 		jf.validate();
 
@@ -220,7 +230,7 @@ public class SystreGUI extends BFrame {
     }
     
     public void resizeMessage() {
-    	final Dimension size = ((JFrame) getComponent()).getSize();
+    	final Dimension size = getComponent().getSize();
     	status("Window resized to " + size.width + "x" + size.height + ".");
     }
     
@@ -272,7 +282,8 @@ public class SystreGUI extends BFrame {
         final boolean success = this.inFileChooser.showDialog(this);
         if (success) {
         	this.netsToProcess = null;
-            final String filename = this.inFileChooser.getSelectedFile().getName();
+            final String filename =
+                    this.inFileChooser.getSelectedFile().getName();
             final File dir = this.inFileChooser.getDirectory();
             final String path = new File(dir, filename).getAbsolutePath();
             this.output.setText("");
@@ -334,18 +345,20 @@ public class SystreGUI extends BFrame {
             new Thread(new Runnable() {
                 public void run() {
                     try {
-                        final BufferedWriter writer = new BufferedWriter(new FileWriter(
-								file, append));
+                        final BufferedWriter writer = new BufferedWriter(
+                                new FileWriter(file, append));
                         if (singleWrite) {
-							writeStructure(filetype, writer, systre.getLastStructure(),
+							writeStructure(filetype, writer,
+							        systre.getLastStructure(),
 									lastFinishedTranscript);
 						} else {
-							for (final Iterator iter = bufferedNets.iterator(); iter
-									.hasNext();) {
-								final Pair item = (Pair) iter.next();
-								final ProcessedNet net = (ProcessedNet) item.getFirst();
-								final String transcript = (String) item.getSecond();
-								writeStructure(filetype, writer, net, transcript);
+							for (final Pair<ProcessedNet, String> item:
+							    bufferedNets)
+							{
+								final ProcessedNet net = item.getFirst();
+								final String transcript = item.getSecond();
+								writeStructure(
+								        filetype, writer, net, transcript);
 							}
 							// -- save output from a possible frozen computation
 							writeStructure(filetype, writer, null,
@@ -354,11 +367,12 @@ public class SystreGUI extends BFrame {
 						writer.flush();
 						writer.close();
                     } catch (IOException ex) {
-                        reportException(null, "FILE", "I/O error writing to " + file,
-                                false);
+                        reportException(null, "FILE", "I/O error writing to "
+                                + file, false);
                     } catch (Exception ex) {
                         reportException(ex, "INTERNAL",
-                                "Unexpected exception while writing to " + file, true);
+                                "Unexpected exception while writing to "
+                                        + file, true);
                     } finally {
                         enableMainButtons();
                     }
@@ -367,8 +381,12 @@ public class SystreGUI extends BFrame {
         }
     }
     
-    private void writeStructure(final String extension, final BufferedWriter writer,
-			final ProcessedNet net, final String transcript) throws IOException {
+    private void writeStructure(
+            final String extension,
+            final BufferedWriter writer,
+			final ProcessedNet net,
+			final String transcript) throws IOException
+	{
         if ("out".equals(extension)) {
             final String lineSeparator = System.getProperty("line.separator");
             // --- write the full transcript
@@ -377,16 +395,18 @@ public class SystreGUI extends BFrame {
         } else if (net != null) {
             if ("arc".equals(extension)) {
             	// --- write archive entry
-				final String txt = new Archive.Entry(net.getGraph(), net.getName())
-						.toString();
+				final String txt = new Archive.Entry(net.getGraph(),
+				        net.getName()).toString();
 				writer.write(txt);
 				writer.write("\n");
             } else if ("cgd".equals(extension)) {
             	// --- write embedding structure with full symmetry
-                net.writeEmbedding(writer, true, systre.getOutputFullCell(), "");
+                net.writeEmbedding(
+                        writer, true, systre.getOutputFullCell(), "");
             } else if ("pgr".equals(extension)) {
             	// --- write abstract, unembedded periodic graph
-                Output.writePGR(writer, net.getGraph().canonical(), net.getName());
+                Output.writePGR(
+                        writer, net.getGraph().canonical(), net.getName());
 				writer.write("\n");
             }
         }
@@ -395,15 +415,18 @@ public class SystreGUI extends BFrame {
     public void doOptions() {
 		final BDialog dialog = new BDialog(this, "Systre - Options", true);
 		final ColumnContainer column = new ColumnContainer();
-		column.setDefaultLayout(new LayoutInfo(LayoutInfo.WEST, LayoutInfo.HORIZONTAL,
-                defaultInsets, null));
+		column.setDefaultLayout(
+		        new LayoutInfo(LayoutInfo.WEST, LayoutInfo.HORIZONTAL,
+		                defaultInsets, null));
         column.setBackground(textColor);
         try {
-			column.add(new OptionCheckBox("Process whole files without stopping",
+			column.add(new OptionCheckBox(
+			        "Process whole files without stopping",
 					this, "nonStopMode"));
 			column.add(new OptionCheckBox("Use Builtin Archive", this.systre,
 					"useBuiltinArchive"));
-			column.add(new OptionCheckBox("Process '.arc' files like normal input",
+			column.add(new OptionCheckBox(
+			        "Process '.arc' files like normal input",
 					this, "readArchivesAsInput"));
 			column.add(new BSeparator());
 			column.add(new OptionCheckBox("Prefer Second Origin On Input",
@@ -416,8 +439,8 @@ public class SystreGUI extends BFrame {
 			column.add(new BSeparator());
 			column.add(new OptionCheckBox("Compute an Embedding", this.systre,
 					"computeEmbedding"));
-            column.add(new OptionCheckBox("Start from given Embedding", this.systre,
-                    "useOriginalEmbedding"));
+            column.add(new OptionCheckBox("Start from given Embedding",
+                    this.systre, "useOriginalEmbedding"));
 			column.add(new OptionCheckBox("Relax Node Positions", this.systre,
 					"relaxPositions"));
 			column.add(new OptionInputBox("Importance Of Equal Edge Lengths",
@@ -480,9 +503,9 @@ public class SystreGUI extends BFrame {
     		this.inputException = null;
     		throw ex;
     	} else {
-    		final Net result = (Net) this.netsToProcess.next();
+    		final Net result = this.netsToProcess.next();
     		if (!result.isOk()) {
-    			throw (Exception) result.getErrors().next();
+    			throw result.getErrors().next();
     		}
             this.taskController.bailOutIfCancelled();
             return result;
@@ -505,8 +528,12 @@ public class SystreGUI extends BFrame {
         status("Reading the next net...");
         boolean cancelled = false;
 
-        final class BailOut extends Throwable {};
-        final class Cancel  extends Throwable {};
+        final class BailOut extends Throwable {
+            private static final long serialVersionUID = -7490696217023106703L;
+        };
+        final class Cancel  extends Throwable {
+            private static final long serialVersionUID = 5411581838341297732L;
+        };
         
         try {
             ++this.count;
@@ -570,13 +597,15 @@ public class SystreGUI extends BFrame {
                 } catch (SystreException ex) {
                     reportException(ex, ex.getType().toString(), null, false);
                 } catch (Exception ex) {
-                    reportException(ex, "INTERNAL", "Unexpected exception", true);
+                    reportException(
+                            ex, "INTERNAL", "Unexpected exception", true);
                 } catch (Error ex) {
                 	reportException(ex, "EXECUTION", "Runtime problem", true);
                 }
             }
             out.println();
-            out.println("Finished structure #" + this.count + displayName + ".");
+            out.println("Finished structure #" + this.count + displayName
+                    + ".");
             this.lastFinishedTranscript = this.currentTranscript.toString();
             final ProcessedNet tmp;
             if (success) {
@@ -585,7 +614,8 @@ public class SystreGUI extends BFrame {
             else {
                 tmp = null;
             }
-            this.bufferedNets.add(new Pair(tmp, this.lastFinishedTranscript));
+            this.bufferedNets.add(new Pair<ProcessedNet, String>(
+                    tmp, this.lastFinishedTranscript));
         } catch (BailOut ex) {
             out.println();
             out.println("Skipping structure #" + this.count
@@ -614,7 +644,8 @@ public class SystreGUI extends BFrame {
         this.count = 0;
         
         this.fullFileName = filePath;
-        this.strippedFileName = new File(filePath).getName().replaceFirst("\\..*$", "");
+        this.strippedFileName =
+                new File(filePath).getName().replaceFirst("\\..*$", "");
         this.bufferedNets.clear();
         this.inputException = null;
 
@@ -656,7 +687,8 @@ public class SystreGUI extends BFrame {
 			out.println("==================================================");
 		}
 		final boolean cancelled = ex instanceof SystreException
-				&& ((SystreException) ex).getType().equals(SystreException.CANCELLED);
+				&& ((SystreException) ex).getType().equals(
+				        SystreException.CANCELLED);
 		final String text;
 		if (cancelled) {
 			text = "CANCELLING";
@@ -715,7 +747,8 @@ public class SystreGUI extends BFrame {
     public void doHelp() {
 		final BFrame frame = new BFrame("Systre - Help");
 		final BorderContainer content = new BorderContainer();
-		content.setDefaultLayout(new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.BOTH,
+		content.setDefaultLayout(
+		        new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.BOTH,
                 defaultInsets, null));
         content.setBackground(textColor);
 		final BDocumentViewer viewer = new BDocumentViewer() {
@@ -724,7 +757,8 @@ public class SystreGUI extends BFrame {
 				if (event.getURL() == null) {
 					final String ref = event.getDescription();
 					if (ref.startsWith("#")) {
-						((JEditorPane) component).scrollToReference(ref.substring(1));
+						((JEditorPane) component)
+						.scrollToReference(ref.substring(1));
 					}
 				}
 			}
@@ -739,7 +773,8 @@ public class SystreGUI extends BFrame {
 		frame.setContent(content);
 
 		frame.addEventLink(WindowClosingEvent.class, frame, "dispose");
-		viewer.addEventLink(DocumentLinkEvent.class, viewer, "processLinkEvent");
+		viewer.addEventLink(
+		        DocumentLinkEvent.class, viewer, "processLinkEvent");
 		
         new Thread(new Runnable() {
 			public void run() {
@@ -771,7 +806,7 @@ public class SystreGUI extends BFrame {
 				SwingUtilities.invokeLater(new Runnable() {
 					public void run() {
 						frame.pack();
-						final JFrame jf = (JFrame) frame.getComponent();
+						final JFrame jf = frame.getComponent();
 						jf.setSize(700, 600);
 						jf.validate();
 						frame.setVisible(true);

@@ -128,10 +128,12 @@ public class SystreCmdline extends EventSource {
         final String packagePath = pkg.getName().replaceAll("\\.", "/");
         
         final String rcsrPath = packagePath + "/rcsr.arc";
-        final InputStream rcsrStream = ClassLoader.getSystemResourceAsStream(rcsrPath);
+        final InputStream rcsrStream =
+                ClassLoader.getSystemResourceAsStream(rcsrPath);
         builtinArchive.addAll(new InputStreamReader(rcsrStream));
         final String zeoPath = packagePath + "/zeolites.arc";
-        final InputStream zeoStream = ClassLoader.getSystemResourceAsStream(zeoPath);
+        final InputStream zeoStream =
+                ClassLoader.getSystemResourceAsStream(zeoPath);
         zeoliteArchive.addAll(new InputStreamReader(zeoStream));
     }
     
@@ -143,14 +145,15 @@ public class SystreCmdline extends EventSource {
     public void processArchive(final String filename) {
         final String name = filename;
         if (this.name2archive.containsKey(name)) {
-            out.println("!!! WARNING (USAGE) - Archive \"" + name + "\" was given twice.");
+            out.println("!!! WARNING (USAGE) - Archive \"" + name
+                    + "\" was given twice.");
         } else {
             final Archive arc = new Archive("1.0");
             try {
                 arc.addAll(new FileReader(filename));
             } catch (FileNotFoundException ex) {
-				out.println("!!! ERROR (FILE) - Could not find file \"" + filename
-						+ "\".");
+				out.println("!!! ERROR (FILE) - Could not find file \""
+				        + filename + "\".");
 				return;
 			} catch (Exception ex) {
 				out.println("!!! ERROR (FILE) - " + ex.getMessage()
@@ -202,16 +205,16 @@ public class SystreCmdline extends EventSource {
         // --- get and check the barycentric placement
     	status("Computing barycentric placement...");
     	
-        final Map barycentric = G.barycentricPlacement();
+        final Map<INode, Point> barycentric = G.barycentricPlacement();
         if (!G.isBarycentric(barycentric)) {
             final String msg = "Incorrect barycentric placement.";
             throw new RuntimeException(msg);
         }
         if (DEBUG) {
             out.println("\t\t@@@ barycentric placement:");
-            for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
-                final INode v = (INode) nodes.next();
-                out.println("\t\t@@@    " + v.id() + " -> " + barycentric.get(v));
+            for (final INode v: G.nodes()) {
+                out.println("\t\t@@@    " + v.id() + " -> "
+                        + barycentric.get(v));
             }
         }
         out.println();
@@ -222,16 +225,16 @@ public class SystreCmdline extends EventSource {
         // --- test if it is Systre-compatible
         if (!G.isLocallyStable()) {
             throw new SystreException(SystreException.STRUCTURE,
-            		"Structure has collisions between next-nearest neighbors." +
-            		" Systre does not currently support such structures.");
+                    "Structure has collisions between next-nearest neighbors."
+                    + " Systre does not currently support such structures.");
         }
         if (G.isLadder()) {
             final String msg = "Structure is non-crystallographic (a 'ladder')";
             throw new SystreException(SystreException.STRUCTURE, msg);
         }
         if (!G.isStable()) {
-            final String msg = "!!! WARNING (STRUCTURE) - "
-                + "Structure has collisions. Output embedding may be incorrect.";
+            final String msg = "!!! WARNING (STRUCTURE) - Structure has "
+                    + "collisions. Output embedding may be incorrect.";
             out.println(msg);
             out.println();
         }
@@ -296,16 +299,17 @@ public class SystreCmdline extends EventSource {
         
         // --- compute an embedding
         if (getComputeEmbedding()) {
-            if (getUseOriginalEmbedding() && G.nodes().hasNext() &&
-                    graph.getNodeInfo((INode) G.nodes().next(),
-                            NetParser.POSITION) != null)
+            if (getUseOriginalEmbedding()
+                    && G.nodes().hasNext()
+                    &&
+                    graph.getNodeInfo(G.nodes().next(), NetParser.POSITION)
+                    != null)
             {
                 Map<INode, Point> pos = new HashMap<INode, Point>();
-                final Point z = (Point) graph.getNodeInfo((INode) G.nodes().next(),
-                        NetParser.POSITION);
+                final Point z = (Point) graph.getNodeInfo(
+                        G.nodes().next(), NetParser.POSITION);
                 final Vector shift = new Vector(z.getCoordinates());
-                for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
-                    final INode v = (INode) nodes.next();
+                for (final INode v: G.nodes()) {
                     pos.put(v, (Point) ((Point) graph.getNodeInfo(v,
                             NetParser.POSITION)).minus(shift));
                 }
@@ -317,7 +321,8 @@ public class SystreCmdline extends EventSource {
                         "barycentric");
             }
         } else {
-        	setLastStructure(new ProcessedNet(G, name, node2name, finder, null));
+        	setLastStructure(
+        	        new ProcessedNet(G, name, node2name, finder, null));
         }
     }
 
@@ -531,25 +536,28 @@ public class SystreCmdline extends EventSource {
         final Map<String, Set<INode>> name2orbit =
                 new HashMap<String, Set<INode>>();
         final Map<INode, String> node2name = new HashMap<INode, String>();
-        final Set<Pair> mergedNames = new LinkedHashSet<Pair>();
+        final Set<Pair<String, String>> mergedNames =
+                new LinkedHashSet<Pair<String, String>>();
         final Net G0 = (Net) M.getSourceGraph();
         
-        for (final Iterator<INode> nodes = G0.nodes(); nodes.hasNext();) {
-        	final INode v = nodes.next();
+        for (final INode v: G0.nodes()) {
         	final String nodeName = G0.getNodeName(v);
-        	final INode w = (INode) M.get(v);
+        	final INode w = M.getImage(v);
         	final Set<INode> orbit = node2orbit.get(w);
         	if (orbit2name.containsKey(orbit) &&
-        	        !nodeName.equals(orbit2name.get(orbit))) {
-				mergedNames.add(new Pair(nodeName, orbit2name.get(orbit)));
+        	        !nodeName.equals(orbit2name.get(orbit)))
+        	{
+				mergedNames.add(new Pair<String, String>(
+				        nodeName, orbit2name.get(orbit)));
 			} else {
         		orbit2name.put(orbit, nodeName);
         		final Integer conn =
         		        (Integer) G0.getNodeInfo(v, NetParser.CONNECTIVITY);
         		if (conn != null && conn.intValue() != 0 &&
-        		        conn.intValue() != v.degree()) {
-        			String msg = "Node " + v + " has connectivity " + v.degree()
-        				+ ", where " + conn + " was expected";
+        		        conn.intValue() != v.degree())
+        		{
+        			String msg = "Node " + v + " has connectivity "
+        			        + v.degree() + ", where " + conn + " was expected";
     				throw new SystreException(SystreException.INPUT, msg);
         		}
         	}
@@ -564,11 +572,9 @@ public class SystreCmdline extends EventSource {
         
         if (mergedNames.size() > 0) {
 			out.println("   Equivalences for non-unique nodes:");
-			for (Pair item: mergedNames) {
-				final String old =
-				        Strings.parsable((String) item.getFirst(), false);
-				final String nu =
-				        Strings.parsable((String) item.getSecond(), false);
+			for (final Pair<String, String> item: mergedNames) {
+				final String old = Strings.parsable(item.getFirst(), false);
+				final String nu = Strings.parsable(item.getSecond(), false);
 				out.println("      " + old + " --> " + nu);
 			}
 			out.println();
@@ -588,12 +594,13 @@ public class SystreCmdline extends EventSource {
         int cum = 0;
         boolean cs_complete = true;
         for (final Iterator<Set<INode>> orbits = G.nodeOrbits();
-                orbits.hasNext();) {
+                orbits.hasNext();)
+        {
             final Set<INode> orbit = orbits.next();
             final INode v = orbit.iterator().next();
-            out.print("      Node "
-                    + Strings.parsable((String) node2name.get(v), false)
-					+ ":   ");
+            out.print("      Node " + Strings.parsable(node2name.get(v), false)
+                    + ":   ");
+            @SuppressWarnings("unchecked")
             final List<Whole> givenCS = (List<Whole>) N.getNodeInfo(v,
                     NetParser.COORDINATION_SEQUENCE);
             final Iterator<Integer> cs = G.coordinationSequence(v);
@@ -640,7 +647,8 @@ public class SystreCmdline extends EventSource {
             final Map<INode, String> node2name) {
         out.println("   Wells point symbols:");
         for (final Iterator<Set<INode>> orbits = G.nodeOrbits();
-                orbits.hasNext();) {
+                orbits.hasNext();)
+        {
             final Set<INode> orbit = orbits.next();
             final INode v = orbit.iterator().next();
             out.println("      Node "
@@ -663,10 +671,10 @@ public class SystreCmdline extends EventSource {
 		out.println("   Processing components separately.");
 		out.println();
 		out.println("   ==========");
-		final List components = graph.connectedComponents();
+		final List<PeriodicGraph.Component> components =
+		        graph.connectedComponents();
 		for (int i = 1; i <= components.size(); ++i) {
-			final PeriodicGraph.Component c = (PeriodicGraph.Component) components
-					.get(i-1);
+			final PeriodicGraph.Component c = components.get(i-1);
 			out.println("   Processing component " + i + ":");
 			if (c.getDimension() < graph.getDimension()) {
 				out.println("      dimension = " + c.getDimension());
@@ -698,7 +706,7 @@ public class SystreCmdline extends EventSource {
     private void embedGraph(
             final PeriodicGraph G,
             final String name,
-			final Map node2name,
+			final Map<INode, String> node2name,
 			final SpaceGroupFinder finder,
 			final Map<INode, Point> initialPlacement,
 			final boolean checkPositions,
@@ -743,24 +751,24 @@ public class SystreCmdline extends EventSource {
                 embedder.normalize();
             }
             if (!embedder.positionsRelaxed() && checkPositions) {
-                final Map pos = embedder.getPositions();
-                final Map bari = G.barycentricPlacement();
+                final Map<INode, Point> pos = embedder.getPositions();
+                final Map<INode, Point> bari = G.barycentricPlacement();
                 int problems = 0;
-                for (final Iterator nodes = G.nodes(); nodes.hasNext();) {
-                    final INode v = (INode) nodes.next();
-                    final Point p = (Point) pos.get(v);
-                    final Point q = (Point) bari.get(v);
+                for (final INode v: G.nodes()) {
+                    final Point p = pos.get(v);
+                    final Point q = bari.get(v);
                     final Vector diff = (Vector) p.minus(q);
                     final double err = ((Real) Vector.dot(diff, diff)).sqrt()
                             .doubleValue();
                     if (err > 1e-12) {
-                        out.println("\t\t@@@ " + v + " is at " + p + ", but should be "
-                                    + q);
+                        out.println("\t\t@@@ " + v + " is at " + p
+                                + ", but should be " + q);
                         ++problems;
                     }
                 }
                 if (problems > 0) {
-                    final String msg = "Embedder misplaced " + problems + " points";
+                    final String msg = "Embedder misplaced " + problems
+                            + " points";
                     throw new SystreException(SystreException.INTERNAL, msg);
                 }
             }
@@ -772,8 +780,8 @@ public class SystreCmdline extends EventSource {
         	
             final StringWriter cgdStringWriter = new StringWriter();
             final PrintWriter cgd = new PrintWriter(cgdStringWriter);
-            final ProcessedNet net = new ProcessedNet(G, name, node2name, finder,
-					embedder);
+            final ProcessedNet net =
+                    new ProcessedNet(G, name, node2name, finder, embedder);
             setLastStructure(net);
             net.writeEmbedding(cgd, true, getOutputFullCell(), "");
 
@@ -788,7 +796,8 @@ public class SystreCmdline extends EventSource {
 
                     status("Consistency test: comparing with original net...");
                     if (!test.minimalImage().equals(G)) {
-                        final String msg = "Output does not match original graph.";
+                        final String msg =
+                                "Output does not match original graph.";
                         throw new RuntimeException(msg);
                     }
                 }
@@ -838,18 +847,19 @@ public class SystreCmdline extends EventSource {
 	 */
     public void processDataFile(final String filePath) {
         // --- set up a parser for reading input from the given file
-        Iterator inputs = null;
+        Iterator<Net> inputs = null;
         int count = 0;
         try {
             inputs = Net.iterator(filePath);
         } catch (FileNotFoundException ex) {
-            out.println("!!! ERROR (FILE) - Could not find file \"" + filePath + "\".");
+            out.println("!!! ERROR (FILE) - Could not find file \"" + filePath
+                    + "\".");
             return;
         } catch (Net.IllegalFileNameException ex) {
             out.println("!!! ERROR (FILE) - " + ex.getMessage());
         }
-        this.lastFileNameWithoutExtension = new File(filePath).getName().replaceFirst(
-                "\\..*$", "");
+        this.lastFileNameWithoutExtension =
+                new File(filePath).getName().replaceFirst("\\..*$", "");
         out.println("Data file \"" + filePath + "\".");
         
         // --- loop through the structures specified in the input file
@@ -860,7 +870,7 @@ public class SystreCmdline extends EventSource {
             // --- read the next net
             status("Reading...");
             try {
-                G = (Net) inputs.next();
+                G = inputs.next();
             } catch (Exception ex) {
                 problem = ex;
             }
@@ -883,7 +893,7 @@ public class SystreCmdline extends EventSource {
                 }
             }
             if (problem == null && !G.isOk()) {
-            	problem = (Exception) G.getErrors().next();
+            	problem = G.getErrors().next();
             }
             final String archiveName;
             final String displayName;
@@ -945,10 +955,14 @@ public class SystreCmdline extends EventSource {
      * @param count the running number of the graph in the current file.
      * @param name the name of the graph.
      */
-    private void reportError(final Throwable ex, final int count, final String name) {
+    private void reportError(
+            final Throwable ex,
+            final int count,
+            final String name)
+    {
         out.println("==================================================");
-        out.println("!!! ERROR (INTERNAL) - Unexpected " + ex.getClass().getName() + ": "
-				+ ex.getMessage());
+        out.println("!!! ERROR (INTERNAL) - Unexpected "
+                + ex.getClass().getName() + ": " + ex.getMessage());
         reportErrorLocation(count, name);
         out.println("!!!    Stack trace:");
         out.print(Misc.stackTrace(ex, "!!!       "));
@@ -983,8 +997,7 @@ public class SystreCmdline extends EventSource {
     private int writeArchive(final Writer writer, final Archive archive)
 			throws IOException {
 		int count = 0;
-        for (Iterator iter = archive.keySet().iterator(); iter.hasNext();) {
-            final String key = (String) iter.next();
+        for (final String key: archive.keySet()) {
             final Archive.Entry entry = archive.getByKey(key);
             writer.write(entry.toString());
             ++count;
@@ -999,8 +1012,8 @@ public class SystreCmdline extends EventSource {
      * @param args the command line arguments.
      */
     public void run(final String args[]) {
-        final List files = new LinkedList();
-        final List archives = new LinkedList();
+        final List<String> files = new LinkedList<String>();
+        final List<String> archives = new LinkedList<String>();
         boolean archivesAsInput = false;
         String outputArchiveFileName = null;
         
@@ -1093,19 +1106,18 @@ public class SystreCmdline extends EventSource {
         
         if (outputArchiveFileName != null) {
             try {
-                this.outputArchive = new BufferedWriter(new FileWriter(outputArchiveFileName));
+                this.outputArchive = new BufferedWriter(
+                        new FileWriter(outputArchiveFileName));
             } catch (IOException ex) {
                 out.println("!!! ERROR (FILE) - Could not open output archive:" + ex);
             }
         }
         
-        for (final Iterator iter = archives.iterator(); iter.hasNext();) {
-            final String filename = (String) iter.next();
+        for (final String filename: archives) {
             this.processArchive(filename);
         }
         
-        for (final Iterator iter = files.iterator(); iter.hasNext();) {
-            final String filename = (String) iter.next();
+        for (final String filename: files) {
             ++count;
             if (count > 1) {
                 out.println();
@@ -1120,7 +1132,8 @@ public class SystreCmdline extends EventSource {
         	this.outputArchive.flush();
         	this.outputArchive.close();
             } catch (IOException ex) {
-                out.println("!!! ERROR (FILE) - Output archive not completely written.");
+                out.println("!!! ERROR (FILE) - "
+                        + "Output archive not completely written.");
             }
         }
     }
@@ -1159,11 +1172,14 @@ public class SystreCmdline extends EventSource {
 		
 		// --- write them to the configuration file
     	try {
-			ourProps.store(new FileOutputStream(configFileName), "Systre options");
+			ourProps.store(new FileOutputStream(configFileName),
+			        "Systre options");
 		} catch (final FileNotFoundException ex) {
-			System.err.println("Could not find configuration file " + configFileName);
+			System.err.println("Could not find configuration file "
+			        + configFileName);
 		} catch (final IOException ex) {
-			System.err.println("Exception occurred while writing configuration file");
+			System.err.println(
+			        "Exception occurred while writing configuration file");
 		}
     }
 
@@ -1173,16 +1189,18 @@ public class SystreCmdline extends EventSource {
     	try {
 			ourProps.load(new FileInputStream(configFileName));
 		} catch (FileNotFoundException ex) {
-			System.err.println("Could not find configuration file " + configFileName);
+			System.err.println("Could not find configuration file "
+			        + configFileName);
 			return;
 		} catch (IOException ex) {
-			System.err.println("Exception occurred while reading configuration file");
+			System.err.println(
+			        "Exception occurred while reading configuration file");
 			return;
 		}
 		
 		// --- override by system properties if defined
-		for (final Iterator keys = ourProps.keySet().iterator(); keys.hasNext();) {
-			final String key = (String) keys.next();
+		for (final Object x: ourProps.keySet()) {
+			final String key = (String) x;
 			final String val = System.getProperty(key);
 			if (val != null) {
 				ourProps.setProperty(key, val);
