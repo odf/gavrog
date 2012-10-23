@@ -46,8 +46,7 @@ public class FrankKasper extends TileKTransitive {
         super(new DSymbol("1:1,1,1:3,3"), k, verbose);
     }
 
-    protected Iterator<DSymbol> defineBranching(
-            final DelaneySymbol<Integer> ds)
+    protected Iterator<DSymbol> defineBranching(final DSymbol ds)
     {
         final DynamicDSymbol out = new DynamicDSymbol(new DSymbol(ds));
         final IndexList idx = new IndexList(2, 3);
@@ -71,9 +70,8 @@ public class FrankKasper extends TileKTransitive {
     
     protected ResumableGenerator<DSymbol> extendTo3d(final DSymbol ds) {
         return new CombineTiles(ds) {
-            @SuppressWarnings("unused")
             protected List<Move> getExtraDeductions(
-                    final DSymbol ds,
+                    final DelaneySymbol<Integer> ds,
 					final Move move)
 			{
                 final List<Move> out = new ArrayList<Move>();
