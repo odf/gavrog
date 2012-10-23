@@ -296,7 +296,7 @@ public abstract class BranchAndCut<T> extends ResumableGenerator<T> {
 
 	private void postCheckpoint(final String message) {
 		dispatchEvent(
-				new CheckpointEvent<T>(this, !resume_point_reached, message));
+		        new CheckpointEvent(this, !resume_point_reached, message));
 	}
 
 	/**

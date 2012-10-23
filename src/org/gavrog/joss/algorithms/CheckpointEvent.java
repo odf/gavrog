@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,22 +18,23 @@
 package org.gavrog.joss.algorithms;
 
 /**
- * @author Olaf Delgado
- * @version $Id:$
  */
-public class CheckpointEvent<T> {
-	final private ResumableGenerator<T> source;
+public class CheckpointEvent {
+	final private ResumableGenerator<?> source;
 	final private boolean old;
 	final private String message;
 	
-	public CheckpointEvent(final ResumableGenerator<T> source, final boolean old,
-			final String message) {
+	public CheckpointEvent(
+	        final ResumableGenerator<?> source,
+	        final boolean old,
+			final String message)
+	{
 		this.source = source;
 		this.old = old;
 		this.message = message;
 	}
 
-	public ResumableGenerator<T> getSource() {
+	public ResumableGenerator<?> getSource() {
 		return source;
 	}
 

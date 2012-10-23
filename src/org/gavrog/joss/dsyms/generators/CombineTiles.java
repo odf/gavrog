@@ -340,8 +340,8 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
     }
 
 	private void postCheckpoint(final String message) {
-		dispatchEvent(new CheckpointEvent<DSymbol>(
-				this, !resume_point_reached, message));
+		dispatchEvent(
+		        new CheckpointEvent(this, !resume_point_reached, message));
 	}
 
     /**
@@ -846,9 +846,7 @@ public class CombineTiles extends ResumableGenerator<DSymbol> {
         iter.addEventLink(CheckpointEvent.class, new EventProcessor() {
             @Override
             public void handleEvent(final Object event) {
-				@SuppressWarnings("unchecked")
-                final CheckpointEvent<DSymbol> ev =
-				        (CheckpointEvent<DSymbol>) event;
+                final CheckpointEvent ev = (CheckpointEvent) event;
 				timer.reset();
 				System.out.format("#@@@ %sCheckpoint %s\n", ev.isOld() ? "Old "
 						: "", ev.getSource().getCheckpoint());

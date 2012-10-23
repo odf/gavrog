@@ -46,7 +46,9 @@ public class FrankKasper extends TileKTransitive {
         super(new DSymbol("1:1,1,1:3,3"), k, verbose);
     }
 
-    protected Iterator defineBranching(final DelaneySymbol ds) {
+    protected Iterator<DSymbol> defineBranching(
+            final DelaneySymbol<Integer> ds)
+    {
         final DynamicDSymbol out = new DynamicDSymbol(new DSymbol(ds));
         final IndexList idx = new IndexList(2, 3);
         for (final int D: out.orbitReps(idx)) {
@@ -69,8 +71,11 @@ public class FrankKasper extends TileKTransitive {
     
     protected ResumableGenerator<DSymbol> extendTo3d(final DSymbol ds) {
         return new CombineTiles(ds) {
-            protected List<Move> getExtraDeductions(final DSymbol ds,
-					final Move move) {
+            @SuppressWarnings("unused")
+            protected List<Move> getExtraDeductions(
+                    final DSymbol ds,
+					final Move move)
+			{
                 final List<Move> out = new ArrayList<Move>();
                 final int D = move.element;
                 int E = D;
@@ -195,10 +200,11 @@ public class FrankKasper extends TileKTransitive {
 			final Stopwatch chkptTimer = new Stopwatch();
 			final int interval = 1000 * checkpointInterval;
 	        iter.addEventLink(CheckpointEvent.class, new EventProcessor() {
-				@Override
+                @Override
 				public void handleEvent(final Object event) {
 					if (((CheckpointEvent) event).getMessage() != null
-							|| chkptTimer.elapsed() > interval) {
+							|| chkptTimer.elapsed() > interval)
+					{
 						chkptTimer.reset();
 						try {
 							output.write(event + "\n");

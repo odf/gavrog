@@ -207,14 +207,12 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
 
     @SuppressWarnings("unused")
     private void repostCheckpoint(final Object ev) {
-        @SuppressWarnings("unchecked")
-        final CheckpointEvent<DSymbol> ce = (CheckpointEvent<DSymbol>) ev;
-        dispatchEvent(new CheckpointEvent<DSymbol>(
-                this, ce.isOld(), ce.getMessage()));
+        final CheckpointEvent ce = (CheckpointEvent) ev;
+        dispatchEvent(new CheckpointEvent(this, ce.isOld(), ce.getMessage()));
     }
 
     private void postCheckpoint() {
-		dispatchEvent(new CheckpointEvent<DSymbol>(this, tooEarly(), null));
+		dispatchEvent(new CheckpointEvent(this, tooEarly(), null));
 	}
 
     /**
@@ -386,9 +384,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
 	        iter.addEventLink(CheckpointEvent.class, new EventProcessor() {
 				@Override
 				public void handleEvent(final Object event) {
-					@SuppressWarnings("unchecked")
-                    final CheckpointEvent<DSymbol> ce =
-					        (CheckpointEvent<DSymbol>) event;
+                    final CheckpointEvent ce = (CheckpointEvent) event;
 					if (ce.getMessage() != null
 							|| chkptTimer.elapsed() > interval) {
 						chkptTimer.reset();
