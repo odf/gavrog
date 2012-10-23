@@ -74,7 +74,9 @@ public class DocumentXStream extends XStream {
 
 	private void registerDocumentConverter() {
 		registerConverter(new Converter() {
-			public boolean canConvert(final Class clazz) {
+			public boolean canConvert(
+			        @SuppressWarnings("rawtypes") final Class clazz)
+			{
 				return clazz == Document.class;
 			}
 			public void marshal(final Object value,
@@ -82,7 +84,7 @@ public class DocumentXStream extends XStream {
 					final MarshallingContext context) {
 				final Document doc = (Document) value;
 				final Tiling til = doc.getTiling();
-				final DSCover cov = til.getCover();
+				final DSCover<Integer> cov = til.getCover();
 				
 				if (doc.getName() != null) {
 					writer.addAttribute("name", doc.getName());
@@ -184,8 +186,10 @@ public class DocumentXStream extends XStream {
 				DSymbol cover = null;
 				final List<Color> palette = new LinkedList<Color>();
 				final List<Object[]> dlist = new LinkedList<Object[]>();
-				final Map<Pair, Color> fcolors = new HashMap<Pair, Color>();
-				final Set<Pair> fhidden = new HashSet<Pair>();
+				final Map<Pair<Integer, Integer>, Color> fcolors =
+				        new HashMap<Pair<Integer, Integer>, Color>();
+				final Set<Pair<Integer, Integer>> fhidden =
+				        new HashSet<Pair<Integer, Integer>>();
 				Properties props = null;
 				Transformation trans = null;
 				
@@ -274,7 +278,7 @@ public class DocumentXStream extends XStream {
 							new Integer(reader.getAttribute("index"));
 						final String hidden = reader.getAttribute("hidden");
 						if ("true".equalsIgnoreCase(hidden)) {
-							fhidden.add(new Pair(tile, index));
+							fhidden.add(new Pair<Integer, Integer>(tile, index));
 						}
 						Vector shift = null;
 						Color color = null;
@@ -290,7 +294,7 @@ public class DocumentXStream extends XStream {
 							reader.moveUp();
 						}
 						if (shift == null) {
-							fcolors.put(new Pair(tile, index), color);
+							fcolors.put(new Pair<Integer, Integer>(tile, index), color);
 						} else {
 							dlist.add(new Object[] { "facet", shift, color,
 									tile, index });
@@ -303,8 +307,8 @@ public class DocumentXStream extends XStream {
 					throw new RuntimeException("No D-Symbol on XML stream.");
 				} else {
 					if (cover != null) {
-						doc = new Document(symbol, name, new DSCover(cover,
-								symbol, new Integer(1)));
+						doc = new Document(symbol, name,
+						        new DSCover<Integer>(cover, symbol, 1));
 					} else {
 						doc = new Document(symbol, name);
 					}
@@ -341,19 +345,19 @@ public class DocumentXStream extends XStream {
 							doc.recolor(item, c);
 						}
 					}
-					for (final Pair item: fcolors.keySet()) {
+					for (final Pair<Integer, Integer> item: fcolors.keySet()) {
 						final Color c = fcolors.get(item);
 						if (c != null) {
-							final int tile = (Integer) item.getFirst();
-							final int index = (Integer) item.getSecond();
+							final int tile = item.getFirst();
+							final int index = item.getSecond();
 							final Tiling.Tile t = doc.getTiles().get(tile);
 							final Tiling.Facet f = t.facet(index);
 							doc.setFacetClassColor(f, c);
 						}
 					}
-					for (final Pair item: fhidden) {
-						final int tile = (Integer) item.getFirst();
-						final int index = (Integer) item.getSecond();
+					for (final Pair<Integer, Integer> item: fhidden) {
+						final int tile = item.getFirst();
+						final int index = item.getSecond();
 						final Tiling.Tile t = doc.getTiles().get(tile);
 						final Tiling.Facet f = t.facet(index);
 						doc.hideFacetClass(f);
@@ -368,7 +372,9 @@ public class DocumentXStream extends XStream {
 
 	private void registerPropertiesConverter() {
 		registerConverter(new Converter() {
-			public boolean canConvert(final Class clazz) {
+			public boolean canConvert(
+			        @SuppressWarnings("rawtypes") final Class clazz)
+			{
 				return clazz == Properties.class;
 			}
 			public void marshal(final Object value,
@@ -399,7 +405,9 @@ public class DocumentXStream extends XStream {
 
 	private void registerTransformationConverter() {
 		registerConverter(new SingleValueConverter() {
-			public boolean canConvert(final Class clazz) {
+			public boolean canConvert(
+			        @SuppressWarnings("rawtypes") final Class clazz)
+			{
 				return clazz == Transformation.class;
 			}
 			public String toString(final Object value) {
@@ -427,7 +435,9 @@ public class DocumentXStream extends XStream {
 
 	private void registerVectorConverter() {
 		registerConverter(new SingleValueConverter() {
-			public boolean canConvert(final Class clazz) {
+			public boolean canConvert(
+			        @SuppressWarnings("rawtypes") final Class clazz)
+			{
 				return clazz == Vector.class;
 			}
 			public String toString(final Object value) {
@@ -455,7 +465,9 @@ public class DocumentXStream extends XStream {
 
 	private void registerColorConverter() {
 		registerConverter(new Converter() {
-			public boolean canConvert(final Class clazz) {
+			public boolean canConvert(
+			        @SuppressWarnings("rawtypes") final Class clazz)
+			{
 				return clazz == Color.class;
 			}
 			public void marshal(final Object value,
@@ -479,7 +491,9 @@ public class DocumentXStream extends XStream {
 
 	private void registerDSymbolConverter() {
 		registerConverter(new SingleValueConverter() {
-			public boolean canConvert(final Class clazz) {
+			public boolean canConvert(
+			        @SuppressWarnings("rawtypes") final Class clazz)
+			{
 				return clazz == DSymbol.class;
 			}
 			public String toString(final Object obj) {
