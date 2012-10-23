@@ -83,23 +83,22 @@ public class FrankKasperExtended extends TileKTransitive {
 		this.testParts = testParts;
 	}
 
-	protected boolean partsListOkay(final List parts) {
+	protected boolean partsListOkay(final List<DSymbol> parts) {
 		if (!this.testParts) {
 			return true;
 		}
 		
 		final List<String> stabs = new ArrayList<String>();
 		
-		for (Iterator iter = parts.iterator(); iter.hasNext();) {
-            final String type = guessOrbifoldSymbol((DSymbol) iter.next());
+		for (final DSymbol part: parts) {
+            final String type = guessOrbifoldSymbol(part);
             if (interesting_stabilizers.contains(type)) {
             	stabs.add(type);
             }
 		}
 		Collections.sort(stabs);
 		final StringBuffer buf = new StringBuffer(100);
-		for (Iterator iter = stabs.iterator(); iter.hasNext();) {
-			final String type = (String) iter.next();
+		for (final String type: stabs) {
 			if (buf.length() > 0) {
 				buf.append('/');
 			}
@@ -141,7 +140,7 @@ public class FrankKasperExtended extends TileKTransitive {
 		}
 	}
 	
-	protected Iterator defineBranching(final DelaneySymbol ds) {
+	protected Iterator<DSymbol> defineBranching(final DSymbol ds) {
 		final DynamicDSymbol out = new DynamicDSymbol(new DSymbol(ds));
 		final IndexList idx = new IndexList(0, 2, 3);
 		final List<Integer> choices = new LinkedList<Integer>();
@@ -162,13 +161,12 @@ public class FrankKasperExtended extends TileKTransitive {
 			}
 		}
 		
-		return new IteratorAdapter() {
+		return new IteratorAdapter<DSymbol>() {
 			final int n = choices.size();
-			int count = 0;
 			final Set<DSymbol> seen = new HashSet<DSymbol>();
 			int a[] = null;
 
-			protected Object findNext() throws NoSuchElementException {
+			protected DSymbol findNext() throws NoSuchElementException {
 				while (true) {
 					if (a == null) {
 						a = new int[n + 1]; // better not risk null result
@@ -188,7 +186,6 @@ public class FrankKasperExtended extends TileKTransitive {
 							choose(++i, 4);
 						}
 					}
-					++count;
 					final DSymbol res = new DSymbol(out);
 					if (res.isLocallyEuclidean3D() && !seen.contains(res)) {
 						seen.add(res);
@@ -208,14 +205,13 @@ public class FrankKasperExtended extends TileKTransitive {
 		};
 	}
 
-    public boolean isComplete(final DelaneySymbol ds) {
-        for (final Iterator elms = ds.elements(); elms.hasNext();) {
-        	if (!ds.definesOp(3, elms.next())) {
+    private boolean isComplete(final DelaneySymbol<Integer> ds) {
+        for (final int D: ds.elements()) {
+        	if (!ds.definesOp(3, D)) {
         		return false;
         	}
         }
-        for (final Iterator elms = ds.elements(); elms.hasNext();) {
-        	final Object D = elms.next();
+        for (final int D: ds.elements()) {
         	if (!ds.op(1, ds.op(3, D)).equals(ds.op(3, ds.op(1, D)))) {
         		return false;
         	}
@@ -229,11 +225,13 @@ public class FrankKasperExtended extends TileKTransitive {
     }
     
 	protected ResumableGenerator<DSymbol> extendTo3d(final DSymbol ds) {
-		final List idcs = new IndexList(1, 2, 3);
+		final IndexList idcs = new IndexList(1, 2, 3);
 		
 		return new CombineTiles(ds) {
-			protected List<Move> getExtraDeductions(final DSymbol ds,
-					final Move move) {
+			protected List<Move> getExtraDeductions(
+			        final DelaneySymbol<Integer> ds,
+					final Move move)
+			{
 				extraDeductionsTimer.start();
 				List<Move> out = new ArrayList<Move>();
 				final int D = move.element;
@@ -258,7 +256,8 @@ public class FrankKasperExtended extends TileKTransitive {
 						out = null;
 					} else if (testVertexFigures) {
 						vertexFigureTestingTimer.start();
-						final Subsymbol sub = new Subsymbol(ds, idcs, D);
+						final Subsymbol<Integer> sub =
+						        new Subsymbol<Integer>(ds, idcs, D);
 						final boolean bad = isComplete(sub)
 								&& !vertexFigureOkay(new DSymbol(sub));
 						vertexFigureTestingTimer.stop();

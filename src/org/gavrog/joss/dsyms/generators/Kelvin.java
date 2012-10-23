@@ -39,12 +39,10 @@ import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 /**
- * @author Olaf Delgado
- * @version $Id: Kelvin.java,v 1.6 2008/04/12 09:40:45 odf Exp $
  */
 public class Kelvin extends FrankKasperExtended {
-	final static private List iTiles = new IndexList(0, 1, 2);
-	final static private List iFaces2d = new IndexList(0, 1);
+	final static private IndexList iTiles = new IndexList(0, 1, 2);
+	final static private IndexList iFaces2d = new IndexList(0, 1);
 	
 	final private Writer output;
 	final private boolean countOnly;
@@ -74,7 +72,7 @@ public class Kelvin extends FrankKasperExtended {
 		this.addEventLink(CheckpointEvent.class, this);
 	}
 	
-	protected boolean partsListOkay(final List parts) {
+	protected boolean partsListOkay(final List<DSymbol> parts) {
 		final boolean ok = super.partsListOkay(parts);
 		if (ok) {
 			++count;
@@ -112,11 +110,11 @@ public class Kelvin extends FrankKasperExtended {
 				return false;
 			}
 
-			final Iterator iter = new IteratorAdapter() {
+			final Iterator<DSymbol> iter = new IteratorAdapter<DSymbol>() {
 				final int n = choices.size();
 				int a[] = null;
 
-				protected Object findNext() throws NoSuchElementException {
+				protected DSymbol findNext() throws NoSuchElementException {
 					while (true) {
 						if (a == null) {
 							a = new int[n + 1]; // better not risk null result
@@ -150,7 +148,7 @@ public class Kelvin extends FrankKasperExtended {
 
 			boolean good = false;
 			while (iter.hasNext()) {
-				final DSymbol x = (DSymbol) iter.next();
+				final DSymbol x = iter.next();
 				if (x.isSpherical2D()) {
 					final DSymbol cover = Covers.finiteUniversalCover(x);
 					final int n = cover.numberOfOrbits(iFaces2d);
@@ -195,9 +193,9 @@ public class Kelvin extends FrankKasperExtended {
 	
 	private static boolean allTileSizesBetween(final DSymbol ds, final int min,
 			final int max) {
-		for (final Iterator reps = ds.orbitReps(iTiles); reps.hasNext();) {
-			final Object D = reps.next();
-			final DSymbol tile = new DSymbol(new Subsymbol(ds, iTiles, D));
+		for (final int D: ds.orbitReps(iTiles)) {
+			final DSymbol tile =
+			        new DSymbol(new Subsymbol<Integer>(ds, iTiles, D));
 			final DSymbol cover = Covers.finiteUniversalCover(tile);
 			final int n = cover.numberOfOrbits(iFaces2d);
 			if (n < min || n > max) {
@@ -214,9 +212,9 @@ public class Kelvin extends FrankKasperExtended {
 		int nt = 0;
 		int sum_nf = 0;
 		int sum_nfsqr = 0;
-		for (final Iterator reps = cover.orbitReps(iTiles); reps.hasNext();) {
-			final Object D = reps.next();
-			final DSymbol tile = new DSymbol(new Subsymbol(cover, iTiles, D));
+		for (final int D: cover.orbitReps(iTiles)) {
+			final DSymbol tile =
+			        new DSymbol(new Subsymbol<Integer>(cover, iTiles, D));
 			final int k = tile.numberOfOrbits(iFaces2d);
 			if (k < 12) {
 				return "found tile with less than 12 faces";
