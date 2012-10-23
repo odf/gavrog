@@ -30,7 +30,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -38,8 +37,8 @@ import java.util.Random;
 import java.util.Set;
 
 import org.gavrog.box.collections.Cache;
-import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.CacheMissException;
+import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.simple.NamedConstant;
 import org.gavrog.box.simple.Tag;
 import org.gavrog.jane.compounds.LinearAlgebra;
@@ -74,20 +73,20 @@ import de.jreality.scene.Transformation;
  */
 public class Document extends DisplayList {
     // --- the cache keys
-	final protected static Object TILES = new Tag();
-    final protected static Object CELL_TO_WORLD = new Tag();
-    final protected static Object CELL_TO_EMBEDDER = new Tag();
-    final protected static Object EMBEDDER = new Tag();
-    final protected static Object EMBEDDER_OUTPUT = new Tag();
-    final protected static Object FINDER = new Tag();
-    final protected static Object SIGNATURE = new Tag();
-    final protected static Object SPACEGROUP = new Tag();
-    final protected static Object TILING = new Tag();
-    final protected static Object WORLD_TO_CELL = new Tag();
-    final protected static Object CENTERING_VECTORS = new Tag();
+	final protected static Tag TILES = new Tag();
+    final protected static Tag CELL_TO_WORLD = new Tag();
+    final protected static Tag CELL_TO_EMBEDDER = new Tag();
+    final protected static Tag EMBEDDER = new Tag();
+    final protected static Tag EMBEDDER_OUTPUT = new Tag();
+    final protected static Tag FINDER = new Tag();
+    final protected static Tag SIGNATURE = new Tag();
+    final protected static Tag SPACEGROUP = new Tag();
+    final protected static Tag TILING = new Tag();
+    final protected static Tag WORLD_TO_CELL = new Tag();
+    final protected static Tag CENTERING_VECTORS = new Tag();
     
     // --- cache for this instance
-    final protected Cache cache = new Cache();
+    final protected Cache<Tag, Object> cache = new Cache<Tag, Object>();
 
     // --- possible document types
     final static public class Type extends NamedConstant {
@@ -102,7 +101,7 @@ public class Document extends DisplayList {
     final private String name;
     private DSymbol symbol = null;
     private DSymbol effective_symbol = null;
-    private DSCover given_cover = null;
+    private DSCover<Integer> given_cover = null;
     private GenericParser.Block data = null;
     
     // --- The tile and face colors set for this instance
@@ -130,7 +129,7 @@ public class Document extends DisplayList {
 	private final static Random random = new Random();
 	
 	// --- convert a 2d symbol to 3d by extrusion
-	private DSymbol extrusion(final DelaneySymbol ds) {
+	private <T> DSymbol extrusion(final DelaneySymbol<T> ds) {
 		if (ds.dim() != 2) {
 			throw new UnsupportedOperationException("dimension must be 2");
 		}
@@ -138,14 +137,14 @@ public class Document extends DisplayList {
 		
 		final DynamicDSymbol tmp = new DynamicDSymbol(3);
 		final List<Integer> elms_new = tmp.grow(s * 3);
-		final List<Integer> elms_old = Iterators.asList(ds.elements());
+		final List<T> elms_old = Iterators.asList(ds.elements());
 		
 		for (int i = 0; i < ds.size(); ++i) {
 			final int Da = elms_new.get(i);
 			final int Db = elms_new.get(i + s);
 			final int Dc = elms_new.get(i + s + s);
 			
-			final Object D  = elms_old.get(i);
+			final T D  = elms_old.get(i);
 			final int i0 = elms_old.indexOf(ds.op(0, D));
 			final int i1 = elms_old.indexOf(ds.op(1, D));
 			final int i2 = elms_old.indexOf(ds.op(2, D));
@@ -171,7 +170,7 @@ public class Document extends DisplayList {
 			final int Db = elms_new.get(i + s);
 			final int Dc = elms_new.get(i + s + s);
 			
-			final Object D  = elms_old.get(i);
+			final T D  = elms_old.get(i);
 			tmp.redefineV(0, 1, Da, ds.v(0, 1, D));
 			if (D.equals(ds.op(0, D))) {
 				tmp.redefineV(0, 1, Db, 2);
@@ -199,7 +198,7 @@ public class Document extends DisplayList {
 		}
 		
 		// -- helper class for sorting neighbors by angle
-		class Neighbor implements Comparable {
+		class Neighbor implements Comparable<Neighbor> {
 			final private IEdge edge;
 			final private double angle;
 			
@@ -208,27 +207,21 @@ public class Document extends DisplayList {
 				this.angle = a;
 			}
 			
-			public int compareTo(final Object arg) {
-	            if (arg instanceof Neighbor) {
-	                final Neighbor other = (Neighbor) arg;
-	                if (this.angle < other.angle) {
-	                    return -1;
-	                } else if (this.angle > other.angle) {
-	                    return 1;
-	                } else {
-	                    return 0;
-	                }
-	            } else {
-	                throw new IllegalArgumentException("Neighbor expected");
-	            }
+			public int compareTo(final Neighbor other) {
+			    if (this.angle < other.angle) {
+			        return -1;
+			    } else if (this.angle > other.angle) {
+			        return 1;
+			    } else {
+			        return 0;
+			    }
 			}
 		}
 		
 		// -- initialize the Delaney symbol; map oriented net edges to chambers
 		final Map<IEdge, Integer> edge2chamber = new HashMap<IEdge, Integer>();
 		final DynamicDSymbol ds = new DynamicDSymbol(2);
-		for (final Iterator iter = net.edges(); iter.hasNext();) {
-			final IEdge e = ((IEdge) iter.next()).oriented();
+		for (final IEdge e: net.edges()) {
 			final List<Integer> elms = ds.grow(4);
 			edge2chamber.put(e, elms.get(0));
 			edge2chamber.put(e.reverse(), elms.get(2));
@@ -239,10 +232,9 @@ public class Document extends DisplayList {
 		}
 		
 		// -- connect the edge orbits of the Delaney symbol
-		final Map pos = net.barycentricPlacement();
-		for (final Iterator iter = net.nodes(); iter.hasNext();) {
-			final INode v = (INode) iter.next();
-			final List<IEdge> incidences = (List<IEdge>) net.allIncidences(v);
+		final Map<INode, Point> pos = net.barycentricPlacement();
+		for (final INode v: net.nodes()) {
+			final List<IEdge> incidences = net.allIncidences(v);
 			if (!net.goodCombinations(incidences, pos).hasNext()) {
 				throw new UnsupportedOperationException(
 					"Only convex tilings are currently supported");
@@ -291,7 +283,11 @@ public class Document extends DisplayList {
      * @param name the name of this instance.
      * @param cov a pre-given (pseudo-) toroidal cover.
      */
-    public Document(final DSymbol ds, final String name, final DSCover cov) {
+    public Document(
+            final DSymbol ds,
+            final String name,
+            final DSCover<Integer> cov)
+    {
         if (ds.dim() == 2) {
         	this.symbol = ds;
             this.effective_symbol = extrusion(ds);
@@ -342,8 +338,8 @@ public class Document extends DisplayList {
     			if (this.type == TILING_3D) {
     				this.symbol = new FaceList(this.data).getSymbol();
     			} else {
-    				final Net net =
-    					new NetParser((BufferedReader) null).parseNet(this.data);
+    				final Net net = new NetParser(
+    				        (BufferedReader) null).parseNet(this.data);
     				if (net.getDimension() != 2) {
     					throw new UnsupportedOperationException(
     							"Only nets of dimension 2 are supported.");
@@ -382,10 +378,9 @@ public class Document extends DisplayList {
 	@SuppressWarnings("unchecked")
 	public List<Tiling.Tile> getTiles() {
 		try {
-			return (List) cache.get(TILES);
+			return (List<Tiling.Tile>) cache.get(TILES);
 		} catch (CacheMissException ex) {
-			return (List) cache.put(TILES, getTiling()
-					.getTiles());
+			return (List<Tiling.Tile>) cache.put(TILES, getTiling().getTiles());
 		}
 	}
     
@@ -406,7 +401,8 @@ public class Document extends DisplayList {
         try {
             return (Embedder) cache.get(EMBEDDER);
         } catch (CacheMissException ex) {
-            return (Embedder) cache.put(EMBEDDER, new Embedder(getNet(), null, false));
+            return (Embedder) cache.put(EMBEDDER,
+                    new Embedder(getNet(), null, false));
         }
     }
 
@@ -419,10 +415,13 @@ public class Document extends DisplayList {
     }
     
     private class EmbedderOutput {
-        final private Map positions;
+        final private Map<DSPair<Integer>, Point> positions;
         final private CoordinateChange change;
         
-        private EmbedderOutput(final Map pos, final CoordinateChange change) {
+        private EmbedderOutput(
+                final Map<DSPair<Integer>, Point> pos,
+                final CoordinateChange change)
+        {
             this.positions = pos;
             this.change = change;
         }
@@ -435,7 +434,8 @@ public class Document extends DisplayList {
             final Embedder embedder = getEmbedder();
             embedder.reset();
             embedder.setPasses(getEqualEdgePriority());
-            if (embedder.getGraph().isStable() || getUseBarycentricPositions()) {
+            if (embedder.getGraph().isStable() || getUseBarycentricPositions())
+            {
                 embedder.setRelaxPositions(false);
                 embedder.go(500);
             }
@@ -450,14 +450,15 @@ public class Document extends DisplayList {
             }
             final CoordinateChange change =
               new CoordinateChange(LinearAlgebra.orthonormalRowBasis(G));
-            final Map pos = getTiling().cornerPositions(embedder.getPositions());
+            final Map<DSPair<Integer>, Point> pos =
+                    getTiling().cornerPositions(embedder.getPositions());
             
             return (EmbedderOutput) cache.put(EMBEDDER_OUTPUT,
                     new EmbedderOutput(pos, change));
         }
     }
     
-    private Map getPositions() {
+    private Map<DSPair<Integer>, Point> getPositions() {
         return getEmbedderOutput().positions;
     }
     
@@ -465,17 +466,15 @@ public class Document extends DisplayList {
     	return getEmbedderOutput().change;
     }
     
-    public double[] cornerPosition(final int i, final Object D) {
-        final Point p0 = (Point) getPositions().get(new DSPair(i, D));
+    public double[] cornerPosition(final int i, final int D) {
+        final Point p0 = getPositions().get(new DSPair<Integer>(i, D));
         final Point p = (Point) p0.times(getEmbedderToWorld());
         return p.getCoordinates().asDoubleArray()[0];
     }
     
     public double volume() {
     	double vol = 0.0;
-    	for (final Iterator it = getTiling().getCover().elements(); it
-				.hasNext();) {
-    		final Object D = it.next();
+    	for (final int D: getTiling().getCover().elements()) {
     		final double p[][] = new double[4][];
     		for (int i = 0; i < 4; ++i)  p[i] = cornerPosition(i, D);
     		for (int i = 1; i < 4; ++i)
@@ -493,46 +492,46 @@ public class Document extends DisplayList {
     }
     
     public Point nodePoint(final INode v) {
-    	final Object D = getNet().chamberAtNode(v);
-        final Point p = (Point) getPositions().get(new DSPair(0, D));
+    	final int D = getNet().chamberAtNode(v);
+        final Point p = getPositions().get(new DSPair<Integer>(0, D));
         return (Point) p.times(getEmbedderToWorld());
     }
     
     public Point edgeSourcePoint(final IEdge e) {
-    	final Object D = getNet().chamberAtNode(e.source());
-        final Point p = (Point) getPositions().get(new DSPair(0, D));
+    	final int D = getNet().chamberAtNode(e.source());
+        final Point p = getPositions().get(new DSPair<Integer>(0, D));
         return (Point) p.times(getEmbedderToWorld());
     }
     
     public Point edgeTargetPoint(final IEdge e) {
-    	final Object D = getNet().chamberAtNode(e.target());
+    	final int D = getNet().chamberAtNode(e.target());
     	final Vector s = getNet().getShift(e);
         final Point q0 =
-        	(Point) ((Point) getPositions().get(new DSPair(0, D))).plus(s);
+        	(Point) (getPositions().get(new DSPair<Integer>(0, D))).plus(s);
         return (Point) q0.times(getEmbedderToWorld());
     }
     
     public List<Vector> centerIntoUnitCell(final Tiling.Tile t) {
     	final int dim = getEffectiveSymbol().dim();
-    	final DSPair c = new DSPair(dim, t.getChamber());
-    	return pointIntoUnitCell((Point) getPositions().get(c));
+    	final DSPair<Integer> c = new DSPair<Integer>(dim, t.getChamber());
+    	return pointIntoUnitCell(getPositions().get(c));
     }
     
     public List<Vector> centerIntoUnitCell(final IEdge e) {
     	final Tiling.Skeleton net = getNet();
-    	final Object C = net.chamberAtNode(e.source());
-    	final Object D = net.chamberAtNode(e.target());
+    	final int C = net.chamberAtNode(e.source());
+    	final int D = net.chamberAtNode(e.target());
     	final Vector s = net.getShift(e);
-        final Point p = (Point) getPositions().get(new DSPair(0, C));
+        final Point p = getPositions().get(new DSPair<Integer>(0, C));
         final Point q =
-        	(Point) ((Point) getPositions().get(new DSPair(0, D))).plus(s);
+        	(Point) (getPositions().get(new DSPair<Integer>(0, D))).plus(s);
     	return pointIntoUnitCell(
     			(Point) p.plus(((Vector) q.minus(p)).times(0.5)));
     }
     
     public List<Vector> centerIntoUnitCell(final INode v) {
-    	final Object D = getNet().chamberAtNode(v);
-    	return pointIntoUnitCell((Point) getPositions().get(new DSPair(0, D)));
+    	final int D = getNet().chamberAtNode(v);
+    	return pointIntoUnitCell(getPositions().get(new DSPair<Integer>(0, D)));
     }
     
     private Vector shifted(final Point p0, final Vector s,
@@ -753,7 +752,7 @@ public class Document extends DisplayList {
           if (getUsePrimitiveCell()) {
               v = (Vector) Vector.unit(dim, i).times(toStd);
           } else {
-              v = (Vector) Vector.unit(dim, i);
+              v = Vector.unit(dim, i);
           }
           result[i] = (Vector) v.times(getCellToEmbedder());
 		}
@@ -771,10 +770,12 @@ public class Document extends DisplayList {
             if (getUsePrimitiveCell()) {
                 result.add(Vector.zero(dim));
             } else {
-                for (final Operator op : (List<Operator>) SpaceGroupCatalogue
-                        .operators(dim, getFinder().getExtendedGroupName())) {
+                for (final Operator op : SpaceGroupCatalogue.operators(dim,
+                        getFinder().getExtendedGroupName()))
+                {
                     if (op.linearPart().isOne()) {
-                        result.add((Vector) op.translationalPart().times(fromStd));
+                        result.add((Vector) op.translationalPart()
+                                .times(fromStd));
                     }
                 }
             }
@@ -795,7 +796,8 @@ public class Document extends DisplayList {
 	public double[] getOrigin() {
 		final int dim = getEffectiveSymbol().dim();
 		final CoordinateChange toStd = getFinder().getToStd();
-		final CoordinateChange id = new CoordinateChange(Operator.identity(dim));
+		final CoordinateChange id =
+		        new CoordinateChange(Operator.identity(dim));
 		final Point o;
 		if (getUsePrimitiveCell()) {
 		  final Point p = (Point) Point.origin(dim).times(toStd.inverse());
@@ -808,15 +810,38 @@ public class Document extends DisplayList {
 		return o.getCoordinates().asDoubleArray()[0];
 	}
     
-	private static void add(final StringBuffer buf, final String key,
-			final Object val) {
-    	final Class cl = val == null ? null : val.getClass();
-		final boolean quote = !(cl == Integer.class || cl == Boolean.class);
+    private static void add(
+            final StringBuffer buf,
+            final String key,
+            final boolean val)
+    {
+        buf.append(key);
+        buf.append(": ");
+        buf.append(val);
+        buf.append('\n');
+    }
+    
+    private static void add(
+            final StringBuffer buf,
+            final String key,
+            final int val)
+    {
+        buf.append(key);
+        buf.append(": ");
+        buf.append(val);
+        buf.append('\n');
+    }
+    
+	private static <T> void add(
+	        final StringBuffer buf,
+	        final String key,
+			final T val)
+	{
     	buf.append(key);
     	buf.append(": ");
-    	if (quote) buf.append('"');
+    	buf.append('"');
     	buf.append(val);
-    	if (quote) buf.append('"');
+    	buf.append('"');
     	buf.append('\n');
     }
     
@@ -843,7 +868,7 @@ public class Document extends DisplayList {
     
 	public String getTransitivity() {
 		final StringBuffer buf = new StringBuffer(10);
-		final DelaneySymbol ds = getSymbol();
+		final DelaneySymbol<Integer> ds = getSymbol();
 		for (int i = 0; i <= ds.dim(); ++i) {
 			buf.append(showNumber(ds.numberOfOrbits(IndexList.except(ds, i))));
 		}
@@ -954,6 +979,7 @@ public class Document extends DisplayList {
             		System.out.println("#@ name " + doc.getName());
             	}
 				System.out.println(doc.getSymbol().canonical());
+                System.out.println(doc.info());
 			}
 		} catch (final FileNotFoundException ex) {
 			ex.printStackTrace();
