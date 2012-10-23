@@ -26,6 +26,7 @@ import java.util.List;
 import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.simple.Stopwatch;
 import org.gavrog.joss.algorithms.CheckpointEvent;
+import org.gavrog.joss.algorithms.ResumableGenerator;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
@@ -66,7 +67,7 @@ public class FrankKasper extends TileKTransitive {
         }
     }
     
-    protected Iterator extendTo3d(final DSymbol ds) {
+    protected ResumableGenerator<DSymbol> extendTo3d(final DSymbol ds) {
         return new CombineTiles(ds) {
             protected List<Move> getExtraDeductions(final DSymbol ds,
 					final Move move) {

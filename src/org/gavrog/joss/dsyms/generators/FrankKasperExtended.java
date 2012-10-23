@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.simple.Stopwatch;
+import org.gavrog.joss.algorithms.ResumableGenerator;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
@@ -227,7 +228,7 @@ public class FrankKasperExtended extends TileKTransitive {
     	return Utils.mayBecomeLocallyEuclidean3D(ds);
     }
     
-	protected Iterator extendTo3d(final DSymbol ds) {
+	protected ResumableGenerator<DSymbol> extendTo3d(final DSymbol ds) {
 		final List idcs = new IndexList(1, 2, 3);
 		
 		return new CombineTiles(ds) {

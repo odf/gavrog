@@ -1,5 +1,5 @@
 /*
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2012 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.io.FileWriter;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -40,16 +39,13 @@ import buoy.event.EventProcessor;
 /**
  * Generates all minimal, locally euclidean, tile-k-transitive tilings by a
  * given combinatorial tile or list thereof.
- * 
- * @author Olaf Delgado
- * @version $Id: TileKTransitive.java,v 1.9 2008/04/02 11:09:59 odf Exp $
  */
 public class TileKTransitive extends ResumableGenerator<DSymbol> {
     private final boolean verbose;
 
-    private final Iterator partLists;
-    private Iterator extended;
-    private Iterator symbols;
+    private final Iterator<List<DSymbol>> partLists;
+    private ResumableGenerator<DSymbol> extended;
+    private Iterator<DSymbol> symbols;
 
     private int count2dSymbols = 0;
     private int count3dSets = 0;
@@ -66,11 +62,21 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
      * @param k the number of transitivity classes of tiles aimed for.
      * @param verbose if true, some logging information is produced.
      */
-    public TileKTransitive(final DelaneySymbol tile, final int k,
-            final boolean verbose) {
-    	this(Arrays.asList(new DelaneySymbol[] { tile }), k, verbose);
+    public <T> TileKTransitive(final DelaneySymbol<T> tile, final int k,
+            final boolean verbose)
+    {
+    	this(makeList(tile), k, verbose);
     }
 
+    private static <T> List<DelaneySymbol<T>> makeList(
+            final DelaneySymbol<T> tile)
+    {
+        final List<DelaneySymbol<T>> list = new ArrayList<DelaneySymbol<T>>();
+        list.add(tile);
+        return list;
+    }
+    
+    
     /**
      * Constructs an instance.
      * 
@@ -78,15 +84,19 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
      * @param k the number of transitivity classes of tiles aimed for.
      * @param verbose if true, some logging information is produced.
      */
-    public TileKTransitive(final List<DelaneySymbol> tiles, final int k,
-            final boolean verbose) {
+    public <T> TileKTransitive(
+            final List<DelaneySymbol<T>> tiles,
+            final int k,
+            final boolean verbose)
+    {
         this.verbose = verbose;
 
-        final List covers = new ArrayList();
-        for (final DelaneySymbol t: tiles) {
+        final List<DSymbol> covers = new ArrayList<DSymbol>();
+        for (final DelaneySymbol<T> t: tiles) {
         	covers.addAll(Iterators.asList(Covers.allCovers(t.minimal())));
         }
-        this.partLists = Iterators.selections(covers.toArray(), k);
+        final DSymbol[] a = new DSymbol[covers.size()];
+        this.partLists = Iterators.selections(covers.toArray(a), k);
 
         this.extended = null;
         this.symbols = null;
@@ -135,14 +145,13 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
             while (symbols == null || !symbols.hasNext()) {
                 while (extended == null || !extended.hasNext()) {
                     if (partLists.hasNext()) {
-                        final List tiles = (List) partLists.next();
+                        final List<DSymbol> tiles = partLists.next();
                         if (!partsListOkay(tiles)) {
                         	continue;
                         }
                         final DynamicDSymbol tmp = new DynamicDSymbol(2);
-                        for (final Iterator iter = tiles.iterator(); iter
-                                .hasNext();) {
-                            tmp.append((DSymbol) iter.next());
+                        for (final DSymbol ds: tiles) {
+                            tmp.append(ds);
                         }
                         ++checkpoint[0];
                         checkpoint[1] = checkpoint[2] = 0;
@@ -156,20 +165,16 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
                             System.err.println(setAsString(ds));
                         }
                         extended = extendTo3d(ds);
-                        if (extended instanceof ResumableGenerator) {
-                        	final ResumableGenerator gen =
-                        		(ResumableGenerator) extended;
-							gen.addEventLink(CheckpointEvent.class, this,
-									"repostCheckpoint");
-							if (checkpoint[0] == resume[0] && resume1 != null) {
-								gen.setResumePoint(resume1);
-							}
-						}
+                        extended.addEventLink(CheckpointEvent.class, this,
+                                "repostCheckpoint");
+                        if (checkpoint[0] == resume[0] && resume1 != null) {
+                            extended.setResumePoint(resume1);
+                        }
                     } else {
                         throw new NoSuchElementException("At end");
                     }
                 }
-                final DSymbol ds = (DSymbol) extended.next();
+                final DSymbol ds = extended.next();
                 ++checkpoint[1];
                 checkpoint[2] = 0;
                 postCheckpoint();
@@ -182,7 +187,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
                 }
                 symbols = defineBranching(ds);
             }
-            final DSymbol ds = (DSymbol) symbols.next();
+            final DSymbol ds = symbols.next();
             ++checkpoint[2];
             postCheckpoint();
             if (tooEarly()) {
@@ -200,16 +205,18 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
         }
     }
 
-	private void postCheckpoint() {
-		dispatchEvent(new CheckpointEvent(this, tooEarly(), null));
+    @SuppressWarnings("unused")
+    private void repostCheckpoint(final Object ev) {
+        @SuppressWarnings("unchecked")
+        final CheckpointEvent<DSymbol> ce = (CheckpointEvent<DSymbol>) ev;
+        dispatchEvent(new CheckpointEvent<DSymbol>(
+                this, ce.isOld(), ce.getMessage()));
+    }
+
+    private void postCheckpoint() {
+		dispatchEvent(new CheckpointEvent<DSymbol>(this, tooEarly(), null));
 	}
 
-	@SuppressWarnings("unused")
-	private void repostCheckpoint(final Object ev) {
-		final CheckpointEvent ce = (CheckpointEvent) ev;
-		dispatchEvent(new CheckpointEvent(this, ce.isOld(), ce.getMessage()));
-	}
-	
     /**
      * Retreives the current checkpoint value as a string.
      * 
@@ -218,8 +225,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
     public String getCheckpoint() {
     	if (extended != null && extended instanceof ResumableGenerator) {
 			return String.format("%d-[%s]", checkpoint[0],
-					((ResumableGenerator) extended).getCheckpoint().replaceAll(
-							"-", "."));
+			        extended.getCheckpoint().replaceAll("-", "."));
 		} else {
 			return String.format("%s-%s-%s", checkpoint[0], checkpoint[1],
 					checkpoint[2]);
@@ -232,7 +238,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
      * @param list a list of D-symbols encoding tiles.
      * @return true if this combination should be used.
      */
-    protected boolean partsListOkay(final List list) {
+    protected boolean partsListOkay(final List<DSymbol> list) {
         return true;
     }
 
@@ -244,7 +250,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
      * @return an iterator over all admissible extensions of ds with complete
      *         branching.
      */
-    protected Iterator defineBranching(final DelaneySymbol ds) {
+    protected Iterator<DSymbol> defineBranching(final DSymbol ds) {
         return new DefineBranching3d(ds);
     }
 
@@ -255,7 +261,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
      * @param ds a Delaney symbol.
      * @return an iterator over all admissible extensions.
      */
-    protected Iterator extendTo3d(final DSymbol ds) {
+    protected ResumableGenerator<DSymbol> extendTo3d(final DSymbol ds) {
         return new CombineTiles(ds);
     }
 
@@ -329,7 +335,8 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
 			final int k = Integer.parseInt(args[i]);
 			++i;
 			
-			final List<DelaneySymbol> tiles = new ArrayList<DelaneySymbol>();
+			final List<DelaneySymbol<Integer>> tiles =
+			        new ArrayList<DelaneySymbol<Integer>>();
 			while (i < args.length) {
 				tiles.add(new DSymbol(args[i]));
 				++i;
@@ -351,7 +358,7 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
 
 			output.write("# Program TileKTransitive with k = " + k + ".\n");
 			output.write("# Tiles:\n");
-			for (final DelaneySymbol t: tiles) {
+			for (final DelaneySymbol<Integer> t: tiles) {
 				output.write("#     " + t + "\n");
 			}
 			output.write("# Output:\n");
@@ -379,7 +386,9 @@ public class TileKTransitive extends ResumableGenerator<DSymbol> {
 	        iter.addEventLink(CheckpointEvent.class, new EventProcessor() {
 				@Override
 				public void handleEvent(final Object event) {
-					final CheckpointEvent ce = (CheckpointEvent) event;
+					@SuppressWarnings("unchecked")
+                    final CheckpointEvent<DSymbol> ce =
+					        (CheckpointEvent<DSymbol>) event;
 					if (ce.getMessage() != null
 							|| chkptTimer.elapsed() > interval) {
 						chkptTimer.reset();
