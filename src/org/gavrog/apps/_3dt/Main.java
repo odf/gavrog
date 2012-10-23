@@ -285,7 +285,8 @@ public class Main extends EventSource {
 	final private ViewerFrame viewerFrame;
     final private SceneGraphComponent world;
 
-    final public static SceneGraphComponent sphereTemplate = new SceneGraphComponent();
+    final public static SceneGraphComponent sphereTemplate =
+            new SceneGraphComponent();
 	static {
 		sphereTemplate.setGeometry(SphereUtility.sphericalPatch(0.0, 0.0,
 				360.0, 180.0, 40, 20, 1.0));
@@ -554,7 +555,10 @@ public class Main extends EventSource {
     	final String name = "About 3dt";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -6894141174367275467L;
+
+                public void actionPerformed(ActionEvent e) {
 					showAbout();
 				}
 			}, null, null);
@@ -566,7 +570,10 @@ public class Main extends EventSource {
 		final String name = "Show Controls";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -4205829340604887360L;
+
+                public void actionPerformed(ActionEvent e) {
 					showControls();
 				}
 			}, null, null);
@@ -578,7 +585,10 @@ public class Main extends EventSource {
 		final String name = "Open...";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -7633694682288607039L;
+
+                public void actionPerformed(ActionEvent e) {
 					final File file = inFileChooser.pickFile(
 							ui.getLastInputPath(), null);
 					if (file == null) return;
@@ -596,14 +606,17 @@ public class Main extends EventSource {
 		final String name = "Save Tiling...";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -4118040215806163426L;
+
+                public void actionPerformed(ActionEvent e) {
 					final File file =outTilingChooser.pickFile(
 							ui.getLastTilingOutputPath(), "ds");
 					if (file == null) return;
 					ui.setLastTilingOutputPath(file);
 					saveOptions();
                     try {
-                    	final DelaneySymbol ds = doc().getSymbol();
+                    	final DelaneySymbol<Integer> ds = doc().getSymbol();
                     	final boolean append = outTilingChooser.getAppend();
                     	final Writer out = new FileWriter(file, append);
                     	for (final String key: tInfoFields.keySet()) {
@@ -634,7 +647,10 @@ public class Main extends EventSource {
 		final String name = "Save Net...";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -2752873210655489350L;
+
+                public void actionPerformed(ActionEvent e) {
 					final File file = outNetChooser.pickFile(
 							ui.getLastNetOutputPath(), "pgr");
 					if (file == null) return;
@@ -661,7 +677,10 @@ public class Main extends EventSource {
 		final String name = "Save Scene...";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        4065514611640844417L;
+
+                public void actionPerformed(ActionEvent e) {
 					final File file = outSceneChooser.pickFile(
 							ui.getLastSceneOutputPath(), "gsl");
 					if (file == null) return;
@@ -688,7 +707,10 @@ public class Main extends EventSource {
 		final String name = "Screen Shot...";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -8294905204122328690L;
+
+                public void actionPerformed(ActionEvent e) {
 					screenshotDimPanel.setDimension(viewerFrame.getViewer()
 							.getViewingComponentSize());
 					final File file = outScreenshotChooser.pickFile(
@@ -723,7 +745,10 @@ public class Main extends EventSource {
 		final String name = "Raytraced Image...";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -7566950527102492665L;
+
+                public void actionPerformed(ActionEvent e) {
 					sunflowDimPanel.setDimension(viewerFrame.getViewer()
 							.getViewingComponentSize());
 					final File file = outSunflowChooser.pickFile(
@@ -756,7 +781,10 @@ public class Main extends EventSource {
 		final String name = "Preview Raytraced...";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        3376824024688938452L;
+
+                public void actionPerformed(ActionEvent e) {
                     try {
                     	final RenderOptions opts = new RenderOptions();
                     	opts.setProgressiveRender(true);
@@ -777,7 +805,10 @@ public class Main extends EventSource {
     	final String name = "Export OBJ...";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -5865220771684507445L;
+
+                public void actionPerformed(ActionEvent e) {
 			    	if (doc() == null) return;
 					final File file = outOBJChooser.pickFile(
 							ui.getLastObjExportPath(), "obj");
@@ -801,7 +832,10 @@ public class Main extends EventSource {
     	final String name = "Quit";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        7629324293326983871L;
+
+                public void actionPerformed(ActionEvent e) {
 					System.exit(0);
 				}
 			}, "Quit the program",
@@ -814,7 +848,10 @@ public class Main extends EventSource {
 		final String name = "First";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        6853426916731514941L;
+
+                public void actionPerformed(ActionEvent e) {
                     doTiling(1);
 				}
 			}, "Display the first tiling in this file",
@@ -827,7 +864,10 @@ public class Main extends EventSource {
 		final String name = "Next";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -3764695742985872112L;
+
+                public void actionPerformed(ActionEvent e) {
                     doTiling(tilingCounter + 1);
 				}
 			}, "Display the next tiling in this file",
@@ -840,7 +880,10 @@ public class Main extends EventSource {
 		final String name = "Previous";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        7931268622003336578L;
+
+                public void actionPerformed(ActionEvent e) {
                     doTiling(tilingCounter - 1);
 				}
 			}, "Display the previous tiling in this file",
@@ -853,7 +896,10 @@ public class Main extends EventSource {
 		final String name = "Last";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -7387980219457791631L;
+
+                public void actionPerformed(ActionEvent e) {
                     doTiling(documents.size());
 				}
 			}, "Display the last tiling in this file",
@@ -866,7 +912,10 @@ public class Main extends EventSource {
 		final String name = "Jump To...";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        1790706172915770128L;
+
+                public void actionPerformed(ActionEvent e) {
 					final String input = getInput("Jump to tiling #:",
 									"3dt Jump To",
 									String.valueOf(tilingCounter + 1));
@@ -888,7 +937,10 @@ public class Main extends EventSource {
 		final String name = "Search...";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        2991707420851482542L;
+
+                public void actionPerformed(ActionEvent e) {
 					final String input = getInput(
 							"Find tiling by name pattern or number:",
 							"3dt Search", String.valueOf(tilingCounter + 1));
@@ -930,7 +982,10 @@ public class Main extends EventSource {
 		final String name = "Dualize";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -2505330289266591494L;
+
+                public void actionPerformed(ActionEvent e) {
 					final DSymbol ds = doc().getSymbol();
 					if (ds.equals(ds.dual())) {
 						messageBox("The tiling is self-dual.", "3dt Dualize",
@@ -957,7 +1012,10 @@ public class Main extends EventSource {
 		final String name = "Max. Symmetry";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        6906675574047428324L;
+
+                public void actionPerformed(ActionEvent e) {
 					final DSymbol ds = doc().getSymbol();
 					if (ds.isMinimal()) {
 						messageBox("The tiling is already maximally symmetric.",
@@ -985,7 +1043,10 @@ public class Main extends EventSource {
 		final String name = "Recolor";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -2790909738851691974L;
+
+                public void actionPerformed(ActionEvent e) {
                     doc().randomlyRecolorTiles();
                     suspendRendering();
                     updateMaterials();
@@ -1001,7 +1062,11 @@ public class Main extends EventSource {
 		final String name = "Update Net";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+
+                private static final long serialVersionUID =
+                        -6384997665916057307L;
+
+                public void actionPerformed(ActionEvent e) {
 					final List<DisplayList.Item> tiles =
 						new ArrayList<DisplayList.Item>();
                     for (final DisplayList.Item item: doc()) {
@@ -1025,7 +1090,10 @@ public class Main extends EventSource {
 		final String name = "Grow Net";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -7120597969940978950L;
+
+                public void actionPerformed(ActionEvent e) {
 					final List<DisplayList.Item> nodes =
 						new LinkedList<DisplayList.Item>();
 					for (DisplayList.Item item: doc()) {
@@ -1060,7 +1128,10 @@ public class Main extends EventSource {
 		final String name = "Clear Net";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -170822340264930999L;
+
+                public void actionPerformed(ActionEvent e) {
                     suspendRendering();
                     doc().removeAllEdges();
                     doc().removeAllNodes();
@@ -1075,7 +1146,10 @@ public class Main extends EventSource {
 		final String name = "Add Tile";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -8182351416550031897L;
+
+                public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null && selectedFace >= 0) {
 						doc().addNeighbor(selectedItem, selectedFace);
 					}
@@ -1090,7 +1164,10 @@ public class Main extends EventSource {
 		final String name = "Add Facet";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -9211003340285294990L;
+
+                public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null && selectedFace >= 0) {
 						doc().addNeighborFacet(selectedItem, selectedFace);
 					}
@@ -1104,7 +1181,10 @@ public class Main extends EventSource {
 		final String name = "Remove Tile";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        8376315073641850092L;
+
+                public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null) {
 						doc().remove(selectedItem);
 					}
@@ -1119,7 +1199,10 @@ public class Main extends EventSource {
 		final String name = "Remove Tile Class";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        587383657519440632L;
+
+                public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null) {
 						doc().removeKind(selectedItem);
 					}
@@ -1134,7 +1217,10 @@ public class Main extends EventSource {
     	final String name = "Add Facet Outline to Net";
     	if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        7850801246685623875L;
+
+                public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null && selectedFace >= 0) {
 						makeFacetOutline(selectedItem.getTile().facet(
 								selectedFace), selectedItem.getShift());
@@ -1149,7 +1235,10 @@ public class Main extends EventSource {
     	final String name = "Add Tile Outline to Net";
     	if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -3728286851012150260L;
+
+                public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null) {
 						makeTileOutline(selectedItem.getTile(),
 								selectedItem.getShift());
@@ -1168,7 +1257,10 @@ public class Main extends EventSource {
     	final String name = "Recolor Tile Class";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        6427094147853988876L;
+
+                public void actionPerformed(ActionEvent e) {
 					if (selectedItem == null) {
 						return;
 					}
@@ -1193,7 +1285,10 @@ public class Main extends EventSource {
     	final String name = "Recolor Tile";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        6323346056587859863L;
+
+                public void actionPerformed(ActionEvent e) {
 					if (selectedItem == null) {
 						return;
 					}
@@ -1220,7 +1315,10 @@ public class Main extends EventSource {
     	final String name = "Uncolor Tile";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -2773415235188149610L;
+
+                public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null) {
 	                    suspendRendering();
 	                    doc().recolor(selectedItem, null);
@@ -1237,7 +1335,10 @@ public class Main extends EventSource {
     	final String name = "Recolor Facet Class";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -8970108899758626493L;
+
+                public void actionPerformed(ActionEvent e) {
 					if (selectedItem == null || selectedFace < 0) {
 						return;
 					}
@@ -1271,7 +1372,10 @@ public class Main extends EventSource {
     	final String name = "Uncolor Facet Class";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        4748131954785975314L;
+
+                public void actionPerformed(ActionEvent e) {
 					if (selectedItem == null || selectedFace < 0) {
 						return;
 					}
@@ -1289,7 +1393,10 @@ public class Main extends EventSource {
     	final String name = "Hide Facet Class";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        7860790749462409702L;
+
+                public void actionPerformed(ActionEvent e) {
 					if (selectedItem == null || selectedFace < 0) {
 						return;
 					}
@@ -1307,7 +1414,10 @@ public class Main extends EventSource {
     	final String name = "Show All Facets in Tile";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -1574834084770081898L;
+
+                public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null) {
 						showAllInTile(selectedItem.getTile());
 	                    suspendRendering();
@@ -1324,7 +1434,10 @@ public class Main extends EventSource {
 		final String name = "Add End Nodes";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        2437463150704689455L;
+
+                public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null) {
 						doc().addIncident(selectedItem);
 					}
@@ -1339,7 +1452,10 @@ public class Main extends EventSource {
 		final String name = "Remove Edge";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -2847207125458667889L;
+
+                public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null) {
 						doc().remove(selectedItem);
 					}
@@ -1354,7 +1470,10 @@ public class Main extends EventSource {
 		final String name = "Connect Node";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        4552540269036574898L;
+
+                public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null) {
 						if (doc().connectToExisting(selectedItem) == 0) {
 							doc().addIncident(selectedItem);
@@ -1373,7 +1492,10 @@ public class Main extends EventSource {
 		final String name = "Remove Node";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
-				public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -4129847344733173243L;
+
+                public void actionPerformed(ActionEvent e) {
 					if (selectedItem != null) {
 						doc().remove(selectedItem);
 					}
@@ -1388,7 +1510,10 @@ public class Main extends EventSource {
     	final String name = "Fit To Scene";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        6888223854976424600L;
+
+                public void actionPerformed(ActionEvent e) {
                     encompass();
                 }
             }, "Adjust camera to fit scene to window",
@@ -1401,7 +1526,10 @@ public class Main extends EventSource {
     	final String name = "View along...";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -305688356188357939L;
+
+                public void actionPerformed(ActionEvent e) {
     				final String input = getInput("View along (x y z):",
     						"3dt Viewing Direction", "");
 					final String fields[] = input.trim().split("\\s+");
@@ -1434,7 +1562,10 @@ public class Main extends EventSource {
     	final String name = "Upward vector...";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        183120034665786492L;
+
+                public void actionPerformed(ActionEvent e) {
     				final String input = getInput(
 									"Vector to point upward (x y z):",
 									"3dt Upward Vector", "0 1 0");
@@ -1463,7 +1594,10 @@ public class Main extends EventSource {
     	final String name = "View along X";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        6334275391099765342L;
+
+                public void actionPerformed(ActionEvent e) {
 					setViewingTransformation(new Vector(1, 0, 0), new Vector(0, 0, 1));
 					encompass();
 				}
@@ -1477,7 +1611,10 @@ public class Main extends EventSource {
     	final String name = "View along Y";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        5981350648939244817L;
+
+                public void actionPerformed(ActionEvent e) {
 					setViewingTransformation(new Vector(0, 1, 0), new Vector(0, 0, 1));
 					encompass();
 				}
@@ -1491,7 +1628,10 @@ public class Main extends EventSource {
     	final String name = "View along Z";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -4817374897979508937L;
+
+                public void actionPerformed(ActionEvent e) {
 					setViewingTransformation(new Vector(0, 0, 1), new Vector(0, 1, 0));
 					encompass();
 				}
@@ -1505,7 +1645,10 @@ public class Main extends EventSource {
     	final String name = "View along 011";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        5974686631191014809L;
+
+                public void actionPerformed(ActionEvent e) {
 					setViewingTransformation(new Vector(0, 1, 1), new Vector(0, 0, 1));
 					encompass();
 				}
@@ -1519,7 +1662,10 @@ public class Main extends EventSource {
     	final String name = "View along 101";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -8692969261308262530L;
+
+                public void actionPerformed(ActionEvent e) {
 					setViewingTransformation(new Vector(1, 0, 1), new Vector(0, 0, 1));
 					encompass();
 				}
@@ -1533,7 +1679,10 @@ public class Main extends EventSource {
     	final String name = "View along 110";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -4318667902352263591L;
+
+                public void actionPerformed(ActionEvent e) {
 					setViewingTransformation(new Vector(1, 1, 0), new Vector(0, 0, 1));
 					encompass();
 				}
@@ -1547,7 +1696,10 @@ public class Main extends EventSource {
     	final String name = "View along 111";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -5470383467771465236L;
+
+                public void actionPerformed(ActionEvent e) {
 					setViewingTransformation(new Vector(1, 1, 1), new Vector(0, 0, 1));
 					encompass();
 				}
@@ -1561,7 +1713,10 @@ public class Main extends EventSource {
     	final String name = "Rotate Right";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -2300127714359881249L;
+
+                public void actionPerformed(ActionEvent e) {
     				viewerFrame.rotateScene(new double[] { 0, 1, 0 },
 									ui.getRotationStep() * Math.PI / 180.0);
 				}
@@ -1575,7 +1730,10 @@ public class Main extends EventSource {
     	final String name = "Rotate Left";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        1760655291215774794L;
+
+                public void actionPerformed(ActionEvent e) {
     				viewerFrame.rotateScene(new double[] { 0, 1, 0 },
     						-ui.getRotationStep() * Math.PI / 180.0);
 				}
@@ -1589,7 +1747,10 @@ public class Main extends EventSource {
     	final String name = "Rotate Up";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -713840553786455658L;
+
+                public void actionPerformed(ActionEvent e) {
     				viewerFrame.rotateScene(new double[] { 1, 0, 0 },
     						-ui.getRotationStep() * Math.PI / 180.0);
 				}
@@ -1603,7 +1764,10 @@ public class Main extends EventSource {
     	final String name = "Rotate Down";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -3357170530618835917L;
+
+                public void actionPerformed(ActionEvent e) {
     				viewerFrame.rotateScene(new double[] { 1, 0, 0 },
     						ui.getRotationStep() * Math.PI / 180.0);
 				}
@@ -1617,7 +1781,10 @@ public class Main extends EventSource {
     	final String name = "Rotate Clockwise";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -1143902458135287185L;
+
+                public void actionPerformed(ActionEvent e) {
     				viewerFrame.rotateScene(new double[] { 0, 0, 1 },
     						-ui.getRotationStep() * Math.PI / 180.0);
 				}
@@ -1632,7 +1799,10 @@ public class Main extends EventSource {
     	final String name = "Rotate Counter-Clockwise";
     	if (ActionRegistry.instance().get(name) == null) {
     		ActionRegistry.instance().put(new AbstractAction(name) {
-    			public void actionPerformed(ActionEvent e) {
+                private static final long serialVersionUID =
+                        -4072606795429852563L;
+
+                public void actionPerformed(ActionEvent e) {
     				viewerFrame.rotateScene(new double[] { 0, 0, 1 },
     						ui.getRotationStep() * Math.PI / 180.0);
 				}
@@ -1931,9 +2101,9 @@ public class Main extends EventSource {
 		
     	// --- get some more data from the tiling
         final Tiling til = doc().getTiling();
-    	final DSCover cover = til.getCover();
-    	final List idcsB = new IndexList(0, 1, 2);
-    	final List idcsV = new IndexList(1, 2);
+    	final DSCover<Integer> cover = til.getCover();
+    	final IndexList idcsB = new IndexList(0, 1, 2);
+    	final IndexList idcsV = new IndexList(1, 2);
     	final int D = b.getChamber();
     	
     	// --- generate and map vertices on the body's edges
@@ -2878,8 +3048,10 @@ public class Main extends EventSource {
             } else {
                 final SceneGraphPath selection = pr.getPickPath();
                 selectedFace = -1;
-				for (Iterator path = selection.iterator(); path.hasNext();) {
-                    final SceneGraphNode node = (SceneGraphNode) path.next();
+				for (final Iterator<SceneGraphNode> path = selection.iterator();
+				        path.hasNext();)
+				{
+                    final SceneGraphNode node = path.next();
                     final String name = node.getName();
                     final DisplayList.Item item = node2item.get(node);
                     if (item != null) {
@@ -2996,8 +3168,8 @@ public class Main extends EventSource {
 		}
 		
 		// --- override by system properties if defined
-		for (final Iterator keys = ourProps.keySet().iterator(); keys.hasNext();) {
-			final String key = (String) keys.next();
+		for (final Object x: ourProps.keySet()) {
+			final String key = (String) x;
 			final String val = System.getProperty(key);
 			if (val != null) {
 				ourProps.setProperty(key, val);
@@ -3581,7 +3753,7 @@ public class Main extends EventSource {
 	 */
 	private List<Tiling.Facet> equivalentFacets(final Tiling.Facet f) {
 		final Object D0 = f.getChamber();
-		final DSCover ds = doc().getTiling().getCover();
+		final DSCover<Integer> ds = doc().getTiling().getCover();
 		final Set<Object> orb = new HashSet<Object>();
 		for (final int E0: ds.elements()) {
 			if (ds.image(E0).equals(ds.image((Integer) D0))) {
