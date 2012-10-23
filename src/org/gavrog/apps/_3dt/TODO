@@ -2,6 +2,8 @@
 
 Open bugs:
 
+- NEW! Euclidicity test can produce falls negatives (no pseudo-toroidal cover)
+
 - Sometimes unit cells are very flat.
 - Disabling and enabling of menu items is missing or clumsily implemented.
 

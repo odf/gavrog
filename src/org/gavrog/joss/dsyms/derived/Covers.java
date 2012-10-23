@@ -167,6 +167,8 @@ public class Covers {
      * 
      * @param ds a 3-dimensional Delaney symbol.
      * @return the pseudo-toroidal cover or null.
+     * 
+     * TODO Seems buggy now! Euclidicity test fails on Kelvin generator for K=3
      */
     public static <T> DSCover<T> pseudoToroidalCover3D(
             final DelaneySymbol<T> ds)
