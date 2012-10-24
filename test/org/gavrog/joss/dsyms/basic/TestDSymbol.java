@@ -33,6 +33,7 @@ import junit.framework.TestCase;
 public class TestDSymbol extends TestCase {
 	private DSymbol ds1;
 	private DSymbol ds2;
+    private DSymbol ds3;
 
 	/*
 	 * @see TestCase#setUp()
@@ -41,6 +42,7 @@ public class TestDSymbol extends TestCase {
 		super.setUp();
 		ds1 = new DSymbol("6:1 3 4 6,2 4 5 6,1 5 6 4:4 4,3 3");
 		ds2 = new DSymbol("6:1 3 0 6,2 4 5 6,1 5 6 4:8 6,0 3");
+		ds3 = new DSymbol("6:2 4 6,4 3 6,6 5 4:4 4,3");
 	}
 
 	/*
@@ -49,6 +51,7 @@ public class TestDSymbol extends TestCase {
 	protected void tearDown() throws Exception {
 		ds1 = null;
 		ds2 = null;
+		ds3 = null;
 		super.tearDown();
 	}
 
@@ -115,6 +118,7 @@ public class TestDSymbol extends TestCase {
 		Assert.assertTrue(ds1.v(1, 2, new Integer(1)) == 1);
 		Assert.assertTrue(ds1.v(0, 2, new Integer(1)) == 2);
 		Assert.assertTrue(ds2.v(1, 2, new Integer(2)) == 0);
+        Assert.assertTrue(ds3.v(0, 2, new Integer(3)) == 2);
 		try {
 			ds1.v(0, 1, new Integer(7));
 			fail("Should raise an IllegalArgumentException");

@@ -481,7 +481,7 @@ public class DSymbol extends DelaneySymbol<Integer> implements Cloneable {
             val = v[i][D];
         } else if (j == i-1) {
             val = v[j][D];
-        } else if (i != j && op(i, D) == op(j, D)) {
+        } else if (i != j && op(i, D).equals(op(j, D))) {
             val = 2;
         } else {
             val = 1;

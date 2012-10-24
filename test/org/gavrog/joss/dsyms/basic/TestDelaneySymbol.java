@@ -39,7 +39,8 @@ import junit.framework.TestCase;
 public class TestDelaneySymbol extends TestCase {
 	private String code;
 	private DelaneySymbol ds1, ds2, ds3, ds4;
-	private DelaneySymbol sub;
+	private DelaneySymbol sub1;
+    private DelaneySymbol sub2;
 	
 	/*
 	 * @see TestCase#setUp()
@@ -51,7 +52,8 @@ public class TestDelaneySymbol extends TestCase {
 		ds2 = new DSymbol("8:2 4 6 8,8 3 5 7,6 5 8 7:4,4");
 		ds3 = new DSymbol("8:2 4 6 8,8 3 5 7,6 5 7 8:4,4");
 		ds4 = new DSymbol("<1.1:1:1,1,1:4,3>");
-		sub = new Subsymbol(ds1, new IndexList(1, 2), new Integer(1));
+		sub1 = new Subsymbol(ds1, new IndexList(1, 2), new Integer(1));
+        sub2 = new Subsymbol(ds1, new IndexList(0, 1, 2), new Integer(1));
 	}
 
 	/*
@@ -60,7 +62,11 @@ public class TestDelaneySymbol extends TestCase {
 	protected void tearDown() throws Exception {
 		code = null;
 		ds1 = null;
-		sub = null;
+        ds2 = null;
+        ds3 = null;
+        ds4 = null;
+		sub1 = null;
+		sub2 = null;
 		super.tearDown();
 	}
 
@@ -88,17 +94,17 @@ public class TestDelaneySymbol extends TestCase {
 			   + "   7 |    8    6 |    1\n"
 			   + "   8 |    7    3 |    1\n"
 			   ;
-		Assert.assertEquals(out2, sub.tabularDisplay());
+		Assert.assertEquals(out2, sub1.tabularDisplay());
 	}
 
 	public void testHasStandardIndexSet() {
 		Assert.assertTrue(ds1.hasStandardIndexSet());
-		Assert.assertFalse(sub.hasStandardIndexSet());
+		Assert.assertFalse(sub1.hasStandardIndexSet());
 	}
     
     public void testIsComplete() {
         assertTrue(ds1.isComplete());
-        assertTrue(sub.isComplete());
+        assertTrue(sub1.isComplete());
         assertFalse(new DSymbol("2:1 0,2,2:4,4").isComplete());
         assertFalse(new DSymbol("2:1 2,2,2:4,0").isComplete());
     }
@@ -111,8 +117,9 @@ public class TestDelaneySymbol extends TestCase {
 	public void testM() {
 		Assert.assertEquals(3, ds1.m(0, 1, new Integer(1)));
 		Assert.assertEquals(2, ds1.m(0, 2, new Integer(1)));
+        Assert.assertEquals(2, sub2.m(0, 2, new Integer(3)));
 	}
-
+	
 	public void testNumberOfOrbits() {
 		Assert.assertEquals(2, ds1.numberOfOrbits(new IndexList(0, 1)));
 		Assert.assertEquals(2, ds1.numberOfOrbits(new IndexList(1, 2)));
@@ -215,7 +222,7 @@ public class TestDelaneySymbol extends TestCase {
                + "   4 |    5    3 |    1\n"
                + "   5 |    4    2 |    1\n"
                ;
-        Assert.assertEquals(out, sub.flat().tabularDisplay());
+        Assert.assertEquals(out, sub1.flat().tabularDisplay());
     }
     
 	public void testCurvature2D() {
