@@ -34,6 +34,7 @@ import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.derived.Covers;
+import org.gavrog.joss.dsyms.derived.DSCover;
 import org.gavrog.joss.dsyms.derived.EuclidicityTester;
 
 import buoy.event.EventProcessor;
@@ -46,9 +47,9 @@ public class TileKTransitiveDuo extends ResumableGenerator<DSymbol> {
     private final boolean verbose;
     private final boolean simple;
 
-    private final Iterator partLists;
-    private Iterator extended;
-    private Iterator symbols;
+    private final Iterator<Pair<List<DSymbol>, List<DSymbol>>> partLists;
+    private ResumableGenerator<DSymbol> extended;
+    private Iterator<DSymbol> symbols;
 
     private int count2dSymbols = 0;
     private int count3dSets = 0;
@@ -65,16 +66,25 @@ public class TileKTransitiveDuo extends ResumableGenerator<DSymbol> {
      * @param k the number of transitivity classes of tiles aimed for.
      * @param verbose if true, some logging information is produced.
      */
-    public TileKTransitiveDuo(final DelaneySymbol tileA, final int nrA,
-			final DelaneySymbol tileB, final int nrB, final boolean simple,
-			final boolean verbose) {
+    public <A, B> TileKTransitiveDuo(
+            final DelaneySymbol<A> tileA, final int nrA,
+			final DelaneySymbol<B> tileB, final int nrB,
+			final boolean simple,
+			final boolean verbose)
+	{
         this.verbose = verbose;
         this.simple = simple;
 
-        final List coversA = Iterators.asList(Covers.allCovers(tileA.minimal()));
-        final List coversB = Iterators.asList(Covers.allCovers(tileB.minimal()));
-        final Iterator listsA = Iterators.selections(coversA.toArray(), nrA);
-        final Iterator listsB = Iterators.selections(coversB.toArray(), nrB);
+        final List<DSCover<Integer>> coversA =
+                Iterators.asList(Covers.allCovers(tileA.minimal()));
+        final List<DSCover<Integer>> coversB =
+                Iterators.asList(Covers.allCovers(tileB.minimal()));
+        final DSymbol[] a = new DSymbol[coversA.size()];
+        final DSymbol[] b = new DSymbol[coversB.size()];
+        final Iterator<List<DSymbol>> listsA =
+                Iterators.selections(coversA.toArray(a), nrA);
+        final Iterator<List<DSymbol>> listsB =
+                Iterators.selections(coversB.toArray(b), nrB);
         this.partLists = Iterators.cantorProduct(listsA, listsB);
 
         this.extended = null;
@@ -124,17 +134,17 @@ public class TileKTransitiveDuo extends ResumableGenerator<DSymbol> {
             while (symbols == null || !symbols.hasNext()) {
                 while (extended == null || !extended.hasNext()) {
                     if (partLists.hasNext()) {
-                    	final Pair item = (Pair) partLists.next();
-                        final List tiles = new ArrayList();
-                        tiles.addAll((List) item.getFirst());
-                        tiles.addAll((List) item.getSecond());
+                    	final Pair<List<DSymbol>, List<DSymbol>> item =
+                    	        partLists.next();
+                        final List<DSymbol> tiles = new ArrayList<DSymbol>();
+                        tiles.addAll(item.getFirst());
+                        tiles.addAll(item.getSecond());
                         if (!partsListOkay(tiles)) {
                         	continue;
                         }
                         final DynamicDSymbol tmp = new DynamicDSymbol(2);
-                        for (final Iterator iter = tiles.iterator(); iter
-                                .hasNext();) {
-                            tmp.append((DSymbol) iter.next());
+                        for (final DSymbol ds: tiles) {
+                            tmp.append(ds);
                         }
                         ++checkpoint[0];
                         checkpoint[1] = checkpoint[2] = 0;
@@ -148,20 +158,16 @@ public class TileKTransitiveDuo extends ResumableGenerator<DSymbol> {
                             System.out.println(setAsString(ds));
                         }
                         extended = extendTo3d(ds);
-                        if (extended instanceof ResumableGenerator) {
-                        	final ResumableGenerator gen =
-                        		(ResumableGenerator) extended;
-							gen.addEventLink(CheckpointEvent.class, this,
-								"repostCheckpoint");
-							if (checkpoint[0] == resume[0] && resume1 != null) {
-								gen.setResumePoint(resume1);
-							}
-						}
+                        extended.addEventLink(CheckpointEvent.class, this,
+                                "repostCheckpoint");
+                        if (checkpoint[0] == resume[0] && resume1 != null) {
+                            extended.setResumePoint(resume1);
+                        }
                     } else {
                         throw new NoSuchElementException("At end");
                     }
                 }
-                final DSymbol ds = (DSymbol) extended.next();
+                final DSymbol ds = extended.next();
                 ++checkpoint[1];
                 checkpoint[2] = 0;
                 postCheckpoint();
@@ -174,7 +180,7 @@ public class TileKTransitiveDuo extends ResumableGenerator<DSymbol> {
                 }
                 symbols = defineBranching(ds);
             }
-            final DSymbol ds = (DSymbol) symbols.next();
+            final DSymbol ds = symbols.next();
             ++checkpoint[2];
             postCheckpoint();
             if (tooEarly()) {
@@ -210,8 +216,7 @@ public class TileKTransitiveDuo extends ResumableGenerator<DSymbol> {
     public String getCheckpoint() {
     	if (extended != null && extended instanceof ResumableGenerator) {
 			return String.format("%d-[%s]", checkpoint[0],
-					((ResumableGenerator) extended).getCheckpoint().replaceAll(
-							"-", "."));
+			        extended.getCheckpoint().replaceAll("-", "."));
 		} else {
 			return String.format("%s-%s-%s", checkpoint[0], checkpoint[1],
 					checkpoint[2]);
@@ -224,7 +229,8 @@ public class TileKTransitiveDuo extends ResumableGenerator<DSymbol> {
      * @param list a list of D-symbols encoding tiles.
      * @return true if this combination should be used.
      */
-    protected boolean partsListOkay(final List list) {
+    protected boolean partsListOkay(final List<DSymbol> list)
+    {
         return true;
     }
 
@@ -236,9 +242,9 @@ public class TileKTransitiveDuo extends ResumableGenerator<DSymbol> {
      * @return an iterator over all admissible extensions of ds with complete
      *         branching.
      */
-    protected Iterator defineBranching(final DelaneySymbol ds) {
+    protected Iterator<DSymbol> defineBranching(final DSymbol ds) {
 		if (this.simple) {
-			final DynamicDSymbol out = new DynamicDSymbol(new DSymbol(ds));
+			final DynamicDSymbol out = new DynamicDSymbol(ds);
 			final IndexList idx = new IndexList(2, 3);
 			for (final int D: out.orbitReps(idx)) {
 				final int r = out.r(2, 3, D);
@@ -269,11 +275,13 @@ public class TileKTransitiveDuo extends ResumableGenerator<DSymbol> {
 	 *            a Delaney symbol.
 	 * @return an iterator over all admissible extensions.
 	 */
-    protected Iterator extendTo3d(final DSymbol ds) {
+    protected ResumableGenerator<DSymbol> extendTo3d(final DSymbol ds) {
 		if (this.simple) {
 			return new CombineTiles(ds) {
-				protected List<Move> getExtraDeductions(final DSymbol ds,
-						final Move move) {
+				protected List<Move> getExtraDeductions(
+				        final DelaneySymbol<Integer> ds,
+						final Move move)
+				{
 					final List<Move> out = new ArrayList<Move>();
 					final int D = move.element;
 					int E = D;
