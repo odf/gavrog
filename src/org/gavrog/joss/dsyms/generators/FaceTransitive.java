@@ -18,7 +18,6 @@
 package org.gavrog.joss.dsyms.generators;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
@@ -460,11 +459,9 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
                 if (this.augmented.hasNext()) {
                     final DSymbol ds = (DSymbol) this.augmented.next();
                     boolean okay = true;
-                    for (final Iterator reps = ds
-                            .orbitReps(idcsFace2d); reps.hasNext();) {
-                        final Object D = reps.next();
-                        final DSymbol face = new DSymbol(new Subsymbol(ds,
-                                idcsFace2d, D));
+                    for (final int D: ds.orbitReps(idcsFace2d)) {
+                        final DSymbol face = new DSymbol(new Subsymbol<Integer>(
+                        		ds, idcsFace2d, D));
                         if (!face.equals(this.inputFace)) {
                             okay = false;
                             break;
@@ -476,7 +473,7 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
                         return ds;
                     }
                 } else if (this.baseTiles.hasNext()) {
-                    final DSymbol tile = (DSymbol) this.baseTiles.next();
+                    final DSymbol tile = this.baseTiles.next();
                     if (this.minVert >= 3) {
                         if (this.minVert <= minVert(tile)) {
                             return tile;
@@ -487,9 +484,10 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
                         this.augmented = new Augmenter(tile, this.targetSize);
                     }
                 } else if (this.baseFacePairs.hasNext()) {
-                    final List item = (List) this.baseFacePairs.next();
-                    final DSymbol f1 = (DSymbol) item.get(0);
-                    final DSymbol f2 = (DSymbol) item.get(1);
+                    final Pair<DSymbol, DSymbol> item =
+                    		this.baseFacePairs.next();
+                    final DSymbol f1 = item.getFirst();
+                    final DSymbol f2 = item.getSecond();
                     final DynamicDSymbol tmp = new DynamicDSymbol(f1);
                     tmp.append(f2);
                     final DSymbol ds = new DSymbol(tmp);
@@ -499,7 +497,7 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
                                 new BaseDoubleFaceTiles(ds, 3);
                         doubleBases.put(invariant, Iterators.asList(tiles));
                     }
-                    this.baseTiles = ((List) doubleBases.get(invariant)).iterator();
+                    this.baseTiles = doubleBases.get(invariant).iterator();
                 } else {
                     time4DoubleFaced.stop();
                     throw new NoSuchElementException("at end");
@@ -516,8 +514,8 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
     private class BaseSingleFaceTiles extends IteratorAdapter<DSymbol> {
         final private Rational minCurv = new Fraction(1, 12);
         final private int minVert;
-        Iterator preTiles = Iterators.empty();
-        Iterator tiles = Iterators.empty();
+        Iterator<DSymbol> preTiles = Iterators.empty();
+        Iterator<DSymbol> tiles = Iterators.empty();
 
         public BaseSingleFaceTiles(final DSymbol face, final int minVert) {
             time4BaseSingleFaced.start();
@@ -539,7 +537,7 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
             time4BaseSingleFaced.start();
             while (true) {
                 if (this.tiles.hasNext()) {
-                    final DSymbol ds = (DSymbol) this.tiles.next();
+                    final DSymbol ds = this.tiles.next();
                     if (!ds.isSpherical2D()) {
                         continue;
                     }
@@ -551,7 +549,7 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
                         }
                     }
                 } else if (this.preTiles.hasNext()) {
-                    final DSymbol ds = (DSymbol) this.preTiles.next();
+                    final DSymbol ds = this.preTiles.next();
                     this.tiles = new DefineBranching2d(ds, 2, minVert, minCurv);
                 } else {
                     time4BaseSingleFaced.stop();
@@ -565,11 +563,11 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
      * Generates all feasible 2-dimensional symbols made from two copies of a
      * given 1-dimensional one.
      */
-    private class BaseDoubleFaceTiles extends IteratorAdapter {
+    private class BaseDoubleFaceTiles extends IteratorAdapter<DSymbol> {
 		final private int minVert;
         final private Rational minCurv = new Fraction(1, 12);
-        Iterator preTiles = Iterators.empty();
-        Iterator tiles = Iterators.empty();
+        Iterator<DSymbol> preTiles = Iterators.empty();
+        Iterator<DSymbol> tiles = Iterators.empty();
         
         public BaseDoubleFaceTiles(final DSymbol ds, final int minVert) {
             time4BaseDoubleFaced.start();
@@ -591,11 +589,11 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
         /* (non-Javadoc)
          * @see org.gavrog.box.collections.IteratorAdapter#findNext()
          */
-        protected Object findNext() throws NoSuchElementException {
+        protected DSymbol findNext() throws NoSuchElementException {
             time4BaseDoubleFaced.start();
             while (true) {
                 if (this.tiles.hasNext()) {
-                    final DSymbol ds = (DSymbol) this.tiles.next();
+                    final DSymbol ds = this.tiles.next();
                     if (!ds.isSpherical2D()) {
                         continue;
                     }
@@ -607,7 +605,7 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
                         }
                     }
                 } else if (this.preTiles.hasNext()) {
-                    final DSymbol ds = (DSymbol) this.preTiles.next();
+                    final DSymbol ds = this.preTiles.next();
                     this.tiles = new DefineBranching2d(ds, 2, minVert, minCurv);
                 } else {
                     time4BaseDoubleFaced.stop();
@@ -621,11 +619,11 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
      * Generates all feasible 2-dimensional symbols made from two copies of a
      * given 1-dimensional one.
      */
-    private class SimpleDoubleFaceTiles extends IteratorAdapter {
+    private class SimpleDoubleFaceTiles extends IteratorAdapter<DSymbol> {
         final private int minVert;
         final private Rational minCurv = new Fraction(1, 12);
-        Iterator preTiles = Iterators.empty();
-        Iterator tiles = Iterators.empty();
+        Iterator<DSymbol> preTiles = Iterators.empty();
+        Iterator<DSymbol> tiles = Iterators.empty();
         
         public SimpleDoubleFaceTiles(final DSymbol face, final int minVert) {
             this.minVert = minVert;
@@ -637,10 +635,10 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
         /* (non-Javadoc)
          * @see org.gavrog.box.collections.IteratorAdapter#findNext()
          */
-        protected Object findNext() throws NoSuchElementException {
+        protected DSymbol findNext() throws NoSuchElementException {
             while (true) {
                 if (this.tiles.hasNext()) {
-                    final DSymbol ds = (DSymbol) this.tiles.next();
+                    final DSymbol ds = this.tiles.next();
                     if (!ds.isSpherical2D()) {
                         continue;
                     }
@@ -650,7 +648,7 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
                         }
                     }
                 } else if (this.preTiles.hasNext()) {
-                    final DSymbol ds = (DSymbol) this.preTiles.next();
+                    final DSymbol ds = this.preTiles.next();
                     this.tiles = new DefineBranching2d(ds, 3, minVert, minCurv);
                 } else {
                     throw new NoSuchElementException("at end");
@@ -659,11 +657,11 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
         }
     }
 
-    private class Glue extends IteratorAdapter {
+    private class Glue extends IteratorAdapter<DSymbol> {
     	final DSymbol ds;
 		final int D0;
 		final Iterator<Integer> targets;
-		final Set seen = new HashSet();
+		final Set<DSymbol> seen = new HashSet<DSymbol>();
 
 		public Glue(final DSymbol ds) {
 			this.ds = ds;
@@ -711,7 +709,7 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
 		 * 
 		 * @see org.gavrog.box.collections.IteratorAdapter#findNext()
 		 */
-		protected Object findNext() throws NoSuchElementException {
+		protected DSymbol findNext() throws NoSuchElementException {
 			while (true) {
 				if (this.targets.hasNext()) {
 					final int E0 = this.targets.next();
@@ -755,10 +753,10 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
 	 * Generates all minimal, euclidean, 3-dimensional symbols extending a given
 	 * 1-dimensional symbol.
 	 */
-    private class ONE extends IteratorAdapter {
-    	Iterator tiles = Iterators.empty();
-        Iterator preTilings = Iterators.empty();
-        Iterator tilings = Iterators.empty();
+    private class ONE extends IteratorAdapter<DSymbol> {
+    	Iterator<DSymbol> tiles = Iterators.empty();
+        Iterator<DSymbol> preTilings = Iterators.empty();
+        Iterator<DSymbol> tilings = Iterators.empty();
         
     	public ONE(final DSymbol face, final int minVert) {
             time4One.start();
@@ -769,7 +767,7 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
 		/* (non-Javadoc)
 		 * @see org.gavrog.box.collections.IteratorAdapter#findNext()
 		 */
-		protected Object findNext() throws NoSuchElementException {
+		protected DSymbol findNext() throws NoSuchElementException {
             time4One.start();
             while (true) {
                 time4Final.start();
@@ -777,7 +775,7 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
                 time4Final.stop();
                 if (moreTilings) {
                     time4Final.start();
-                    final DSymbol ds = (DSymbol) this.tilings.next();
+                    final DSymbol ds = this.tilings.next();
                     time4Final.stop();
                     if (isGood(ds)) {
                         time4One.stop();
@@ -785,14 +783,14 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
                         return ds;
                     }
                 } else if (this.preTilings.hasNext()) {
-                    final DSymbol ds = (DSymbol) this.preTilings.next();
+                    final DSymbol ds = this.preTilings.next();
                     if (!hasTrivialVertices(ds)) {
                         time4Final.start();
                         this.tilings = new DefineBranching3d(ds);
                         time4Final.stop();
                     }
                 } else if (this.tiles.hasNext()) {
-                	final DSymbol ds = (DSymbol) this.tiles.next();
+                	final DSymbol ds = this.tiles.next();
                 	this.preTilings = new Glue(ds);
                 } else {
                     time4One.stop();
@@ -806,11 +804,11 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
 	 * Generates all minimal, euclidean, 3-dimensional symbols containing two
 	 * 2-dimensional symbols each made from the single given 1-dimensional one.
 	 */
-    private class TWO extends IteratorAdapter {
-    	final List tiles;
+    private class TWO extends IteratorAdapter<DSymbol> {
+    	final List<DSymbol> tiles;
     	int i, j;
-        Iterator preTilings = Iterators.empty();
-        Iterator tilings = Iterators.empty();
+        Iterator<DSymbol> preTilings = Iterators.empty();
+        Iterator<DSymbol> tilings = Iterators.empty();
         
     	public TWO(final DSymbol face, final int minVert) {
             time4Two.start();
@@ -822,7 +820,7 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
 		/* (non-Javadoc)
 		 * @see org.gavrog.box.collections.IteratorAdapter#findNext()
 		 */
-		protected Object findNext() throws NoSuchElementException {
+		protected DSymbol findNext() throws NoSuchElementException {
             time4Two.start();
             while (true) {
                 time4Final.start();
@@ -830,7 +828,7 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
                 time4Final.stop();
                 if (moreTilings) {
                     time4Final.start();
-                    final DSymbol ds = (DSymbol) this.tilings.next();
+                    final DSymbol ds = this.tilings.next();
                     time4Final.stop();
                     if (isGood(ds)) {
                         time4Two.stop();
@@ -838,15 +836,15 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
                         return ds;
                     }
                 } else if (this.preTilings.hasNext()) {
-                    final DSymbol ds = (DSymbol) this.preTilings.next();
+                    final DSymbol ds = this.preTilings.next();
                     if (!hasTrivialVertices(ds)) {
                         time4Final.start();
                         this.tilings = new DefineBranching3d(ds);
                         time4Final.stop();
                     }
                 } else if (this.i < this.tiles.size()) {
-                	final DSymbol t1 = (DSymbol) this.tiles.get(i);
-                	final DSymbol t2 = (DSymbol) this.tiles.get(j);
+                	final DSymbol t1 = this.tiles.get(i);
+                	final DSymbol t2 = this.tiles.get(j);
                 	++j;
                 	if (j >= this.tiles.size()) {
                 		j = ++i;
@@ -866,17 +864,18 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
 	 * Generates all minimal, euclidean, tile- and face-transitive 3-dimensional
 	 * symbols made from two copies of a given 1-dimensional symbol.
 	 */
-    private class DOUBLE extends IteratorAdapter {
-    	Iterator tiles = Iterators.empty();
-        Iterator preTilings = Iterators.empty();
-        Iterator tilings = Iterators.empty();
+    private class DOUBLE extends IteratorAdapter<DSymbol> {
+    	Iterator<DSymbol> tiles = Iterators.empty();
+        Iterator<DSymbol> preTilings = Iterators.empty();
+        Iterator<DSymbol> tilings = Iterators.empty();
         
-        final Set testTiles; //@@@ for test purposes only
+        final Set<DSymbol> testTiles; //@@@ for test purposes only
         
     	public DOUBLE(final DSymbol face, final int minVert) {
     	    if (TEST) {
-				final Iterator tiles = new SimpleDoubleFaceTiles(face, minVert);
-				testTiles = new HashSet();
+				final Iterator<DSymbol> tiles =
+						new SimpleDoubleFaceTiles(face, minVert);
+				testTiles = new HashSet<DSymbol>();
 				while (tiles.hasNext()) {
 					testTiles.add(((DSymbol) tiles.next()));
 				}
@@ -892,7 +891,7 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
 		/* (non-Javadoc)
 		 * @see org.gavrog.box.collections.IteratorAdapter#findNext()
 		 */
-		protected Object findNext() throws NoSuchElementException {
+		protected DSymbol findNext() throws NoSuchElementException {
             time4Double.start();
             while (true) {
                 time4Final.start();
@@ -900,7 +899,7 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
                 time4Final.stop();
                 if (moreTilings) {
                     time4Final.start();
-                    final DSymbol ds = (DSymbol) this.tilings.next();
+                    final DSymbol ds = this.tilings.next();
                     time4Final.stop();
                     if (isGood(ds)) {
                         time4Double.stop();
@@ -908,7 +907,7 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
                         return ds;
                     }
                 } else if (this.preTilings.hasNext()) {
-                    final DSymbol ds = (DSymbol) this.preTilings.next();
+                    final DSymbol ds = this.preTilings.next();
                     if (ds.numberOfOrbits(idcsFace3d) == 1
 							&& !hasTrivialVertices(ds)) {
                         time4Final.start();
@@ -916,7 +915,7 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
                         time4Final.stop();
                     }
                 } else if (this.tiles.hasNext()) {
-                	final DSymbol ds = (DSymbol) this.tiles.next();
+                	final DSymbol ds = this.tiles.next();
                     if (TEST) {
                     	this.testTiles.remove(ds);
                     }
@@ -924,14 +923,12 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
                 } else {
                     time4Double.stop();
                     if (TEST) {
-						for (final Iterator iter = this.testTiles.iterator(); iter
-								.hasNext();) {
-							final DSymbol ds = (DSymbol) iter.next();
+						for (final DSymbol ds: this.testTiles) {
 							System.out.println("#!!! Missed: " + ds);
 							final DSymbol base = baseTile(ds);
-							final DynamicDSymbol key = new DynamicDSymbol(1,
-									base);
-							if (((List) doubleBases.get(key)).contains(base)) {
+							final DynamicDSymbol key =
+									new DynamicDSymbol(1, base);
+							if (doubleBases.get(key).contains(base)) {
 								System.out.println("#!!!   (but base " + base
 										+ " found.)");
 							}
@@ -960,7 +957,7 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
 
     private int size;
     private int type;
-    private Iterator faces = Iterators.empty();
+    private Iterator<DSymbol> faces = Iterators.empty();
     private Iterator<DSymbol> tilings = Iterators.empty();
 
     private int badVertices = 0;
@@ -1007,7 +1004,7 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
             if (this.tilings.hasNext()) {
                 return this.tilings.next();
             } else if (this.faces.hasNext()) {
-                final DSymbol face = (DSymbol) faces.next();
+                final DSymbol face = faces.next();
                 switch (this.type) {
                 case 0:
                     this.tilings = new ONE(face, this.minVert);
@@ -1045,7 +1042,7 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
      * @return the list of base symbols for the input symbol.
      */
     private static List<DSymbol> baseFaces(final DSymbol face) {
-        final List results = new LinkedList();
+        final List<DSymbol> results = new LinkedList<DSymbol>();
         final int v = face.v(0, 1, face.elements().next());
         final boolean loopless = face.isLoopless();
         final int d = v * (loopless ? 1 : 2);
@@ -1057,10 +1054,10 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
             if (size > face.size()) {
                 continue;
             }
-            for (final Iterator iter = new Faces(size, 2); iter.hasNext();) {
-                final DSymbol ds = (DSymbol) iter.next();
+            for (final DSymbol ds: new Faces(size, 2)) {
                 if (ds.v(0, 1, ds.elements().next()) == v
-                        && ds.isLoopless() == loopless) {
+                        && ds.isLoopless() == loopless)
+                {
                     results.add(ds);
                 }
             }
