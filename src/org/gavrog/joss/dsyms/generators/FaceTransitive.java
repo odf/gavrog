@@ -55,78 +55,6 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
 	final static private IndexList idcsVert3d = new IndexList(1, 2, 3);
 
     /**
-     * Generates all feasible 1-dimensional symbols of a given size.
-     */
-    public static class Faces extends IteratorAdapter<DSymbol> {
-		final private int minFace;
-        final Iterator<DSymbol> sets;
-        int v;
-        DynamicDSymbol currentSet = null;
-        
-        public Faces(final int size, int minFace) {
-        	this.minFace = minFace;
-            if (size % 2 == 1) {
-                final DynamicDSymbol ds = new DynamicDSymbol(1);
-                final List<Integer> elms = ds.grow(size);
-                for (int i = 1; i < size; i += 2) {
-                    ds.redefineOp(0, elms.get(i-1), elms.get(i));
-                    ds.redefineOp(1, elms.get(i), elms.get(i+1));
-                }
-                ds.redefineOp(1, elms.get(0), elms.get(0));
-                ds.redefineOp(0, elms.get(size-1), elms.get(size-1));
-                this.sets = Iterators.singleton(new DSymbol(ds));
-            } else {
-                final List<DSymbol> tmp = new LinkedList<DSymbol>();
-                final DynamicDSymbol ds = new DynamicDSymbol(1);
-                final List<Integer> elms = ds.grow(size);
-                for (int i = 1; i < size; i += 2) {
-                    ds.redefineOp(0, elms.get(i-1), elms.get(i));
-                    ds.redefineOp(1, elms.get(i), elms.get((i+1) % size));
-                }
-                tmp.add(new DSymbol(ds));
-
-                ds.redefineOp(1, elms.get(0), elms.get(0));
-                ds.redefineOp(1, elms.get(size-1), elms.get(size-1));
-                tmp.add(new DSymbol(ds));
-
-                for (int i = 1; i < size; i += 2) {
-                    ds.redefineOp(1, elms.get(i-1), elms.get(i));
-                    ds.redefineOp(0, elms.get(i), elms.get((i+1) % size));
-                }
-                ds.redefineOp(0, elms.get(0), elms.get(0));
-                ds.redefineOp(0, elms.get(size-1), elms.get(size-1));
-                tmp.add(new DSymbol(ds));
-
-                this.sets = tmp.iterator();
-            }
-        }
-        
-        /* (non-Javadoc)
-         * @see org.gavrog.box.collections.IteratorAdapter#findNext()
-         */
-        protected DSymbol findNext() throws NoSuchElementException {
-            while (true) {
-                if (this.currentSet != null && this.v <= 4) {
-                    final DynamicDSymbol ds = this.currentSet;
-                    final int D = ds.elements().next();
-                    ds.redefineV(0, 1, D, this.v);
-                    ++this.v;
-                    if (ds.m(0, 1, D) < this.minFace) {
-                    	continue;
-                    }
-                    return new DSymbol(ds);
-                } else if (this.sets.hasNext()) {
-                    final DSymbol ds = this.sets.next();
-                    this.currentSet = new DynamicDSymbol(ds);
-                    this.v = 1;
-                } else {
-                    throw new NoSuchElementException("at end");
-                }
-            }
-        }
-    }
-
-    /**
      * Augments a tile in all possible ways by splitting edges (introducing
      * vertices of degree two) so that the symbol for the resulting tile has a
      * specified size.
@@ -1019,9 +947,9 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
             } else if ((this.type < 2 && this.size % 2 == 0) || this.type < 0) {
             	++this.type;
                 if (this.type == 0) {
-                    this.faces = new Faces(this.size, 3);
+                    this.faces = new Faces(this.size, 3, 4);
                 } else {
-                    this.faces = new Faces(this.size / 2, 3);
+                    this.faces = new Faces(this.size / 2, 3, 4);
                 }
             } else if (this.maxSize < 1 || this.size < this.maxSize) {
                 ++this.size;
@@ -1054,7 +982,7 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
             if (size > face.size()) {
                 continue;
             }
-            for (final DSymbol ds: new Faces(size, 2)) {
+            for (final DSymbol ds: new Faces(size, 2, 4)) {
                 if (ds.v(0, 1, ds.elements().next()) == v
                         && ds.isLoopless() == loopless)
                 {
