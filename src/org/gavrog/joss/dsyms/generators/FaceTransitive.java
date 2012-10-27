@@ -683,45 +683,23 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
 	 */
     private class ONE extends IteratorAdapter<DSymbol> {
     	Iterator<DSymbol> tiles = Iterators.empty();
-        Iterator<DSymbol> preTilings = Iterators.empty();
         Iterator<DSymbol> tilings = Iterators.empty();
         
     	public ONE(final DSymbol face, final int minVert) {
-            time4One.start();
     		this.tiles = new SingleFaceTiles(face, minVert);
-            time4One.stop();
     	}
 
 		/* (non-Javadoc)
 		 * @see org.gavrog.box.collections.IteratorAdapter#findNext()
 		 */
 		protected DSymbol findNext() throws NoSuchElementException {
-            time4One.start();
             while (true) {
-                time4Final.start();
-                boolean moreTilings = this.tilings.hasNext();
-                time4Final.stop();
-                if (moreTilings) {
-                    time4Final.start();
-                    final DSymbol ds = this.tilings.next();
-                    time4Final.stop();
-                    if (isGood(ds)) {
-                        time4One.stop();
-                        ++countONE;
-                        return ds;
-                    }
-                } else if (this.preTilings.hasNext()) {
-                    final DSymbol ds = this.preTilings.next();
-                    if (!hasTrivialVertices(ds)) {
-                        time4Final.start();
-                        this.tilings = new DefineBranching3d(ds);
-                        time4Final.stop();
-                    }
+                if (this.tilings.hasNext()) {
+                    return this.tilings.next();
                 } else if (this.tiles.hasNext()) {
                 	final DSymbol ds = this.tiles.next();
-                	this.preTilings = new Glue(ds);
+                	this.tilings = new Glue(ds);
                 } else {
-                    time4One.stop();
                     throw new NoSuchElementException("at end");
                 }
             }
@@ -735,41 +713,20 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
     private class TWO extends IteratorAdapter<DSymbol> {
     	final List<DSymbol> tiles;
     	int i, j;
-        Iterator<DSymbol> preTilings = Iterators.empty();
         Iterator<DSymbol> tilings = Iterators.empty();
         
     	public TWO(final DSymbol face, final int minVert) {
-            time4Two.start();
     		this.tiles = Iterators.asList(new SingleFaceTiles(face, minVert));
     		i = j = 0;
-            time4Two.stop();
     	}
 
 		/* (non-Javadoc)
 		 * @see org.gavrog.box.collections.IteratorAdapter#findNext()
 		 */
 		protected DSymbol findNext() throws NoSuchElementException {
-            time4Two.start();
             while (true) {
-                time4Final.start();
-                boolean moreTilings = this.tilings.hasNext();
-                time4Final.stop();
-                if (moreTilings) {
-                    time4Final.start();
-                    final DSymbol ds = this.tilings.next();
-                    time4Final.stop();
-                    if (isGood(ds)) {
-                        time4Two.stop();
-                        ++countTWO;
-                        return ds;
-                    }
-                } else if (this.preTilings.hasNext()) {
-                    final DSymbol ds = this.preTilings.next();
-                    if (!hasTrivialVertices(ds)) {
-                        time4Final.start();
-                        this.tilings = new DefineBranching3d(ds);
-                        time4Final.stop();
-                    }
+                if (this.tilings.hasNext()) {
+                    return this.tilings.next();
                 } else if (this.i < this.tiles.size()) {
                 	final DSymbol t1 = this.tiles.get(i);
                 	final DSymbol t2 = this.tiles.get(j);
@@ -779,9 +736,8 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
                 	}
                 	final DynamicDSymbol ds = new DynamicDSymbol(t1);
                 	ds.append(t2);
-                	this.preTilings = new Glue(new DSymbol(ds));
+                	this.tilings = new Glue(new DSymbol(ds));
                 } else {
-                    time4Two.stop();
                     throw new NoSuchElementException("at end");
                 }
             }
@@ -794,7 +750,6 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
 	 */
     private class DOUBLE extends IteratorAdapter<DSymbol> {
     	Iterator<DSymbol> tiles = Iterators.empty();
-        Iterator<DSymbol> preTilings = Iterators.empty();
         Iterator<DSymbol> tilings = Iterators.empty();
         
         final Set<DSymbol> testTiles; //@@@ for test purposes only
@@ -811,45 +766,23 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
 				testTiles = null;
 			}
             
-            time4Double.start();
     		this.tiles = new DoubleFaceTiles(face, minVert);
-            time4Double.stop();
     	}
 
 		/* (non-Javadoc)
 		 * @see org.gavrog.box.collections.IteratorAdapter#findNext()
 		 */
 		protected DSymbol findNext() throws NoSuchElementException {
-            time4Double.start();
             while (true) {
-                time4Final.start();
-                boolean moreTilings = this.tilings.hasNext();
-                time4Final.stop();
-                if (moreTilings) {
-                    time4Final.start();
-                    final DSymbol ds = this.tilings.next();
-                    time4Final.stop();
-                    if (isGood(ds)) {
-                        time4Double.stop();
-                        ++countDOUBLE;
-                        return ds;
-                    }
-                } else if (this.preTilings.hasNext()) {
-                    final DSymbol ds = this.preTilings.next();
-                    if (ds.numberOfOrbits(idcsFace3d) == 1
-							&& !hasTrivialVertices(ds)) {
-                        time4Final.start();
-                        this.tilings = new DefineBranching3d(ds);
-                        time4Final.stop();
-                    }
+                if (this.tilings.hasNext()) {
+                    return this.tilings.next();
                 } else if (this.tiles.hasNext()) {
                 	final DSymbol ds = this.tiles.next();
                     if (TEST) {
                     	this.testTiles.remove(ds);
                     }
-                	this.preTilings = new Glue(ds);
+                	this.tilings = new Glue(ds);
                 } else {
-                    time4Double.stop();
                     if (TEST) {
 						for (final DSymbol ds: this.testTiles) {
 							System.out.println("#!!! Missed: " + ds);
@@ -886,6 +819,7 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
     private int size;
     private int type;
     private Iterator<DSymbol> faces = Iterators.empty();
+    private Iterator<DSymbol> preTilings = Iterators.empty();
     private Iterator<DSymbol> tilings = Iterators.empty();
 
     private int badVertices = 0;
@@ -929,19 +863,40 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
      */
     protected DSymbol findNext() throws NoSuchElementException {
         while (true) {
-            if (this.tilings.hasNext()) {
-                return this.tilings.next();
+            if (moreTilings()) {
+                time4Final.start();
+                final DSymbol ds = this.tilings.next();
+                time4Final.stop();
+                if (isGood(ds)) {
+                    return ds;
+                }
+            } else if (morePreTilings()) {
+                startCaseTimer();
+                final DSymbol ds = this.preTilings.next();
+                stopCaseTimer();
+                if (ds.numberOfOrbits(idcsFace3d) == 1
+                        && !hasTrivialVertices(ds))
+                {
+                    switch (this.type) {
+                    case 0: ++countONE; break;
+                    case 1: ++countTWO; break;
+                    case 2: ++countDOUBLE; break;
+                    }
+                    time4Final.start();
+                    this.tilings = new DefineBranching3d(ds);
+                    time4Final.stop();
+                }
             } else if (this.faces.hasNext()) {
                 final DSymbol face = faces.next();
                 switch (this.type) {
                 case 0:
-                    this.tilings = new ONE(face, this.minVert);
+                    this.preTilings = new ONE(face, this.minVert);
                     break;
                 case 1:
-                    this.tilings = new TWO(face, this.minVert);
+                    this.preTilings = new TWO(face, this.minVert);
                     break;
                 case 2:
-                    this.tilings = new DOUBLE(face, this.minVert);
+                    this.preTilings = new DOUBLE(face, this.minVert);
                     break;
                 }
             } else if ((this.type < 2 && this.size % 2 == 0) || this.type < 0) {
@@ -958,6 +913,38 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
                 throw new NoSuchElementException("at end");
             }
         }
+    }
+    
+    private boolean moreTilings()
+    {
+        time4Final.start();
+        boolean moreTilings = this.tilings.hasNext();
+        time4Final.stop();
+        return moreTilings;
+    }
+    
+    private void startCaseTimer() {
+        switch (this.type) {
+        case 0: time4One.start(); break;
+        case 1: time4Two.start(); break;
+        case 2: time4Double.start(); break;
+        }
+    }
+    
+    private void stopCaseTimer() {
+        switch (this.type) {
+        case 0: time4One.stop(); break;
+        case 1: time4Two.stop(); break;
+        case 2: time4Double.stop(); break;
+        }
+    }
+    
+    private boolean morePreTilings()
+    {
+        startCaseTimer();
+        boolean more = this.preTilings.hasNext();
+        stopCaseTimer();
+        return more;
     }
     
     /**
@@ -1180,13 +1167,13 @@ public class FaceTransitive extends IteratorAdapter<DSymbol> {
         System.out.println("#");
         System.out.println("#     Used " + symbols.timeForCaseOne()
                 + " for case ONE producing " + symbols.getCountONE()
-                + " symbols.");
+                + " Delaney sets.");
         System.out.println("#     Used " + symbols.timeForCaseTwo()
                 + " for case TWO producing " + symbols.getCountTWO()
-                + " symbols.");
+                + " Delaney sets.");
         System.out.println("#     Used " + symbols.timeForCaseDouble()
                 + " for case DOUBLE producing " + symbols.getCountDOUBLE()
-                + " symbols.");
+                + " Delaney sets.");
         System.out.println("#");
         System.out.println("#     Used " + symbols.timeForBaseSingleFacedTiles()
 				+ " to generate " + symbols.getCountBaseSingleFaced()
