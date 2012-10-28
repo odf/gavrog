@@ -1,18 +1,21 @@
 (ns org.gavrog.clojure.permutations)
 
-(defn permutations [degree]
-  (let [keys (range 1 (inc degree))
-        complete? (comp empty? :unused)
-        children (fn [node]
-                   (let [{:keys [perm unused unseen]} node]
-                     (when-let [i (first unused)]
-                       (for [n unseen]
-                         {:perm (assoc perm i n)
-                          :unused (disj unused i)
-                          :unseen (disj unseen n)}))))
+(deftype BacktrackingGenerator [root complete? branch? children extract]
+  clojure.lang.Seqable
+  (seq [gen] (map extract (filter complete? (tree-seq branch? children root)))))
+
+(defn permutations [n]
+  (let [keys (range 1 (inc n))
         root {:perm {}
               :unused (into #{} keys)
-              :unseen (into #{} keys)}]
-    (map :perm
-         (filter complete?
-                 (tree-seq (comp not complete?) children root)))))
+              :unseen (into #{} keys)}
+        complete? (comp empty? :unused)
+        branch? (comp seq :unused)
+        children (fn [node] (let [{:keys [perm unused unseen]} node]
+                              (when-let [i (first unused)]
+                                (for [k unseen]
+                                  {:perm (assoc perm i k)
+                                   :unused (disj unused i)
+                                   :unseen (disj unseen k)}))))
+        extract :perm]
+        (BacktrackingGenerator. root complete? branch? children extract)))
