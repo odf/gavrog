@@ -31,6 +31,19 @@
                            :siblings-left (rest siblings-left)}))))]
           (when (seq stack)
             (BacktrackingGenerator. gen-children extract desc stack))))
+  Resumable
+  (checkpoint [_] (rest (reverse (map :branch-nr stack))))
+  (resume [_ checkpoint]
+          (loop [todo checkpoint stack stack]
+            (if (seq todo)
+              (let [n (first todo)
+                    children (drop n (gen-children (:node (first stack))))
+                    stack (conj stack
+                                {:node (first children)
+                                 :branch-nr n
+                                 :siblings-left (rest children)})]
+                (recur (rest todo) stack))
+              (BacktrackingGenerator. gen-children extract desc stack))))                
   Object
   (toString [_] (str desc)))
 
