@@ -19,22 +19,14 @@
 (deftype BacktrackingGenerator [gen-children extract desc stack]
   SubstepGenerator
   (result [_] (extract (:node (first stack))))
-  (step [_]
-        (let [stack
-              (if-let [children (seq (gen-children (:node (first stack))))]
-                (conj stack
-                      {:node (first children)
-                       :branch-nr 0
-                       :siblings-left (rest children)})
-                (when-let [stack (seq (drop-while
-                                        #(not (seq (:siblings-left %))) stack))]
-                  (let [{:keys [siblings-left branch-nr]} (first stack)]
-                    (conj (rest stack)
-                          {:node (first siblings-left)
-                           :branch-nr (inc branch-nr)
-                           :siblings-left (rest siblings-left)}))))]
-          (when (seq stack)
-            (BacktrackingGenerator. gen-children extract desc stack))))
+  (step [gen]
+        (if-let [children (seq (gen-children (:node (first stack))))]
+          (let [stack (conj stack
+                            {:node (first children)
+                             :branch-nr 0
+                             :siblings-left (rest children)})]
+            (BacktrackingGenerator. gen-children extract desc stack))
+          (skip gen)))
   Resumable
   (checkpoint [_] (rest (reverse (map :branch-nr stack))))
   (resume [_ checkpoint]
@@ -54,15 +46,13 @@
                        stack (list {:node (:node (first stack))})]
                    (BacktrackingGenerator. gen-children extract desc stack)))
   (skip [_]
-        (let [stack
-              (when-let [stack (seq (drop-while
-                                      #(not (seq (:siblings-left %))) stack))]
-                (let [{:keys [siblings-left branch-nr]} (first stack)]
-                  (conj (rest stack)
-                        {:node (first siblings-left)
-                         :branch-nr (inc branch-nr)
-                         :siblings-left (rest siblings-left)})))]
-          (when (seq stack)
+        (when-let [stack
+                   (seq (drop-while #(not (seq (:siblings-left %))) stack))]
+          (let [{:keys [siblings-left branch-nr]} (first stack)
+                stack (conj (rest stack)
+                            {:node (first siblings-left)
+                             :branch-nr (inc branch-nr)
+                             :siblings-left (rest siblings-left)})]
             (BacktrackingGenerator. gen-children extract desc stack))))
   Object
   (toString [_] (str desc)))
