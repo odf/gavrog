@@ -8,6 +8,10 @@
   (letfn [(s [gen] (when gen (lazy-seq (cons gen (s (step gen))))))]
     (filter (comp not nil?) (map result (s gen)))))
 
+(defprotocol SplittableGenerator
+  (sub-generator [_])
+  (skip [_]))
+
 (defprotocol Resumable
   (checkpoint [_])
   (resume [_ checkpoint]))
@@ -43,7 +47,23 @@
                                  :branch-nr n
                                  :siblings-left (rest children)})]
                 (recur (rest todo) stack))
-              (BacktrackingGenerator. gen-children extract desc stack))))                
+              (BacktrackingGenerator. gen-children extract desc stack))))
+  SplittableGenerator
+  (sub-generator [gen]
+                 (let [desc (list desc (checkpoint gen))
+                       stack (list {:node (:node (first stack))})]
+                   (BacktrackingGenerator. gen-children extract desc stack)))
+  (skip [_]
+        (let [stack
+              (when-let [stack (seq (drop-while
+                                      #(not (seq (:siblings-left %))) stack))]
+                (let [{:keys [siblings-left branch-nr]} (first stack)]
+                  (conj (rest stack)
+                        {:node (first siblings-left)
+                         :branch-nr (inc branch-nr)
+                         :siblings-left (rest siblings-left)})))]
+          (when (seq stack)
+            (BacktrackingGenerator. gen-children extract desc stack))))
   Object
   (toString [_] (str desc)))
 
