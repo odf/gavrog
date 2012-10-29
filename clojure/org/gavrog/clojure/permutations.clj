@@ -1,13 +1,19 @@
 (ns org.gavrog.clojure.permutations)
 
-(defprotocol ResumableGenerator
+(defprotocol SubstepGenerator
   (result [_])
-  (step [_])
+  (step [_]))
+
+(defn results [gen]
+  (letfn [(s [gen] (when gen (lazy-seq (cons gen (s (step gen))))))]
+    (filter (comp not nil?) (map result (s gen)))))
+
+(defprotocol Resumable
   (checkpoint [_])
   (resume [_ checkpoint]))
 
 (deftype BacktrackingGenerator [gen-children extract desc stack]
-  ResumableGenerator
+  SubstepGenerator
   (result [_] (extract (:node (first stack))))
   (step [_]
         (let [stack
@@ -25,8 +31,6 @@
                            :siblings-left (rest siblings-left)}))))]
           (when (seq stack)
             (BacktrackingGenerator. gen-children extract desc stack))))
-  clojure.lang.Seqable
-  (seq [bg] (lazy-seq (cons bg (step bg))))
   Object
   (toString [_] (str desc)))
 
