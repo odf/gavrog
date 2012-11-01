@@ -416,7 +416,7 @@ public class DSymbol extends DelaneySymbol<Integer> implements Cloneable {
      * @see javaDSym.DelaneySymbol#isElement(java.lang.Object)
      */
     public boolean hasElement(final Integer D) {
-    	return D >= 1 && D <= size();
+    	return D != null && D >= 1 && D <= size();
     }
 
     /* (non-Javadoc)

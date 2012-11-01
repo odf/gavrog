@@ -42,7 +42,7 @@
   "Returns the result of applying the D-symbol operators on ds with the
    given indices in order, starting with the element D. If the result of
    any step is undefined, nil is returned."
-  (reduce #(when %1 (.op ds %2 %1)) D idxs))
+  (reduce #(when (and %1 (not= 0 %1)) (.op ds %2 %1)) D idxs))
 
 (defn chain-end [ds D i j]
   "Returns the result of alternately applying operators indexed i and j,
@@ -51,9 +51,9 @@
   (loop [E (walk ds D i)]
     (let [E* (walk ds E j)]
       (cond
-        (nil? E*) E
+        (= 0 E*) E
         (= E E*) E
-        (= D E*) nil
+        (= D E*) 0
         :else (recur (walk ds E j i))))))
 
 (defn pretty-traversal [ds indices seeds]
