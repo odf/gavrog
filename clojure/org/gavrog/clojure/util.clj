@@ -28,7 +28,7 @@
                       [seen nil false]
                       [(conj seen key) x true])))]
            (map second
-                (filter #(nth % 2) (reductions step [#{} nil false] coll)))))
+                (filter second (reductions step [#{} nil false] coll)))))
   ([coll]
     (unique identity coll)))
 
