@@ -16,44 +16,40 @@
   (checkpoint [_])
   (resume [_ checkpoint]))
 
-(deftype BacktrackingGenerator [spec stack]
+(deftype BacktrackingGenerator [extract make-children stack]
   SubstepGenerator
-  (result [_] ((:extract spec) (:node (first stack))))
+  (result [_] (extract (first (first stack))))
   (step [gen]
-        (if-let [children (seq ((:children spec) (:node (first stack))))]
-          (let [stack (conj stack
-                            {:node (first children)
-                             :branch-nr 0
-                             :siblings-left (rest children)})]
-            (BacktrackingGenerator. spec stack))
+        (if-let [children (seq (make-children (first (first stack))))]
+          (let [stack (conj stack [(first children) 0 (rest children)])]
+            (BacktrackingGenerator. extract make-children stack))
           (skip gen)))
   Resumable
-  (checkpoint [_] (rest (reverse (map :branch-nr stack))))
+  (checkpoint [_] (rest (reverse (map second stack))))
   (resume [_ checkpoint]
-          (loop [todo checkpoint stack stack]
+          (loop [todo checkpoint
+                 stack stack]
             (if (seq todo)
               (let [n (first todo)
-                    children (drop n ((:children spec) (:node (first stack))))
-                    stack (conj stack
-                                {:node (first children)
-                                 :branch-nr n
-                                 :siblings-left (rest children)})]
+                    children (drop n (make-children (first (first stack))))
+                    stack (conj stack [(first children) n (rest children)])]
                 (recur (rest todo) stack))
-              (BacktrackingGenerator. spec stack))))
+              (BacktrackingGenerator. extract make-children stack))))
   SplittableGenerator
   (sub-generator [gen]
-                 (let [stack (list {:node (:node (first stack))})]
-                   (BacktrackingGenerator. spec stack)))
+                 (let [stack (list [(first (first stack))])]
+                   (BacktrackingGenerator. extract make-children stack)))
   (skip [_]
-        (when-let [stack
-                   (seq (drop-while #(not (seq (:siblings-left %))) stack))]
-          (let [{:keys [siblings-left branch-nr]} (first stack)
+        (when-let [stack (seq (drop-while #(not (seq (nth % 2))) stack))]
+          (let [[_ branch-nr siblings-left] (first stack)
                 stack (conj (rest stack)
-                            {:node (first siblings-left)
-                             :branch-nr (inc branch-nr)
-                             :siblings-left (rest siblings-left)})]
-            (BacktrackingGenerator. spec stack)))))
+                            [(first siblings-left)
+                             (inc branch-nr)
+                             (rest siblings-left)])]
+            (BacktrackingGenerator. extract make-children stack)))))
 
 (defn make-backtracker [spec]
-  (BacktrackingGenerator. spec (list {:node (:root spec)})))
+  (BacktrackingGenerator. (:extract spec)
+                          (:children spec)
+                          (list [(:root spec) 0 nil])))
 

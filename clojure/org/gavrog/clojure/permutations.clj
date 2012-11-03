@@ -3,14 +3,10 @@
 
 (defn permutations [n]
   (let [keys (range 1 (inc n))
-        root {:perm {}
-              :unused (into #{} keys)
-              :unseen (into #{} keys)}
-        children (fn [{:keys [perm unused unseen]}]
+        root [{} (into #{} keys) (into #{} keys)]
+        children (fn [[perm unused unseen]]
                    (when-let [i (first unused)]
                      (for [k unseen]
-                       {:perm (assoc perm i k)
-                        :unused (disj unused i)
-                        :unseen (disj unseen k)})))
-        extract (fn [node] (when (empty? (:unused node)) (:perm node)))]
+                       [(assoc perm i k) (disj unused i) (disj unseen k)])))
+        extract (fn [node] (when (empty? (second node)) (first node)))]
         (make-backtracker {:children children :extract extract :root root})))
