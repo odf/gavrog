@@ -4,9 +4,12 @@
   (result [_])
   (step [_]))
 
+(defn traverse [gen]
+  (when gen
+    (lazy-seq (cons gen (traverse (step gen))))))
+
 (defn results [gen]
-  (letfn [(s [gen] (when gen (lazy-seq (cons gen (s (step gen))))))]
-    (filter (comp not nil?) (map result (s gen)))))
+  (filter (comp not nil?) (map result (traverse gen))))
 
 (defprotocol SplittableGenerator
   (sub-generator [_])
@@ -41,7 +44,7 @@
                    (BacktrackingGenerator. extract make-children stack)))
   (skip [_]
         (when-let [stack (seq (drop-while #(empty? (second %)) stack))]
-          (let [[_ siblings-left branch-nr] (first stack)
+          (let [[node siblings-left branch-nr] (first stack)
                 stack (conj (rest stack)
                             [(first siblings-left)
                              (rest siblings-left)
@@ -51,5 +54,5 @@
 (defn make-backtracker [spec]
   (BacktrackingGenerator. (:extract spec)
                           (:children spec)
-                          (list [(:root spec) nil 0])))
+                          (list [(:root spec)])))
 
