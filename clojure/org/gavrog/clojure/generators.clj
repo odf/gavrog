@@ -21,18 +21,18 @@
   (result [_] (extract (first (first stack))))
   (step [gen]
         (if-let [children (seq (make-children (first (first stack))))]
-          (let [stack (conj stack [(first children) 0 (rest children)])]
+          (let [stack (conj stack [(first children) (rest children) 0])]
             (BacktrackingGenerator. extract make-children stack))
           (skip gen)))
   Resumable
-  (checkpoint [_] (rest (reverse (map second stack))))
+  (checkpoint [_] (rest (reverse (map #(nth % 2) stack))))
   (resume [_ checkpoint]
           (loop [todo checkpoint
                  stack stack]
             (if (seq todo)
               (let [n (first todo)
                     children (drop n (make-children (first (first stack))))
-                    stack (conj stack [(first children) n (rest children)])]
+                    stack (conj stack [(first children) (rest children) n])]
                 (recur (rest todo) stack))
               (BacktrackingGenerator. extract make-children stack))))
   SplittableGenerator
@@ -40,16 +40,16 @@
                  (let [stack (list [(first (first stack))])]
                    (BacktrackingGenerator. extract make-children stack)))
   (skip [_]
-        (when-let [stack (seq (drop-while #(not (seq (nth % 2))) stack))]
-          (let [[_ branch-nr siblings-left] (first stack)
+        (when-let [stack (seq (drop-while #(empty? (second %)) stack))]
+          (let [[_ siblings-left branch-nr] (first stack)
                 stack (conj (rest stack)
                             [(first siblings-left)
-                             (inc branch-nr)
-                             (rest siblings-left)])]
+                             (rest siblings-left)
+                             (inc branch-nr)])]
             (BacktrackingGenerator. extract make-children stack)))))
 
 (defn make-backtracker [spec]
   (BacktrackingGenerator. (:extract spec)
                           (:children spec)
-                          (list [(:root spec) 0 nil])))
+                          (list [(:root spec) nil 0])))
 
