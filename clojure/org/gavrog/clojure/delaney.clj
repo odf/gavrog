@@ -12,13 +12,14 @@
 (defn chain-end [ds D i j]
   "Returns the result of alternately applying operators indexed i and j,
    starting with the element D, until the end of the chain is reached.
-   In case of a cycle, nil is returned."
+   In case of a cycle, or when any step is undefined, nil is returned."
   (loop [E (walk ds D i)]
     (let [E* (walk ds E j)]
       (cond
+        (nil? E*) nil
         (= 0 E*) E
         (= E E*) E
-        (= D E*) 0
+        (= D E*) nil
         :else (recur (walk ds E j i))))))
 
 (defn pretty-traversal [ds indices seeds]
