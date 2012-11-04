@@ -1,23 +1,40 @@
 (ns org.gavrog.clojure.delaney
-  (:use (org.gavrog.clojure [util :only [empty-queue pop-while]])))
+  (:use (org.gavrog.clojure [util :only [empty-queue pop-while]]))
+  (:import (org.gavrog.joss.dsyms.basic DelaneySymbol)))
+
+(defprotocol D-symbol
+  (elements [_])
+  (indices [_])
+  (s [_ i D])
+  (v [_ i j D]))
+
+(extend-type DelaneySymbol
+  D-symbol
+  (elements [ds] (iterator-seq (.elements ds)))
+  (indices [ds] (iterator-seq (.indices ds)))
+  (s [ds i D] (when (.definesOp ds i D) (.op ds i D)))
+  (v [ds i j D] (when (.definesV ds i j D) (.v ds i j D))))
 
 ;; General D-symbol functions
+
+(defn size [ds] (count (elements ds)))
+
+(defn dim [ds] (dec (count (indices ds))))
 
 (defn walk [ds D & idxs]
   "Returns the result of applying the D-symbol operators on ds with the
    given indices in order, starting with the element D. If the result of
    any step is undefined, nil is returned."
-  (reduce #(when (and %1 (not= 0 %1)) (.op ds %2 %1)) D idxs))
+  (reduce #(s ds %2 %1) D idxs))
 
 (defn chain-end [ds D i j]
   "Returns the result of alternately applying operators indexed i and j,
    starting with the element D, until the end of the chain is reached.
-   In case of a cycle, or when any step is undefined, nil is returned."
+   In case of a cycle, nil is returned."
   (loop [E (walk ds D i)]
     (let [E* (walk ds E j)]
       (cond
-        (nil? E*) nil
-        (= 0 E*) E
+        (nil? E*) E
         (= E E*) E
         (= D E*) nil
         :else (recur (walk ds E j i))))))
@@ -54,7 +71,7 @@
   ([ds indices seeds]
     (for [[D i] (pretty-traversal ds indices seeds) :when (= :root i)] D))
   ([ds indices]
-    (orbit-reps ds indices (iterator-seq (.elements ds)))))
+    (orbit-reps ds indices (elements ds))))
 
 (defn orbit-loopless? [ds indices D]
   (empty? (for [[D i] (pretty-traversal ds indices [D])
@@ -64,10 +81,10 @@
 (defn curvature
   ([ds default-v]
     (reduce +
-            (- (.size ds))
+            (- (size ds))
             (for [[i j] [[0 1] [0 2] [1 2]]
                   :let [s #(if (orbit-loopless? ds [i j] %) 2 1)
-                        v #(if (.definesV ds i j %) (.v ds i j %) default-v)]
+                        v #(or (v ds i j %) default-v)]
                   D (orbit-reps ds [i j])]
               (/ (s D) (v D)))))
   ([ds]
