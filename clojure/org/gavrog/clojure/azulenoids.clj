@@ -1,6 +1,6 @@
 (ns org.gavrog.clojure.azulenoids
   (:use (org.gavrog.clojure [util :only [iterate-cycle unique]]
-                            [delaney :only [walk chain-end curvature]]))
+                            [delaney :only [s v chain-end curvature]]))
   (:import (org.gavrog.jane.numbers Whole)
            (org.gavrog.joss.dsyms.basic DSymbol DynamicDSymbol IndexList)
            (org.gavrog.joss.dsyms.generators CombineTiles DefineBranching2d))
@@ -22,7 +22,7 @@
   (DSymbol. "1.1:16 1:2 4 6 8 10 12 14 16,16 3 5 7 9 11 13 15:8"))
 
 (defn boundary-chambers [ds D i j k]
-  (iterate-cycle [#(walk ds %1 i) #(chain-end ds %1 j k)] D))
+  (iterate-cycle [#(s ds i %1) #(chain-end ds %1 j k)] D))
 
 (def boundary-mappings
   (let [template-boundary (boundary-chambers template (Integer. 1) 0 1 2)
@@ -33,10 +33,10 @@
 
 (defn on-template [ds oct2tmp]
   (let [result (DynamicDSymbol. template)]
-    (doseq [[D D*] oct2tmp :when (not (.definesOp result 2 D*))]
-      (.redefineOp result 2 D* (oct2tmp (.op ds 2 D))))
-    (doseq [[D D*] oct2tmp :when (not (.definesV result 1 2 D*))]
-      (.redefineV result 1 2 D* (.v ds 1 2 D)))
+    (doseq [[D D*] oct2tmp :when (not (s result 2 D*))]
+      (.redefineOp result 2 D* (oct2tmp (s ds 2 D))))
+    (doseq [[D D*] oct2tmp :when (not (v result 1 2 D*))]
+      (.redefineV result 1 2 D* (v ds 1 2 D)))
     result))
 
 (def octa-sets (filter #(-> % (curvature 1) (>= 0))
