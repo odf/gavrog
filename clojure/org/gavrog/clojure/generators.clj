@@ -40,7 +40,7 @@
               (BacktrackingGenerator. extract make-children stack))))
   SplittableGenerator
   (sub-generator [gen]
-                 (let [stack (list [(first (first stack))])]
+                 (let [stack (list [(first (first stack)) nil 0])]
                    (BacktrackingGenerator. extract make-children stack)))
   (skip [_]
         (when-let [stack (seq (drop-while #(empty? (second %)) stack))]
@@ -54,5 +54,5 @@
 (defn make-backtracker [spec]
   (BacktrackingGenerator. (:extract spec)
                           (:children spec)
-                          (list [(:root spec)])))
+                          (list [(:root spec) nil 0])))
 
