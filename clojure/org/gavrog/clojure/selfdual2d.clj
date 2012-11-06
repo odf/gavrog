@@ -12,8 +12,12 @@
 
 (defn proto-euclidean? [ds] (>= (curvature ds 1) 0))
 
+(defn andp [& preds]
+  (fn [& args]
+    (reduce #(and %1 (apply %2 args)) true preds)))
+
 (defn d-sets [max-size]
   (let [G (FundamentalGroup. (DSymbol. "1:1,1,1:0,0"))]
-    (filter #(and (self-dual? %) (proto-euclidean? %))
+    (filter (andp self-dual? proto-euclidean?)
             (map #(.flat (DSCover. G %))
                  (SmallActionsIterator. (.getPresentation G) max-size false)))))
