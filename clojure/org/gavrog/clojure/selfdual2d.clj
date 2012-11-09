@@ -6,6 +6,7 @@
            (org.gavrog.jane.numbers Whole)
            (org.gavrog.joss.dsyms.basic DSymbol)
            (org.gavrog.joss.dsyms.derived FundamentalGroup DSCover)
+           (org.gavrog.joss.tilings Tiling)
            (org.gavrog.joss.dsyms.generators DefineBranching2d))
   (:gen-class))
 
@@ -24,6 +25,10 @@
   (let [t (face-sizes ds)]
     (and (<= (count (unique t)) 2) (some #(= 3 %) t))))
 
+(defn good-net? [ds]
+  (try (do (.getSkeleton (Tiling. ds)) true)
+    (catch IllegalArgumentException e false)))
+
 (defn andp [& preds]
   (fn [& args]
     (reduce #(and %1 (apply %2 args)) true preds)))
@@ -37,7 +42,8 @@
 ;; All self-dual, 2d euclidean tilings with only two face sizes and at least
 ;; one triangle.
 (defn d-syms [max-size]
-  (for [dset (d-sets max-size)
-        dsym (lazy-seq (DefineBranching2d. dset 3 3 Whole/ZERO))
-        :when ((andp self-dual? minimal? euclidean? good-face-sizes?) dsym)]
-    dsym))
+  (let [good? (andp self-dual? minimal? euclidean? good-face-sizes? good-net?)]
+    (for [dset (d-sets max-size)
+          dsym (lazy-seq (DefineBranching2d. dset 3 3 Whole/ZERO))
+          :when (good? dsym)]
+    dsym)))
