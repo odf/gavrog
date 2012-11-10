@@ -1,14 +1,27 @@
 (ns org.gavrog.clojure.selfdual2d
   (:use (org.gavrog.clojure
           [util :only [unique]]
-          [delaney :only [s v size dim curvature orbit-reps]]))
+          [delaney]))
   (:import (org.gavrog.jane.fpgroups SmallActionsIterator)
            (org.gavrog.jane.numbers Whole)
            (org.gavrog.joss.dsyms.basic DSymbol)
-           (org.gavrog.joss.dsyms.derived FundamentalGroup DSCover)
+           (org.gavrog.joss.dsyms.derived FundamentalGroup DSCover Covers)
            (org.gavrog.joss.tilings Tiling)
            (org.gavrog.joss.dsyms.generators DefineBranching2d))
   (:gen-class))
+
+(defn face-sizes [ds]
+  (map #(.m ds 0 1 %) (orbit-reps ds [0 1])))
+
+(defn elms-to-orbit-reps [ds idcs]
+  (into {} (for [D (orbit-reps ds idcs)
+                 E (orbit ds idcs D)]
+             [E D])))
+
+(defn face-vertex-signatures [ds]
+  (let [f (elms-to-orbit-reps ds [0 1])
+        v (elms-to-orbit-reps ds [1 2])]
+    (into {} (for [D (elements ds)] [D [(f D) (v D)]]))))
 
 (defn minimal? [ds] (.isMinimal ds))
 
@@ -18,9 +31,6 @@
 
 (defn proto-euclidean? [ds] (>= (curvature ds 1) 0))
 
-(defn face-sizes [ds]
-  (map #(.m ds 0 1 %) (orbit-reps ds [0 1])))
-
 (defn good-face-sizes? [ds]
   (let [t (face-sizes ds)]
     (and (<= (count (unique t)) 2) (some #(= 3 %) t))))
@@ -28,6 +38,12 @@
 (defn good-net? [ds]
   (try (do (.getSkeleton (Tiling. ds)) true)
     (catch IllegalArgumentException e false)))
+
+;;TODO this does not work
+(defn non-disk-face-free? [ds]
+  (let [ds (Covers/toroidalCover2D ds)
+        fq (frequencies (map second (face-vertex-signatures ds)))]
+    (not (some #(> (second %) 2) fq))))
 
 (defn andp [& preds]
   (fn [& args]

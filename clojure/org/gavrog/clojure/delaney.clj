@@ -73,6 +73,9 @@
   ([ds indices]
     (orbit-reps ds indices (elements ds))))
 
+(defn orbit [ds indices seed]
+  (for [[D i] (pretty-traversal ds indices [seed])] D))
+
 (defn orbit-loopless? [ds indices D]
   (empty? (for [[D i] (pretty-traversal ds indices [D])
                 :when (and (not= i :root) (or (nil? D) (= D (walk ds D i))))]
