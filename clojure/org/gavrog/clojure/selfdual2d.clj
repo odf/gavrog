@@ -13,16 +13,6 @@
 (defn face-sizes [ds]
   (map #(.m ds 0 1 %) (orbit-reps ds [0 1])))
 
-(defn elms-to-orbit-reps [ds idcs]
-  (into {} (for [D (orbit-reps ds idcs)
-                 E (orbit ds idcs D)]
-             [E D])))
-
-(defn face-vertex-signatures [ds]
-  (let [f (elms-to-orbit-reps ds [0 1])
-        v (elms-to-orbit-reps ds [1 2])]
-    (into {} (for [D (elements ds)] [D [(f D) (v D)]]))))
-
 (defn minimal? [ds] (.isMinimal ds))
 
 (defn self-dual? [ds] (= ds (.dual ds)))
