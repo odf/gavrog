@@ -35,15 +35,15 @@
   (let [t (face-sizes ds)]
     (and (<= (count (unique t)) 2) (some #(= 3 %) t))))
 
-(defn good-net? [ds]
-  (try (do (.getSkeleton (Tiling. ds)) true)
-    (catch IllegalArgumentException e false)))
+(defn- good-node [net pos v]
+  (not (empty? (.goodCombinations net (.allIncidences net v) pos))))
 
-;;TODO this does not work
-(defn non-disk-face-free? [ds]
-  (let [ds (Covers/toroidalCover2D ds)
-        fq (frequencies (map second (face-vertex-signatures ds)))]
-    (not (some #(> (second %) 2) fq))))
+(defn convex? [ds]
+  (if-let [net (try (.getSkeleton (Tiling. ds))
+                 (catch IllegalArgumentException e))]
+    (let [pos (.barycentricPlacement net)]
+      (every? (partial good-node net pos)
+              (.nodes net)))))
 
 (defn andp [& preds]
   (fn [& args]
@@ -58,7 +58,7 @@
 ;; All self-dual, 2d euclidean tilings with only two face sizes and at least
 ;; one triangle.
 (defn d-syms [max-size]
-  (let [good? (andp self-dual? minimal? euclidean? good-face-sizes? good-net?)]
+  (let [good? (andp self-dual? minimal? euclidean? good-face-sizes? convex?)]
     (for [dset (d-sets max-size)
           dsym (lazy-seq (DefineBranching2d. dset 3 3 Whole/ZERO))
           :when (good? dsym)]
