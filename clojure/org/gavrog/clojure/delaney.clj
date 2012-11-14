@@ -2,18 +2,27 @@
   (:use (org.gavrog.clojure [util :only [empty-queue pop-while]]))
   (:import (org.gavrog.joss.dsyms.basic DelaneySymbol)))
 
-(defprotocol D-symbol
+(defprotocol IDSymbol
   (elements [_])
   (indices [_])
   (s [_ i D])
   (v [_ i j D]))
 
 (extend-type DelaneySymbol
-  D-symbol
+  IDSymbol
   (elements [ds] (iterator-seq (.elements ds)))
   (indices [ds] (iterator-seq (.indices ds)))
   (s [ds i D] (when (.definesOp ds i D) (.op ds i D)))
   (v [ds i j D] (when (.definesV ds i j D) (.v ds i j D))))
+
+(deftype DSymbol [idcs elms s v]
+  IDSymbol
+  (elements [_] elms)
+  (indices [_] idcs)
+  (s [_ i D] (get s [i, D]))
+  (v [_ i j D]
+     (cond)))
+
 
 ;; General D-symbol functions
 
