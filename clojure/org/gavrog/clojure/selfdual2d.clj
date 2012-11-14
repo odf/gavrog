@@ -49,3 +49,8 @@
           dsym (lazy-seq (DefineBranching2d. dset 3 3 Whole/ZERO))
           :when (good? dsym)]
     (.canonical dsym))))
+
+;; Main entry point when used as a script
+
+(defn -main [& args]
+  (doseq [ds (d-syms (Integer/parseInt (first args)))] (println (str ds))))
