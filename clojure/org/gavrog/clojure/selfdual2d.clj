@@ -10,19 +10,16 @@
            (org.gavrog.joss.dsyms.generators DefineBranching2d))
   (:gen-class))
 
-(defn face-sizes [ds]
-  (map #(.m ds 0 1 %) (orbit-reps ds [0 1])))
+(defn self-dual? [ds] (= ds (.dual ds)))
 
 (defn minimal? [ds] (.isMinimal ds))
-
-(defn self-dual? [ds] (= ds (.dual ds)))
 
 (defn euclidean? [ds] (= (curvature ds 1) 0))
 
 (defn proto-euclidean? [ds] (>= (curvature ds 1) 0))
 
 (defn good-face-sizes? [ds]
-  (let [t (face-sizes ds)]
+  (let [t (map #(.m ds 0 1 %) (orbit-reps ds [0 1]))]
     (and (<= (count (unique t)) 2) (some #(= 3 %) t))))
 
 (defn- good-node [net pos v]
@@ -45,11 +42,10 @@
             (map #(.flat (DSCover. G %))
                  (SmallActionsIterator. (.getPresentation G) max-size false)))))
 
-;; All self-dual, 2d euclidean tilings with only two face sizes and at least
-;; one triangle.
+;; All convex, self-dual, 2d euclidean tilings.
 (defn d-syms [max-size]
-  (let [good? (andp self-dual? minimal? euclidean? good-face-sizes? convex?)]
+  (let [good? (andp self-dual? minimal? euclidean? convex?)]
     (for [dset (d-sets max-size)
           dsym (lazy-seq (DefineBranching2d. dset 3 3 Whole/ZERO))
           :when (good? dsym)]
-    dsym)))
+    (.canonical dsym))))
