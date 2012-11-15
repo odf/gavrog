@@ -3,25 +3,36 @@
   (:import (org.gavrog.joss.dsyms.basic DelaneySymbol)))
 
 (defprotocol IDSymbol
+  (element? [_ D])
   (elements [_])
+  (index? [_ i])
   (indices [_])
   (s [_ i D])
   (v [_ i j D]))
 
 (extend-type DelaneySymbol
   IDSymbol
+  (element? [ds D] (.hasElement ds D))
   (elements [ds] (iterator-seq (.elements ds)))
+  (index? [ds i] (.hasIndex ds i))
   (indices [ds] (iterator-seq (.indices ds)))
   (s [ds i D] (when (.definesOp ds i D) (.op ds i D)))
   (v [ds i j D] (when (.definesV ds i j D) (.v ds i j D))))
 
-(deftype DSymbol [idcs elms s v]
+(deftype DSymbol [idcs elms s# v#]
   IDSymbol
-  (elements [_] elms)
-  (indices [_] idcs)
-  (s [_ i D] (get s [i, D]))
-  (v [_ i j D]
-     (cond)))
+  (element? [_ D] (elms D))
+  (elements [_] (seq elms))
+  (index? [_ i] (idcs i))
+  (indices [_] (seq idcs))
+  (s [_ i D] ((s# i) D))
+  (v [ds i j D]
+     (when (and (element? ds D) (index? ds i) (index? ds j))
+       (cond (= j (inc i)) ((v# i) D)
+             (= j (dec i)) ((v# j) D)
+             (= j i) 1
+             (= (s ds i D) (s ds j D)) 2
+             :else 1))))
 
 
 ;; General D-symbol functions
