@@ -42,6 +42,13 @@
             (map #(.flat (DSCover. G %))
                  (SmallActionsIterator. (.getPresentation G) max-size false)))))
 
+(defn print-seq [xs format-item format-summary]
+  (let [start-time (. System (nanoTime))
+        n (count (for [x xs] (println (format-item x))))
+        t (/ (double (- (. System (nanoTime)) start-time)) 1000000000.0)]
+    (println (format-summary n t))))
+
+
 ;; All convex, self-dual, 2d euclidean tilings.
 (defn d-syms [max-size]
   (let [good? (andp self-dual? minimal? euclidean? convex?)]
@@ -51,6 +58,7 @@
     (.canonical dsym))))
 
 ;; Main entry point when used as a script
-
 (defn -main [& args]
-  (doseq [ds (d-syms (Integer/parseInt (first args)))] (println (str ds))))
+  (print-seq (d-syms (Integer/parseInt (first args)))
+             str
+             #(str "# Generated " %1 " symbols in " %2 " seconds.")))
