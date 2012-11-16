@@ -10,6 +10,12 @@
   (s [_ i D])
   (v [_ i j D]))
 
+(defprotocol IPersistentDSymbol
+  (dsconj [_ new])
+  (dsdisj [_ old])
+  (dsglue [_ i D E])
+  (dsunglue [_ i D]))
+
 (extend-type DelaneySymbol
   IDSymbol
   (element? [ds D] (.hasElement ds D))
@@ -25,14 +31,35 @@
   (elements [_] (seq elms))
   (index? [_ i] (idcs i))
   (indices [_] (seq idcs))
-  (s [_ i D] ((s# i) D))
+  (s [_ i D] ((or (s# i) {}) D))
   (v [ds i j D]
      (when (and (element? ds D) (index? ds i) (index? ds j))
-       (cond (= j (inc i)) ((v# i) D)
-             (= j (dec i)) ((v# j) D)
+       (cond (= j (inc i)) ((or (v# i) {}) D)
+             (= j (dec i)) ((or (v# j) {}) D)
              (= j i) 1
              (= (s ds i D) (s ds j D)) 2
-             :else 1))))
+             :else 1)))
+  IPersistentDSymbol
+  (dsconj [_ new] (DSymbol. idcs (into elms new) s# v#))
+  (dsdisj [_ old]
+          (let [s-remove (fn [[i a]]
+                           [i (reduce dissoc a (concat old (map (s# i) old)))])
+                v-remove (fn [[i a]] [i (reduce dissoc a old)])
+                new-elms (persistent! (reduce disj! (transient elms) old))
+                new-s# (into {} (map s-remove s#))
+                new-v# (into {} (map v-remove v#))]
+            (DSymbol. idcs new-elms new-s# new-v#)))
+  (dsglue [ds i D E]
+          (DSymbol. (conj idcs i)
+                    (conj elms D E)
+                    (assoc s# i (assoc (s# i) D E, E D))
+                    v#)
+          ds)
+  (dsunglue [ds i D]
+            (DSymbol. idcs
+                      elms
+                      (assoc s# i (dissoc (s# i) D ((s# i) D)))
+                      v#)))
 
 
 ;; General D-symbol functions
