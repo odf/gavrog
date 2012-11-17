@@ -53,8 +53,7 @@
           (DSymbol. (conj idcs i)
                     (conj elms D E)
                     (assoc s# i (assoc (s# i) D E, E D))
-                    v#)
-          ds)
+                    v#))
   (dsunglue [ds i D]
             (DSymbol. idcs
                       elms
