@@ -1,6 +1,8 @@
 (ns org.gavrog.clojure.delaney
-  (:use (org.gavrog.clojure [util :only [empty-queue pop-while]]))
-  (:import (org.gavrog.joss.dsyms.basic DelaneySymbol)))
+  (:use (clojure [test])
+        (org.gavrog.clojure [util :only [empty-queue pop-while]]))
+  (:import (org.gavrog.joss.dsyms.basic DelaneySymbol)
+           (java.io Writer)))
 
 (defprotocol IDSymbol
   (element? [_ D])
@@ -58,10 +60,39 @@
             (DSymbol. idcs
                       elms
                       (assoc s# i (dissoc (s# i) D ((s# i) D)))
-                      v#)))
+                      v#))
+  Object
+  (equals [self other]
+          (and (satisfies? IDSymbol other)
+               (= (indices self) (indices other))
+               (= (elements self) (elements other))
+               (= (ops self) (ops other))
+               (= (vs self) (vs other)))))
 
+(defmethod print-method DSymbol [ds ^Writer w]
+  (print-method (list (symbol "DSymbol.")
+                      (into #{} (indices ds))
+                      (into #{} (elements ds))
+                      (ops ds)
+                      (vs ds))
+                w))
+
+(deftest gluing
+  (is (= (dsglue (DSymbol. #{0 1 2} #{} {} {}) 0 1 2)
+         (DSymbol. #{0 1 2} #{1 2} {0 {1 2 2 1}} {}))))
 
 ;; General D-symbol functions
+
+(defn- ops [ds]
+  (into {} (for [i (indices ds)]
+             [i (into {} (for [D (elements ds)]
+                           [D (s ds i D)]))])))
+
+(defn- vs [ds]
+  (into {} (for [i (indices ds)
+                 :when (index? ds (inc i))]
+             [i (into {} (for [D (elements ds)]
+                           [D (v ds i (inc i) D)]))])))
 
 (defn size [ds] (count (elements ds)))
 
