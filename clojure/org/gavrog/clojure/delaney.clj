@@ -27,12 +27,16 @@
   (s [ds i D] (when (.definesOp ds i D) (.op ds i D)))
   (v [ds i j D] (when (.definesV ds i j D) (.v ds i j D))))
 
-(deftype DSymbol [idcs elms s# v#]
+(deftype DSymbol [dim size s# v#]
   IDSymbol
-  (element? [_ D] (elms D))
-  (elements [_] (seq elms))
-  (index? [_ i] (idcs i))
-  (indices [_] (seq idcs))
+  (element? [_ D] (and (integer? D)
+                       (>= D 1)
+                       (<= D size)))
+  (elements [_] (range 1 (inc size)))
+  (index? [_ i] (and (integer? i)
+                     (>= i 0)
+                     (<= i dim)))
+  (indices [_] (range 0 (inc dim)))
   (s [_ i D] ((or (s# i) {}) D))
   (v [ds i j D]
      (when (and (element? ds D) (index? ds i) (index? ds j))
@@ -42,25 +46,30 @@
              (= (s ds i D) (s ds j D)) 2
              :else 1)))
   IPersistentDSymbol
-  (dsconj [_ new] (DSymbol. idcs (into elms new) s# v#))
+  (dsconj [_ new]
+          (when (and (integer? new) (not (neg? new)))
+            (DSymbol. dim (max size new) s# v#)))
   (dsdisj [_ old]
           (let [s-remove (fn [[i a]]
                            [i (reduce dissoc a (concat old (map (s# i) old)))])
                 v-remove (fn [[i a]] [i (reduce dissoc a old)])
-                new-elms (persistent! (reduce disj! (transient elms) old))
                 new-s# (into {} (map s-remove s#))
                 new-v# (into {} (map v-remove v#))]
-            (DSymbol. idcs new-elms new-s# new-v#)))
+            (DSymbol. dim size new-s# new-v#)))
   (dsglue [ds i D E]
-          (DSymbol. (conj idcs i)
-                    (conj elms D E)
-                    (assoc s# i (assoc (s# i) D E, E D))
-                    v#))
+          (when (and (integer? i) (not (neg? i))
+                     (integer? D) (pos? D)
+                     (integer? E) (pos? E))
+            (DSymbol. (max dim i)
+                      (max size D E)
+                      (assoc s# i (assoc (s# i) D E, E D))
+                      v#)))
   (dsunglue [ds i D]
-            (DSymbol. idcs
-                      elms
-                      (assoc s# i (dissoc (s# i) D ((s# i) D)))
-                      v#))
+            (when (index? ds i)
+              (DSymbol. dim
+                        size
+                        (assoc s# i (dissoc (s# i) D ((s# i) D)))
+                        v#)))
   Object
   (equals [self other]
           (and (satisfies? IDSymbol other)
@@ -71,27 +80,29 @@
 
 (defmethod print-method DSymbol [ds ^Writer w]
   (print-method (list (symbol "DSymbol.")
-                      (into #{} (indices ds))
-                      (into #{} (elements ds))
+                      (dim ds)
+                      (size ds)
                       (ops ds)
                       (vs ds))
                 w))
 
 (deftest gluing
-  (is (= (dsglue (DSymbol. #{0 1 2} #{} {} {}) 0 1 2)
-         (DSymbol. #{0 1 2} #{1 2} {0 {1 2 2 1}} {}))))
+  (is (= (dsglue (DSymbol. 0 0 {} {}) 2 1 2)
+         (DSymbol. 2 2 {2 {1 2 2 1}} {}))))
 
 ;; General D-symbol functions
 
 (defn- ops [ds]
   (into {} (for [i (indices ds)]
-             [i (into {} (for [D (elements ds)]
+             [i (into {} (for [D (elements ds)
+                               :when (s ds i D)]
                            [D (s ds i D)]))])))
 
 (defn- vs [ds]
   (into {} (for [i (indices ds)
                  :when (index? ds (inc i))]
-             [i (into {} (for [D (elements ds)]
+             [i (into {} (for [D (elements ds)
+                               :when (v ds i (inc i) D)]
                            [D (v ds i (inc i) D)]))])))
 
 (defn size [ds] (count (elements ds)))
