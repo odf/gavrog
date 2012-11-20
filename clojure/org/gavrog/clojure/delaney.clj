@@ -115,6 +115,17 @@
    any step is undefined, nil is returned."
   (reduce #(s ds %2 %1) D idxs))
 
+(defn r [ds i j D]
+  (loop [n 1, E D]
+    (when-let [F (walk ds E i j)]
+      (if (= F D)
+        n
+        (recur (inc n) F)))))
+
+(defn m [ds i j D]
+  (let [v (v ds i j D), r (r ds i j D)]
+    (when (and v r) (* v r))))
+
 (defn chain-end [ds D i j]
   "Returns the result of alternately applying operators indexed i and j,
    starting with the element D, until the end of the chain is reached.
