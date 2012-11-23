@@ -16,7 +16,9 @@
   (dsconj [_ new])
   (dsdisj [_ old])
   (glue [_ i D E])
-  (unglue [_ i D]))
+  (unglue [_ i D])
+  (spin [_ i j D v])
+  (unspin [_ i j D]))
 
 (extend-type DelaneySymbol
   IDSymbol
@@ -59,31 +61,40 @@
              (= (s ds i D) (s ds j D)) 2
              :else 1)))
   IPersistentDSymbol
-  (dsconj [_ new]
-          (when (and (integer? new) (not (neg? new)))
-            (DSymbol. dim (max size new) s# v#)))
-  (dsdisj [_ old]
-          (when (= old size)
-            (let [s-remove (fn [[i a]]
-                             [i (reduce dissoc a (concat old (map (s# i) old)))])
-                  v-remove (fn [[i a]] [i (reduce dissoc a old)])
-                  new-s# (into {} (map s-remove s#))
-                  new-v# (into {} (map v-remove v#))]
-              (DSymbol. dim (dec size) new-s# new-v#))))
+  (dsconj [_ D]
+          (when (and (integer? D) (pos? D))
+            (DSymbol. dim (max size D) s# v#)))
+  (dsdisj [ds D]
+          (if (element? ds D)
+            (when (= D size)
+              (let [s-remove (fn [[i a]] [i (reduce dissoc a [D ((s# i) D)])])
+                    v-remove (fn [[i a]] [i (dissoc a D)])
+                    new-s# (into {} (map s-remove s#))
+                    new-v# (into {} (map v-remove v#))]
+                (DSymbol. dim (dec size) new-s# new-v#)))
+            ds))
   (glue [ds i D E]
           (when (and (integer? i) (not (neg? i))
                      (integer? D) (pos? D)
-                     (integer? E) (pos? E))
+                     (integer? E) (pos? E)
+                     (= (v ds i (inc i) D) (v ds i (inc i) E))
+                     (= (v ds (dec i) i D) (v ds (dec i) i E)))
             (DSymbol. (max dim i)
                       (max size D E)
                       (assoc s# i (assoc (s# i) D E, E D))
                       v#)))
   (unglue [ds i D]
-            (when (index? ds i)
+            (if (index? ds i)
               (DSymbol. dim
                         size
                         (assoc s# i (dissoc (s# i) D ((s# i) D)))
-                        v#)))
+                        v#)
+              ds))
+  (spin [ds i j D v]
+        (when (and (integer? i) (not (neg? i))
+                   (integer? j) (not (neg? j))
+                   (integer? D) (pos? D))))
+          
   Object
   (equals [self other]
           (and (satisfies? IDSymbol other)
@@ -192,6 +203,16 @@
     (curvature ds 0)))
 
 ;; === Tests
+
+(deftest add-elements
+  (is (= (dsconj (DSymbol. 0 0 {} {}) 2)
+         (DSymbol. 0 2 {} {}))))
+
+(deftest removing-elements
+  (is (= (dsdisj (DSymbol. 2 2
+                           {0 {1 1, 2 2} 1 {1 2, 2 1} 2 {1 2, 2 1}}
+                           {0 {1 4, 2 4} 1 {1 4, 2 4}}) 2)
+         (DSymbol. 2 1 {0 {1 1} 1 {} 2 {}} {0 {1 4} 1 {1 4}}))))
 
 (deftest gluing
   (is (= (glue (DSymbol. 0 0 {} {}) 2 1 2)
