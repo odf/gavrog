@@ -1,5 +1,6 @@
 (ns org.gavrog.clojure.delaney
-  (:use (clojure [test])
+  (:use (clojure [test]
+                 [string :only [split trim]])
         (org.gavrog.clojure [util :only [empty-queue pop-while unique]]))
   (:import (org.gavrog.joss.dsyms.basic DelaneySymbol)
            (java.io Writer)))
@@ -222,6 +223,18 @@
                       (vs ds))
                 w))
 
+(defmulti dsymbol class)
+
+(defmethod dsymbol String [code]
+  (let [items (fn [s] (-> s trim (split #"\s+") (map #(Integer/parseInt %))))
+        extract (fn [ds a f]
+                  (let [step (fn [[acc todo] val]
+                               (let [D (first todo)]
+                                 [(conj acc [D, val])
+                                  (reduce disj todo (f D val))]))]
+                    (reduce step [[] (into #{} (elements ds))] a)))
+        parts (-> code trim (replace #"^<" "") (replace #">$" "") (split #":"))
+        ]))
 
 ;; === Tests
 
