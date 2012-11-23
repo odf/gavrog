@@ -15,8 +15,8 @@
 (defprotocol IPersistentDSymbol
   (dsconj [_ new])
   (dsdisj [_ old])
-  (dsglue [_ i D E])
-  (dsunglue [_ i D]))
+  (glue [_ i D E])
+  (unglue [_ i D]))
 
 (extend-type DelaneySymbol
   IDSymbol
@@ -26,6 +26,19 @@
   (indices [ds] (iterator-seq (.indices ds)))
   (s [ds i D] (when (.definesOp ds i D) (.op ds i D)))
   (v [ds i j D] (when (.definesV ds i j D) (.v ds i j D))))
+
+(defn- ops [ds]
+  (into {} (for [i (indices ds)]
+             [i (into {} (for [D (elements ds)
+                               :when (s ds i D)]
+                           [D (s ds i D)]))])))
+
+(defn- vs [ds]
+  (into {} (for [i (indices ds)
+                 :when (index? ds (inc i))]
+             [i (into {} (for [D (elements ds)
+                               :when (v ds i (inc i) D)]
+                           [D (v ds i (inc i) D)]))])))
 
 (deftype DSymbol [dim size s# v#]
   IDSymbol
@@ -50,13 +63,14 @@
           (when (and (integer? new) (not (neg? new)))
             (DSymbol. dim (max size new) s# v#)))
   (dsdisj [_ old]
-          (let [s-remove (fn [[i a]]
-                           [i (reduce dissoc a (concat old (map (s# i) old)))])
-                v-remove (fn [[i a]] [i (reduce dissoc a old)])
-                new-s# (into {} (map s-remove s#))
-                new-v# (into {} (map v-remove v#))]
-            (DSymbol. dim size new-s# new-v#)))
-  (dsglue [ds i D E]
+          (when (= old size)
+            (let [s-remove (fn [[i a]]
+                             [i (reduce dissoc a (concat old (map (s# i) old)))])
+                  v-remove (fn [[i a]] [i (reduce dissoc a old)])
+                  new-s# (into {} (map s-remove s#))
+                  new-v# (into {} (map v-remove v#))]
+              (DSymbol. dim (dec size) new-s# new-v#))))
+  (glue [ds i D E]
           (when (and (integer? i) (not (neg? i))
                      (integer? D) (pos? D)
                      (integer? E) (pos? E))
@@ -64,7 +78,7 @@
                       (max size D E)
                       (assoc s# i (assoc (s# i) D E, E D))
                       v#)))
-  (dsunglue [ds i D]
+  (unglue [ds i D]
             (when (index? ds i)
               (DSymbol. dim
                         size
@@ -78,6 +92,13 @@
                (= (ops self) (ops other))
                (= (vs self) (vs other)))))
 
+
+;; === Functions for IDSymbol instances
+
+(defn size [ds] (count (elements ds)))
+
+(defn dim [ds] (dec (count (indices ds))))
+
 (defmethod print-method DSymbol [ds ^Writer w]
   (print-method (list (symbol "DSymbol.")
                       (dim ds)
@@ -85,29 +106,6 @@
                       (ops ds)
                       (vs ds))
                 w))
-
-(deftest gluing
-  (is (= (dsglue (DSymbol. 0 0 {} {}) 2 1 2)
-         (DSymbol. 2 2 {2 {1 2 2 1}} {}))))
-
-;; General D-symbol functions
-
-(defn- ops [ds]
-  (into {} (for [i (indices ds)]
-             [i (into {} (for [D (elements ds)
-                               :when (s ds i D)]
-                           [D (s ds i D)]))])))
-
-(defn- vs [ds]
-  (into {} (for [i (indices ds)
-                 :when (index? ds (inc i))]
-             [i (into {} (for [D (elements ds)
-                               :when (v ds i (inc i) D)]
-                           [D (v ds i (inc i) D)]))])))
-
-(defn size [ds] (count (elements ds)))
-
-(defn dim [ds] (dec (count (indices ds))))
 
 (defn walk [ds D & idxs]
   "Returns the result of applying the D-symbol operators on ds with the
@@ -123,7 +121,8 @@
         (recur (inc n) F)))))
 
 (defn m [ds i j D]
-  (let [v (v ds i j D), r (r ds i j D)]
+  (let [v (v ds i j D)
+        r (r ds i j D)]
     (when (and v r) (* v r))))
 
 (defn chain-end [ds D i j]
@@ -191,3 +190,9 @@
               (/ (s D) (v D)))))
   ([ds]
     (curvature ds 0)))
+
+;; === Tests
+
+(deftest gluing
+  (is (= (glue (DSymbol. 0 0 {} {}) 2 1 2)
+         (DSymbol. 2 2 {2 {1 2 2 1}} {}))))
