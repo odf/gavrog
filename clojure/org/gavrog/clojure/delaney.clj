@@ -1,6 +1,6 @@
 (ns org.gavrog.clojure.delaney
   (:use (clojure [test]
-                 [string :only [split trim]])
+                 [string :only [replace split trim]])
         (org.gavrog.clojure [util :only [empty-queue pop-while unique]]))
   (:import (org.gavrog.joss.dsyms.basic DelaneySymbol)
            (java.io Writer)))
@@ -177,7 +177,9 @@
                      (integer? D) (pos? D)
                      (integer? E) (pos? E)
                      (= (v ds i (inc i) D) (v ds i (inc i) E))
-                     (= (v ds (dec i) i D) (v ds (dec i) i E)))
+                     (= (v ds (dec i) i D) (v ds (dec i) i E))
+                     (nil? (s ds i D))
+                     (nil? (s ds i E))
             (DSymbol. (max dim i)
                       (max size D E)
                       (assoc s# i (assoc (s# i) D E, E D))
@@ -227,14 +229,35 @@
 
 (defmethod dsymbol String [code]
   (let [items (fn [s] (-> s trim (split #"\s+") (map #(Integer/parseInt %))))
-        extract (fn [ds a f]
+        extract (fn [a elms f]
                   (let [step (fn [[acc todo] val]
                                (let [D (first todo)]
                                  [(conj acc [D, val])
                                   (reduce disj todo (f D val))]))]
-                    (reduce step [[] (into #{} (elements ds))] a)))
+                    (reduce step [[] (into #{} elms)] a)))
         parts (-> code trim (replace #"^<" "") (replace #">$" "") (split #":"))
-        ]))
+        data (if (re-matches #"\d+.\d+" (first parts)) (rest parts) parts)
+        [size d] (items (first parts))
+        dim (or d 2)
+        gluings (-> data (nth 1) trim (split #",") (map items))
+        d-set (reduce (fn [sym i]
+                        (reduce #(glue %1 i (first %2) (second %2))
+                                sym
+                                (extract (nth gluings i)
+                                         (range 1 (inc size))
+                                         seq)))
+                      (DSymbol. 0 0 {} {})
+                      (range 0 (inc dim)))
+        spins (-> data (nth 2) trim (split #",") (map items))
+        d-sym (reduce (fn [sym i]
+                        (reduce #(glue %1 i (first %2) (second %2))
+                                sym
+                                (extract (nth spins i)
+                                         (elements d-set)
+                                         #(orbit d-set [i (inc i)] %1))))
+                      d-set
+                      (range 0 dim))]
+    d-sym))
 
 ;; === Tests
 
