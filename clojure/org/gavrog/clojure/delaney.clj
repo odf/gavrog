@@ -227,37 +227,36 @@
 
 (defmulti dsymbol class)
 
+(defn- parse-numbers [str]
+  (map #(Integer/parseInt %) (-> str s/trim (s/split #"\s+"))))
+
+(defn- parse-number-lists [str]
+  (map parse-numbers (-> str s/trim (s/split #","))))
+
+(defn- extract [data free]
+  (let [step (fn [[_ free] val]
+               [[(first free), val] (disj free (first free) val)])]
+    (rest (map first (reductions step [nil (into #{} free)] data)))))
+
 (defmethod dsymbol String [code]
-  (let [items (fn [str]
-                (map #(Integer/parseInt %) (-> str s/trim (s/split #"\s+"))))
-        extract (fn [a elms f]
-                  (let [step (fn [[acc todo] val]
-                               (let [D (first todo)]
-                                 [(conj acc [D, val])
-                                  (reduce disj todo (f D val))]))]
-                    (first (reduce step [[] (into #{} elms)] a))))
-        parts (-> code s/trim
+  (let [parts (-> code s/trim
                 (s/replace #"^<" "") (s/replace #">$" "") (s/split #":"))
         data (if (re-matches #"\d+.\d+" (first parts)) (rest parts) parts)
-        [size d] (items (first data))
+        [size d] (parse-numbers (first data))
         dim (or d 2)
-        gluings (map items (-> data (nth 1) s/trim (s/split #",")))
+        gluings (parse-number-lists (nth data 1))
+        spins (parse-number-lists (nth data 2))
         d-set (reduce (fn [sym i]
-                        (reduce #(glue %1 i (first %2) (second %2))
+                        (reduce (fn [ds [D E]] (glue ds i D E))
                                 sym
-                                (extract (nth gluings i)
-                                         (range 1 (inc size))
-                                         vector)))
+                                (extract (nth gluings i) (range 1 (inc size)))))
                       (DSymbol. 0 0 {} {})
                       (range 0 (inc dim)))
-        spins (map items (-> data (nth 2) s/trim (s/split #",")))
         d-sym (reduce (fn [sym i]
-                        (reduce #(spin %1 i (inc i) (first %2) (second %2))
+                        (reduce (fn [ds [D v]] (spin ds i (inc i) D v))
                                 sym
-                                (extract (nth spins i)
-                                         (elements d-set)
-                                         (fn [D m]
-                                           (orbit d-set [i (inc i)] D)))))
+                                (zipmap (orbit-reps d-set [i (inc i)])
+                                        (nth spins i))))
                       d-set
                       (range 0 dim))]
     d-sym))
