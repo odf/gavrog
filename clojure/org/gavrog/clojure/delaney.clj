@@ -202,12 +202,18 @@
                (= (.v# self) (.v# other)))))
 
 (defmethod print-method DSymbol [ds ^Writer w]
-  (print-method (list (symbol "DSymbol.")
-                      (dim ds)
-                      (size ds)
-                      (.s# ds)
-                      (.v# ds))
-                w))
+  (let [images (fn [i] (map #(or (s ds i %) 0) (orbit-reps ds [i])))
+        spins (fn [i] (map #(or (v ds i (inc i) %) 0)
+                           (orbit-reps ds [i (inc i)])))
+        ops-str (s/join "," (map #(s/join " " (images %)) (indices ds)))
+        vs-str (s/join "," (map #(s/join " " (spins %)) (range (.dim ds))))
+        dims-str (if (= 2 (.dim ds))
+                   (str (.size ds))
+                   (str (.size ds) " " (.dim ds)))
+        code (str "<1.1:" dims-str ":" ops-str ":" vs-str ">")]
+    (if *print-readably*
+      (print-simple (str "(dsymbol \"" code "\")") w)
+      (print-simple code w))))
 
 (defmulti dsymbol class)
 
