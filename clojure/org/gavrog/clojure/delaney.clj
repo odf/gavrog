@@ -239,27 +239,31 @@
           rest-free (filter (comp not (set pair)) free)]
       (lazy-seq (cons pair (pairs (rest data) rest-free))))))
 
+(defn- with-gluings [ds gluings]
+  (reduce (fn [ds i]
+            (reduce (fn [ds [D E]] (glue ds i D E))
+                    ds
+                    (pairs (nth gluings i) (elements ds))))
+          ds
+          (range (count gluings))))
+
+(defn- with-spins [ds spins]
+  (reduce (fn [ds i]
+            (reduce (fn [ds [D v]] (spin ds i (inc i) D v))
+                    ds
+                    (zipmap (orbit-reps ds [i (inc i)]) (nth spins i))))
+          ds
+          (range (count spins))))
+
 (defmethod dsymbol String [code]
   (let [parts (-> code s/trim
                 (s/replace #"^<" "") (s/replace #">$" "") (s/split #":"))
         data (if (re-matches #"\d+.\d+" (first parts)) (rest parts) parts)
-        [size d] (parse-numbers (first data))
-        dim (or d 2)
-        gluings (parse-number-lists (nth data 1))
-        spins (parse-number-lists (nth data 2))
-        d-set (reduce (fn [sym i]
-                        (reduce (fn [ds [D E]] (glue ds i D E))
-                                sym
-                                (pairs (nth gluings i) (range 1 (inc size)))))
-                      (DSymbol. 0 0 {} {})
-                      (range 0 (inc dim)))
-        d-sym (reduce (fn [sym i]
-                        (reduce (fn [ds [D v]] (spin ds i (inc i) D v))
-                                sym
-                                (zipmap (orbit-reps d-set [i (inc i)])
-                                        (nth spins i))))
-                      d-set
-                      (range 0 dim))]
+        [size dim] (parse-numbers (first data))
+        d-set (with-gluings (DSymbol. (or dim 2) size {} {})
+                (parse-number-lists (nth data 1)))
+        d-sym (with-spins d-set
+                (parse-number-lists (nth data 2)))]
     d-sym))
 
 ;; === Tests
