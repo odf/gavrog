@@ -22,13 +22,13 @@
    If key-fun is given, it is applied to the original values before
    determining equality."
   ([key-fun coll]
-    (letfn [(step [[seen _] x]
-                  (let [key (key-fun x)]
-                    (if (seen key)
-                      [seen nil false]
-                      [(conj seen key) x true])))]
-           (map second
-                (filter second (reductions step [#{} nil false] coll)))))
+    (letfn [(step [coll seen]
+                  (when-let [x (first coll)]
+                    (let [key (key-fun x)]
+                      (if (seen key)
+                        (recur (rest coll) seen)
+                        (lazy-seq (cons x (step (rest coll)
+                                                (conj seen key))))))))]
+           (step coll #{})))
   ([coll]
     (unique identity coll)))
-
