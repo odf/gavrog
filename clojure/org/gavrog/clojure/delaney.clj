@@ -195,11 +195,23 @@
             ds))
   Object
   (equals [self other]
-          (and (satisfies? IDSymbol other)
-               (= (indices self) (indices other))
-               (= (elements self) (elements other))
-               (= (.s# self) (.s# other))
-               (= (.v# self) (.v# other)))))
+          ;;TODO this should really test isomorphism via the canonical form
+          (let [ops (fn [ds]
+                      (into {} (for [i (indices ds)]
+                                 [i (into {} (for [D (elements ds)
+                                                   :when (s ds i D)]
+                                               [D (s ds i D)]))])))
+                vs (fn [ds]
+                     (into {} (for [i (indices ds)
+                                    :when (index? ds (inc i))]
+                                [i (into {} (for [D (elements ds)
+                                                  :when (v ds i (inc i) D)]
+                                              [D (v ds i (inc i) D)]))])))]
+            (and (satisfies? IDSymbol other)
+                 (= (indices self) (indices other))
+                 (= (elements self) (elements other))
+                 (= (ops self) (ops other))
+                 (= (vs self) (vs other))))))
 
 (defmethod print-method DSymbol [ds ^Writer w]
   (let [images (fn [i] (map #(or (s ds i %) 0) (orbit-reps ds [i])))
@@ -291,5 +303,15 @@
                  0 1 2)
          (DSymbol. 2 2
                    {0 {1 1, 2 2} 1 {1 2, 2 1} 2 {1 2, 2 1}}
-                   {1 {1 4, 2 4}})))
-  )
+                   {1 {1 4, 2 4}}))))
+
+(deftest input-output
+  (is (= (dsymbol "<1.1:2:2,1 2,2:4,6>")
+         (DSymbol. 2 2
+                   {0 {1 2, 2 1} 1 {1 1, 2 2} 2 {1 2, 2 1}}
+                   {0 {1 2, 2 2} 1 {1 3, 2 3}})))
+  (is (= (dsymbol "<1.1:2:2,1 2,2:4,5>") nil))
+  (is (= (dsymbol "<1.1:2:2,1 2,2:0,6>")
+         (DSymbol. 2 2
+                   {0 {1 2, 2 1} 1 {1 1, 2 2} 2 {1 2, 2 1}}
+                   {1 {1 3, 2 3}}))))
