@@ -233,10 +233,11 @@
 (defn- parse-number-lists [str]
   (map parse-numbers (-> str s/trim (s/split #","))))
 
-(defn- extract [data free]
-  (let [step (fn [[_ free] val]
-               [[(first free), val] (disj free (first free) val)])]
-    (rest (map first (reductions step [nil (into #{} free)] data)))))
+(defn- pairs [data free]
+  (when (seq free)
+    (let [pair [(first free) (first data)]
+          rest-free (filter (comp not (set pair)) free)]
+      (lazy-seq (cons pair (pairs (rest data) rest-free))))))
 
 (defmethod dsymbol String [code]
   (let [parts (-> code s/trim
@@ -249,7 +250,7 @@
         d-set (reduce (fn [sym i]
                         (reduce (fn [ds [D E]] (glue ds i D E))
                                 sym
-                                (extract (nth gluings i) (range 1 (inc size)))))
+                                (pairs (nth gluings i) (range 1 (inc size)))))
                       (DSymbol. 0 0 {} {})
                       (range 0 (inc dim)))
         d-sym (reduce (fn [sym i]
