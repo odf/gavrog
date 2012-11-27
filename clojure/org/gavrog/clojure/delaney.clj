@@ -233,7 +233,8 @@
   (reduce (fn [ds i]
             (reduce (fn [ds [D E]] (glue ds i D E))
                     ds
-                    (pairs (nth gluings i) (elements ds))))
+                    (filter (fn [[D E]] (element? ds E))
+                            (pairs (nth gluings i) (elements ds)))))
           ds
           (range (count gluings))))
 
@@ -241,7 +242,8 @@
   (reduce (fn [ds i]
             (reduce (fn [ds [D v]] (spin ds i (inc i) D v))
                     ds
-                    (zipmap (orbit-reps ds [i (inc i)]) (nth spins i))))
+                    (filter (fn [[D v]] (> v 0))
+                      (zipmap (orbit-reps ds [i (inc i)]) (nth spins i)))))
           ds
           (range (count spins))))
 
