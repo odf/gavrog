@@ -31,22 +31,6 @@
   (v [ds i j D] (when (.definesV ds i j D) (.v ds i j D))))
 
 
-;; === Private functions for IDSymbol instances
-
-(defn- ops [ds]
-  (into {} (for [i (indices ds)]
-             [i (into {} (for [D (elements ds)
-                               :when (s ds i D)]
-                           [D (s ds i D)]))])))
-
-(defn- vs [ds]
-  (into {} (for [i (indices ds)
-                 :when (index? ds (inc i))]
-             [i (into {} (for [D (elements ds)
-                               :when (v ds i (inc i) D)]
-                           [D (v ds i (inc i) D)]))])))
-
-
 ;; === Exportable functions for IDSymbol instances
 
 (defn size [ds] (count (elements ds)))
@@ -214,15 +198,15 @@
           (and (satisfies? IDSymbol other)
                (= (indices self) (indices other))
                (= (elements self) (elements other))
-               (= (ops self) (ops other))
-               (= (vs self) (vs other)))))
+               (= (.s# self) (.s# other))
+               (= (.v# self) (.v# other)))))
 
 (defmethod print-method DSymbol [ds ^Writer w]
   (print-method (list (symbol "DSymbol.")
                       (dim ds)
                       (size ds)
-                      (ops ds)
-                      (vs ds))
+                      (.s# ds)
+                      (.v# ds))
                 w))
 
 (defmulti dsymbol class)
