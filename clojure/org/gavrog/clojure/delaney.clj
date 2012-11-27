@@ -203,14 +203,14 @@
 
 (defmethod print-method DSymbol [ds ^Writer w]
   (let [images (fn [i] (map #(or (s ds i %) 0) (orbit-reps ds [i])))
-        spins (fn [i] (map #(or (v ds i (inc i) %) 0)
-                           (orbit-reps ds [i (inc i)])))
+        m-vals (fn [i] (map #(or (m ds i (inc i) %) 0)
+                            (orbit-reps ds [i (inc i)])))
         ops-str (s/join "," (map #(s/join " " (images %)) (indices ds)))
-        vs-str (s/join "," (map #(s/join " " (spins %)) (range (.dim ds))))
+        ms-str (s/join "," (map #(s/join " " (m-vals %)) (range (.dim ds))))
         dims-str (if (= 2 (.dim ds))
                    (str (.size ds))
                    (str (.size ds) " " (.dim ds)))
-        code (str "<1.1:" dims-str ":" ops-str ":" vs-str ">")]
+        code (str "<1.1:" dims-str ":" ops-str ":" ms-str ">")]
     (if *print-readably*
       (print-simple (str "(dsymbol \"" code "\")") w)
       (print-simple code w))))
@@ -238,12 +238,14 @@
           ds
           (range (count gluings))))
 
-(defn- with-spins [ds spins]
+(defn- with-m-vals [ds spins]
   (reduce (fn [ds i]
-            (reduce (fn [ds [D v]] (spin ds i (inc i) D v))
-                    ds
-                    (filter (fn [[D v]] (> v 0))
-                      (zipmap (orbit-reps ds [i (inc i)]) (nth spins i)))))
+            (let [j (inc i)]
+              (reduce (fn [ds [D m]]
+                        (spin ds i j D (/ m (r ds i j D))))
+                      ds
+                      (filter (fn [[D m]] (> m 0))
+                              (zipmap (orbit-reps ds [i j]) (nth spins i))))))
           ds
           (range (count spins))))
 
@@ -254,7 +256,7 @@
         [size dim] (parse-numbers (first data))
         d-set (with-gluings (DSymbol. (or dim 2) size {} {})
                 (parse-number-lists (nth data 1)))
-        d-sym (with-spins d-set
+        d-sym (with-m-vals d-set
                 (parse-number-lists (nth data 2)))]
     d-sym))
 
