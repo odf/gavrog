@@ -207,9 +207,8 @@
                             (orbit-reps ds [i (inc i)])))
         ops-str (s/join "," (map #(s/join " " (images %)) (indices ds)))
         ms-str (s/join "," (map #(s/join " " (m-vals %)) (range (.dim ds))))
-        dims-str (if (= 2 (.dim ds))
-                   (str (.size ds))
-                   (str (.size ds) " " (.dim ds)))
+        [size dim] [(.size ds) (.dim ds)]
+        dims-str (s/join " " (if (= 2 dim) [size] [size dim]))
         code (str "<1.1:" dims-str ":" ops-str ":" ms-str ">")]
     (if *print-readably*
       (print-simple (str "(dsymbol \"" code "\")") w)
@@ -241,8 +240,7 @@
 (defn- with-m-vals [ds spins]
   (reduce (fn [ds i]
             (let [j (inc i)]
-              (reduce (fn [ds [D m]]
-                        (spin ds i j D (/ m (r ds i j D))))
+              (reduce (fn [ds [D m]] (spin ds i j D (/ m (r ds i j D))))
                       ds
                       (filter (fn [[D m]] (> m 0))
                               (zipmap (orbit-reps ds [i j]) (nth spins i))))))
