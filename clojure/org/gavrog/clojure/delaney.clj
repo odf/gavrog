@@ -229,10 +229,12 @@
 (defmulti dsymbol class)
 
 (defn- parse-numbers [str]
-  (map #(Integer/parseInt %) (-> str s/trim (s/split #"\s+"))))
+  (when (and str (< 0 (count (s/trim str))))
+    (map #(Integer/parseInt %) (-> str s/trim (s/split #"\s+")))))
 
 (defn- parse-number-lists [str]
-  (map parse-numbers (-> str s/trim (s/split #","))))
+  (when str
+    (map parse-numbers (-> str s/trim (s/split #",")))))
 
 (defn- pairs [data free]
   (when (seq free)
@@ -254,7 +256,7 @@
             (let [j (inc i)]
               (reduce (fn [ds [D m]] (spin ds i j D (/ m (r ds i j D))))
                       ds
-                      (filter (fn [[D m]] (> m 0))
+                      (filter (fn [[D m]] (and (r ds i j D) (> m 0)))
                               (zipmap (orbit-reps ds [i j]) (nth spins i))))))
           ds
           (range (count spins))))
@@ -262,12 +264,14 @@
 (defmethod dsymbol String [code]
   (let [parts (-> code s/trim
                 (s/replace #"^<" "") (s/replace #">$" "") (s/split #":"))
-        data (if (re-matches #"\d+.\d+" (first parts)) (rest parts) parts)
-        [size dim] (parse-numbers (first data))
+        [dims gluings spins] (vec (if (re-matches #"\d+\.\d+" (first parts))
+                                    (rest parts)
+                                    parts))
+        [size dim] (parse-numbers dims)
         d-set (with-gluings (DSymbol. (or dim 2) size {} {})
-                (parse-number-lists (nth data 1)))
+                (parse-number-lists gluings))
         d-sym (with-m-vals d-set
-                (parse-number-lists (nth data 2)))]
+                (parse-number-lists spins))]
     d-sym))
 
 ;; === Tests
@@ -310,8 +314,37 @@
          (DSymbol. 2 2
                    {0 {1 2, 2 1} 1 {1 1, 2 2} 2 {1 2, 2 1}}
                    {0 {1 2, 2 2} 1 {1 3, 2 3}})))
+  (is (= (dsymbol "1.1:2:2,1 2,2:4,6")
+         (DSymbol. 2 2
+                   {0 {1 2, 2 1} 1 {1 1, 2 2} 2 {1 2, 2 1}}
+                   {0 {1 2, 2 2} 1 {1 3, 2 3}})))
+  (is (= (dsymbol "2:2,1 2,2:4,6")
+         (DSymbol. 2 2
+                   {0 {1 2, 2 1} 1 {1 1, 2 2} 2 {1 2, 2 1}}
+                   {0 {1 2, 2 2} 1 {1 3, 2 3}})))
+  (is (= (dsymbol "2:2,,2:4,6")
+         (DSymbol. 2 2
+                   {0 {1 2, 2 1} 2 {1 2, 2 1}}
+                   {})))
   (is (= (dsymbol "<1.1:2:2,1 2,2:4,5>") nil))
   (is (= (dsymbol "<1.1:2:2,1 2,2:0,6>")
          (DSymbol. 2 2
                    {0 {1 2, 2 1} 1 {1 1, 2 2} 2 {1 2, 2 1}}
-                   {1 {1 3, 2 3}}))))
+                   {1 {1 3, 2 3}})))
+  (is (= (dsymbol "<1.1:2:2,1 2,2:4,>")
+         (DSymbol. 2 2
+                   {0 {1 2, 2 1} 1 {1 1, 2 2} 2 {1 2, 2 1}}
+                   {0 {1 2, 2 2}})))
+  (is (= (dsymbol "<1.1:2:2,1 2,2:>")
+         (DSymbol. 2 2
+                   {0 {1 2, 2 1} 1 {1 1, 2 2} 2 {1 2, 2 1}}
+                   {})))
+  (is (= (dsymbol "<1.1:2:2:>")
+         (DSymbol. 2 2
+                   {0 {1 2, 2 1}}
+                   {})))
+  (is (= (dsymbol "<1.1:2>")
+         (DSymbol. 2 2
+                   {}
+                   {})))
+  )
