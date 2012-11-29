@@ -31,6 +31,12 @@
   (v [ds i j D] (when (.definesV ds i j D) (.v ds i j D))))
 
 
+;; === Helper functions
+
+(defn assert-arg [arg-name val test description]
+  (assert (test val)
+          (str "Expected " description " for " arg-name ", got " val)))
+
 ;; === Exportable functions for IDSymbol instances
 
 (defn size [ds] (count (elements ds)))
@@ -145,41 +151,46 @@
              :else 1)))
   IPersistentDSymbol
   (dsconj [_ D]
-          (when (and (integer? D) (pos? D))
+          (do
+            (assert-arg "D" D #(and (integer? %) (pos? %)) "a positive integer")
             (DSymbol. dim (max size D) s# v#)))
   (dsdisj [ds D]
-          (if (element? ds D)
-            (when (= D size)
-              (let [s-remove (fn [[i a]] [i (reduce dissoc a [D ((s# i) D)])])
-                    v-remove (fn [[i a]] [i (dissoc a D)])
-                    new-s# (into {} (map s-remove s#))
-                    new-v# (into {} (map v-remove v#))]
-                (DSymbol. dim (dec size) new-s# new-v#)))
-            ds))
+          (do
+            (assert-arg "D" D #(= % size) size)
+            (let [s-remove (fn [[i a]] [i (reduce dissoc a [D ((s# i) D)])])
+                  v-remove (fn [[i a]] [i (dissoc a D)])
+                  new-s# (into {} (map s-remove s#))
+                  new-v# (into {} (map v-remove v#))]
+              (DSymbol. dim (dec size) new-s# new-v#))))
   (glue [ds i D E]
-          (when (and (integer? i) (not (neg? i))
-                     (integer? D) (pos? D)
-                     (integer? E) (pos? E)
-                     (= (v ds i (inc i) D) (v ds i (inc i) E))
-                     (= (v ds (dec i) i D) (v ds (dec i) i E))
-                     (nil? (s ds i D))
-                     (nil? (s ds i E)))
+          (do
+            (assert-arg "i" i #(and (integer? %) (not (neg? %)))
+                       "a non-negative integer")
+            (assert-arg "D" D #(and (integer? %) (pos? %)) "a positive integer")
+            (assert-arg "E" E #(and (integer? %) (pos? %)) "a positive integer")
+            (assert (= (v ds i (inc i) D) (v ds i (inc i) E)))
+            (assert (= (v ds (dec i) i D) (v ds (dec i) i E)))
+            (assert (nil? (s ds i D)))
+            (assert (nil? (s ds i E)))
             (DSymbol. (max dim i)
                       (max size D E)
                       (assoc s# i (assoc (s# i) D E, E D))
                       v#)))
   (unglue [ds i D]
-            (if (index? ds i)
-              (DSymbol. dim
-                        size
-                        (assoc s# i (dissoc (s# i) D ((s# i) D)))
-                        v#)
-              ds))
+          (do
+            (assert-arg "i" i #(index? ds %) "an existing index")
+            (assert-arg "D" D #(element? ds %) "an existing element")
+            (DSymbol. dim
+                      size
+                      (assoc s# i (dissoc (s# i) D ((s# i) D)))
+                      v#)))
   (spin [ds i j D v]
-        (when (and (integer? i) (not (neg? i))
-                   (= j (inc i))
-                   (integer? D) (pos? D)
-                   (integer? v) (pos? v))
+        (do
+          (assert-arg "i" i #(and (integer? %) (not (neg? %)))
+                      "a non-negative integer")
+          (assert-arg "j" j #(= (inc i) %) (inc i))
+          (assert-arg "D" D #(and (integer? %) (pos? %)) "a positive integer")
+          (assert-arg "v" v #(and (integer? %) (pos? %)) "a positive integer")
           (DSymbol. (max dim i j)
                     (max size D)
                     s#
@@ -187,12 +198,14 @@
                                         (v# i)
                                         (orbit ds [i j] D))))))
   (unspin [ds i j D]
-          (if (and (index? ds i) (index? ds j) (element? ds D) (= j (inc i)))
+          (do
+            (assert-arg "i" i #(index? ds %) "an existing index")
+            (assert-arg "j" j #(= (inc i) %) (inc i))
+            (assert-arg "D" D #(element? ds %) "an existing element")
             (DSymbol. dim
                       size
                       s#
-                      (assoc v# i (reduce dissoc (v# i) (orbit ds [i j] D))))
-            ds))
+                      (assoc v# i (reduce dissoc (v# i) (orbit ds [i j] D))))))
   Object
   (equals [self other]
           ;;TODO this should really test isomorphism via the canonical form
@@ -225,6 +238,9 @@
     (if *print-readably*
       (print-simple (str "(dsymbol \"" code "\")") w)
       (print-simple code w))))
+
+
+;; === Factory multimethod for creating DSymbol instances
 
 (defmulti dsymbol class)
 
@@ -326,7 +342,8 @@
          (DSymbol. 2 2
                    {0 {1 2, 2 1} 2 {1 2, 2 1}}
                    {})))
-  (is (= (dsymbol "<1.1:2:2,1 2,2:4,5>") nil))
+  (is (thrown-with-msg? AssertionError #"Expected a positive integer for v"
+                        (= (dsymbol "<1.1:2:2,1 2,2:4,5>"))))
   (is (= (dsymbol "<1.1:2:2,1 2,2:0,6>")
          (DSymbol. 2 2
                    {0 {1 2, 2 1} 1 {1 1, 2 2} 2 {1 2, 2 1}}
