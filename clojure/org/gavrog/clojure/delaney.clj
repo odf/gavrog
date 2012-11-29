@@ -170,8 +170,8 @@
             (assert-arg "E" E #(and (integer? %) (pos? %)) "a positive integer")
             (assert (= (v ds i (inc i) D) (v ds i (inc i) E)))
             (assert (= (v ds (dec i) i D) (v ds (dec i) i E)))
-            (assert (nil? (s ds i D)))
-            (assert (nil? (s ds i E)))
+            (assert (= E (or (s ds i D) E)) "must unglue first")
+            (assert (= D (or (s ds i E) D)) "must unglue first")
             (DSymbol. (max dim i)
                       (max size D E)
                       (assoc s# i (assoc (s# i) D E, E D))
@@ -288,6 +288,24 @@
                 (parse-number-lists gluings))
         d-sym (with-m-vals d-set
                 (parse-number-lists spins))]
+    d-sym))
+
+(defmethod dsymbol DSymbol [ds] ds)
+
+(defmethod dsymbol DelaneySymbol [ds]
+  (let [emap (zipmap (.elements ds) (range 1 (inc (size ds))))
+        imap (zipmap (indices ds) (range (inc (dim ds))))
+        gluings (for [i (indices ds), D (orbit-reps ds [i])]
+                  [(imap i) (emap D) (emap (s ds i D))])
+        spins (for [[i j] (zipmap (indices ds) (rest (indices ds)))
+                    D (orbit-reps ds [i j])]
+                [(imap i) (emap D) (v ds i j D)])
+        d-set (reduce (fn [ds [i D E]] (glue ds i D E))
+                      (DSymbol. (dim ds) (size ds) {} {})
+                      gluings)
+        d-sym (reduce (fn [ds [i D v]] (spin ds i (inc i) D v))
+                      d-set
+                      spins)]
     d-sym))
 
 ;; === Tests
