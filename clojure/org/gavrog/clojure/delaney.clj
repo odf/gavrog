@@ -240,9 +240,7 @@
       (print-simple code w))))
 
 
-;; === Factory multimethod for creating DSymbol instances
-
-(defmulti dsymbol class)
+;; === Factories for DSymbol instances
 
 (defn- parse-numbers [str]
   (when (and str (< 0 (count (s/trim str))))
@@ -277,7 +275,7 @@
           ds
           (range (count spins))))
 
-(defmethod dsymbol String [code]
+(defn- ds-from-str [code]
   (let [parts (-> code s/trim
                 (s/replace #"^<" "") (s/replace #">$" "") (s/split #":"))
         [dims gluings spins] (vec (if (re-matches #"\d+\.\d+" (first parts))
@@ -290,9 +288,7 @@
                 (parse-number-lists spins))]
     d-sym))
 
-(defmethod dsymbol DSymbol [ds] ds)
-
-(defmethod dsymbol DelaneySymbol [ds]
+(defn- ds-from-ds [ds]
   (let [emap (zipmap (elements ds) (range 1 (inc (size ds))))
         imap (zipmap (indices ds) (range (inc (dim ds))))
         gluings (for [i (indices ds), D (orbit-reps ds [i])]
@@ -307,6 +303,21 @@
                       d-set
                       spins)]
     d-sym))
+
+(defprotocol DSymbolSource
+  (dsymbol [_]))
+
+(extend-type String
+  DSymbolSource
+  (dsymbol [code] (ds-from-str code)))
+
+(extend-type DSymbol
+  DSymbolSource
+  (dsymbol [ds] ds))
+
+(extend-type DelaneySymbol
+  DSymbolSource
+  (dsymbol [ds] (ds-from-ds ds)))
 
 ;; === Building a Java DSymbol instance from a Clojure one
 
