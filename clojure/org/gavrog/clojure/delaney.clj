@@ -293,7 +293,7 @@
 (defmethod dsymbol DSymbol [ds] ds)
 
 (defmethod dsymbol DelaneySymbol [ds]
-  (let [emap (zipmap (.elements ds) (range 1 (inc (size ds))))
+  (let [emap (zipmap (elements ds) (range 1 (inc (size ds))))
         imap (zipmap (indices ds) (range (inc (dim ds))))
         gluings (for [i (indices ds), D (orbit-reps ds [i])]
                   [(imap i) (emap D) (emap (s ds i D))])
@@ -307,6 +307,17 @@
                       d-set
                       spins)]
     d-sym))
+
+;; === Building a Java DSymbol instance from a Clojure one
+
+(defn java-dsymbol [ds]
+  (let [ops (make-array Integer/TYPE (inc (dim ds)) (inc (size ds)))
+        vs (make-array Integer/TYPE (dim ds) (inc (size ds)))]
+    (doseq [i (range 0 (inc (dim ds)))
+            D (range 1 (inc (size ds)))]
+      (aset-int ops i D (s ds i D))
+      (if (< i (dim ds)) (aset-int vs i D (v ds i (inc i) D))))
+    (org.gavrog.joss.dsyms.basic.DSymbol. ops vs)))
 
 ;; === Tests
 
