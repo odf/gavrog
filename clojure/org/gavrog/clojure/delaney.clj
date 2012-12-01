@@ -291,11 +291,14 @@
 (defn- ds-from-ds [ds]
   (let [emap (zipmap (elements ds) (range 1 (inc (size ds))))
         imap (zipmap (indices ds) (range (inc (dim ds))))
-        gluings (for [i (indices ds), D (orbit-reps ds [i])]
-                  [(imap i) (emap D) (emap (s ds i D))])
+        gluings (for [i (indices ds)
+                      D (orbit-reps ds [i])
+                      :when (s ds i D)]
+                    [(imap i) (emap D) (emap (s ds i D))])
         spins (for [[i j] (zipmap (indices ds) (rest (indices ds)))
-                    D (orbit-reps ds [i j])]
-                [(imap i) (emap D) (v ds i j D)])
+                    D (orbit-reps ds [i j])
+                    :when (v ds i j D)]
+                  [(imap i) (emap D) (v ds i j D)])
         d-set (reduce (fn [ds [i D E]] (glue ds i D E))
                       (DSymbol. (dim ds) (size ds) {} {})
                       gluings)
@@ -319,16 +322,30 @@
   DSymbolSource
   (dsymbol [ds] (ds-from-ds ds)))
 
-;; === Building a Java DSymbol instance from a Clojure one
+
+;; === Building a flat Java DSymbol instance
 
 (defn java-dsymbol [ds]
-  (let [ops (make-array Integer/TYPE (inc (dim ds)) (inc (size ds)))
+  (let [ds (dsymbol ds)
+        ops (make-array Integer/TYPE (inc (dim ds)) (inc (size ds)))
         vs (make-array Integer/TYPE (dim ds) (inc (size ds)))]
     (doseq [i (range 0 (inc (dim ds)))
             D (range 1 (inc (size ds)))]
-      (aset-int ops i D (s ds i D))
-      (if (< i (dim ds)) (aset-int vs i D (v ds i (inc i) D))))
+      (if-let [E (s ds i D)] (aset-int ops i D (s ds i D)))
+      (if (< i (dim ds))
+        (if-let [b (v ds i (inc i) D)] (aset-int vs i D b))))
     (org.gavrog.joss.dsyms.basic.DSymbol. ops vs)))
+
+
+;; === Wrapped Java methods
+
+(defn canonical [ds]
+  (-> ds java-dsymbol .canonical dsymbol))
+
+(defn canonical? [ds]
+  (every? (fn [[a b]] (= a b))
+          (into {} (-> ds java-dsymbol .getMapToCanonical))))
+
 
 ;; === Tests
 
