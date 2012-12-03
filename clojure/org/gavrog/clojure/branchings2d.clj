@@ -3,21 +3,33 @@
           [generators :only [make-backtracker results]]
           [delaney])))
 
-(defn branchings [d-set min-face-degree min-vert-degree min-curvature]
+(defn branchings
+  [d-set & {:keys [face-sizes-at-least
+                   vertex-degrees-at-least
+                   curvature-at-least
+                   try-spins]
+            :or {face-sizes-at-least 3
+                 vertex-degrees-at-least 3
+                 curvature-at-least 0
+                 try-spins [1 2 3 4 6]}}]
   (let [ds (canonical d-set)
-        good-degree (fn [i D v]
-                      (cond (= 0 i) (<= min-face-degree (* v (r ds 0 1 D)))
-                            (= 1 i) (<= min-vert-degree (* v (r ds 1 2 D)))))]
+        new-curvature (fn [c s v] (+ c (* (if s 2 1) (- (/ v) 1))))
+        still-good (fn [c i D r s v]
+                     (and (<= curvature-at-least (new-curvature c s v))
+                          (cond (= 0 i) (<= face-sizes-at-least (* r v))
+                                (= 1 i) (<= vertex-degrees-at-least (* r v)))))]
     (make-backtracker 
-      {:root (let [orbs (for [i [0 1], D (orbit-reps ds [i (inc i)])] [i D])]
-               [ds (into #{} orbs)])
-       :extract (fn [[ds unused]]
-                  (when (and (empty? unused)
-                             (canonical? ds)
-                             (<= min-curvature (curvature ds)))
+      {:root (let [orbs (for [i [0 1] :let [j (inc i)]
+                              D (orbit-reps ds [i j])]
+                          [i D (r ds i j D) (orbit-loopless? ds [i j] D)])]
+               [ds (curvature ds 1) (into #{} orbs)])
+       :extract (fn [[ds c unused]]
+                  (when (and (empty? unused) (canonical? ds))
                     ds))
-       :children (fn [[ds unused]]
-                   (when-let [[i D] (first unused)]
-                     (for [v [1 2 3 4 6]
-                           :when (good-degree i D v)]
-                       [(spin ds i (inc i) D v) (disj unused [i D])])))})))
+       :children (fn [[ds c unused]]
+                   (when-let [[i D r s] (first unused)]
+                     (for [v try-spins
+                           :when (still-good c i D r s v)]
+                       [(spin ds i (inc i) D v)
+                        (new-curvature c s v)
+                        (disj unused [i D r s])])))})))
