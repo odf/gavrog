@@ -1,4 +1,4 @@
-(ns org.gavrog.clojure.branchings
+(ns org.gavrog.clojure.branchings2d
   (:use (org.gavrog.clojure
           [generators :only [make-backtracker results]]
           [delaney])))
