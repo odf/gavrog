@@ -1,9 +1,11 @@
 (ns org.gavrog.clojure.azulenoids
   (:use (org.gavrog.clojure [util :only [iterate-cycle unique]]
-                            [delaney :only [s v chain-end curvature]]))
+                            [delaney :only [s v chain-end curvature]]
+                            [generators :only [results]]
+                            [branchings2d :only [branchings]]))
   (:import (org.gavrog.jane.numbers Whole)
            (org.gavrog.joss.dsyms.basic DSymbol DynamicDSymbol IndexList)
-           (org.gavrog.joss.dsyms.generators CombineTiles DefineBranching2d))
+           (org.gavrog.joss.dsyms.generators CombineTiles))
   (:gen-class))
 
 ;; Azulenoid-specific functions
@@ -44,7 +46,11 @@
 
 (def octa-syms
   (for [dset octa-sets
-        dsym (lazy-seq (DefineBranching2d. dset 3 2 Whole/ZERO))
+        dsym (results (branchings dset
+                                  :face-sizes-at-least 3
+                                  :vertex-degrees-at-least 2
+                                  :curvature-at-least 0
+                                  :try-spins [1 2 3 4 6]))
         :when (-> dsym curvature (= 0))]
     dsym))
 
