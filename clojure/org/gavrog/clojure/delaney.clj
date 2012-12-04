@@ -2,7 +2,7 @@
   (:require (clojure [string :as s]))
   (:use (clojure test)
         (org.gavrog.clojure [util :only [empty-queue pop-while unique]]))
-  (:import (org.gavrog.joss.dsyms.basic DelaneySymbol)
+  (:import (org.gavrog.joss.dsyms.basic DelaneySymbol DSMorphism)
            (java.io Writer)))
 
 (defprotocol IDSymbol
@@ -346,6 +346,9 @@
   (every? (fn [[a b]] (= a b))
           (into {} (-> ds java-dsymbol .getMapToCanonical))))
 
+(defn automorphisms [ds]
+  (for [m (-> ds java-dsymbol DSMorphism/automorphisms)]
+    (into {} (for [D (elements ds)] [D (.get m (Integer. D))]))))
 
 ;; === Tests
 
