@@ -336,6 +336,14 @@
         (if-let [b (v ds i (inc i) D)] (aset-int vs i D b))))
     (org.gavrog.joss.dsyms.basic.DSymbol. ops vs)))
 
+;; === Functions that build specific DSymbol instances
+
+(defn dual [ds]
+  (let [ds (dsymbol ds)]
+    (DSymbol. (dim ds)
+              (size ds)
+              (into {} (for [[i s] (.s# ds)] [(- (dim ds) i) s]))
+              (into {} (for [[i v] (.v# ds)] [(- (dim ds) 1 i) v])))))
 
 ;; === Wrapped Java methods
 
@@ -348,9 +356,6 @@
 
 (defn minimal [ds]
   (-> ds java-dsymbol .minimal dsymbol))
-
-(defn dual [ds]
-  (-> ds java-dsymbol .dual dsymbol))
 
 (defn invariant [ds]
   (into [] (.invariant (java-dsymbol ds))))
