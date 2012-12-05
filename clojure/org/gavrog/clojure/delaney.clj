@@ -346,6 +346,15 @@
   (every? (fn [[a b]] (= a b))
           (into {} (-> ds java-dsymbol .getMapToCanonical))))
 
+(defn minimal [ds]
+  (-> ds java-dsymbol .minimal dsymbol))
+
+(defn dual [ds]
+  (-> ds java-dsymbol .dual dsymbol))
+
+(defn invariant [ds]
+  (into [] (.invariant (java-dsymbol ds))))
+
 (defn automorphisms [ds]
   (for [m (-> ds java-dsymbol DSMorphism/automorphisms)]
     (into {} (for [D (elements ds)] [D (.get m (Integer. D))]))))
