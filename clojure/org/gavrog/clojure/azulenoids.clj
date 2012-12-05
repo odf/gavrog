@@ -53,16 +53,17 @@
     dsym))
 
 (def azul-syms
-  (let [raw (for [ds octa-syms o2t boundary-mappings]
-              (java-dsymbol (on-template ds o2t)))]
-    (for [ds (unique #(-> %1 .minimal .invariant) raw)]
-      (-> ds .dual .minimal .canonical))))
+  (let [raw (for [ds octa-syms
+                  o2t boundary-mappings]
+              (minimal (on-template ds o2t)))]
+    (for [ds (unique invariant raw)]
+      (-> ds dual canonical))))
 
 ;; Main entry point when used as a script
 
 (defn -main []
   (do
-    (doseq [ds azul-syms] (println (str ds)))
+    (doseq [ds azul-syms] (println ds))
     (println "#Generated:")
     (println "#   " (count octa-sets) "octagonal D-sets.")
     (println "#   " (count octa-syms) "octagonal D-symbols.")
