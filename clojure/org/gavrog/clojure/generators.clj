@@ -9,7 +9,7 @@
     (lazy-seq (cons gen (traverse (step gen))))))
 
 (defn results [gen]
-  (filter (comp not nil?) (map result (traverse gen))))
+  (remove nil? (map result (traverse gen))))
 
 (defprotocol SplittableGenerator
   (sub-generator [_])

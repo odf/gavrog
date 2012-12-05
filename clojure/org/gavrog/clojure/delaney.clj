@@ -253,7 +253,7 @@
 (defn- pairs [data free]
   (when (seq free)
     (let [pair [(first free) (first data)]
-          rest-free (filter (comp not (set pair)) free)]
+          rest-free (remove (set pair) free)]
       (lazy-seq (cons pair (pairs (rest data) rest-free))))))
 
 (defn- with-gluings [ds gluings]
