@@ -291,21 +291,15 @@
 (defn- ds-from-ds [ds]
   (let [emap (zipmap (elements ds) (range 1 (inc (size ds))))
         imap (zipmap (indices ds) (range (inc (dim ds))))
-        gluings (for [i (indices ds)
-                      D (orbit-reps ds [i])
-                      :when (s ds i D)]
-                    [(imap i) (emap D) (emap (s ds i D))])
-        spins (for [[i j] (zipmap (indices ds) (rest (indices ds)))
-                    D (orbit-reps ds [i j])
-                    :when (v ds i j D)]
-                  [(imap i) (emap D) (v ds i j D)])
-        d-set (reduce (fn [ds [i D E]] (glue ds i D E))
-                      (DSymbol. (dim ds) (size ds) {} {})
-                      gluings)
-        d-sym (reduce (fn [ds [i D v]] (spin ds i (inc i) D v))
-                      d-set
-                      spins)]
-    d-sym))
+        gluings-for (fn [i] (into {} (for [D (elements ds) :when (s ds i D)]
+                                       [(emap D) (emap (s ds i D))])))
+        gluings (into {} (for [i (indices ds)]
+                           [(imap i) (gluings-for i)]))
+        spins-for (fn [i j] (into {} (for [D (elements ds) :when (v ds i j D)]
+                                       [(emap D) (v ds i j D)])))
+        spins (into {} (for [[i j] (zipmap (indices ds) (rest (indices ds)))]
+                         [(imap i) (spins-for i j)]))]
+    (DSymbol. (dim ds) (size ds) gluings spins)))
 
 (defprotocol DSymbolSource
   (dsymbol [_]))
