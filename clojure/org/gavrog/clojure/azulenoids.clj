@@ -53,11 +53,8 @@
     dsym))
 
 (def azul-syms
-  (let [raw (for [ds octa-syms
-                  o2t boundary-mappings]
-              (-> (on-template ds o2t) minimal canonical))]
-    (for [ds (distinct raw)]
-      (-> ds dual canonical))))
+  (distinct (for [ds octa-syms, o2t boundary-mappings]
+              (-> (on-template ds o2t) minimal dual canonical))))
 
 ;; Main entry point when used as a script
 
