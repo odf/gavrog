@@ -1,6 +1,6 @@
 (ns org.gavrog.clojure.azulenoids
   (:use (org.gavrog.clojure
-          [util :only [iterate-cycle unique]]
+          [util :only [iterate-cycle]]
           [delaney]
           [generators :only [results]]
           [branchings2d :only [branchings]]))
@@ -55,8 +55,8 @@
 (def azul-syms
   (let [raw (for [ds octa-syms
                   o2t boundary-mappings]
-              (minimal (on-template ds o2t)))]
-    (for [ds (unique invariant raw)]
+              (-> (on-template ds o2t) minimal canonical))]
+    (for [ds (distinct raw)]
       (-> ds dual canonical))))
 
 ;; Main entry point when used as a script

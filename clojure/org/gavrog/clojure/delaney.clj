@@ -1,7 +1,7 @@
 (ns org.gavrog.clojure.delaney
   (:require (clojure [string :as s]))
   (:use (clojure test)
-        (org.gavrog.clojure [util :only [empty-queue pop-while unique]]))
+        (org.gavrog.clojure [util :only [empty-queue pop-while]]))
   (:import (org.gavrog.joss.dsyms.basic DelaneySymbol DSMorphism)
            (java.io Writer)))
 
@@ -36,6 +36,16 @@
 (defn assert-arg [arg-name val test description]
   (assert (test val)
           (str "Expected " description " for " arg-name ", got " val)))
+
+(defn ops [ds]
+  (into {} (for [i (indices ds)]
+             [i (into {} (for [D (elements ds) :when (s ds i D)]
+                           [D (s ds i D)]))])))
+
+(defn vs [ds]
+  (into {} (for [i (indices ds) :when (index? ds (inc i))]
+             [i (into {} (for [D (elements ds) :when (v ds i (inc i) D)]
+                           [D (v ds i (inc i) D)]))])))
 
 ;; === Exportable functions for IDSymbol instances
 
@@ -78,7 +88,7 @@
     (orbit-reps ds indices (elements ds))))
 
 (defn orbit [ds indices seed]
-  (unique (for [[D i] (pretty-traversal ds indices [seed])] D)))
+  (distinct (for [[D i] (pretty-traversal ds indices [seed])] D)))
 
 (defn walk [ds D & idxs]
   "Returns the result of applying the D-symbol operators on ds with the
@@ -208,23 +218,13 @@
                       (assoc v# i (reduce dissoc (v# i) (orbit ds [i j] D))))))
   Object
   (equals [self other]
-          ;;TODO this should really test isomorphism via the canonical form
-          (let [ops (fn [ds]
-                      (into {} (for [i (indices ds)]
-                                 [i (into {} (for [D (elements ds)
-                                                   :when (s ds i D)]
-                                               [D (s ds i D)]))])))
-                vs (fn [ds]
-                     (into {} (for [i (indices ds)
-                                    :when (index? ds (inc i))]
-                                [i (into {} (for [D (elements ds)
-                                                  :when (v ds i (inc i) D)]
-                                              [D (v ds i (inc i) D)]))])))]
-            (and (satisfies? IDSymbol other)
-                 (= (indices self) (indices other))
-                 (= (elements self) (elements other))
-                 (= (ops self) (ops other))
-                 (= (vs self) (vs other))))))
+          (and (satisfies? IDSymbol other)
+               (= (indices self) (indices other))
+               (= (elements self) (elements other))
+               (= (ops self) (ops other))
+               (= (vs self) (vs other))))
+  (hashCode [self]
+            (.hashCode (list dim size (ops self) (vs self)))))
 
 (defmethod print-method DSymbol [ds ^Writer w]
   (let [images (fn [i] (map #(or (s ds i %) 0) (orbit-reps ds [i])))

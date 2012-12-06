@@ -16,19 +16,3 @@
    cycling through the functions in coll and applying each to the
    previous result."
   (reductions #(%2 %1) x (cycle coll)))
-
-(defn unique
-  "Returns a lazy sequence of values from coll with duplicates removed.
-   If key-fun is given, it is applied to the original values before
-   determining equality."
-  ([key-fun coll]
-    (letfn [(step [coll seen]
-                  (when-let [x (first coll)]
-                    (let [key (key-fun x)]
-                      (if (seen key)
-                        (recur (rest coll) seen)
-                        (lazy-seq (cons x (step (rest coll)
-                                                (conj seen key))))))))]
-           (step coll #{})))
-  ([coll]
-    (unique identity coll)))

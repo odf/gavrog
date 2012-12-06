@@ -1,6 +1,5 @@
 (ns org.gavrog.clojure.selfdual2d
   (:use (org.gavrog.clojure
-          [util :only [unique]]
           [delaney]))
   (:import (org.gavrog.jane.fpgroups SmallActionsIterator)
            (org.gavrog.jane.numbers Whole)
@@ -20,7 +19,7 @@
 
 (defn good-face-sizes? [ds]
   (let [t (map #(.m ds 0 1 %) (orbit-reps ds [0 1]))]
-    (and (<= (count (unique t)) 2) (some #(= 3 %) t))))
+    (and (<= (count (distinct t)) 2) (some #(= 3 %) t))))
 
 (defn- good-node [net pos v]
   (not (empty? (.goodCombinations net (.allIncidences net v) pos))))
