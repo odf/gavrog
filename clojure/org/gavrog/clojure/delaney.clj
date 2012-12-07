@@ -351,12 +351,17 @@
 (defn minimal [ds]
   (-> ds java-dsymbol .minimal dsymbol))
 
+(defn minimal? [ds]
+  (-> ds java-dsymbol .isMinimal))
+
 (defn invariant [ds]
   (into [] (.invariant (java-dsymbol ds))))
 
 (defn automorphisms [ds]
   (for [m (-> ds java-dsymbol DSMorphism/automorphisms)]
     (into {} (for [D (elements ds)] [D (.get m (Integer. D))]))))
+
+(defn self-dual? [ds] (= (-> ds canonical) (-> ds dual canonical)))
 
 ;; === Tests
 
