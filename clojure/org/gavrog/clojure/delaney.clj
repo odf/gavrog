@@ -112,8 +112,8 @@
   "Returns the result of alternately applying operators indexed i and j,
    starting with the element D, until the end of the chain is reached.
    In case of a cycle, nil is returned."
-  (loop [E (walk ds D i)]
-    (let [E* (walk ds E j)]
+  (loop [E (s ds i D)]
+    (let [E* (s ds j E)]
       (cond
         (nil? E*) E
         (= E E*) E
@@ -122,7 +122,7 @@
 
 (defn orbit-loopless? [ds indices D]
   (empty? (for [[D i] (pretty-traversal ds indices [D])
-                :when (and (not= i :root) (or (nil? D) (= D (walk ds D i))))]
+                :when (and (not= i :root) (or (nil? D) (= D (s ds i D))))]
             D)))
 
 (defn curvature
