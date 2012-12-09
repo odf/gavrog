@@ -56,7 +56,7 @@
 (defn pretty-traversal [ds indices seeds]
   (let [stacks (map #(vector % ()) (take 2 indices))
         queues (map #(vector % empty-queue) (drop 2 indices))
-        as-root #(vector % :root)
+        as-root #(vector % :root %)
         unseen (fn [i seen bag] (pop-while #(seen [% i]) bag))
         pop-seen #(for [[i ys] %1] (vector i (unseen i %2 ys)))
         push-neighbors #(for [[i ys] %1] (vector i (conj ys %2)))]
@@ -80,6 +80,21 @@
            :else
            ())))
       (seq seeds) (doall (concat stacks queues)) #{})))
+
+(defn- protocol [ds indices traversal]
+  (let [imap (zipmap indices (range (count indices)))
+        ipairs (zipmap indices (rest indices))
+        step (fn step [xs emap n]
+               (when (seq xs)
+                 (let [[[_ i D] & xs] xs
+                       E (or (emap D) n)
+                       new? (= E n)
+                       emap (if new? (assoc emap D n) emap)
+                       n (if new? (inc n) n)
+                       head (if (= i :root) [-1] [(imap i) (emap (s ds i D))])
+                       tail (if new? (map (fn [[i j]] (m ds i j D)) ipairs) [])]
+                   (concat head [E] tail (step xs emap n)))))]
+    (step traversal {} 1)))
 
 (defn orbit-reps
   ([ds indices seeds]
