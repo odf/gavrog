@@ -92,9 +92,26 @@
                        emap (if new? (assoc emap D n) emap)
                        n (if new? (inc n) n)
                        head (if (= i :root) [-1] [(imap i) (emap (s ds i D))])
-                       tail (if new? (map (fn [[i j]] (m ds i j D)) ipairs) [])]
+                       tail (if new? (map (fn [[i j]] (v ds i j D)) ipairs) [])]
                    (concat head [E] tail (step xs emap n)))))]
     (step traversal {} 1)))
+
+(defn invariant [ds]
+  (when (seq (elements ds))
+    (let [idcs (indices ds)
+          cmp-seq (fn [s1 s2]
+                    (cond (empty? s1)
+                          -1
+                          (empty? s2)
+                          1
+                          (= 0 (compare (first s1) (first s2)))
+                          (recur (rest s1) (rest s2))
+                          :else
+                          (compare (first s1) (first s2))))
+          min-seq (fn [[x & xs]]
+                    (reduce #(if (> 0 (cmp-seq %1 %2)) %1 %2) x xs))]
+      (min-seq (for [D (elements ds)]
+                 (protocol ds idcs (pretty-traversal ds idcs [D])))))))
 
 (defn orbit-reps
   ([ds indices seeds]
@@ -368,9 +385,6 @@
 
 (defn minimal? [ds]
   (-> ds java-dsymbol .isMinimal))
-
-(defn invariant [ds]
-  (into [] (.invariant (java-dsymbol ds))))
 
 (defn automorphisms [ds]
   (for [m (-> ds java-dsymbol DSMorphism/automorphisms)]
