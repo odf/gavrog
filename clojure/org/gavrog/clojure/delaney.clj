@@ -99,9 +99,9 @@
 (defn invariant [ds]
   (when (pos? (size ds))
     (let [idcs (indices ds)]
-      (apply lexicographically-smallest
-             (for [D (elements ds)]
-               (protocol ds idcs (pretty-traversal ds idcs [D])))))))
+      (reduce lexicographically-smallest
+              (for [D (elements ds)]
+                (protocol ds idcs (pretty-traversal ds idcs [D])))))))
 
 (defn orbit-reps
   ([ds indices seeds]
