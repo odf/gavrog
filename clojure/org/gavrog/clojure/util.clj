@@ -26,3 +26,10 @@
                 (if (not= 0 d)
                   d
                   (recur (rest xs) (rest ys))))))
+
+(defn lexicographically-smallest
+  "Returns the lexicographically smallest sequence, via compare."
+  ([xs] xs)
+  ([xs ys] (if (neg? (compare-lexicographically xs ys)) xs ys))
+  ([xs ys & more] (reduce lexicographically-smallest
+                          (lexicographically-smallest xs ys) more)))

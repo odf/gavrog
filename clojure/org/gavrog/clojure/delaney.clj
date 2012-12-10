@@ -97,13 +97,11 @@
     (step traversal {} 1)))
 
 (defn invariant [ds]
-  (when (seq (elements ds))
-    (let [idcs (indices ds)
-          min-seq (fn [[x & xs]]
-                    (reduce #(if (> 0 (compare-lexicographically %1 %2)) %1 %2)
-                            x xs))]
-      (min-seq (for [D (elements ds)]
-                 (protocol ds idcs (pretty-traversal ds idcs [D])))))))
+  (when (pos? (size ds))
+    (let [idcs (indices ds)]
+      (apply lexicographically-smallest
+             (for [D (elements ds)]
+               (protocol ds idcs (pretty-traversal ds idcs [D])))))))
 
 (defn orbit-reps
   ([ds indices seeds]
