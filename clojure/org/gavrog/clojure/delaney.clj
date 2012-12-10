@@ -1,7 +1,7 @@
 (ns org.gavrog.clojure.delaney
   (:require (clojure [string :as s]))
   (:use (clojure test)
-        (org.gavrog.clojure [util :only [empty-queue pop-while]]))
+        (org.gavrog.clojure util))
   (:import (org.gavrog.joss.dsyms.basic DelaneySymbol DSMorphism)
            (java.io Writer)))
 
@@ -99,17 +99,9 @@
 (defn invariant [ds]
   (when (seq (elements ds))
     (let [idcs (indices ds)
-          cmp-seq (fn [s1 s2]
-                    (cond (empty? s1)
-                          -1
-                          (empty? s2)
-                          1
-                          (= 0 (compare (first s1) (first s2)))
-                          (recur (rest s1) (rest s2))
-                          :else
-                          (compare (first s1) (first s2))))
           min-seq (fn [[x & xs]]
-                    (reduce #(if (> 0 (cmp-seq %1 %2)) %1 %2) x xs))]
+                    (reduce #(if (> 0 (compare-lexicographically %1 %2)) %1 %2)
+                            x xs))]
       (min-seq (for [D (elements ds)]
                  (protocol ds idcs (pretty-traversal ds idcs [D])))))))
 
