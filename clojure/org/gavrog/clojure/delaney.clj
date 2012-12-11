@@ -352,7 +352,7 @@
         (if-let [b (v ds i (inc i) D)] (aset-int vs i D b))))
     (org.gavrog.joss.dsyms.basic.DSymbol. ops vs)))
 
-;; === Functions that build specific DSymbol instances
+;; === Functions that build and compare with specific DSymbol instances
 
 (defn dual [ds]
   (let [ds (dsymbol ds)]
@@ -361,14 +361,32 @@
               (into {} (for [[i s] (.s# ds)] [(- (dim ds) i) s]))
               (into {} (for [[i v] (.v# ds)] [(- (dim ds) 1 i) v])))))
 
-;; === Wrapped Java methods
+(defn self-dual? [ds] (= (-> ds invariant) (-> ds dual invariant)))
 
 (defn canonical [ds]
-  (-> ds java-dsymbol .canonical dsymbol))
+  (let [ds (dsymbol ds)
+        update (fn [m data D]
+                 (reduce (fn [m [i val]] (assoc-in m [i D] val))
+                         m
+                         (map-indexed list data)))]
+    (loop [todo (invariant ds), ops {}, vs {}, n 0]
+      (cond (empty? todo)
+            (DSymbol. (dim ds) (size ds) ops vs)
+            (neg? (first todo))
+            (let [D (second todo)
+                  [data todo] (split-at (dim ds) (drop 2 todo))]
+              (recur todo ops (update vs data D) (max n D)))
+            :else
+            (let [[i E D] (take 3 todo)
+                  [data todo] (split-at (if (> D n) (dim ds) 0) (drop 3 todo))]
+              (recur todo
+                     (-> ops (assoc-in [i E] D) (assoc-in [i D] E))
+                     (update vs data D) (max n D)))))))
 
 (defn canonical? [ds]
-  (every? (fn [[a b]] (= a b))
-          (into {} (-> ds java-dsymbol .getMapToCanonical))))
+  (= (dsymbol ds) (canonical ds)))
+
+;; === Wrapped Java methods
 
 (defn minimal [ds]
   (-> ds java-dsymbol .minimal dsymbol))
@@ -379,8 +397,6 @@
 (defn automorphisms [ds]
   (for [m (-> ds java-dsymbol DSMorphism/automorphisms)]
     (into {} (for [D (elements ds)] [D (.get m (Integer. D))]))))
-
-(defn self-dual? [ds] (= (-> ds canonical) (-> ds dual canonical)))
 
 ;; === Tests
 
