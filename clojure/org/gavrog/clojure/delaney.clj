@@ -83,17 +83,20 @@
 
 (defn- protocol [ds indices traversal]
   (let [imap (zipmap indices (range (count indices)))
-        ipairs (zipmap indices (rest indices))
+        ipairs (map vector indices (rest indices))
+        spins (fn [D] (for [[i j] ipairs] (or (v ds i j D) 0)))
         step (fn step [xs emap n]
                (when (seq xs)
-                 (let [[[Di i D] & xs] xs
-                       [Ei E] (sort [(emap Di) (or (emap D) n)])
-                       new? (= E n)
-                       emap (if new? (assoc emap D n) emap)
-                       n (if new? (inc n) n)
-                       head (if (= i :root) [-1] [(imap i) Ei])
-                       tail (if new? (map (fn [[i j]] (v ds i j D)) ipairs) [])]
-                   (concat head [E] tail (step xs emap n)))))]
+                 (let [[[Di i D] & xs] xs]
+                   (if (nil? D)
+                     (recur xs emap n)
+                     (let [[Ei E] (sort [(emap Di) (or (emap D) n)])
+                           new? (= E n)
+                           emap (if new? (assoc emap D n) emap)
+                           n (if new? (inc n) n)
+                           head (if (= i :root) [-1] [(imap i) Ei])
+                           tail (if new? (spins D) [])]
+                       (concat head [E] tail (step xs emap n)))))))]
     (step traversal {} 1)))
 
 (defn invariant [ds]
@@ -366,7 +369,8 @@
 (defn canonical [ds]
   (let [ds (dsymbol ds)
         update (fn [m data D]
-                 (reduce (fn [m [i val]] (assoc-in m [i D] val))
+                 (reduce (fn [m [i val]]
+                           (if (= 0 val) m (assoc-in m [i D] val)))
                          m
                          (map-indexed list data)))]
     (loop [todo (invariant ds), ops {}, vs {}, n 0]
@@ -471,5 +475,18 @@
   (is (= (dsymbol "<1.1:2>")
          (DSymbol. 2 2
                    {}
-                   {})))
-  )
+                   {}))))
+
+(deftest invariants
+  (are [x] (let [ds (dsymbol x)]
+             (= (invariant ds) (.invariant (java-dsymbol ds))))
+       "2:2,1 2,2:6,4"
+       "2:2,1 2,2"
+       "2:2,1 2"))
+
+(deftest canonical-forms
+  (are [x] (let [ds (dsymbol x)]
+             (= (canonical ds) (dsymbol (.canonical (java-dsymbol ds)))))
+       "2:2,1 2,2:6,4"
+       "2:2,1 2,2"
+       "2:2,1 2"))
