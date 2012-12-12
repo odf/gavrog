@@ -1,4 +1,5 @@
-(ns org.gavrog.clojure.partition)
+(ns org.gavrog.clojure.partition
+  (:use (clojure test)))
 
 (defprotocol IPartition
   (pfind [_ x])
@@ -35,3 +36,25 @@
          (vals blocks))))
 
 (def pempty (Partition. {} {}))
+
+;; === Tests
+
+(def ^{:private true} p
+  (-> pempty
+    (punion 1 2) (punion 3 4) (punion 2 4)
+    (punion 1 5) (punion 6 7) (punion 8 8)))
+
+(deftest partition-test
+  (testing "find"
+           (are [xs] (apply = (map (partial pfind p) xs))
+                [1 2 3 4 5]
+                [6 7]
+                [8]
+                [9]))
+  (testing "blocks"
+           (are [b] (some #{b} p)
+                #{1 2 3 4 5}
+                #{6 7})
+           (are [b] (not (some #{b} p))
+               #{8}
+               #{9})))
