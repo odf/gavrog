@@ -178,19 +178,22 @@
             [E x])))
 
 (defn- type-partition [ds]
-  (let [D0 (first (elements ds)) 
-        tm (type-map ds)
-        spread (fn [D E] (for [i (indices ds)] [(s ds i D), (s ds i E)]))
-        unite (fn [p A B]
-                (loop [p p, q (conj empty-queue [A B])]
-                  (if-let [[D E] (first q)]
-                    (cond
-                      (= (pfind p D) (pfind p E))
-                      (recur p (pop q))
-                      (= (tm D) (tm E))
-                      (recur (punion p D E) (apply conj (pop q) (spread D E))))
-                    p)))]
-    (reduce (fn [p D] (or (unite p D0 D) p)) pempty (rest (elements ds)))))
+  (do
+    (assert (connected? ds) "Symbol must be connected")
+    (let [D0 (first (elements ds)) 
+          tm (type-map ds)
+          spread (fn [D E] (for [i (indices ds)] [(s ds i D), (s ds i E)]))
+          unite (fn [p A B]
+                  (loop [p p, q (conj empty-queue [A B])]
+                    (if-let [[D E] (first q)]
+                      (cond
+                        (= (pfind p D) (pfind p E))
+                        (recur p (pop q))
+                        (= (tm D) (tm E))
+                        (recur (punion p D E)
+                               (apply conj (pop q) (spread D E))))
+                      p)))]
+      (reduce (fn [p D] (or (unite p D0 D) p)) pempty (rest (elements ds))))))
 
 
 ;; === Persistent Clojure implementation of IDSymbol with some common
@@ -420,13 +423,14 @@
 (defn canonical? [ds]
   (= (dsymbol ds) (canonical ds)))
 
+(defn minimal? [ds]
+  (let [p (type-partition ds)]
+    (every? (fn [D] (= D (pfind p D))) (elements ds))))
+
 ;; === Wrapped Java methods
 
 (defn minimal [ds]
   (-> ds java-dsymbol .minimal dsymbol))
-
-(defn minimal? [ds]
-  (-> ds java-dsymbol .isMinimal))
 
 (defn automorphisms [ds]
   (for [m (-> ds java-dsymbol DSMorphism/automorphisms)]
