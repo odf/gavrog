@@ -81,6 +81,18 @@
            ())))
       (seq seeds) (doall (concat stacks queues)) #{})))
 
+(defn orbit-reps
+  ([ds indices seeds]
+    (for [[D i] (pretty-traversal ds indices seeds) :when (= :root i)] D))
+  ([ds indices]
+    (orbit-reps ds indices (elements ds))))
+
+(defn orbit [ds indices seed]
+  (distinct (for [[D i] (pretty-traversal ds indices [seed])] D)))
+
+(defn connected? [ds]
+  (> 2 (count (orbit-reps ds (indices ds)))))
+
 (defn- protocol [ds indices traversal]
   (let [imap (zipmap indices (range (count indices)))
         ipairs (map vector indices (rest indices))
@@ -100,20 +112,13 @@
     (step traversal {} 1)))
 
 (defn invariant [ds]
-  (when (pos? (size ds))
-    (let [idcs (indices ds)]
-      (reduce lexicographically-smallest
-              (for [D (elements ds)]
-                (protocol ds idcs (pretty-traversal ds idcs [D])))))))
-
-(defn orbit-reps
-  ([ds indices seeds]
-    (for [[D i] (pretty-traversal ds indices seeds) :when (= :root i)] D))
-  ([ds indices]
-    (orbit-reps ds indices (elements ds))))
-
-(defn orbit [ds indices seed]
-  (distinct (for [[D i] (pretty-traversal ds indices [seed])] D)))
+  (do
+    (assert (connected? ds) "Symbol must be connected")
+    (when (pos? (size ds))
+      (let [idcs (indices ds)]
+        (reduce lexicographically-smallest
+                (for [D (elements ds)]
+                  (protocol ds idcs (pretty-traversal ds idcs [D]))))))))
 
 (defn walk [ds D & idxs]
   "Returns the result of applying the D-symbol operators on ds with the
@@ -490,7 +495,10 @@
                 (str "12:1 3 4 6 8 10 12,2 3 5 7 8 9 11 12,4 9 10 5 6 12 11:"
                      "3 5 4,5 4 3")
                 (str "6 3:1 2 3 4 6,1 2 3 5 6,2 4 5 6,1 3 4 5 6:"
-                     "4 3 3 3,4 3 3,4 4 4")))
+                     "4 3 3 3,4 3 3,4 4 4"))
+           (is (thrown-with-msg?
+                 AssertionError #"Symbol must be connected"
+                 (invariant (dsymbol "2")))))
 
   (testing "canonical-forms"
            (are [x] (let [ds (dsymbol x)]
@@ -504,4 +512,7 @@
                 (str "12:1 3 4 6 8 10 12,2 3 5 7 8 9 11 12,4 9 10 5 6 12 11:"
                      "3 5 4,5 4 3")
                 (str "6 3:1 2 3 4 6,1 2 3 5 6,2 4 5 6,1 3 4 5 6:"
-                     "4 3 3 3,4 3 3,4 4 4"))))
+                     "4 3 3 3,4 3 3,4 4 4"))
+           (is (thrown-with-msg?
+                 AssertionError #"Symbol must be connected"
+                 (canonical (dsymbol "2"))))))
