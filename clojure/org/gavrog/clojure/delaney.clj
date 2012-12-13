@@ -1,6 +1,7 @@
 (ns org.gavrog.clojure.delaney
   (:require (clojure [string :as s]))
   (:use (clojure test)
+        (org.gavrog.clojure partition)
         (org.gavrog.clojure util))
   (:import (org.gavrog.joss.dsyms.basic DelaneySymbol DSMorphism)
            (java.io Writer)))
@@ -166,6 +167,30 @@
               (/ (s D) (v D)))))
   ([ds]
     (curvature ds 0)))
+
+(defn- type-map [ds]
+  (reduce (fn [m [D x]] (assoc m D (conj (or (m D) []) x)))
+          {}
+          (for [[i j] (map vector (indices ds) (rest (indices ds)))
+                D (orbit-reps ds [i j])
+                :let [x (m ds i j D)]
+                E (orbit ds [i j] D)]
+            [E x])))
+
+(defn- type-partition [ds]
+  (let [D0 (first (elements ds)) 
+        tm (type-map ds)
+        spread (fn [D E] (for [i (indices ds)] [(s ds i D), (s ds i E)]))
+        unite (fn [p A B]
+                (loop [p p, q (conj empty-queue [A B])]
+                  (if-let [[D E] (first q)]
+                    (cond
+                      (= (pfind p D) (pfind p E))
+                      (recur p (pop q))
+                      (= (tm D) (tm E))
+                      (recur (punion p D E) (apply conj (pop q) (spread D E))))
+                    p)))]
+    (reduce (fn [p D] (or (unite p D0 D) p)) pempty (rest (elements ds)))))
 
 
 ;; === Persistent Clojure implementation of IDSymbol with some common
