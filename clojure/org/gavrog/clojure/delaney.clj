@@ -427,10 +427,27 @@
   (let [p (type-partition ds)]
     (every? (fn [D] (= D (pfind p D))) (elements ds))))
 
-;; === Wrapped Java methods
-
 (defn minimal [ds]
-  (-> ds java-dsymbol .minimal dsymbol))
+  (let [p (type-partition ds)
+        reps (filter (fn [D] (= D (pfind p D))) (elements ds))]
+    (if (= (size ds) (count reps))
+      ds
+      (let [emap (zipmap reps (range 1 (inc (count reps))))
+            idcs (indices ds)
+            imap (zipmap idcs (range (inc (dim ds))))
+            set-op (fn [ops [D i]] (assoc-in ops [(imap i) (emap D)]
+                                             (emap (pfind p (s ds i D)))))
+            ops (reduce set-op {} (for [i idcs, D reps] [D i]))
+            d-set (DSymbol. (dim ds) (count reps) ops {})
+            set-v (fn [vs [D i j]]
+                    (let [this-r (r d-set (imap i) (imap j) (emap D))]
+                      (assoc-in vs [(imap i) (emap D)]
+                                (/ (m ds i j D) this-r))))
+            vs (reduce set-v {} (for [[i j] (zipmap idcs (rest idcs)), D reps]
+                                  [D i j]))]
+        (DSymbol. (dim ds) (count reps) ops vs)))))
+
+;; === Wrapped Java methods
 
 (defn automorphisms [ds]
   (for [m (-> ds java-dsymbol DSMorphism/automorphisms)]
