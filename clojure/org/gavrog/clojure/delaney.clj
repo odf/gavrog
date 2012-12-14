@@ -435,15 +435,13 @@
       (let [emap (zipmap reps (range 1 (inc (count reps))))
             idcs (indices ds)
             imap (zipmap idcs (range (inc (dim ds))))
-            img (fn [i D] (emap (pfind p (s ds i D))))
-            ops (into {} (for [i idcs]
-                           [(imap i),
-                            (into {} (for [D reps] [(emap D) (img i D)]))]))
+            pairs (fn [i] (for [D reps] [(emap D) (emap (pfind p (s ds i D)))]))
+            ops (into {} (for [i idcs] [(imap i), (into {} (pairs i))]))
             t (DSymbol. (dim ds) (count reps) ops {})
             spin (fn [i j D] (/ (m ds i j D) (r t (imap i) (imap j) (emap D))))
-            vs (into {} (for [[i j] (zipmap idcs (rest idcs))]
-                          [(imap i)
-                           (into {} (for [D reps] [(emap D) (spin i j D)]))]))]
+            spins (fn [i j] (for [D reps] [(emap D) (spin i j D)]))
+            ipairs (zipmap idcs (rest idcs))
+            vs (into {} (for [[i j] ipairs] [(imap i) (into {} (spins i j))]))]
         (DSymbol. (dim ds) (count reps) ops vs)))))
 
 ;; === Wrapped Java methods
