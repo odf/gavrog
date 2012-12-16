@@ -94,6 +94,14 @@
 (defn connected? [ds]
   (> 2 (count (orbit-reps ds (indices ds)))))
 
+(defn complete? [ds]
+  (and (every? (comp not nil?)
+               (for [i (indices ds), D (elements ds)]
+                 (s ds i D)))
+       (every? (comp not nil?)
+               (for [i (indices ds), j (indices ds), D (elements ds)]
+                 (v ds i j D)))))
+
 (defn- protocol [ds indices traversal]
   (let [imap (zipmap indices (range (count indices)))
         ipairs (map vector indices (rest indices))
