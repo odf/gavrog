@@ -54,7 +54,15 @@
 
 (defn dim [ds] (dec (count (indices ds))))
 
-(defn pretty-traversal [ds indices seeds]
+(defn complete? [ds]
+  (and (every? (comp not nil?)
+               (for [i (indices ds), D (elements ds)]
+                 (s ds i D)))
+       (every? (comp not nil?)
+               (for [i (indices ds), j (indices ds), D (elements ds)]
+                 (v ds i j D)))))
+
+(defn traversal [ds indices seeds]
   (let [stacks (map #(vector % ()) (take 2 indices))
         queues (map #(vector % empty-queue) (drop 2 indices))
         as-root #(vector % :root %)
@@ -84,25 +92,24 @@
 
 (defn orbit-reps
   ([ds indices seeds]
-    (for [[D i] (pretty-traversal ds indices seeds) :when (= :root i)] D))
+    (for [[D i] (traversal ds indices seeds) :when (= :root i)] D))
   ([ds indices]
     (orbit-reps ds indices (elements ds))))
 
 (defn orbit [ds indices seed]
-  (distinct (for [[D i] (pretty-traversal ds indices [seed])] D)))
+  (distinct (for [[D i] (traversal ds indices [seed])] D)))
 
 (defn connected? [ds]
   (> 2 (count (orbit-reps ds (indices ds)))))
 
-(defn complete? [ds]
-  (and (every? (comp not nil?)
-               (for [i (indices ds), D (elements ds)]
-                 (s ds i D)))
-       (every? (comp not nil?)
-               (for [i (indices ds), j (indices ds), D (elements ds)]
-                 (v ds i j D)))))
+(defn partial-orientation [ds]
+  (loop [ori {}
+         [[Di i D] & xs] (traversal ds (indices ds) (elements ds))]
+    (cond (nil? i) ori
+          (or (nil? D) (ori D)) (recur ori xs)
+          :else (recur (assoc ori D (if (= :root i) 1 (- (ori Di)))) xs))))
 
-(defn- protocol [ds indices traversal]
+(defn- protocol [ds indices trav]
   (let [imap (zipmap indices (range (count indices)))
         ipairs (map vector indices (rest indices))
         spins (fn [D] (for [[i j] ipairs] (or (v ds i j D) 0)))
@@ -118,7 +125,7 @@
                            head (if (= i :root) [-1] [(imap i) Ei])
                            tail (if new? (spins D) [])]
                        (concat head [E] tail (step xs emap n)))))))]
-    (step traversal {} 1)))
+    (step trav {} 1)))
 
 (defn invariant [ds]
   (do
@@ -127,7 +134,7 @@
       (let [idcs (indices ds)]
         (reduce lexicographically-smallest
                 (for [D (elements ds)]
-                  (protocol ds idcs (pretty-traversal ds idcs [D]))))))))
+                  (protocol ds idcs (traversal ds idcs [D]))))))))
 
 (defn walk [ds D & idxs]
   "Returns the result of applying the D-symbol operators on ds with the
@@ -160,7 +167,7 @@
         :else (recur (walk ds E j i))))))
 
 (defn orbit-loopless? [ds indices D]
-  (empty? (for [[D i] (pretty-traversal ds indices [D])
+  (empty? (for [[D i] (traversal ds indices [D])
                 :when (and (not= i :root) (or (nil? D) (= D (s ds i D))))]
             D)))
 
