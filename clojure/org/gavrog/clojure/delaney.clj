@@ -109,6 +109,21 @@
           (or (nil? D) (ori D)) (recur ori xs)
           :else (recur (assoc ori D (if (= :root i) 1 (- (ori Di)))) xs))))
 
+(defn loopless? [ds]
+  (every? (fn [[i D]] (not= D (s ds i D)))
+          (for [i (indices ds), D (elements ds)] [i D])))
+
+(defn oriented? [ds]
+  (let [ori (partial-orientation ds)]
+    (every? (fn [[i D]] (not= (ori D) (ori (s ds i D))))
+            (for [i (indices ds), D (elements ds)] [i D]))))
+
+(defn weakly-oriented? [ds]
+  (let [ori (partial-orientation ds)]
+    (every? (fn [[i D]]
+              (let [Di (s ds i D)] (or (= D Di) (not= (ori D) (ori Di)))))
+            (for [i (indices ds), D (elements ds)] [i D]))))
+
 (defn- protocol [ds indices trav]
   (let [imap (zipmap indices (range (count indices)))
         ipairs (map vector indices (rest indices))
