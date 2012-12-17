@@ -367,8 +367,11 @@
          (into #{} (elements ds)) ")")
     w))
 
+(defn restriction [ds idcs elms]
+  (Restriction. ds (into #{} idcs) (into #{} elms)))
+
 (defn orbit [ds idcs seed]
-  (Restriction. ds (into #{} idcs) (orbit-elements ds idcs seed)))
+  (restriction ds idcs (orbit-elements ds idcs seed)))
 
 ;; === Factories for DSymbol instances
 
@@ -446,6 +449,9 @@
   DSymbolSource
   (dsymbol [ds] (ds-from-ds ds)))
 
+(extend-type Restriction
+  DSymbolSource
+  (dsymbol [ds] (ds-from-ds ds)))
 
 ;; === Building a flat Java DSymbol instance
 
