@@ -96,7 +96,7 @@
   ([ds indices]
     (orbit-reps ds indices (elements ds))))
 
-(defn orbit [ds indices seed]
+(defn orbit-elements [ds indices seed]
   (distinct (for [[D i] (traversal ds indices [seed])] D)))
 
 (defn connected? [ds]
@@ -204,7 +204,7 @@
           (for [[i j] (map vector (indices ds) (rest (indices ds)))
                 D (orbit-reps ds [i j])
                 :let [x (m ds i j D)]
-                E (orbit ds [i j] D)]
+                E (orbit-elements ds [i j] D)]
             [E x])))
 
 (defn- type-partition [ds]
@@ -294,7 +294,7 @@
                     s#
                     (assoc v# i (reduce #(assoc %1 %2 v)
                                         (v# i)
-                                        (orbit ds [i j] D))))))
+                                        (orbit-elements ds [i j] D))))))
   (unspin [ds i j D]
           (do
             (assert-arg "i" i #(index? ds %) "an existing index")
@@ -303,7 +303,8 @@
             (DSymbol. dim
                       size
                       s#
-                      (assoc v# i (reduce dissoc (v# i) (orbit ds [i j] D))))))
+                      (assoc v# i (reduce dissoc (v# i)
+                                          (orbit-elements ds [i j] D))))))
   Object
   (equals [self other]
           (and (satisfies? IDSymbol other)
@@ -327,6 +328,47 @@
       (print-simple (str "(dsymbol \"" code "\")") w)
       (print-simple code w))))
 
+
+;; === An IDSymbol implementation representing a restricted view into a base
+;;     symbol.
+
+(defprotocol IRestriction
+  (base [_]))
+
+(deftype Restriction [base idx-set elm-set]
+  IRestriction
+  (base [_] base)
+  IDSymbol
+  (element? [_ D] (elm-set D))
+  (elements [_] (seq elm-set))
+  (index? [_ i] (idx-set i))
+  (indices [_] (seq idx-set))
+  (s [self i D]
+     (when (and (index? self i) (element? self D))
+       (s base i D)))
+  (v [self i j D]
+     (when (and (index? self i) (index? self j) (element? self D))
+       (v base i j D)))
+  Object
+  (equals [self other]
+          (and (satisfies? IDSymbol other)
+               (= (indices self) (indices other))
+               (= (elements self) (elements other))
+               (= (ops self) (ops other))
+               (= (vs self) (vs other))))
+  (hashCode [self]
+            (.hashCode (list dim size (ops self) (vs self)))))
+
+(defmethod print-method Restriction [ds ^Writer w]
+  (print-simple
+    (str "(Restriction. "
+         (prn-str (base ds)) " "
+         (into #{} (indices ds)) " "
+         (into #{} (elements ds)) ")")
+    w))
+
+(defn orbit [ds idcs seed]
+  (Restriction. ds (into #{} idcs) (orbit-elements ds idcs seed)))
 
 ;; === Factories for DSymbol instances
 
