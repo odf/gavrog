@@ -475,8 +475,6 @@
               (into {} (for [[i s] (.s# ds)] [(- (dim ds) i) s]))
               (into {} (for [[i v] (.v# ds)] [(- (dim ds) 1 i) v])))))
 
-(defn self-dual? [ds] (= (-> ds invariant) (-> ds dual invariant)))
-
 (defn canonical [ds]
   (let [ds (dsymbol ds)
         update (fn [m data D]
@@ -500,6 +498,12 @@
 
 (defn canonical? [ds]
   (= (dsymbol ds) (canonical ds)))
+
+(defn isomorphic? [ds1 ds2]
+  (= (invariant ds1) (invariant ds2)))
+
+(defn self-dual? [ds]
+  (isomorphic? ds (dual ds)))
 
 (defn minimal? [ds]
   (let [p (type-partition ds)]
