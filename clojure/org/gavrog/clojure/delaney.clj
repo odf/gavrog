@@ -225,6 +225,26 @@
                       p)))]
       (reduce (fn [p D] (or (unite p D0 D) p)) pempty (rest (elements ds))))))
 
+(defn morphism [src img src-base img-base]
+  (do
+    (assert (connected? src) "Source symbol must be connected")
+    (assert (= (indices src) (indices img)) "Index lists must be equal")
+    (let [idcs (indices src)
+          t-src (type-map src)
+          t-img (type-map img)
+          match (fn [mapping [D E]]
+                  (or (= E (mapping D))
+                      (and (nil? (mapping D)) (= (t-src D) (t-img E)))))]
+      (loop [mapping {src-base img-base}
+             q (conj empty-queue [src-base img-base])]
+        (if (empty? q)
+          mapping
+          (let [[D E] (first q)
+                pairs (for [i idcs] [(s src i D) (s img i E)])]
+            (if (every? (partial match mapping) pairs)
+              (recur (into mapping pairs)
+                     (into (rest q) (filter (comp nil? mapping first) pairs)))
+              nil)))))))
 
 ;; === Persistent Clojure implementation of IDSymbol with some common
 ;;     restrictions.
