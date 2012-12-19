@@ -248,7 +248,7 @@
 
 (defn automorphisms [ds]
   (when-let [D (first (elements ds))]
-    (keep (partial morphism ds ds D) (rest (elements ds))))) 
+    (keep (partial morphism ds ds D) (elements ds))))
 
 ;; === Persistent Clojure implementation of IDSymbol with some common
 ;;     restrictions.
@@ -549,12 +549,6 @@
             ipairs (zipmap idcs (rest idcs))
             vs (into {} (for [[i j] ipairs] [(imap i) (into {} (spins i j))]))]
         (DSymbol. (dim ds) (count reps) ops vs)))))
-
-;; === Wrapped Java methods
-
-(defn automorphisms [ds]
-  (for [m (-> ds java-dsymbol DSMorphism/automorphisms)]
-    (into {} (for [D (elements ds)] [D (.get m (Integer. D))]))))
 
 ;; === Tests
 
