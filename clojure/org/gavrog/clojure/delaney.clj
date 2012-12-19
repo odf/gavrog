@@ -246,6 +246,10 @@
                      (into (rest q) (filter (comp nil? mapping first) pairs)))
               nil)))))))
 
+(defn automorphisms [ds]
+  (when-let [D (first (elements ds))]
+    (keep (partial morphism ds ds D) (rest (elements ds))))) 
+
 ;; === Persistent Clojure implementation of IDSymbol with some common
 ;;     restrictions.
 
