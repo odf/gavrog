@@ -6,14 +6,13 @@
 (defn dsets [dim max-size]
   (let [idcs (range (inc dim))
         still-good? (fn [ds i D]
-                      (empty? (for [j idcs 
-                                    :when (or (< j (dec i)) (> j (inc i)))
-                                    :let [o (orbit ds [i j] D)]
-                                    :when (> (size o) (if (loopless? o) 4 2))]
-                                j)))]
+                      (not-any? #(> (size %) (if (loopless? %) 4 2))
+                        (for [j idcs :when (or (< j (dec i)) (> j (inc i)))]
+                          (orbit ds [i j] D))))]
     (make-backtracker
       {:root [(dsymbol (str "1 " dim))
               (into (sorted-set) (for [i idcs] [i 1]))]
+       ;; TODO our generation procedure is incompatible with (canonical?)
        :extract (fn [[ds free]] (when (and (empty? free) (canonical? ds)) ds))
        :children (fn [[ds free]]
                    (when (seq free)
