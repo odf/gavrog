@@ -36,11 +36,14 @@
 
 (defn dsets [dim max-size]
   (let [idcs (range (inc dim))
-        still-good? (fn [ds i D] (and (orbits-okay? ds i D) (best? ds)))]
+        still-good? (fn [ds i D]
+                      (and (orbits-okay? ds i D)
+                           (or (-> ds size (mod 3) (> 0)) (best? ds))))]
     (make-backtracker
       {:root [(dsymbol (str "1 " dim))
               (into (sorted-set) (for [i idcs] [i 1]))]
-       :extract (fn [[ds free]] (when (empty? free) (canonical ds)))
+       :extract (fn [[ds free]]
+                  (when (and (empty? free) (best? ds)) (canonical ds)))
        :children (fn [[ds free]]
                    (when (seq free)
                      (let [[i D] (first free)
