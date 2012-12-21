@@ -20,7 +20,10 @@
         (if (nil? oDi)
           false
           (let [Di (or (o2n oDi) (inc n))
-                d (- Di (s ds i D))]
+                d (- Di (s ds i D))
+                free (if (<= Di n)
+                       free
+                       (into free (for [j (indices ds)] [j Di])))]
             (cond (neg? d) true
                   (pos? d) false
                   :else (recur (assoc o2n oDi Di)
