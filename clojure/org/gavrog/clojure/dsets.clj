@@ -1,5 +1,6 @@
 (ns org.gavrog.clojure.dsets
   (:use (org.gavrog.clojure
+          [util]
           [generators :only [make-backtracker results]]
           [delaney])))
 
@@ -8,7 +9,7 @@
             (for [j (indices ds) :when (or (< j (dec i)) (> j (inc i)))]
               (orbit ds [i j] D))))
 
-(defn- traversed-from [ds D]
+(defn- trace [ds D]
   (let [plus-all (fn [pairs D] (into pairs (for [i (indices ds)] [i D])))
         step (fn step [o2n n2o n free]
                (when-let [[i D] (first free)]
@@ -21,32 +22,17 @@
                                             (disj free [i D] [i Di]))))))))]
     (step {D 1} {1 D} 1 (plus-all (sorted-set) 1))))
 
-(defn- compare-with-start [ds D]
-  (loop [o2n {D 1}
-         n2o {1 D}
-         n 1
-         free (into (sorted-set) (for [i (indices ds)] [i 1]))]
-    (if (empty? free)
-      0
-      (let [[i D] (first free)
-            oDi (s ds i (n2o D))]
-        (if (nil? oDi)
-          0
-          (let [Di (or (o2n oDi) (inc n))
-                d (- Di (s ds i D))
-                free (if (<= Di n)
-                       free
-                       (into free (for [j (indices ds)] [j Di])))]
-            (cond (nil? (s ds i D)) 0
-                  (neg? d) -1
-                  (pos? d) 1
-                  :else (recur (assoc o2n oDi Di)
-                               (assoc n2o Di oDi)
-                               (max n Di)
-                               (disj free [i D] [i Di])))))))))
+(defn- cmp [xs ys]
+  (if (or (empty? xs) (empty? ys))
+    0
+    (let [d (compare (first xs) (first ys))]
+      (if (not= 0 d)
+        d
+        (recur (rest xs) (rest ys))))))
 
 (defn- best? [ds alt-starts]
-  (let [results (into {} (for [D alt-starts] [D (compare-with-start ds D)]))]
+  (let [base (trace ds 1)
+        results (into {} (for [D alt-starts] [D (cmp (trace ds D) base)]))]
     [(not-any? #(neg? (results %)) alt-starts)
      (apply disj alt-starts (filter #(pos? (results %)) alt-starts))]))
 
