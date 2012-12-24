@@ -2,10 +2,9 @@
   (:use (org.gavrog.clojure
           [delaney]
           [generators :only [results]]
+          [dsets :only [dsets]]
           [branchings2d :only [branchings]]))
-  (:import (org.gavrog.jane.fpgroups SmallActionsIterator)
-           (org.gavrog.joss.dsyms.derived FundamentalGroup DSCover)
-           (org.gavrog.joss.tilings Tiling))
+  (:import (org.gavrog.joss.tilings Tiling))
   (:gen-class))
 
 (defn euclidean? [ds] (= (curvature ds 1) 0))
@@ -26,12 +25,6 @@
   (fn [& args]
     (reduce #(and %1 (apply %2 args)) true preds)))
 
-(defn d-sets [max-size]
-  (let [G (FundamentalGroup. (java-dsymbol "1:1,1,1"))]
-    (filter (andp self-dual? proto-euclidean?)
-            (map #(dsymbol (DSCover. G %))
-                 (SmallActionsIterator. (.getPresentation G) max-size false)))))
-
 (defn print-seq [xs format-item format-summary]
   (let [start-time (. System (nanoTime))
         n (count (for [x xs] (println (format-item x))))
@@ -42,7 +35,8 @@
 ;; All convex, self-dual, 2d euclidean tilings.
 (defn d-syms [max-size]
   (let [good? (andp self-dual? minimal? euclidean? convex?)]
-    (for [dset (d-sets max-size)
+    (for [dset (results (dsets 2 max-size))
+          :when (and (self-dual? dset) (proto-euclidean? dset))
           dsym (results (branchings dset))
           :when (good? dsym)]
     (canonical dsym))))
