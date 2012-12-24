@@ -8,6 +8,19 @@
             (for [j (indices ds) :when (or (< j (dec i)) (> j (inc i)))]
               (orbit ds [i j] D))))
 
+(defn- traversed-from [ds D]
+  (let [plus-all (fn [pairs D] (into pairs (for [i (indices ds)] [i D])))
+        step (fn step [o2n n2o n free]
+               (when-let [[i D] (first free)]
+                 (when-let [oDi (s ds i (n2o D))]
+                   (let [Di (or (o2n oDi) (inc n))
+                         free (if (<= Di n) free (plus-all free Di))]
+                   (lazy-seq (cons Di (step (assoc o2n oDi Di)
+                                            (assoc n2o Di oDi)
+                                            (max n Di)
+                                            (disj free [i D] [i Di]))))))))]
+    (step {D 1} {1 D} 1 (plus-all (sorted-set) 1))))
+
 (defn- compare-with-start [ds D]
   (loop [o2n {D 1}
          n2o {1 D}
