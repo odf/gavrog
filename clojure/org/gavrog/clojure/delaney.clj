@@ -499,26 +499,28 @@
               (into {} (for [[i s] (.s# ds)] [(- (dim ds) i) s]))
               (into {} (for [[i v] (.v# ds)] [(- (dim ds) 1 i) v])))))
 
-(defn canonical [ds]
-  (let [ds (dsymbol ds)
-        update (fn [m data D]
-                 (reduce (fn [m [i val]]
-                           (if (= 0 val) m (assoc-in m [i D] val)))
+(defn from-protocol [dim# size# prot]
+  (let [update (fn [m data D]
+                 (reduce (fn [m [i v]] (if (= 0 v) m (assoc-in m [i D] v)))
                          m
                          (map-indexed list data)))]
-    (loop [todo (invariant ds), ops {}, vs {}, n 0]
+    (loop [todo prot, ops {}, vs {}, n 0]
       (cond (empty? todo)
-            (DSymbol. (dim ds) (size ds) ops vs)
+            (DSymbol. dim# size# ops vs)
             (neg? (first todo))
             (let [D (second todo)
-                  [data todo] (split-at (dim ds) (drop 2 todo))]
+                  [data todo] (split-at dim# (drop 2 todo))]
               (recur todo ops (update vs data D) (max n D)))
             :else
             (let [[i E D] (take 3 todo)
-                  [data todo] (split-at (if (> D n) (dim ds) 0) (drop 3 todo))]
+                  [data todo] (split-at (if (> D n) dim# 0) (drop 3 todo))]
               (recur todo
                      (-> ops (assoc-in [i E] D) (assoc-in [i D] E))
                      (update vs data D) (max n D)))))))
+
+(defn canonical [ds]
+  (let [ds (dsymbol ds)]
+    (from-protocol (dim ds) (size ds) (invariant ds))))
 
 (defn canonical? [ds]
   (= (dsymbol ds) (canonical ds)))
