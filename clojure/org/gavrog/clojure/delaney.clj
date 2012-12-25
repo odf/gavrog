@@ -499,7 +499,7 @@
               (into {} (for [[i s] (.s# ds)] [(- (dim ds) i) s]))
               (into {} (for [[i v] (.v# ds)] [(- (dim ds) 1 i) v])))))
 
-(defn from-protocol [dim# size# prot]
+(defn- from-protocol [dim# size# prot]
   (let [update (fn [m data D]
                  (reduce (fn [m [i v]] (if (= 0 v) m (assoc-in m [i D] v)))
                          m
@@ -524,6 +524,11 @@
 
 (defn canonical? [ds]
   (= (dsymbol ds) (canonical ds)))
+
+(defn renumbered-from [ds D]
+  (let [idcs (indices ds)]
+    (from-protocol (dim ds) (size ds)
+                   (protocol ds idcs (traversal ds idcs [D])))))
 
 (defn isomorphic? [ds1 ds2]
   (= (invariant ds1) (invariant ds2)))
