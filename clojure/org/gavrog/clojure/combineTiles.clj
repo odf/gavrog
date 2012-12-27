@@ -9,11 +9,18 @@
     (frequencies (for [D (orbit-reps ds idcs)] (canonical (orbit ds idcs D))))))
 
 (defn- partition-by-automorphism-group [ds]
-  (into pempty (apply concat (automorphisms ds))))
+  (or (seq (into pempty (apply concat (automorphisms ds))))
+      (map hash-set (elements ds))))
 
 (defn- inequivalent-forms [ds]
   (for [orb (partition-by-automorphism-group ds)]
-    (renumbered-from ds (first orb))))
+    (canonical ds (first orb))))
+
+(defn- signatures [ds]
+  (into {} (for [orb (partition-by-automorphism-group ds)
+                 :let [inv (invariant ds (first orb))],
+                 D orb]
+             [D inv])))
 
 (defn combine-tiles [ds]
   (make-backtracker 
