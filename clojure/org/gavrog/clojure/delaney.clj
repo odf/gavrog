@@ -142,14 +142,17 @@
                        (concat head [E] tail (step xs emap n)))))))]
     (step trav {} 1)))
 
-(defn invariant [ds]
-  (do
-    (assert (connected? ds) "Symbol must be connected")
+(defn invariant 
+  ([ds D]
+    (let [idcs (indices ds), t (traversal ds idcs [D])]
+      (do
+        (assert (= (size ds) (count (into #{} (map first t))))
+                "Symbol must be connected")
+        (protocol ds idcs t))))
+  ([ds]
     (when (pos? (size ds))
-      (let [idcs (indices ds)]
-        (reduce lexicographically-smallest
-                (for [D (elements ds)]
-                  (protocol ds idcs (traversal ds idcs [D]))))))))
+      (reduce lexicographically-smallest
+              (for [D (elements ds)] (invariant ds D))))))
 
 (defn walk [ds D & idxs]
   "Returns the result of applying the D-symbol operators on ds with the
@@ -518,17 +521,16 @@
                      (-> ops (assoc-in [i E] D) (assoc-in [i D] E))
                      (update vs data D) (max n D)))))))
 
-(defn canonical [ds]
-  (let [ds (dsymbol ds)]
-    (from-protocol (dim ds) (size ds) (invariant ds))))
+(defn canonical
+  ([ds]
+    (let [ds (dsymbol ds)]
+      (from-protocol (dim ds) (size ds) (invariant ds))))
+  ([ds D]
+    (let [ds (dsymbol ds)]
+      (from-protocol (dim ds) (size ds) (invariant ds D)))))
 
 (defn canonical? [ds]
   (= (dsymbol ds) (canonical ds)))
-
-(defn renumbered-from [ds D]
-  (let [idcs (indices ds)]
-    (from-protocol (dim ds) (size ds)
-                   (protocol ds idcs (traversal ds idcs [D])))))
 
 (defn isomorphic? [ds1 ds2]
   (= (invariant ds1) (invariant ds2)))
