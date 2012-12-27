@@ -33,16 +33,25 @@
                       (let [root (pfind self x)]
                         (assoc b root (conj (or (b root) #{}) x))))
              blocks (reduce add-in {} (apply concat parent))]
-         (vals blocks))))
+         (vals blocks)))
+  clojure.lang.IFn
+  (invoke [self] self)
+  (invoke [self x] (pfind self x))
+  (applyTo [self args] (clojure.lang.AFn/applyToHelper self args))
+  clojure.lang.IPersistentCollection
+  (count [self] (count (into #{} (apply concat parent))))
+  (empty [self] (Partition. {} {}))
+  (cons [self [a b]] (punion self a b))
+  (equiv [self obj]
+         (= (seq self) (if (extends? IPartition (type obj)) (seq obj) obj))))
 
 (def pempty (Partition. {} {}))
 
+(defn pmake [& xs] (into pempty (partition 2 xs)))
+
 ;; === Tests
 
-(def ^{:private true} p
-  (-> pempty
-    (punion 1 2) (punion 3 4) (punion 2 4)
-    (punion 1 5) (punion 6 7) (punion 8 8)))
+(def ^{:private true} p (pmake 1 2, 3 4, 2 4, 1 5, 6 7, 8 8))
 
 (deftest partition-test
   (testing "find"
