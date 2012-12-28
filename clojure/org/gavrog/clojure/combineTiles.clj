@@ -1,8 +1,10 @@
 (ns org.gavrog.clojure.combineTiles
-  (:use (org.gavrog.clojure
-          [partition]
+  (:use (clojure
+          [set :only [difference]])
+        (org.gavrog.clojure
           [generators :only [make-backtracker results]]
-          [delaney])))
+          delaney
+          partition)))
 
 (defn- components-with-multiplicities [ds]
   (let [idcs (indices ds)]
@@ -24,22 +26,43 @@
                  E block]
              [E inv])))
 
+(defn- glue-faces [ds i D E] ;; TODO implement this
+  )
+
+(defn- children [d forms [symbol sig free-elements free-components]]
+  (when-let [D (first (free-elements))]
+    (let [face-idcs (range (dec d))
+          face (fn [D] (orbit-elements symbol face-idcs D))
+          adding (for [E free-elements :when (= (sig D) (sig E))]
+                   [(glue-faces ds d D E)
+                    signatures
+                    (difference free-elements (face D) (face E))
+                    free-components])
+          extending (for [[part n] free-components
+                          :when (pos? n)
+                          [form s] (forms part)
+                          :when (= (sig D) (s (first (elements form))))]
+                      ;; TODO need to concatenate form to ds, then glue
+                      [])
+        ])))
+
 (defn combine-tiles [ds]
-  (let [d (dim ds)
-        face-idcs (range d)
+  (let [d (inc (dim ds))
+        face-idcs (range (dim ds))
         counts (components-with-multiplicities ds)
         parts (keys counts)
-        forms (into {} (for [sub parts] [sub (inequivalent-forms sub)]))
-        sigs (into {} (for [sub parts] [sub (signatures sub face-idcs)]))]
+        forms (into {} (for [sub parts]
+                         [sub (for [f (inequivalent-forms sub)]
+                                [f (signatures f face-idcs)])]))]
     (make-backtracker 
-      {:root (let [sub (first parts)]
+      {:root (let [[sub sigs] (first (forms (first parts)))]
                [sub
-                (sigs sub)
-                (orbit-reps sub face-idcs)
+                sigs
+                (into #{} (orbit-reps sub face-idcs))
                 (assoc counts sub (dec (counts sub)))])
        :extract (fn [[symbol _ free-elements free-components]]
                   (when (and (empty? free-elements)
                              (every? (comp zero? second) free-components)
                              (canonical? symbol))
                     symbol))
-       :children (fn [[]])})))
+       :children (partial children d forms)})))
