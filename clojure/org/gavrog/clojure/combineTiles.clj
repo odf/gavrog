@@ -44,16 +44,20 @@
           face (fn [D] (orbit-elements symbol face-idcs D))
           adding (for [E free-elements :when (= (sig D) (sig E))]
                    [(glue-faces symbol d D E)
-                    signatures
+                    sig
                     (difference free-elements (face D) (face E))
                     free-components])
           extending (for [[part n] free-components
                           :when (pos? n)
                           [form s] (forms part)
-                          :when (= (sig D) (s (first (elements form))))]
-                      ;; TODO need to concatenate form to ds, then glue
-                      [])
-        ])))
+                          :when (= (sig D) (s 1))]
+                      [(glue-faces (append symbol form) d D (inc (size symbol)))
+                       (into sig (for [D (range 1 (inc (size form)))]
+                                   [(+ (size symbol D)) (s D)]))
+                       (difference (union free-elements ...) (face D) ...)
+                       (assoc free-components part
+                              (dec (free-componets part)))])]
+      (concat adding extending))))
 
 (defn combine-tiles [ds]
   (let [d (inc (dim ds))
