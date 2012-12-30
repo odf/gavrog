@@ -2,6 +2,7 @@
   (:use (clojure
           [set :only [difference]])
         (org.gavrog.clojure
+          [util :only [empty-queue]]
           [generators :only [make-backtracker results]]
           delaney
           partition)))
@@ -26,15 +27,23 @@
                  E block]
              [E inv])))
 
-(defn- glue-faces [ds i D E] ;; TODO implement this
-  )
+(defn- glue-faces [ds i D E]
+  (loop [ds ds, q (conj empty-queue [D E])]
+    (if (empty? q)
+      ds
+      (let [[D E] (first q)]
+        (if (s ds i D)
+          (recur ds (rest q))
+          (recur (glue ds i D E)
+                 (into (rest q) (for [j (range (dec i))]
+                                  [(s ds j D) (s ds j E)]))))))))
 
 (defn- children [d forms [symbol sig free-elements free-components]]
   (when-let [D (first (free-elements))]
     (let [face-idcs (range (dec d))
           face (fn [D] (orbit-elements symbol face-idcs D))
           adding (for [E free-elements :when (= (sig D) (sig E))]
-                   [(glue-faces ds d D E)
+                   [(glue-faces symbol d D E)
                     signatures
                     (difference free-elements (face D) (face E))
                     free-components])
