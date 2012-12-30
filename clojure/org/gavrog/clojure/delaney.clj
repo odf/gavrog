@@ -97,7 +97,7 @@
     (orbit-reps ds indices (elements ds))))
 
 (defn orbit-elements [ds indices seed]
-  (distinct (for [[D i] (traversal ds indices [seed])] D)))
+  (distinct (for [[_ i D] (traversal ds indices [seed])] D)))
 
 (defn connected? [ds]
   (> 2 (count (orbit-reps ds (indices ds)))))
@@ -146,7 +146,7 @@
   ([ds D]
     (let [idcs (indices ds), t (traversal ds idcs [D])]
       (do
-        (assert (= (size ds) (count (into #{} (map first t))))
+        (assert (= (size ds) (count (into #{} (map (fn [[_ _ D]] D) t))))
                 "Symbol must be connected")
         (protocol ds idcs t))))
   ([ds]
