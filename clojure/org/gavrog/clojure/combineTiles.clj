@@ -1,6 +1,6 @@
 (ns org.gavrog.clojure.combineTiles
   (:use (clojure
-          [set :only [difference]])
+          [set :only [difference union]])
         (org.gavrog.clojure
           [util :only [empty-queue]]
           [generators :only [make-backtracker results]]
@@ -38,26 +38,33 @@
                  (into (rest q) (for [j (range (dec i))]
                                   [(s ds j D) (s ds j E)]))))))))
 
-(defn- children [d forms [symbol sig free-elements free-components]]
-  (when-let [D (first (free-elements))]
-    (let [face-idcs (range (dec d))
-          face (fn [D] (orbit-elements symbol face-idcs D))
-          adding (for [E free-elements :when (= (sig D) (sig E))]
-                   [(glue-faces symbol d D E)
-                    sig
-                    (difference free-elements (face D) (face E))
-                    free-components])
-          extending (for [[part n] free-components
-                          :when (pos? n)
-                          [form s] (forms part)
-                          :when (= (sig D) (s 1))]
-                      [(glue-faces (append symbol form) d D (inc (size symbol)))
-                       (into sig (for [D (range 1 (inc (size form)))]
-                                   [(+ (size symbol D)) (s D)]))
-                       (difference (union free-elements ...) (face D) ...)
-                       (assoc free-components part
-                              (dec (free-componets part)))])]
-      (concat adding extending))))
+(defn- augmentations [d forms [symbol sig free-elements free-components]]
+  (when-let [D (first free-elements)]
+    (let [face (fn [D] (orbit-elements symbol (range (dec d)) D))]
+      (for [E free-elements :when (= (sig D) (sig E))]
+        [(glue-faces symbol d D E)
+         sig
+         (difference free-elements (face D) (face E))
+         free-components]))))
+
+(defn- extensions [d forms [symbol sig free-elements free-components]]
+  (when-let [D (first free-elements)]
+    (let [sz (size symbol)]
+      (for [[part n] free-components
+            :when (pos? n)
+            [form s] (forms part)
+            :when (= (sig D) (s 1))
+            face (orbit-elements symbol (range (dec d)) D)]
+        [(glue-faces (append symbol form) d D (inc sz))
+         (into sig (for [D (range 1 (inc (size form)))] [(+ sz D) (s D)]))
+         (difference (union free-elements
+                            (range (inc sz) (inc (+ sz (size form)))))
+                     face
+                     (range (inc sz) (+ sz (count face))))
+         (assoc free-components part (dec (free-components part)))]))))
+
+(defn- children [d forms state]
+  (concat (augmentations d forms state) (extensions d forms state)))
 
 (defn combine-tiles [ds]
   (let [d (inc (dim ds))
@@ -71,7 +78,7 @@
       {:root (let [[sub sigs] (first (forms (first parts)))]
                [sub
                 sigs
-                (into #{} (orbit-reps sub face-idcs))
+                (into #{} (elements sub))
                 (assoc counts sub (dec (counts sub)))])
        :extract (fn [[symbol _ free-elements free-components]]
                   (when (and (empty? free-elements)
