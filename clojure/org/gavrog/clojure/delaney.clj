@@ -559,6 +559,31 @@
             vs (into {} (for [[i j] ipairs] [(imap i) (into {} (spins i j))]))]
         (DSymbol. (dim ds) (count reps) ops vs)))))
 
+(defn append
+  ([] (dsymbol "0"))
+  ([ds] ds)
+  ([ds1 ds2]
+    (let [ds1 (dsymbol ds1)
+          ds2 (dsymbol ds2)
+          d (max (dim ds1) (dim ds2))
+          s1 (size ds1)
+          s2 (size ds2)
+          ops (into {} (for [i (range (inc d))]
+                         [i (into {} (concat (for [D (elements ds1)]
+                                               [D (s ds1 i D)])
+                                             (for [D (elements ds2)]
+                                               [(+ s1 D)
+                                                (+ s1 (s ds2 i D))])))]))
+          vs (into {} (for [i (range d)]
+                        [i (into {} (concat (for [D (elements ds1)]
+                                              [D (v ds1 i (inc i) D)])
+                                            (for [D (elements ds2)]
+                                              [(+ s1 D)
+                                               (v ds2 i (inc i) D)])))]))]
+      (DSymbol. d (+ s1 s2) ops vs)))
+  ([ds1 ds2 & xds]
+    (reduce append (append ds1 ds2) xds)))
+
 ;; === Tests
 
 (deftest delaney-test
