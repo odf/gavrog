@@ -54,23 +54,20 @@
             :when (pos? n)
             [form s] (forms part)
             :when (= (sig D) (s 1))
-            face (orbit-elements symbol (range (dec d)) D)]
+            :let [face (orbit-elements symbol (range (dec d)) D)]]
         [(glue-faces (append symbol form) d D (inc sz))
          (into sig (for [D (range 1 (inc (size form)))] [(+ sz D) (s D)]))
          (difference (union free-elements
-                            (range (inc sz) (inc (+ sz (size form)))))
+                            (set (range (inc sz) (inc (+ sz (size form))))))
                      face
-                     (range (inc sz) (+ sz (count face))))
+                     (set (range (inc sz) (inc (+ sz (count face))))))
          (assoc free-components part (dec (free-components part)))]))))
-
-(defn- children [d forms state]
-  (concat (augmentations d forms state) (extensions d forms state)))
 
 (defn combine-tiles [ds]
   (let [d (inc (dim ds))
         face-idcs (range (dim ds))
         counts (components-with-multiplicities ds)
-        parts (keys counts)
+        parts (sort-by (comp vec invariant) (keys counts))
         forms (into {} (for [sub parts]
                          [sub (for [f (inequivalent-forms sub)]
                                 [f (signatures f face-idcs)])]))]
@@ -85,4 +82,6 @@
                              (every? (comp zero? second) free-components)
                              (canonical? symbol))
                     symbol))
-       :children (partial children d forms)})))
+       :children (fn [state]
+                   (concat (augmentations d forms state)
+                           (extensions d forms state)))})))
