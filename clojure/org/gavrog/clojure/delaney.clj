@@ -146,7 +146,7 @@
   ([ds D]
     (let [idcs (indices ds), t (traversal ds idcs [D])]
       (do
-        (assert (= (size ds) (count (into #{} (map (fn [[_ _ D]] D) t))))
+        (assert (>= 1 (count (for [[_ i _] t :when (= :root i)] true)))
                 "Symbol must be connected")
         (protocol ds idcs t))))
   ([ds]
