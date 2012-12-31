@@ -3,7 +3,8 @@
           [util :only [iterate-cycle]]
           [delaney]
           [generators :only [results]]
-          [branchings2d :only [branchings]]))
+          [branchings2d :only [branchings]]
+          [combineTiles :only [combine-tiles]]))
   (:import (org.gavrog.joss.dsyms.generators CombineTiles))
   (:gen-class))
 
@@ -40,7 +41,8 @@
     spun))
 
 (def octa-sets (filter #(-> % (curvature 1) (>= 0))
-                       (lazy-seq (CombineTiles. (java-dsymbol octagon)))))
+                       ;(lazy-seq (CombineTiles. (java-dsymbol octagon)))))
+                       (results (combine-tiles octagon))))
 
 (def octa-syms
   (for [dset octa-sets
