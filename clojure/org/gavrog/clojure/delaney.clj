@@ -529,8 +529,11 @@
     (let [ds (dsymbol ds)]
       (from-protocol (dim ds) (size ds) (invariant ds D)))))
 
-(defn canonical? [ds]
-  (= (dsymbol ds) (canonical ds)))
+(defn canonical?
+  ([ds]
+    (= (dsymbol ds) (canonical ds)))
+  ([ds D]
+    (= (dsymbol ds) (canonical ds D))))
 
 (defn isomorphic? [ds1 ds2]
   (= (invariant ds1) (invariant ds2)))
