@@ -573,7 +573,8 @@
                                                [D (s ds1 i D)])
                                              (for [D (elements ds2)]
                                                [(+ s1 D)
-                                                (+ s1 (s ds2 i D))])))]))
+                                                (when-let [E (s ds2 i D)]
+                                                  (+ s1 E))])))]))
           vs (into {} (for [i (range d)]
                         [i (into {} (concat (for [D (elements ds1)]
                                               [D (v ds1 i (inc i) D)])
