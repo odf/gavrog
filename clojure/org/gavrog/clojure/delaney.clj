@@ -3,7 +3,7 @@
   (:use (clojure test)
         (org.gavrog.clojure partition)
         (org.gavrog.clojure util))
-  (:import (org.gavrog.joss.dsyms.basic DelaneySymbol DSMorphism)
+  (:import (org.gavrog.joss.dsyms.basic DelaneySymbol)
            (java.io Writer)))
 
 (defprotocol IDSymbol
@@ -144,15 +144,13 @@
 
 (defn invariant 
   ([ds D]
-    (let [idcs (indices ds), t (traversal ds idcs [D])]
-      (do
-        (assert (>= 1 (count (for [[_ i _] t :when (= :root i)] true)))
-                "Symbol must be connected")
-        (protocol ds idcs t))))
+    (let [idcs (indices ds)]
+      (protocol ds idcs (traversal ds idcs [D]))))
   ([ds]
     (when (pos? (size ds))
-      (reduce lexicographically-smallest
-              (for [D (elements ds)] (invariant ds D))))))
+      (do (assert (connected? ds) "Symbol must be connected")
+        (reduce lexicographically-smallest
+                (for [D (elements ds)] (invariant ds D)))))))
 
 (defn walk [ds D & idxs]
   "Returns the result of applying the D-symbol operators on ds with the
