@@ -5,7 +5,6 @@
           [generators :only [results]]
           [branchings2d :only [branchings]]
           [combineTiles :only [combine-tiles]]))
-  (:import (org.gavrog.joss.dsyms.generators CombineTiles))
   (:gen-class))
 
 ;; Azulenoid-specific functions
@@ -41,7 +40,6 @@
     spun))
 
 (def octa-sets (filter #(-> % (curvature 1) (>= 0))
-                       ;(lazy-seq (CombineTiles. (java-dsymbol octagon)))))
                        (results (combine-tiles octagon))))
 
 (def octa-syms
