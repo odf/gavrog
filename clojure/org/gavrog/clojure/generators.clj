@@ -6,7 +6,9 @@
 
 (defn traverse [gen]
   (when gen
-    (lazy-seq (cons gen (traverse (step gen))))))
+    (if-let [next (step gen)]
+      (lazy-seq (cons gen (traverse next)))
+      (list gen))))
 
 (defn results [gen]
   (remove nil? (map result (traverse gen))))
