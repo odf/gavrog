@@ -77,18 +77,18 @@
            (seq todo-for-i)
            (let [D (first todo-for-i)
                  Di (s ds i D)
-                 todo (if Di (doall (push-neighbors todo Di)) todo)
+                 todo (if Di (vec (push-neighbors todo Di)) todo)
                  seen (conj seen (as-root Di) [D i] [Di i])]
              (lazy-seq (cons [D i Di] (collect seeds-left todo seen))))
            (seq seeds-left)
            (let [D (first seeds-left)
-                 todo (doall (push-neighbors todo D))
+                 todo (vec (push-neighbors todo D))
                  seen (conj seen (as-root D))]
              (lazy-seq
                (cons (as-root D) (collect (rest seeds-left) todo seen))))
            :else
            ())))
-      (seq seeds) (doall (concat stacks queues)) #{})))
+      (seq seeds) (vec (concat stacks queues)) #{})))
 
 (defn orbit-reps
   ([ds indices seeds]
@@ -129,17 +129,17 @@
         ipairs (map vector indices (rest indices))
         spins (fn [D] (for [[i j] ipairs] (or (v ds i j D) 0)))
         step (fn step [xs emap n]
-               (when (seq xs)
-                 (let [[[Di i D] & xs] xs]
-                   (if (nil? D)
-                     (recur xs emap n)
-                     (let [[Ei E] (sort [(emap Di) (or (emap D) n)])
-                           new? (= E n)
-                           emap (if new? (assoc emap D n) emap)
-                           n (if new? (inc n) n)
-                           head (if (= i :root) [-1] [(imap i) Ei])
-                           tail (if new? (spins D) [])]
-                       (concat head [E] tail (step xs emap n)))))))]
+               (when-let [[Di i D] (first xs)]
+                 (if (nil? D)
+                   (recur (rest xs) emap n)
+                   (let [[Ei E] (sort [(emap Di) (or (emap D) n)])
+                         new? (= E n)
+                         emap (if new? (assoc emap D n) emap)
+                         n (if new? (inc n) n)
+                         head (if (= i :root) [-1] [(imap i) Ei])
+                         tail (if new? (spins D) [])
+                         prefix (vec (concat head [E] tail))]
+                     (lazy-seq (concat prefix (step (rest xs) emap n)))))))]
     (step trav {} 1)))
 
 (defn invariant 
