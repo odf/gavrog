@@ -77,15 +77,17 @@
            (seq todo-for-i)
            (let [D (first todo-for-i)
                  Di (s ds i D)
+                 head [D i Di]
                  todo (if Di (vec (push-neighbors todo Di)) todo)
                  seen (conj seen (as-root Di) [D i] [Di i])]
-             (lazy-seq (cons [D i Di] (collect seeds-left todo seen))))
+             (lazy-seq (cons head (collect seeds-left todo seen))))
            (seq seeds-left)
            (let [D (first seeds-left)
+                 head (as-root D)
+                 seeds-left (rest seeds-left)
                  todo (vec (push-neighbors todo D))
                  seen (conj seen (as-root D))]
-             (lazy-seq
-               (cons (as-root D) (collect (rest seeds-left) todo seen))))
+             (lazy-seq (cons head (collect seeds-left todo seen))))
            :else
            ())))
       (seq seeds) (vec (concat stacks queues)) #{})))
@@ -133,13 +135,14 @@
                  (if (nil? D)
                    (recur (rest xs) emap n)
                    (let [[Ei E] (sort [(emap Di) (or (emap D) n)])
-                         new? (= E n)
-                         emap (if new? (assoc emap D n) emap)
-                         n (if new? (inc n) n)
-                         head (if (= i :root) [-1] [(imap i) Ei])
-                         tail (if new? (spins D) [])
-                         prefix (vec (concat head [E] tail))]
-                     (lazy-seq (concat prefix (step (rest xs) emap n)))))))]
+                         head (if (= i :root) [-1 E] [(imap i) Ei E])
+                         xs (rest xs)]
+                     (if (not= E n)
+                       (lazy-seq (concat head (step xs emap n)))
+                       (let [head (vec (concat head (spins D)))
+                             emap (assoc emap D n)
+                             n (inc n)]
+                         (lazy-seq (concat head (step xs emap n)))))))))]
     (step trav {} 1)))
 
 (defn invariant 
