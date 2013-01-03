@@ -145,15 +145,15 @@
                          (lazy-seq (concat head (step xs emap n)))))))))]
     (step trav {} 1)))
 
-(defn invariant 
+(defn invariant
   ([ds D]
     (let [idcs (indices ds)]
       (protocol ds idcs (traversal ds idcs [D]))))
   ([ds]
     (when (pos? (size ds))
       (assert (connected? ds) "Symbol must be connected")
-      (reduce lexicographically-smallest
-              (for [D (elements ds)] (invariant ds D))))))
+      (apply lexicographically-smallest
+             (for [D (elements ds)] (invariant ds D))))))
 
 (defn walk [ds D & idxs]
   "Returns the result of applying the D-symbol operators on ds with the
@@ -244,7 +244,8 @@
         (if (empty? q)
           mapping
           (let [[D E] (first q)
-                pairs (for [i idcs] [(s src i D) (s img i E)])]
+                pairs (filter (partial not= [nil nil])
+                              (for [i idcs] [(s src i D) (s img i E)]))]
             (if (every? (partial match mapping) pairs)
               (recur (into mapping pairs)
                      (into (rest q) (filter (comp nil? mapping first) pairs)))
@@ -253,6 +254,10 @@
 (defn automorphisms [ds]
   (if-let [D (first (elements ds))]
     (keep (partial morphism ds ds D) (elements ds))))
+
+(defn automorphism-orbits [ds]
+  (or (seq (into pempty (apply concat (automorphisms ds)))) (elements ds)))
+
 
 ;; === Persistent Clojure implementation of IDSymbol with some common
 ;;     restrictions.
@@ -529,6 +534,9 @@
   ([ds D]
     (let [ds (dsymbol ds)]
       (from-protocol (dim ds) (size ds) (invariant ds D)))))
+
+(defn inequivalent-forms [ds]
+  (for [orb (automorphism-orbits ds)] (canonical ds (first orb))))
 
 (defn canonical?
   ([ds]

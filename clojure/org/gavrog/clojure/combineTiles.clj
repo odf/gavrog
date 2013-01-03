@@ -11,18 +11,10 @@
   (let [idcs (indices ds)]
     (frequencies (for [D (orbit-reps ds idcs)] (canonical (orbit ds idcs D))))))
 
-(defn- partition-by-automorphism-group [ds]
-  (or (seq (into pempty (apply concat (automorphisms ds))))
-      (map hash-set (elements ds))))
-
-(defn- inequivalent-forms [ds]
-  (for [orb (partition-by-automorphism-group ds)]
-    (canonical ds (first orb))))
-
 (defn- signatures [ds, idcs]
   (into {} (for [D (orbit-reps ds idcs)
                  :let [sub (orbit ds idcs D)]
-                 block (partition-by-automorphism-group sub)
+                 block (automorphism-orbits sub)
                  :let [inv (invariant sub (first block))],
                  E block]
              [E inv])))
