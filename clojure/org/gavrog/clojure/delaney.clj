@@ -28,8 +28,8 @@
   (elements [ds] (iterator-seq (.elements ds)))
   (index? [ds i] (.hasIndex ds i))
   (indices [ds] (iterator-seq (.indices ds)))
-  (s [ds i D] (when (.definesOp ds i D) (.op ds i D)))
-  (v [ds i j D] (when (.definesV ds i j D) (.v ds i j D))))
+  (s [ds i D] (if (.definesOp ds i D) (.op ds i D)))
+  (v [ds i j D] (if (.definesV ds i j D) (.v ds i j D))))
 
 
 ;; === Helper functions
@@ -131,7 +131,7 @@
         ipairs (map vector indices (rest indices))
         spins (fn [D] (for [[i j] ipairs] (or (v ds i j D) 0)))
         step (fn step [xs emap n]
-               (when-let [[Di i D] (first xs)]
+               (if-let [[Di i D] (first xs)]
                  (if (nil? D)
                    (recur (rest xs) emap n)
                    (let [[Ei E] (sort [(emap Di) (or (emap D) n)])
@@ -151,9 +151,9 @@
       (protocol ds idcs (traversal ds idcs [D]))))
   ([ds]
     (when (pos? (size ds))
-      (do (assert (connected? ds) "Symbol must be connected")
-        (reduce lexicographically-smallest
-                (for [D (elements ds)] (invariant ds D)))))))
+      (assert (connected? ds) "Symbol must be connected")
+      (reduce lexicographically-smallest
+              (for [D (elements ds)] (invariant ds D))))))
 
 (defn walk [ds D & idxs]
   "Returns the result of applying the D-symbol operators on ds with the
@@ -163,7 +163,7 @@
 
 (defn r [ds i j D]
   (loop [n 1, E D]
-    (when-let [F (walk ds E i j)]
+    (if-let [F (walk ds E i j)]
       (if (= F D)
         n
         (recur (inc n) F)))))
@@ -171,7 +171,7 @@
 (defn m [ds i j D]
   (let [v (v ds i j D)
         r (r ds i j D)]
-    (when (and v r) (* v r))))
+    (if (and v r) (* v r))))
 
 (defn chain-end [ds D i j]
   "Returns the result of alternately applying operators indexed i and j,
@@ -251,7 +251,7 @@
               nil)))))))
 
 (defn automorphisms [ds]
-  (when-let [D (first (elements ds))]
+  (if-let [D (first (elements ds))]
     (keep (partial morphism ds ds D) (elements ds))))
 
 ;; === Persistent Clojure implementation of IDSymbol with some common
@@ -269,7 +269,7 @@
   (indices [_] (range 0 (inc dim)))
   (s [_ i D] ((or (s# i) {}) D))
   (v [ds i j D]
-     (when (and (element? ds D) (index? ds i) (index? ds j))
+     (if (and (element? ds D) (index? ds i) (index? ds j))
        (cond (= j (inc i)) ((or (v# i) {}) D)
              (= j (dec i)) ((or (v# j) {}) D)
              (= j i) 1
@@ -372,10 +372,10 @@
   (index? [_ i] (idx-set i))
   (indices [_] (seq idx-set))
   (s [self i D]
-     (when (and (index? self i) (element? self D))
+     (if (and (index? self i) (element? self D))
        (s base i D)))
   (v [self i j D]
-     (when (and (index? self i) (index? self j) (element? self D))
+     (if (and (index? self i) (index? self j) (element? self D))
        (v base i j D)))
   Object
   (equals [self other]
@@ -404,15 +404,15 @@
 ;; === Factories for DSymbol instances
 
 (defn- parse-numbers [str]
-  (when (and str (< 0 (count (s/trim str))))
-    (map #(Integer/parseInt %) (-> str s/trim (s/split #"\s+")))))
+  (if (and str (< 0 (count (s/trim str))))
+    (map #(Integer/parseInt %) (s/split (s/trim str) #"\s+"))))
 
 (defn- parse-number-lists [str]
-  (when str
-    (map parse-numbers (-> str s/trim (s/split #",")))))
+  (if str
+    (map parse-numbers (s/split (s/trim str) #","))))
 
 (defn- pairs [data free]
-  (when (seq free)
+  (if (seq free)
     (let [pair [(first free) (first data)]
           rest-free (remove (set pair) free)]
       (lazy-seq (cons pair (pairs (rest data) rest-free))))))
@@ -577,7 +577,7 @@
                                                [D (s ds1 i D)])
                                              (for [D (elements ds2)]
                                                [(+ s1 D)
-                                                (when-let [E (s ds2 i D)]
+                                                (if-let [E (s ds2 i D)]
                                                   (+ s1 E))])))]))
           vs (into {} (for [i (range d)]
                         [i (into {} (concat (for [D (elements ds1)]
