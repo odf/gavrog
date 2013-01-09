@@ -92,50 +92,6 @@
            ())))
       (seq seeds) (vec (concat stacks queues)) #{})))
 
-(defn trav-alt [ds idcs seeds]
-  (let [[i1 i2] (take 2 idcs)
-        high-idcs (drop 2 idcs)
-        plus-all (fn [pairs D] (into pairs (for [i high-idcs] [i D])))]
-    (letfn [(step [o2n n2o n stack free seeds]
-                  (cond
-                    (seq stack)
-                    (let [[i D] (first stack), oDi (s ds i (n2o D))]
-                      (if (and (not (nil? oDi)) (not= (or (o2n oDi) D) D))
-                        (recur o2n n2o n (pop stack) free seeds)
-                        (continue (first stack) o2n n2o n (pop stack) free
-                                  seeds)))
-                    (seq free)
-                    (continue (first free) o2n n2o n stack free seeds)
-                    (seq seeds)
-                    (let [D (first seeds)]
-                      (if (o2n D)
-                        (recur o2n n2o n stack free (rest seeds))
-                        (let [head [D :root D]
-                              o2n (assoc o2n D n)
-                              n2o (assoc n2o n D)
-                              stack (conj stack [i2 n] [i1 n])
-                              free (plus-all free n)
-                              seeds (rest seeds)
-                              n (inc n)]
-                          (lazy-seq
-                            (cons head (step o2n n2o n stack free seeds))))))))
-            (continue [[i D] o2n n2o n stack free seeds]
-                      (if-let [oDi (s ds i (n2o D))]
-                        (let [Di (or (o2n oDi) n)
-                              stack (if (< Di n)
-                                      stack (conj stack [i2 Di] [i1 Di]))
-                              free (if (< Di n)
-                                     free (plus-all free Di))
-                              o2n (assoc o2n oDi Di)
-                              n2o (assoc n2o Di oDi)
-                              n (max n (inc Di))
-                              free (disj free [i D] [i Di])]
-                          (lazy-seq (cons [(n2o D) i (n2o Di)]
-                                          (step o2n n2o n stack free seeds))))
-                        (lazy-seq (cons [(n2o D) i nil]
-                                        (step o2n n2o n stack free seeds)))))]
-           (step {} {} 1 '() (sorted-set) (seq seeds)))))
-
 (defn orbit-reps
   ([ds indices seeds]
     (for [[D i] (traversal ds indices seeds) :when (= :root i)] D))
