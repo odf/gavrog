@@ -65,7 +65,7 @@
 (defn traversal [ds indices seeds]
   (let [stacks (map #(vector % ()) (take 2 indices))
         queues (map #(vector % empty-queue) (drop 2 indices))
-        as-root #(vector % :root %)
+        as-root #(vector :root %)
         unseen (fn [i seen bag] (pop-while #(seen [% i]) bag))
         pop-seen #(for [[i ys] %1] (vector i (unseen i %2 ys)))
         push-neighbors #(for [[i ys] %1] (vector i (conj ys %2)))]
@@ -77,7 +77,7 @@
            (seq todo-for-i)
            (let [D (first todo-for-i)
                  Di (s ds i D)
-                 head [D i Di]
+                 head [i Di]
                  todo (if Di (vec (push-neighbors todo Di)) todo)
                  seen (conj seen (as-root Di) [D i] [Di i])]
              (lazy-seq (cons head (collect seeds-left todo seen))))
@@ -94,22 +94,23 @@
 
 (defn orbit-reps
   ([ds indices seeds]
-    (for [[D i] (traversal ds indices seeds) :when (= :root i)] D))
+    (for [[i D] (traversal ds indices seeds) :when (= :root i)] D))
   ([ds indices]
     (orbit-reps ds indices (elements ds))))
 
 (defn orbit-elements [ds indices seed]
-  (distinct (for [[_ i D] (traversal ds indices [seed])] D)))
+  (distinct (for [[i D] (traversal ds indices [seed])] D)))
 
 (defn connected? [ds]
   (> 2 (count (orbit-reps ds (indices ds)))))
 
 (defn partial-orientation [ds]
   (loop [ori {}
-         [[Di i D] & xs] (traversal ds (indices ds) (elements ds))]
+         [[i D] & xs] (traversal ds (indices ds) (elements ds))]
     (cond (nil? i) ori
           (or (nil? D) (ori D)) (recur ori xs)
-          :else (recur (assoc ori D (if (= :root i) 1 (- (ori Di)))) xs))))
+          :else (recur (assoc ori D
+                              (if (= :root i) 1 (- (ori (s ds i D))))) xs))))
 
 (defn loopless? [ds]
   (every? (fn [[i D]] (not= D (s ds i D)))
@@ -131,10 +132,11 @@
         ipairs (map vector indices (rest indices))
         spins (fn [D] (for [[i j] ipairs] (or (v ds i j D) 0)))
         step (fn step [xs emap n]
-               (if-let [[Di i D] (first xs)]
+               (if-let [[i D] (first xs)]
                  (if (nil? D)
                    (recur (rest xs) emap n)
-                   (let [[Ei E] (sort [(emap Di) (or (emap D) n)])
+                   (let [Di (s ds i D)
+                         [Ei E] (sort [(emap Di) (or (emap D) n)])
                          head (if (= i :root) [-1 E] [(imap i) Ei E])
                          xs (rest xs)]
                      (if (not= E n)
@@ -186,8 +188,8 @@
         :else (recur (walk ds E j i))))))
 
 (defn orbit-loopless? [ds indices D]
-  (empty? (for [[D i] (traversal ds indices [D])
-                :when (and (not= i :root) (or (nil? D) (= D (s ds i D))))]
+  (empty? (for [[i E] (traversal ds indices [D])
+                :when (and (not= i :root) (or (nil? E) (= E (s ds i E))))]
             D)))
 
 (defn curvature
