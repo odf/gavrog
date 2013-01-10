@@ -20,7 +20,7 @@
     (every? #(-> % diffs sign (>= 0)) maps)))
 
 (defn branchings
-  [d-set & {:keys [face-sizes-at-least
+  [ds & {:keys [face-sizes-at-least
                    vertex-degrees-at-least
                    curvature-at-least
                    try-spins]
@@ -28,8 +28,7 @@
                  vertex-degrees-at-least 3
                  curvature-at-least 0
                  try-spins [1 2 3 4 6]}}]
-  (let [ds (canonical d-set)
-        maps (automorphisms ds)
+  (let [maps (automorphisms ds)
         new-curvature (fn [c s v] (+ c (* (if s 2 1) (- (/ v) 1))))
         still-good? (fn [c i D r s v]
                      (and (<= curvature-at-least (new-curvature c s v))
