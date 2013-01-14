@@ -12,3 +12,7 @@
               (/ (s D) (v D)))))
   ([ds]
     (curvature ds 0)))
+
+(defn euclidean? [ds] (= (curvature ds 1) 0))
+
+(defn proto-euclidean? [ds] (>= (curvature ds 1) 0))

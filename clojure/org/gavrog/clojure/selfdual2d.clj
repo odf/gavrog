@@ -8,10 +8,6 @@
   (:import (org.gavrog.joss.tilings Tiling))
   (:gen-class))
 
-(defn euclidean? [ds] (= (curvature ds 1) 0))
-
-(defn proto-euclidean? [ds] (>= (curvature ds 1) 0))
-
 (defn- good-node [net pos v]
   (not (empty? (.goodCombinations net (.allIncidences net v) pos))))
 
