@@ -3,13 +3,17 @@
 
 (defn curvature
   ([ds default-v]
-    (reduce +
-            (- (size ds))
-            (for [[i j] [[0 1] [0 2] [1 2]]
-                  :let [s #(if (orbit-loopless? ds [i j] %) 2 1)
-                        v #(or (v ds i j %) default-v)]
-                  D (orbit-reps ds [i j])]
-              (/ (s D) (v D)))))
+    (do
+      (assert (= 2 (dim ds)) (str "Expected 2d symbol, got " (dim ds) "d"))
+      (assert (connected? ds) "Symbol must be connected")
+      (let [[i j k] (indices ds)]
+        (reduce +
+                (- (size ds))
+                (for [[i j] [[i j] [i k] [j k]]
+                      :let [s #(if (orbit-loopless? ds [i j] %) 2 1)
+                            v #(or (v ds i j %) default-v)]
+                      D (orbit-reps ds [i j])]
+                  (/ (s D) (v D)))))))
   ([ds]
     (curvature ds 0)))
 
