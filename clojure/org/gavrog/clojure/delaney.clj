@@ -192,18 +192,6 @@
                 :when (and (not= i :root) (or (nil? D) (= D (s ds i D))))]
             D)))
 
-(defn curvature
-  ([ds default-v]
-    (reduce +
-            (- (size ds))
-            (for [[i j] [[0 1] [0 2] [1 2]]
-                  :let [s #(if (orbit-loopless? ds [i j] %) 2 1)
-                        v #(or (v ds i j %) default-v)]
-                  D (orbit-reps ds [i j])]
-              (/ (s D) (v D)))))
-  ([ds]
-    (curvature ds 0)))
-
 (defn- type-map [ds]
   (reduce (fn [m [D x]] (assoc m D (conj (or (m D) []) x)))
           {}

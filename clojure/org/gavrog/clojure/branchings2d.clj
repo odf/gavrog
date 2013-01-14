@@ -1,7 +1,8 @@
 (ns org.gavrog.clojure.branchings2d
   (:use (org.gavrog.clojure
           [generators :only [make-backtracker results]]
-          [delaney])))
+          [delaney]
+          [delaney2d])))
 
 (defn- open-orbits [ds]
   (for [i [0 1] :let [j (inc i)]

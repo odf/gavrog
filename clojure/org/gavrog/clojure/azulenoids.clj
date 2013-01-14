@@ -2,6 +2,7 @@
   (:use (org.gavrog.clojure
           [util :only [iterate-cycle]]
           [delaney]
+          [delaney2d]
           [generators :only [results]]
           [branchings2d :only [branchings]]
           [combineTiles :only [combine-tiles]]))

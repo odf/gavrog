@@ -1,6 +1,7 @@
 (ns org.gavrog.clojure.selfdual2d
   (:use (org.gavrog.clojure
           [delaney]
+          [delaney2d]
           [generators :only [results]]
           [dsets :only [dsets]]
           [branchings2d :only [branchings]]))
