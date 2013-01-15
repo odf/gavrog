@@ -33,3 +33,5 @@
                      (v ds i j D))
              n (count cones)]
          (and (not= 1 n) (or (not= 2 n) (= (first cones) (second cones)))))))
+
+(defn proto-spherical? [ds] (pos? (curvature ds 1)))
