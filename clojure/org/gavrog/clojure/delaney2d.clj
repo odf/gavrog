@@ -17,6 +17,19 @@
   ([ds]
     (curvature ds 0)))
 
-(defn euclidean? [ds] (= (curvature ds 1) 0))
+(defn euclidean? [ds] (zero? (curvature ds 1)))
 
-(defn proto-euclidean? [ds] (>= (curvature ds 1) 0))
+(defn proto-euclidean? [ds] (not (neg? (curvature ds 1))))
+
+(defn hyperbolic? [ds] (neg? (curvature ds 1)))
+
+(defn spherical? [ds]
+  (and (pos? (curvature ds 1))
+       (let [ds (oriented-cover ds)
+             [i j k] (indices ds)
+             cones (for [[i j] [[i j] [i k] [j k]]
+                         D (orbit-reps ds [i j])
+                         :when (< 1 (v ds i j D))]
+                     (v ds i j D))
+             n (count cones)]
+         (and (not= 1 n) (or (not= 2 n) (= (first cones) (second cones)))))))
