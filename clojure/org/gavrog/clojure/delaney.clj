@@ -587,6 +587,33 @@
   ([ds1 ds2 & xds]
     (reduce append (append ds1 ds2) xds)))
 
+(defn- oc-pairs [ori n D E]
+  (cond (= D E)
+        [[D (+ D n)] [(+ D n) D]],
+        (= (ori D) (ori E))
+        [[D (+ E n)] [(+ E n) D] [(+ D n) E] [E (+ D n)]],
+        :else
+        [[D E] [E D] [(+ D n) (+ E n)] [(+ E n) (+ D n)]]))
+
+(defn oriented-cover [ds]
+  (if (oriented? ds)
+    ds
+    (let [ds (dsymbol ds)
+          ori (partial-orientation ds)
+          d (dim ds)
+          n (size ds)
+          ops (into {} (for [i (range (inc d))]
+                         [i (into {} (apply concat
+                                            (for [D (elements ds)
+                                                  :let [E (s ds i D)]]
+                                              (oc-pairs ori n D E))))]))
+          vs (into {} (for [i (range d)]
+                        [i (into {} (apply concat
+                                           (for [D (elements ds)
+                                                 :let [x (v ds i (inc i) D)]]
+                                             [[D x] [(+ D n) x]])))]))]
+      (DSymbol. d (+ n n) ops vs))))
+
 ;; === Tests
 
 (deftest delaney-test
