@@ -5,19 +5,12 @@
   (if (= c a) b a))
 
 (defn- initial-todo [ds]
-  (loop [result []
-         seen #{}
-         todo (traversal ds (indices ds) (elements ds))]
-    (if (empty? todo)
-      (seq result)
-      (let [[D i E] (first todo)
-            todo (rest todo)]
-        (cond (= :root i)
-              (recur result (conj seen D) todo)
-              (seen E)
-              (recur result seen todo)
-              :else
-              (recur (conj result [D i nil]) (conj seen E) todo))))))
+  (first
+    (reduce (fn [[result seen] [D i E]]
+              [(if (or (= :root i) (seen E)) result (conj result [D i nil]))
+               (conj seen E)])
+            [[] #{}]
+            (traversal ds (indices ds) (elements ds)))))
 
 (defn- update-todo [ds todo opposite D i]
   (into todo (for [j (indices ds) :when (not= i j)]
