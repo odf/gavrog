@@ -248,47 +248,6 @@
 (defn automorphism-orbits [ds]
   (or (seq (into pempty (apply concat (automorphisms ds)))) (elements ds)))
 
-(defn- initial-queue [ds]
-  (into empty-queue (for [[D i E] (traversal ds (indices ds) (elements ds))
-                          :when (not= :root i)]
-                      [D i nil])))
-
-(defn- update-queue [ds q neighbor D i]
-  (into q (for [j (indices ds) :when (not= i j)
-                [E k] (neighbor [[D i] j])]
-            [E k (- (+ i j) k)])))
-
-(defn- initial-boundary [ds]
-  [(set (for [D (elements ds), i (indices ds)] [D i]))
-   (into {} (for [D (elements ds)
-                  i (indices ds)
-                  j (indices ds) :when (not= i j)]
-              [[[D i] j] 1]))
-   (into {} (for [D (elements ds)
-                  i (indices ds)
-                  j (indices ds) :when (not= i j)]
-              [[[D i] j] [D j]]))])
-
-(defn- glue-boundary [ds [on-bnd chain-len neighbor] D i]
-  ;; TODO implement this
-  )
-
-(defn fundamental-edges [ds]
-  (loop [q (initial-queue ds)
-         [on-bnd chain-len neighbor :as boundary] (initial-boundary ds)
-         result []]
-    (if (empty? q)
-      result
-      (let [[D i j] (first q)
-            q (pop q)]
-        (if (and (on-bnd [D i])
-                 (or (nil? j)
-                     (= chain-len (* 2 (m ds i j D)))))
-          (recur (update-queue ds q neighbor D i)
-                 (glue-boundary ds boundary D i)
-                 (conj result [D i]))
-          (recur q boundary result))))))
-
 
 ;; === Persistent Clojure implementation of IDSymbol with some common
 ;;     restrictions.
