@@ -154,7 +154,10 @@
   ([ds]
     (when (pos? (size ds))
       (assert (connected? ds) "Symbol must be connected")
-      (apply lexicographically-smallest
+      (reduce (fn [inv p]
+                (if (or (nil? inv) (neg? (compare-lexicographically p inv)))
+                  p
+                  inv))
              (for [D (elements ds)] (invariant ds D))))))
 
 (defn walk [ds D & idxs]
