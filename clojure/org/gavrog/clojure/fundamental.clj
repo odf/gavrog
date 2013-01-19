@@ -1,5 +1,5 @@
 (ns org.gavrog.clojure.fundamental
-  (:use (org.gavrog.clojure delaney)))
+  (:use (org.gavrog.clojure delaney free-word)))
 
 (defn- other [a b c]
   (if (= c a) b a))
@@ -53,26 +53,39 @@
                  (conj result [D i]))
           (recur todo boundary result))))))
 
-(defn- glue-generator [ds [on-bnd opposite] edge2word gen2edge D i]
+(defn- trace-word [ds edge2word D i]
   )
+
+(defn- glue-generator [ds [_ opposite :as boundary] edge2word gen2edge D i]
+  (let [gen (count gen2edge)
+        gen2edge (conj gen2edge [gen [D i]])]
+    (loop [todo (update-todo ds '() opposite D i)
+           [on-bnd opposite :as boundary] (glue-boundary ds boundary D i)
+           edge2word (conj edge2word [[D i] [gen]])]
+      (if (empty? todo)
+        [boundary edge2word gen2edge]
+        (let [[D i j] (first todo)
+              [_ _ n] (opposite [D i j])
+              todo (rest todo)]
+          (if (and (on-bnd [D i])
+                   (or (nil? j)
+                       (= n (* 2 (m ds i j D)))))
+            (recur (update-todo ds todo opposite D i)
+                   (glue-boundary ds boundary D i)
+                   (conj edge2word
+                         [[D i] (inverse (trace-word ds edge2word D i))]))
+            (recur todo boundary edge2word)))))))
 
 (defn- find-generators [ds]
   (let [boundary (reduce (fn [bnd [D i]] (glue-boundary ds bnd D i))
                          (initial-boundary ds)
                          (inner-edges ds))]
-    (loop [[on-bnd _ :as boundary] boundary
-           edge2word {}
-           gen2edge []
-           todo (for [D (elements ds), i (indices ds)] [D i])]
-      (cond
-        (empty? todo)
-        [edge2word gen2edge]
-        (not (on-bnd (first todo)))
-        (recur boundary edge2word gen2edge (rest todo))
-        :else
-        (let [[D i] (first todo)
-              [bnd e2w g2w] (glue-generator ds boundary edge2word gen2edge D i)]
-          (recur bnd e2w g2w (rest todo)))))))
+    (drop 1 (reduce (fn [[[on-bnd _ :as boundary] edge2word gen2edge] [D i]]
+                      (if (on-bnd [D i])
+                        (glue-generator ds boundary edge2word gen2edge D i)                        
+                        [boundary edge2word gen2edge]))
+                    (for [D (elements ds), i (indices ds)] [D i])
+                    [boundary {} {}]))))
 
 (defn fundamental-group [ds]
   (let [[edge2word, gen2edge] (find-generators ds)]
