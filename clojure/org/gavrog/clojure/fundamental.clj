@@ -52,3 +52,28 @@
                  (glue-boundary ds boundary D i)
                  (conj result [D i]))
           (recur todo boundary result))))))
+
+(defn- glue-generator [ds [on-bnd opposite] edge2word gen2edge D i]
+  )
+
+(defn- find-generators [ds]
+  (let [boundary (reduce (fn [bnd [D i]] (glue-boundary ds bnd D i))
+                         (initial-boundary ds)
+                         (inner-edges ds))]
+    (loop [[on-bnd _ :as boundary] boundary
+           edge2word {}
+           gen2edge []
+           todo (for [D (elements ds), i (indices ds)] [D i])]
+      (cond
+        (empty? todo)
+        [edge2word gen2edge]
+        (not (on-bnd (first todo)))
+        (recur boundary edge2word gen2edge (rest todo))
+        :else
+        (let [[D i] (first todo)
+              [bnd e2w g2w] (glue-generator ds boundary edge2word gen2edge D i)]
+          (recur bnd e2w g2w (rest todo)))))))
+
+(defn fundamental-group [ds]
+  (let [[edge2word, gen2edge] (find-generators ds)]
+    ))
