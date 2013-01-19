@@ -35,7 +35,8 @@
                              [[[D* r (other i j r)] [E* s n]]
                               [[E* s (other i j s)] [D* r n]]]))))]))
 
-(defn fundamental-edges [ds]
+(defn inner-edges [ds]
+  "Returns the list of inner edges for a fundamental domain."
   (loop [todo (initial-todo ds)
          [on-bnd opposite :as boundary] (initial-boundary ds)
          result []]
