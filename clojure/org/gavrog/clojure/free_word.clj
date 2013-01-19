@@ -1,5 +1,8 @@
 (ns org.gavrog.clojure.free-word)
 
+;; Operations for free words over the natural numbers (positive integers).
+;; Inverses are represented as negative numbers.
+
 (defn normalise [xs]
   (assert (every? integer? xs))
   (reduce (fn [w x] (cond (= 0 x)
@@ -52,6 +55,10 @@
 (defn commutator [a b]
   (product a b (inverse a) (inverse b)))
 
-(def w* product)
+;; Some abbreviations.
 
-(def w** raised-to)
+(def -* product)
+
+(def -** raised-to)
+
+(def -| commutator)
