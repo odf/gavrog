@@ -1,21 +1,27 @@
 (ns org.gavrog.clojure.generators)
 
 (defprotocol SubstepGenerator
+  (current [_])
   (result [_])
-  (step [_]))
+  (step [_])
+  (skip [_]))
 
-(defn traverse [gen]
-  (when gen
-    (if-let [next (step gen)]
-      (lazy-seq (cons gen (traverse next)))
-      (list gen))))
+(defn traverse
+  ([gen]
+    (traverse gen (constantly true)))
+  ([gen pred]
+    (when gen
+      (if (pred (current gen))
+        (if-let [next (step gen)]
+          (lazy-seq (cons gen (traverse next)))
+          (list gen))
+        (recur (skip gen) pred)))))
 
-(defn results [gen]
-  (remove nil? (map result (traverse gen))))
+(defn results [& args]
+  (remove nil? (map result (apply traverse args))))
 
 (defprotocol SplittableGenerator
-  (sub-generator [_])
-  (skip [_]))
+  (sub-generator [_]))
 
 (defprotocol Resumable
   (checkpoint [_])
@@ -23,12 +29,21 @@
 
 (deftype BacktrackingGenerator [extract make-children stack]
   SubstepGenerator
-  (result [_] (extract (first (first stack))))
+  (current [_] (first (first stack)))
+  (result [gen] (extract (current gen)))
   (step [gen]
         (if-let [children (seq (make-children (first (first stack))))]
           (let [stack (conj stack [(first children) (rest children) 0])]
             (BacktrackingGenerator. extract make-children stack))
           (skip gen)))
+  (skip [_]
+        (when-let [stack (seq (drop-while #(empty? (second %)) stack))]
+          (let [[node siblings-left branch-nr] (first stack)
+                stack (conj (rest stack)
+                            [(first siblings-left)
+                             (rest siblings-left)
+                             (inc branch-nr)])]
+            (BacktrackingGenerator. extract make-children stack))))
   Resumable
   (checkpoint [_] (rest (reverse (map #(nth % 2) stack))))
   (resume [_ checkpoint]
@@ -43,15 +58,7 @@
   SplittableGenerator
   (sub-generator [gen]
                  (let [stack (list [(first (first stack)) nil 0])]
-                   (BacktrackingGenerator. extract make-children stack)))
-  (skip [_]
-        (when-let [stack (seq (drop-while #(empty? (second %)) stack))]
-          (let [[node siblings-left branch-nr] (first stack)
-                stack (conj (rest stack)
-                            [(first siblings-left)
-                             (rest siblings-left)
-                             (inc branch-nr)])]
-            (BacktrackingGenerator. extract make-children stack)))))
+                   (BacktrackingGenerator. extract make-children stack))))
 
 (defn make-backtracker [spec]
   (BacktrackingGenerator. (:extract spec)
