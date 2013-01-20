@@ -28,12 +28,25 @@
         t (/ (double (- (. System (nanoTime)) start-time)) 1000000000.0)]
     (println (format-summary n t))))
 
+(defn- orbits-okay? [ds]
+  (>= 4 (count (for [i (indices ds)
+                     j (indices ds) :when (> j i)
+                     D (orbit-reps ds [i j])
+                     :when (< (or (r ds i j D) 3) (if (> j (inc i)) 2 3))]
+                 [i j D]))))
+
+;; All self-dual, 2d Delaney sets that have non-negative curvature after
+;; setting m to the minimal feasible value on each (i,j)-orbit when face and
+;; edge degrees in a derived tiling are both to be at least three.
+(defn d-sets [max-size]
+  (for [dset (results (dsets 2 max-size) (comp orbits-okay? first))
+        :when (and (self-dual? dset) (proto-euclidean? dset))]
+    dset))
 
 ;; All convex, self-dual, 2d euclidean tilings.
 (defn d-syms [max-size]
   (let [good? (andp self-dual? minimal? euclidean? convex?)]
-    (for [dset (results (dsets 2 max-size))
-          :when (and (self-dual? dset) (proto-euclidean? dset))
+    (for [dset (d-sets max-size)
           dsym (results (branchings dset))
           :when (good? dsym)]
     (canonical dsym))))
