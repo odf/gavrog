@@ -45,7 +45,7 @@
               #{}]
        :extract (fn [[ds free alt-starts]]
                   (when (and (empty? free) (first (best? ds alt-starts)))
-                    (canonical ds)))
+                    ds))
        :children (fn [[ds free alt-starts]]
                    (when (seq free)
                      (let [[i D] (first free)
