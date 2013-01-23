@@ -65,32 +65,17 @@
 (defn traversal [ds indices seeds]
   (let [stacks (map #(vector % ()) (take 2 indices))
         queues (map #(vector % empty-queue) (drop 2 indices))
-        as-root #(vector % :root %)
-        unseen (fn [i seen bag] (pop-while #(seen [% i]) bag))
-        pop-seen #(for [[i ys] %1] (vector i (unseen i %2 ys)))
-        push-neighbors #(for [[i ys] %1] (vector i (conj ys %2)))]
-    ((fn collect [seeds-left todo seen]
-       (let [seeds-left (drop-while (comp seen as-root) seeds-left)
-             todo (pop-seen todo seen)
-             [i todo-for-i] (first (filter (comp seq second) todo))]
-         (cond
-           (seq todo-for-i)
-           (let [D (first todo-for-i)
-                 Di (s ds i D)
-                 head [D i Di]
-                 todo (if Di (vec (push-neighbors todo Di)) todo)
-                 seen (conj seen (as-root Di) [D i] [Di i])]
-             (lazy-seq (cons head (collect seeds-left todo seen))))
-           (seq seeds-left)
-           (let [D (first seeds-left)
-                 head (as-root D)
-                 seeds-left (rest seeds-left)
-                 todo (vec (push-neighbors todo D))
-                 seen (conj seen (as-root D))]
-             (lazy-seq (cons head (collect seeds-left todo seen))))
-           :else
-           ())))
-      (seq seeds) (vec (concat stacks queues)) #{})))
+        push-neighbors #(for [[i ys] %1] [i (if (= :root i) ys (conj ys %2))])
+        step (fn step [todo seen]
+               (let [todo (for [[i ys] todo] [i (pop-while #(seen [% i]) ys)])
+                     [i todo-for-i] (first (filter (comp seq second) todo))]
+                 (if-let [D (first todo-for-i)]
+                   (let [Di (if (= i :root) D (s ds i D))
+                         todo (if Di (vec (push-neighbors todo Di)) todo)
+                         seen (conj seen [Di :root] [D i] [Di i])]
+                     (lazy-seq (cons [D i Di] (step todo seen))))
+                   ())))]
+    (step (vec (concat stacks queues [[:root (into empty-queue seeds)]])) #{})))
 
 (defn orbit-reps
   ([ds indices seeds]
