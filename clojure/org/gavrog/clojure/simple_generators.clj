@@ -1,4 +1,4 @@
-(ns org.gavrog.clojure.permutations
+(ns org.gavrog.clojure.simple-generators
   (:use (org.gavrog.clojure [generators :only [make-backtracker results]])))
 
 (defn permutations [n]
@@ -13,3 +13,11 @@
                      [(assoc perm i k)
                       (disj unused i)
                       (disj unseen k)])))}))
+
+(defn integer-partitions [n]
+  (make-backtracker
+    {:root [[] 0 1]
+     :extract (fn [[xs sz mx]] (when (= sz n) xs))
+     :children (fn [[xs sz mx]]
+                 (for [i (range mx (inc (- n sz)))]
+                   [(conj xs i) (+ sz i) (max mx i)]))}))

@@ -464,6 +464,9 @@
   DSymbolSource
   (dsymbol [ds] (ds-from-ds ds)))
 
+(defn make-dsymbol [dim size s# v#]
+  (DSymbol. dim size s# v#))
+
 ;; === Building a flat Java DSymbol instance
 
 (defn java-dsymbol [ds]
