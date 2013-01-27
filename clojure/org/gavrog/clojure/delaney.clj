@@ -234,7 +234,8 @@
     (keep (partial morphism ds ds D) (elements ds))))
 
 (defn automorphism-orbits [ds]
-  (or (seq (into pempty (apply concat (automorphisms ds)))) (elements ds)))
+  (or (seq (into pempty (apply concat (automorphisms ds))))
+      (map list (elements ds))))
 
 
 ;; === Persistent Clojure implementation of IDSymbol with some common
