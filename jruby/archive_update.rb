@@ -59,20 +59,20 @@ Net.iterator(ARGV[0]).each do |net|
     message = ">>>ladder<<<"
   else
     key = net.minimal_image.systre_key
-    if new_archive.get(key)
-      message = ">>>duplicate key<<<"
+    if found = new_archive.get(key)
+      message = ">>>same key as #{found.name}<<<"
     elsif new_archive.get(name)
       message = ">>>duplicate name<<<"
     else
       if found = archive.get(key)
         unless name == found.name
-          message = "found as #{found.name}"
+          message = "in old archive as #{found.name}"
         end
       else
         if archive.getByName(name).nil?
           message = "NEW!!!"
         else
-          message = "found different net with this name"
+          message = "the old archive has a different net with this name"
         end
       end
       new_archive.add net.minimal_image, name

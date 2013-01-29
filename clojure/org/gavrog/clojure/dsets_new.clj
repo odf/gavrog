@@ -55,6 +55,6 @@
 (defn dsets2d [max-size]
   (for [s (range 1 (inc max-size))
         sizes (results (integer-partitions s))
-        olist (results (orbit-lists sizes))
+        olist (results (orbit-lists (reverse sizes)))
         ds (results (combine-tiles olist))]
     ds))
