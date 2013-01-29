@@ -1,4 +1,4 @@
-(ns org.gavrog.clojure.dsets-new
+(ns org.gavrog.clojure.dsets-combining
   (:use (org.gavrog.clojure
           [generators :only [make-backtracker results]]
           [simple-generators :only [integer-partitions]]
