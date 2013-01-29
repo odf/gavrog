@@ -15,11 +15,12 @@
                (when-let [[i D] (first free)]
                  (when-let [oDi (s ds i (n2o D))]
                    (let [Di (or (o2n oDi) (inc n))
-                         free (if (<= Di n) free (plus-all free Di))]
-                     (lazy-seq (cons Di (step (assoc o2n oDi Di)
-                                              (assoc n2o Di oDi)
-                                              (max n Di)
-                                              (disj free [i D] [i Di]))))))))]
+                         free (if (<= Di n) free (plus-all free Di))
+                         o2n (assoc o2n oDi Di)
+                         n2o (assoc n2o Di oDi)
+                         n (max n Di)
+                         free (disj free [i D] [i Di])]
+                     (lazy-seq (cons Di (step o2n n2o n free)))))))]
     (step {D 1} {1 D} 1 (plus-all (sorted-set) 1))))
 
 (defn- cmp [xs ys]
