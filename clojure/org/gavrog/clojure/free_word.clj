@@ -5,12 +5,9 @@
 
 (defn normalise [xs]
   (assert (every? integer? xs))
-  (reduce (fn [w x] (cond (= 0 x)
-                          w,
-                          (= (last w) (- x))
-                          (pop w),
-                          :else
-                          (conj w x)))
+  (reduce (fn [w x] (cond (= 0 x)            w
+                          (= (last w) (- x)) (pop w)
+                          :else              (conj w x)))
           [] xs))
 
 (defn- overlap [w1 w2]
