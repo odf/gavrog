@@ -57,14 +57,19 @@
   (second (glue-recursively ds (initial-boundary ds) (initial-todo ds))))
 
 (defn- trace-word [ds edge2word D i j]
-  )
+  (loop [w [], E (s ds i D), k j]
+    (if (= [E k] [D i])
+      w
+      (let [f (or (edge2word [E k]) (inverse (edge2word [(s ds k E) k])) [])]
+        (recur (-* w f) (s ds k E) (other i j k))))))
 
 (defn- glue-generator [ds [_ opposite :as boundary] edge2word gen2edge D i]
   (let [gen (count gen2edge)
         gen2edge (conj gen2edge [gen [D i]])
         [boundary glued] (glue-recursively ds boundary [[D i nil]])
         edge2word (reduce (fn [e2w [D i j]]
-                            (conj e2w (inverse (trace-word ds e2w D i j))))
+                            (conj e2w
+                                  [[D i] (inverse (trace-word ds e2w D i j))]))
                           (conj edge2word [[D i] [gen]])
                           (rest glued))]
     [boundary edge2word gen2edge]))
@@ -77,8 +82,8 @@
                       (if (on-bnd [D i])
                         (glue-generator ds boundary edge2word gen2edge D i)                        
                         [boundary edge2word gen2edge]))
-                    (for [D (elements ds), i (indices ds)] [D i])
-                    [boundary {} {}]))))
+                    [boundary {} {}]
+                    (for [D (elements ds), i (indices ds)] [D i])))))
 
 (defn fundamental-group [ds]
   (let [[edge2word, gen2edge] (find-generators ds)]
