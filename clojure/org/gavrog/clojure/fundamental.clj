@@ -1,5 +1,8 @@
 (ns org.gavrog.clojure.fundamental
-  (:use (org.gavrog.clojure delaney free-word)))
+  (:use (org.gavrog.clojure
+          delaney
+          free-word
+          util)))
 
 (defn- other [a b c]
   (if (= c a) b a))
@@ -21,14 +24,14 @@
                               [[E* s (other i j s)] [D* r n]]]))))]))
 
 (defn- glue-recursively [ds boundary edges]
-  (loop [todo edges
+  (loop [todo (into empty-queue edges)
          [on-bnd opposite :as boundary] boundary
          glued []]
     (if (empty? todo)
       [boundary glued]
       (let [[D i j] (first todo)
             [_ _ n] (opposite [D i j])
-            todo (rest todo)]
+            todo (pop todo)]
         (if (and (on-bnd [D i])
                  (or (nil? j)
                      (= n (* 2 (m ds i j D)))))
