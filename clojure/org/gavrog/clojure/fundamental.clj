@@ -34,7 +34,7 @@
                      (= n (* 2 (m ds i j D)))))
           (recur (update-todo ds todo opposite D i)
                  (glue-boundary ds boundary D i)
-                 (conj glued [D i]))
+                 (conj glued [D i j]))
           (recur todo boundary glued))))))
 
 (defn- initial-todo [ds]
@@ -56,15 +56,15 @@
   "Returns the list of inner edges for a fundamental domain."
   (second (glue-recursively ds (initial-boundary ds) (initial-todo ds))))
 
-(defn- trace-word [ds edge2word D i]
+(defn- trace-word [ds edge2word D i j]
   )
 
 (defn- glue-generator [ds [_ opposite :as boundary] edge2word gen2edge D i]
   (let [gen (count gen2edge)
         gen2edge (conj gen2edge [gen [D i]])
         [boundary glued] (glue-recursively ds boundary [[D i nil]])
-        edge2word (reduce (fn [e2w [D i]]
-                            (conj e2w (inverse (trace-word ds e2w D i))))
+        edge2word (reduce (fn [e2w [D i j]]
+                            (conj e2w (inverse (trace-word ds e2w D i j))))
                           (conj edge2word [[D i] [gen]])
                           (rest glued))]
     [boundary edge2word gen2edge]))
