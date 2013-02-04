@@ -77,16 +77,24 @@
                           (rest glued))]
     [boundary edge2word gen2edge]))
 
+(defn- add-inverses [ds edge2word]
+  (into edge2word (for [[[D i] w] edge2word]
+                    [[(s ds i D) i] (inverse w)])))
+
 (defn- find-generators [ds]
-  (let [boundary (reduce (fn [bnd [D i]] (glue-boundary ds bnd D i))
-                         (initial-boundary ds)
-                         (inner-edges ds))]
-    (drop 1 (reduce (fn [[[on-bnd _ :as boundary] edge2word gen2edge] [D i]]
-                      (if (on-bnd [D i])
-                        (glue-generator ds boundary edge2word gen2edge D i)                        
-                        [boundary edge2word gen2edge]))
-                    [boundary {} {}]
-                    (for [D (elements ds), i (indices ds)] [D i])))))
+  (let [boundary
+        (reduce (fn [bnd [D i]] (glue-boundary ds bnd D i))
+                (initial-boundary ds)
+                (inner-edges ds))
+
+        [_ e2w g2e]
+        (reduce (fn [[[on-bnd _ :as boundary] e2w g2e] [D i]]
+                  (if (on-bnd [D i])
+                    (glue-generator ds boundary e2w g2e D i)                        
+                    [boundary e2w g2e]))
+                [boundary {} {}]
+                (for [D (elements ds), i (indices ds)] [D i]))]
+    [(add-inverses ds e2w) g2e]))
 
 (defn fundamental-group [ds]
   (let [[edge2word, gen2edge] (find-generators ds)]
