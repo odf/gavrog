@@ -42,8 +42,11 @@
     :else
     (let [n (count w)
           k (overlap w w)]
-      (if (= k n)
-        (if (odd? m) w [])
+      (cond
+        (zero? k) (reduce into [] (repeat m w))
+        (= k n)   (if (odd? m) w [])
+        
+        :else
         (let [head (subvec w 0 (- (dec n) k))
               tail (subvec w (inc k))
               mid (subvec w k (- n k))]
