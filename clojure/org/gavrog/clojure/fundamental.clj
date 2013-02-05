@@ -96,16 +96,29 @@
                 (for [D (elements ds), i (indices ds)] [D i]))]
     [(add-inverses ds e2w) g2e]))
 
+(defn- mirror-relators [ds g2e]
+  (for [[g [D i]] g2e
+        :when (= D (s ds i D))]
+   [g g]))
+
+(defn- relator-rep [w]
+  (apply (partial lexicographically-smallest (fn [a b] (* a b (- a b))))
+    (for [i (range (count w))
+          :let [w* (into (subvec w i) (subvec w 0 i))]
+          x [w* (inverse w*)]]
+      x)))
+
 (defn fundamental-group [ds]
   (let [[edge2word, gen2edge] (find-generators ds)
         orbits (for [i (indices ds), j (indices ds), :when (> j i)
                      D (orbit-reps ds [i j])
                      :let [w (trace-word ds edge2word i j D)]
                      :when (seq w)]
-                 [D i j w (v ds i j D)])]
-    {:generators (keys gen2edge)
-     :relators (for [[D i j w v] orbits] (-** w v))
-     :axes (for [[D i j w v] orbits, :when (> v 1)] [w v])
+                 [D i j (relator-rep w) (v ds i j D)])]
+    {:generators (sort (keys gen2edge))
+     :relators (sort (concat (for [[D i j w v] orbits] (-** w v))
+                             (mirror-relators ds gen2edge)))
+     :axes (sort (for [[D i j w v] orbits, :when (> v 1)] [w v]))
      :gen-to-edge gen2edge
      :edge-to-word edge2word
      }))
