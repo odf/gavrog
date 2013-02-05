@@ -17,19 +17,23 @@
    previous result."
   (reductions #(%2 %1) x (cycle coll)))
 
-(defn compare-lexicographically [xs ys]
-  "Compares two sequences lexicographically via compare. Elements of
-   the first sequence must implements Comparable."
-  (cond (empty? xs) (if (empty? ys) 0 -1)
-        (empty? ys) 1
-        :else (let [d (compare (first xs) (first ys))]
-                (if (not= 0 d)
-                  d
-                  (recur (rest xs) (rest ys))))))
+(defn compare-lexicographically
+  ([cmp xs ys]
+    "Compares two sequences lexicographically via the given function cmp."
+    (cond (empty? xs) (if (empty? ys) 0 -1)
+          (empty? ys) 1
+          :else (let [d (cmp (first xs) (first ys))]
+                  (if (not= 0 d)
+                    d
+                    (recur cmp (rest xs) (rest ys))))))
+  ([xs ys]
+    "Compares two sequences lexicographically via compare. Elements of
+     the first sequence must implements Comparable."   
+    (compare-lexicographically compare xs ys)))
 
 (defn lexicographically-smallest
   "Returns the lexicographically smallest sequence, via compare."
-  ([xs] xs)
-  ([xs ys] (if (neg? (compare-lexicographically xs ys)) xs ys))
-  ([xs ys & more] (reduce lexicographically-smallest
-                          (lexicographically-smallest xs ys) more)))
+  ([cmp xs] xs)
+  ([cmp xs ys] (if (neg? (compare-lexicographically cmp xs ys)) xs ys))
+  ([cmp xs ys & more] (reduce (partial lexicographically-smallest cmp)
+                          (lexicographically-smallest cmp xs ys) more)))
