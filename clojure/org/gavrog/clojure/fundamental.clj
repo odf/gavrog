@@ -59,20 +59,20 @@
   "Returns the list of inner edges for a fundamental domain."
   (second (glue-recursively ds (initial-boundary ds) (initial-todo ds))))
 
-(defn- trace-word [ds edge2word D i j]
+(defn- trace-word [ds edge2word i j D]
   (loop [w [], E (s ds i D), k j]
-    (if (= [E k] [D i])
-      w
-      (let [f (or (edge2word [E k]) (inverse (edge2word [(s ds k E) k])) [])]
+    (let [f (or (edge2word [E k]) (inverse (edge2word [(s ds k E) k])) [])]
+      (if (= [E k] [D i])
+        (-* w f)
         (recur (-* w f) (s ds k E) (other i j k))))))
 
 (defn- glue-generator [ds [_ opposite :as boundary] edge2word gen2edge D i]
-  (let [gen (count gen2edge)
+  (let [gen (inc (count gen2edge))
         gen2edge (conj gen2edge [gen [D i]])
         [boundary glued] (glue-recursively ds boundary [[D i nil]])
         edge2word (reduce (fn [e2w [D i j]]
                             (conj e2w
-                                  [[D i] (inverse (trace-word ds e2w D i j))]))
+                                  [[D i] (inverse (trace-word ds e2w i j D))]))
                           (conj edge2word [[D i] [gen]])
                           (rest glued))]
     [boundary edge2word gen2edge]))
@@ -97,5 +97,25 @@
     [(add-inverses ds e2w) g2e]))
 
 (defn fundamental-group [ds]
-  (let [[edge2word, gen2edge] (find-generators ds)]
-    ))
+  (let [[edge2word, gen2edge] (find-generators ds)
+        orbits (for [i (indices ds), j (indices ds), :when (> j i)
+                     D (orbit-reps ds [i j])
+                     :let [w (trace-word ds edge2word i j D)]
+                     :when (seq w)]
+                 [D i j w (v ds i j D)])]
+    {:generators (keys gen2edge)
+     :relators (for [[D i j w v] orbits] (-** w v))
+     :axes (for [[D i j w v] orbits, :when (> v 1)] [w v])
+     :gen-to-edge gen2edge
+     :edge-to-word edge2word
+     }))
+
+(comment
+  A test symbol.
+  
+(def ds (dsymbol
+          (str "24:2 4 6 8 10 12 14 16 18 20 22 24,"
+               "16 3 5 7 9 11 13 15 24 19 21 23,"
+               "10 9 18 17 14 13 20 19 22 21 24 23:"
+               "8 4,3 3 3 3")))
+)
