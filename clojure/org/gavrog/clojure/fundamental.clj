@@ -115,7 +115,7 @@
                      :let [w (trace-word ds edge2word i j D)]
                      :when (seq w)]
                  [D i j (relator-rep w) (v ds i j D)])]
-    {:generators (sort (keys gen2edge))
+    {:nr-generators (count gen2edge)
      :relators (sort (concat (for [[D i j w v] orbits] (-** w v))
                              (mirror-relators ds gen2edge)))
      :axes (sort (for [[D i j w v] orbits, :when (> v 1)] [w v]))
