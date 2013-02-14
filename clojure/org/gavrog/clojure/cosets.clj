@@ -64,9 +64,11 @@
     (reduce (fn [[t p] w] (scan t p w (pfind equiv 0))) [table equiv] subgens)))
 
 (defn- compressed-table [table equiv]
-  (let [canon (into {} (for [i (keys table)] [i (pfind equiv i)]))]
-    (into {} (for [[i row] table :when (= i (canon i))]
-               [i (into {} (map (fn [[j v]] [j (canon v)]) row))]))))
+  (let [reps (into #{} (filter #(= % (pfind equiv %)) (keys table)))
+        rep-to-idx (into {} (map vector reps (range)))
+        canon (comp rep-to-idx (partial pfind equiv))]
+    (into {} (for [[i row] table :when (reps i)]
+               [(canon i) (into {} (map (fn [[j v]] [j (canon v)]) row))]))))
 
 (defn coset-table [nr-gens relators subgroup-gens]
   (let [with-inverses (fn [ws] (vec (into #{} (concat ws (map inverse ws)))))
