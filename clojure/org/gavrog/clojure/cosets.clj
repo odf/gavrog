@@ -69,7 +69,7 @@
     (into {} (for [[i row] table :when (reps i)]
                [(canon i) (into {} (map (fn [[j v]] [j (canon v)]) row))]))))
 
-(defn- maybe-compressed [table equiv factor]
+(defn- maybe-compressed [[table equiv] factor]
   (let [nr-invalid (- (reduce + (map count equiv)) (count equiv))]
     (if (> nr-invalid (* factor (count table)))
       (compressed-table [table equiv])
@@ -101,5 +101,7 @@
                   g* (- g)
                   n (count table)
                   table (-> table (assoc-in [i g] n) (assoc-in [n g*] i))
-                  [table equiv] (scan-relations rels subgens table equiv n)]
+                  [table equiv] (maybe-compressed
+                                  (scan-relations rels subgens table equiv n)
+                                  1/2)]
               (recur table equiv i (inc j)))))))
