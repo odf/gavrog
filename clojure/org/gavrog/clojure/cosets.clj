@@ -11,8 +11,7 @@
         row-a (merge (table a) (table b))
         row-b (merge (table b) (table a))
         q (into q (for [g (keys row-a)
-                        :when (not= (pfind equiv (row-a g))
-                                    (pfind equiv (row-b g)))]
+                        :when (not= (equiv (row-a g)) (equiv (row-b g)))]
                     [(row-a g) (row-b g)]))
         table (conj table [a row-a] [b row-a])]
     [table q]))
@@ -23,11 +22,11 @@
          equiv equiv]
     (if-let [[i j] (first q)]
       (let [q (pop q)
-            a (pfind equiv i)
-            b (pfind equiv j)]
+            a (equiv i)
+            b (equiv j)]
         (if (= a b)
           (recur q table equiv)
-          (let [equiv (punion equiv a b)
+          (let [equiv (conj equiv [a b])
                 [table q] (merge-rows table equiv q a b)]
             (recur q table equiv))))
       [table equiv])))
@@ -61,14 +60,20 @@
 (defn- scan-relations [rels subgens table equiv n]
   (let [[table equiv]
         (reduce (fn [[t p] w] (scan t p w n)) [table equiv] rels)]
-    (reduce (fn [[t p] w] (scan t p w (pfind equiv 0))) [table equiv] subgens)))
+    (reduce (fn [[t p] w] (scan t p w (equiv 0))) [table equiv] subgens)))
 
 (defn- compressed-table [table equiv]
-  (let [reps (into #{} (filter #(= % (pfind equiv %)) (keys table)))
+  (let [reps (into #{} (filter #(= % (equiv %)) (keys table)))
         rep-to-idx (into {} (map vector reps (range)))
-        canon (comp rep-to-idx (partial pfind equiv))]
+        canon (comp rep-to-idx equiv)]
     (into {} (for [[i row] table :when (reps i)]
                [(canon i) (into {} (map (fn [[j v]] [j (canon v)]) row))]))))
+
+(defn- maybe-compressed [table equiv factor]
+  (let [nr-invalid (- (reduce + (map count equiv)) (count equiv))]
+    (if (> nr-invalid (* factor (count table)))
+      (compressed-table [table equiv])
+      [table equiv])))
 
 (defn coset-table [nr-gens relators subgroup-gens]
   (let [with-inverses (fn [ws] (vec (into #{} (concat ws (map inverse ws)))))
@@ -85,7 +90,7 @@
       (cond (>= i (count table))
             (compressed-table table equiv)
             
-            (or (>= j (count gens)) (not= i (pfind equiv i)))
+            (or (>= j (count gens)) (not= i (equiv i)))
             (recur table equiv (inc i) 0)
             
             ((table i) (get gens j))
