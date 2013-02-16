@@ -606,6 +606,25 @@
                                              [[D x] [(+ D n) x]])))]))]
       (DSymbol. d (+ n n) ops vs))))
 
+(defn cover [ds nr-cosets action]
+  (let [ds (dsymbol ds)
+        idcs (indices ds)
+        d (dim ds)
+        n (size ds)
+        ops (into {} (for [i idcs]
+                       [i (into {} (for [D (elements ds)
+                                         k (range nr-cosets)]
+                                     [(+ (* k n) D)
+                                      (+ (* (action k i D) n) (s ds i D))]))]))
+        t (DSymbol. d (* n nr-cosets) ops {})
+        vs (into {} (for [[i j] (zipmap idcs (rest idcs))]
+                      [i (into {} (for [D (orbit-reps t [i j])
+                                        :let [D0 (-> D dec (mod n) inc)
+                                              v* (/ (m ds i j D0) (r t i j D))]
+                                        E (orbit t [i j] D)]
+                                    [E v*]))]))]
+    (DSymbol. d (size t) ops vs)))
+
 ;; === Tests
 
 (deftest delaney-test
