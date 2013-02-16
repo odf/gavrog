@@ -105,3 +105,14 @@
                                   (scan-relations rels subgens table equiv n)
                                   1/2)]
               (recur table equiv i (inc j)))))))
+
+(defn coset-representatives [table]
+  (loop [q (conj empty-queue 0)
+         reps {0 []}]
+    (if-let [i (first q)]
+      (let [row (table i)
+            free (filter (comp nil? reps second) row)
+            reps (into reps (map (fn [[g k]] [k (-* (reps i) [g])]) free))
+            q (into (pop q) (map second free))]
+        (recur q reps))
+      reps)))
