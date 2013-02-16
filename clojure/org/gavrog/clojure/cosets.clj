@@ -63,7 +63,7 @@
     (reduce (fn [[t p] w] (scan t p w (equiv 0))) [table equiv] subgens)))
 
 (defn- compressed-table [table equiv]
-  (let [reps (into #{} (filter #(= % (equiv %)) (keys table)))
+  (let [reps (into (sorted-set) (filter #(= % (equiv %)) (keys table)))
         rep-to-idx (into {} (map vector reps (range)))
         canon (comp rep-to-idx equiv)]
     (into {} (for [[i row] table :when (reps i)]
