@@ -579,17 +579,17 @@
   ([ds1 ds2 & xds]
     (reduce append (append ds1 ds2) xds)))
 
-(defn cover [ds nr-cosets action]
+(defn cover [ds nr-sheets transfer]
   (let [ds (dsymbol ds)
         idcs (indices ds)
         d (dim ds)
         n (size ds)
         ops (into {} (for [i idcs]
                        [i (into {} (for [D (elements ds)
-                                         k (range nr-cosets)]
+                                         k (range nr-sheets)]
                                      [(+ (* k n) D)
-                                      (+ (* (action k i D) n) (s ds i D))]))]))
-        t (DSymbol. d (* n nr-cosets) ops {})
+                                      (+ (* (transfer k i D) n) (s ds i D))]))]))
+        t (DSymbol. d (* n nr-sheets) ops {})
         vs (into {} (for [[i j] (zipmap idcs (rest idcs))]
                       [i (into {} (for [D (orbit-reps t [i j])
                                         :let [D0 (-> D dec (mod n) inc)
