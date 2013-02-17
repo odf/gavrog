@@ -2,7 +2,8 @@
   (:use (org.gavrog.clojure
           free-word
           partition
-          util)))
+          util
+          generators)))
 
 (defn- merge-rows [table equiv q a b]
   (let [merge (fn [ra rb]
@@ -116,3 +117,36 @@
             q (into (pop q) (map second free))]
         (recur q reps))
       reps)))
+
+(defn tables-generator [nr-gens relators max-cosets]
+  (let [with-inverses (fn [ws] (vec (into #{} (concat ws (map inverse ws)))))
+        gens (vec (concat (range 1 (inc nr-gens))
+                          (range -1 (- (inc nr-gens)) -1)))
+        rels (with-inverses (for [w relators, i (range (count w))]
+                              (into (subvec w i) (subvec w 0 i))))
+        free (fn [table] (for [k (range (count table))
+                               :let [row (table k)]
+                               g gens :when (nil? (row g))]
+                           [k g]))]
+    (make-backtracker
+      {:root {0 {}}
+       :extract (fn [table]
+                  (println "  " table)
+                  (when (empty? (free table)) table))
+       :children (fn [table]
+                   (if-let [[k g] (first (free table))]
+                     (let [g* (- g)
+                           n (count table)
+                           matches (filter (fn [k] (nil? ((table k) g*)))
+                                           (range k n))
+                           candidates (if (< n max-cosets)
+                                        (conj matches n)
+                                        matches)]
+                       (for [k* candidates
+                             :let [t (-> table
+                                      (assoc-in [k g] k*)
+                                      (assoc-in [k* g*] k))
+                                  [t equiv]
+                                  (scan-relations rels [] table pempty k)]
+                                  :when (empty? equiv)]
+                             t))))})))
