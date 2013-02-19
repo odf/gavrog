@@ -118,6 +118,29 @@
         (recur q reps))
       reps)))
 
+(defn- compare-renumbered-from [table gens start]
+  (loop [o2n {start 1}, n2o {1 start}, row 0, col 0]
+    (assert (< row (count o2n)) "the current action is not transitive")
+    (cond (>= row (count table)) 0
+          (>= col (count gens)) (recur o2n n2o (inc row) 0)
+          :else
+          (let [oval ((table row) (gens col))
+                nval (and (n2o row) ((table (n2o row)) (gens col)))
+                [o2n n2o] (if (and nval (nil? (o2n nval)))
+                            [(assoc o2n nval (count o2n))
+                             (assoc n2o (count n2o) nval)]
+                            [o2n
+                             n2o])
+                nval (o2n nval)]
+            (cond (= oval nval) (recur o2n n2o row (inc col))
+                  (nil? oval) -1
+                  (nil? nval) 1
+                  :else (- nval oval))))))
+
+(defn- canonical [table gens]
+  (every? (fn [start] (not (neg? (compare-renumbered-from table gens start))))
+          (range 2 (count table))))
+
 (defn tables-generator [nr-gens relators max-cosets]
   (let [with-inverses (fn [ws] (vec (into #{} (concat ws (map inverse ws)))))
         gens (vec (concat (range 1 (inc nr-gens))
@@ -146,5 +169,6 @@
                                       (assoc-in [k* g*] k))
                                   [t equiv]
                                   (scan-relations rels [] t pempty k)]
-                                  :when (empty? equiv)]
+                                  :when (and (empty? equiv)
+                                             (canonical t gens))]
                              t))))})))
