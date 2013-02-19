@@ -130,9 +130,7 @@
                            [k g]))]
     (make-backtracker
       {:root {0 {}}
-       :extract (fn [table]
-                  (println "  " table)
-                  (when (empty? (free table)) table))
+       :extract (fn [table] (when (empty? (free table)) table))
        :children (fn [table]
                    (if-let [[k g] (first (free table))]
                      (let [g* (- g)
@@ -147,6 +145,6 @@
                                       (assoc-in [k g] k*)
                                       (assoc-in [k* g*] k))
                                   [t equiv]
-                                  (scan-relations rels [] table pempty k)]
+                                  (scan-relations rels [] t pempty k)]
                                   :when (empty? equiv)]
                              t))))})))
