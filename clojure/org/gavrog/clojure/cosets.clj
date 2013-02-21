@@ -119,8 +119,9 @@
       reps)))
 
 (defn- compare-renumbered-from [table gens start]
-  (loop [o2n {start 1}, n2o {1 start}, row 0, col 0]
-    (assert (< row (count o2n)) "the current action is not transitive")
+  (loop [o2n {start 0}, n2o {0 start}, row 0, col 0]
+    (assert (or (< row (count o2n)) (>= row (count table)))
+            (str table " is not transitive."))
     (cond (>= row (count table)) 0
           (>= col (count gens)) (recur o2n n2o (inc row) 0)
           :else
@@ -139,7 +140,7 @@
 
 (defn- canonical [table gens]
   (every? (fn [start] (not (neg? (compare-renumbered-from table gens start))))
-          (range 2 (count table))))
+          (range 1 (count table))))
 
 (defn tables-generator [nr-gens relators max-cosets]
   (let [with-inverses (fn [ws] (vec (into #{} (concat ws (map inverse ws)))))
