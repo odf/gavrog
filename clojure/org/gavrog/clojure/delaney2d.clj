@@ -1,13 +1,17 @@
 (ns org.gavrog.clojure.delaney2d
-  (:use (org.gavrog.clojure delaney)))
+  (:use (org.gavrog.clojure delaney covers)))
 
 (defn- index-pairs [ds]
   (let [[i j k] (indices ds)]
     [[i j] [i k] [j k]]))
 
+(defn- v-vals [ds]
+  (for [[i j] (index-pairs ds)
+        D (orbit-reps ds [i j])]
+    (v ds i j D)))
+
 (defn curvature
   ([ds default-v]
-    (do
       (assert (= 2 (dim ds)) (str "Expected 2d symbol, got " (dim ds) "d"))
       (assert (connected? ds) "Symbol must be connected")
       (reduce +
@@ -16,7 +20,7 @@
                     :let [s #(if (orbit-loopless? ds [i j] %) 2 1)
                           v #(or (v ds i j %) default-v)]
                     D (orbit-reps ds [i j])]
-                (/ (s D) (v D))))))
+                (/ (s D) (v D)))))
   ([ds]
     (curvature ds 0)))
 
@@ -58,3 +62,8 @@
                       (repeat (/ cost 2) "o")
                       (repeat cost "x")))]
     (if (pos? (count tmp)) (apply str tmp) "1")))
+
+(defn toroidal-cover [ds]
+  (assert (euclidean? ds))
+  (some (fn [cov] (and (every? (partial = 1) (v-vals cov)) cov))
+        (covers (oriented-cover ds) (apply max (v-vals ds)))))
