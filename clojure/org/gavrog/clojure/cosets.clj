@@ -87,7 +87,7 @@
            equiv pempty
            i 0
            j 0]
-      (assert (< (count table) 500))
+      (assert (< (count table) 10000))
       (cond (>= i (count table))
             (compressed-table table equiv)
             
