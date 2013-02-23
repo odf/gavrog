@@ -173,3 +173,27 @@
                                   :when (and (empty? equiv)
                                              (canonical t gens))]
                              t))))})))
+
+(defn- induced-table [gens img img0]
+  (loop [table {0 {}}, o2n {img0 0}, n2o {0 img0}, i 0, j 0]
+    (cond (>= i (count table)) table
+          (>= j (count gens)) (recur table o2n n2o (inc i) 0)
+          :else
+          (let [g (gens j)
+                k (img (n2o i) g)
+                n (or (o2n k) (count table))
+                o2n (assoc o2n k n)
+                n2o (assoc n2o n k)
+                table (-> table (assoc-in [i g] n) (assoc-in [n (- g)] i))]
+            (recur table o2n n2o i (inc j))))))
+
+(defn intersection-table [table-a table-b]
+  (induced-table (vec (keys (or (table-a 0) {})))
+                 (fn [[a b] g] [((table-a a) g) ((table-b b) g)])
+                 [0 0]))
+
+(defn core-table [table]
+  (let [elms (vec (keys table))]
+    (induced-table (vec (keys (or (table 0) {})))
+                   (fn [es g] (vec (map (fn [e] ((table e) g)) es)))
+                   elms)))
