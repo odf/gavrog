@@ -142,7 +142,7 @@
   (every? (fn [start] (not (neg? (compare-renumbered-from table gens start))))
           (range 1 (count table))))
 
-(defn tables-generator [nr-gens relators max-cosets]
+(defn table-generator [nr-gens relators max-cosets]
   (let [with-inverses (fn [ws] (vec (into #{} (concat ws (map inverse ws)))))
         gens (vec (concat (range 1 (inc nr-gens))
                           (range -1 (- (inc nr-gens)) -1)))

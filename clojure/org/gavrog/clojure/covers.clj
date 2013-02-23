@@ -20,5 +20,5 @@
 
 (defn covers [ds max-degree]
   (let [{:keys [nr-generators relators edge-to-word]} (fundamental-group ds)]
-    (for [table (results (tables-generator nr-generators relators max-degree))]
+    (for [table (results (table-generator nr-generators relators max-degree))]
       (cover-for-table ds table edge-to-word))))
