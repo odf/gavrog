@@ -118,7 +118,7 @@
     {:nr-generators (count gen2edge)
      :relators (sort (concat (for [[D i j w v] orbits] (-** w v))
                              (mirror-relators ds gen2edge)))
-     :axes (sort (for [[D i j w v] orbits, :when (> v 1)] [w v]))
+     :cones (sort (for [[D i j w v] orbits, :when (> v 1)] [w v]))
      :gen-to-edge gen2edge
      :edge-to-word edge2word
      }))

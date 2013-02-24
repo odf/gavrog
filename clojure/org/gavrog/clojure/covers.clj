@@ -5,7 +5,7 @@
          cosets
          [generators :only [results]])))
 
-(defn- cover-for-table [ds table edge-to-word]
+(defn cover-for-table [ds table edge-to-word]
   (cover ds (count table) (fn [k i D]
                             (reduce (fn [k g] ((table k) g))
                                     k (edge-to-word [D i])))))
