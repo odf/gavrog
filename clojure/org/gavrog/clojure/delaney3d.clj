@@ -32,11 +32,10 @@
         cones2 (filter (fn [[wd deg]] (= deg 2)) cones)
         cones3 (filter (fn [[wd deg]] (= deg 3)) cones)
         base (map core-table (results (table-generator nr-gens relators 4)))
-        good (for [ct base
-                   :when (flattens-all? ct cones)
-                   index (count ct)
-                   type (if (= index 4)
+        good (for [ct base :when (flattens-all? ct cones)
+                   type (if (= (count ct) 4)
                           (if (not (fully-involutive? ct)) :z4 :v4)
-                          (map core-type index))]
+                          (map core-type (count ct)))]
                [type ct])
+        candidates (reduce (fn [m [k v]] (massoc m k v)) {} good)
         ]))
