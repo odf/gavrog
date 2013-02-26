@@ -1,5 +1,6 @@
 Systre 1.1.8:
 
+2013-02-26: RCSR archive is current as of today.
 2012-09-11: The Wells point symbols for vertices are displayed on request.
 2012-09-06: Added some support for 1d structures.
 2012-09-05: Warnings on unit cell parameters that don't fit the space group.

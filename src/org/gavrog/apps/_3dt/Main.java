@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Olaf Delgado-Friedrichs
+   Copyright 2013 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -3699,7 +3699,7 @@ public class Main extends EventSource {
 					"hideAbout");
 			final BLabel label = new BLabel("<html><center><h2>Gavrog 3dt</h2>"
 					+ "<p>Version " + Version.full + "</p>"
-					+ "<p>by Olaf Delgado-Friedrichs 1997-2012<p>"
+					+ "<p>by Olaf Delgado-Friedrichs 1997-2013<p>"
 					+ "<p>For further information visit<br>"
 					+ "<em>http://gavrog.org</em><p>"
 					+ "</center></html>");

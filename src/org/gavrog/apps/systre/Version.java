@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Olaf Delgado-Friedrichs
+   Copyright 2013 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ public class Version {
 
 	final public static String maturity = "alpha";
 
-	final public static String date = "2012/09/11";
+	final public static String date = "2013/02/26";
 
 	final public static String extension = (maturity == null ? "" : " "
             + maturity)
