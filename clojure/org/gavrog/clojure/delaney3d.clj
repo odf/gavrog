@@ -34,16 +34,40 @@
   (let [ds (oriented-cover ds)
         {:keys
          [nr-generators relators cones edge-to-word]} (fundamental-group ds)
+        _ (assert (every? (comp #{1 2 3 4 6} second) cones)
+                  "Symbol violates the crystallographic restriction")
         cones2 (filter (fn [[wd deg]] (= deg 2)) cones)
         cones3 (filter (fn [[wd deg]] (= deg 3)) cones)
         base (map core-table
                   (results (table-generator nr-generators relators 4)))
-        good (for [ct base :when (flattens-all? ct cones)]
-               (let [type (if (= (count ct) 4)
-                            (if (fully-involutive? ct) :v4 :z4)
-                            (core-type (count ct)))]
-                 [type ct]))
-        candidates (reduce (fn [m [k v]] (massoc m k v)) {} good)
-        
-        ]
+        cores (for [ct base :when (flattens-all? ct cones)]
+                (let [type (if (= (count ct) 4)
+                             (if (fully-involutive? ct) :v4 :z4)
+                             (core-type (count ct)))]
+                  [type ct]))
+        z2a (filter (fn [ct] (and (= 2 (count ct))
+                                  (flattens-all? ct cones2)))
+                    base)
+        z2b (filter (fn [ct] (and (= 2 (count ct))
+                                  (not (flattens-all? ct cones2))))
+                    base)
+        z3a (filter (fn [ct] (and (= 3 (count ct))
+                                  (flattens-all? ct cones3)))
+                    base)
+        s3a (filter (fn [ct] (and (= 6 (count ct))
+                                  (flattens-all? ct cones3)))
+                    base)
+        z6 (for [a z3a, b z2a
+                 :let [c (intersection-table a b)]
+                 :when (and (= 6 (count c)) (flattens-all? c cones))]
+             [:z6 c])
+        d6 (for [a s3a, b z2b
+                 :let [c (intersection-table a b)]
+                 :when (and (= 12 (count c)) (flattens-all? c cones))]
+             [:d6 c])
+        categorized (reduce (fn [m [k v]] (massoc m k v)) {}
+                            (concat cores z6 d6))
+        candidates (for [type [:z1 :z2 :z3 :z4 :v4 :s3 :z6 :d4 :d6 :a4 :s4]
+                         ct (categorized type)]
+                     ct)]
     candidates))
