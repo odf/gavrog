@@ -69,5 +69,5 @@
                             (concat cores z6 d6))
         candidates (for [type [:z1 :z2 :z3 :z4 :v4 :s3 :z6 :d4 :d6 :a4 :s4]
                          ct (categorized type)]
-                     ct)]
+                     (cover-for-table ds ct edge-to-word))]
     candidates))
