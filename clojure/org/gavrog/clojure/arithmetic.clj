@@ -1,11 +1,5 @@
-(ns org.gavrog.clojure.arithmetic)
-
-(defn abs [n] (if (neg? n) (- n) n))
-
-(defn sign [n]
-  (cond (zero? n) 0
-        (neg? n) -1
-        :else 1))
+(ns org.gavrog.clojure.arithmetic
+  (:use (org.gavrog.clojure util)))
 
 (defn gcdex [m n]
   (loop [f (abs m), fm (sign m), g (abs n), gm 0]
@@ -69,10 +63,11 @@
     (if dirty (recur M rows cols) M)))
 
 (defn diagonalized [M rows cols]
-  (if-let [[_ i j] (smallest (for [i rows, j cols
-                                   :when (not (zero? (M [i j])))]
-                               [(M [i j]) i j]))]
+  (if-let [[_ i j s] (smallest (for [i rows, j cols
+                                     :let [x (M [i j])]
+                                     :when (not (zero? x))]
+                                 [(abs x) i j (sign x)]))]
     (let [M (combine-rows M cols (first rows) i 0 1 1 0)
-          M (combine-cols M rows (first cols) j 0 (sign (M [i j])) 1 0)]
+          M (combine-cols M rows (first cols) j 0 1 s 0)]
       (recur (eliminate M rows cols) (rest rows) (rest cols)))
     M))

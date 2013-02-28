@@ -1,6 +1,11 @@
 (ns org.gavrog.clojure.util)
 
-;; General purpose definitions and entities
+(defn abs [n] (if (neg? n) (- n) n))
+
+(defn sign [n]
+  (cond (zero? n) 0
+        (neg? n) -1
+        :else 1))
 
 (def empty-queue clojure.lang.PersistentQueue/EMPTY)
 
