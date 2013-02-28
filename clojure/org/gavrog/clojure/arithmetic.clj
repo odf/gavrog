@@ -11,8 +11,8 @@
   (loop [f (abs m), fm (sign m), g (abs n), gm 0]
     (if (zero? g)
       (if (zero? n)
-        [f [fm 0 gm 1]]
-        [f [fm (quot (- f (* fm m)) n) gm (quot (- (* gm m)) n)]])
+        [fm 0 gm 1]
+        [fm (quot (- f (* fm m)) n) gm (quot (- (* gm m)) n)])
       (let [x (quot f g)]
         (recur g gm (- f (* x g)) (- fm (* x gm)))))))
 
@@ -35,38 +35,44 @@
     (reduce (fn [a b] (if (neg? (compare a b)) a b)) (first xs) (rest xs))))
 
 (defn- clear-col [M rows cols]
-  (let [i0 (first rows)
-        j0 (first cols)]
+  (let [i0 (first rows), j0 (first cols)]
     (reduce (fn [M i]
-              (let [a (M [i0 j0]) b (M [i j0])]
+              (let [a (M [i0 j0]), b (M [i j0])]
                 (cond (and (not (zero? a)) (zero? (mod b a)))
                       (combine-rows M cols i0 i 1 0 (- (quot b a)) 1)
                       
                       (not (zero? b))
-                      (let [[_ [f11 f12 f21 f22]] (gcdex a b)]
-                        (combine-rows M cols i0 i f11 f12 f21 f22))
+                      (apply combine-rows M cols i0 i (gcdex a b))
                       
                       :else
                       M)))
+            M
             (rest rows))))
 
-(defn- clear-row [M rows cols])
+(defn- try-to-clear-row [M rows cols]
+  (let [i0 (first rows), j0 (first cols)]
+    (loop [M M, js (rest cols)]
+      (if-let [j (first js)]
+        (let [a (M [i0 j0]), b (M [i0 j])]
+          (cond (and (not (zero? a)) (zero? (mod b a)))
+                (recur (assoc M [i0 j] 0) (rest js))
+                      
+                (not (zero? b))
+                [(apply combine-cols M rows j0 j (gcdex a b)) true]
+                      
+                :else
+                (recur M (rest js))))
+        [M false]))))
 
 (defn- eliminate [M rows cols]
-  (let [M (clear-col M rows cols)
-        [M dirty] (clear-row M rows cols)]
-    (if dirty
-      (recur M rows cols)
-      M)))
+  (let [[M dirty] (try-to-clear-row (clear-col M rows cols) rows cols)]
+    (if dirty (recur M rows cols) M)))
 
 (defn diagonalized [M rows cols]
-  (if (or (empty? rows) (empty? cols))
-    M
-    (let [i0 (first rows)
-          j0 (first cols)
-          [_ ip jp] (smallest (for [i rows, j cols
-                                    :when (not (zero? (M [i j])))]
-                                [i j]))
-          M (combine-rows M cols i0 ip 0 1 1 0)
-          M (combine-cols M rows j0 jp 0 (sign (M [ip jp])) 1 0)]
-      (recur (eliminate M rows cols) (rest rows) (rest cols)))))
+  (if-let [[_ i j] (smallest (for [i rows, j cols
+                                   :when (not (zero? (M [i j])))]
+                               [(M [i j]) i j]))]
+    (let [M (combine-rows M cols (first rows) i 0 1 1 0)
+          M (combine-cols M rows (first cols) j 0 (sign (M [i j])) 1 0)]
+      (recur (eliminate M rows cols) (rest rows) (rest cols)))
+    M))
