@@ -608,6 +608,28 @@
                       (- 1 k)
                       k))))))
 
+(defn collapse [ds connector to-be-removed]
+  (let [to-be-removed (set to-be-removed)]
+    (assert (every? (fn [D] (to-be-removed (s ds connector D))) to-be-removed)
+            (str "element set not invariant under s" connector))
+    (let [img (fn [i D]
+                (loop [D (s ds i D)]
+                  (if (to-be-removed D)
+                    (recur (walk ds D connector i))
+                    D)))
+          remaining (filter (comp not to-be-removed) (elements ds))
+          n (count remaining)
+          emap (zipmap remaining (range 1 (inc n)))
+          idcs (indices ds)
+          ops (into {} (for [i idcs]
+                         [i (into {} (for [D remaining]
+                                       [(emap D) (emap (img i D))]))]))
+          t (DSymbol. (dim ds) n ops {})
+          vs (into {} (for [[i j] (zipmap idcs (rest idcs))]
+                        [i (into {} (for [D remaining]
+                                      [(emap D) (v ds i j D)]))]))]
+      (DSymbol. (dim ds) n ops vs))))
+
 ;; === Tests
 
 (deftest delaney-test
