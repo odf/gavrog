@@ -30,6 +30,10 @@
 (defn- flattens-all? [ct cones]
   (every? (partial flattens? ct) cones))
 
+(defn- invariants [ds]
+  (let [{:keys [nr-generators relators]} (fundamental-group ds)]
+    (abelian-invariants nr-generators relators)))
+
 (defn pseudo-toroidal-cover [ds]
   (let [ds (oriented-cover ds)
         {:keys
@@ -70,4 +74,5 @@
         candidates (for [type [:z1 :z2 :z3 :z4 :v4 :s3 :z6 :d4 :d6 :a4 :s4]
                          ct (categorized type)]
                      (cover-for-table ds ct edge-to-word))]
-    candidates))
+    (some (fn [cov] (when (= [0 0 0] (invariants cov)) cov))
+          candidates)))

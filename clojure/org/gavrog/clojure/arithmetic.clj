@@ -1,6 +1,9 @@
 (ns org.gavrog.clojure.arithmetic
   (:use (org.gavrog.clojure util)))
 
+(defn divides? [a b]
+  (and (not (zero? a)) (zero? (mod b a))))
+
 (defn gcdex [m n]
   (loop [f (abs m), fm (sign m), g (abs n), gm 0]
     (if (zero? g)
@@ -9,6 +12,17 @@
         [fm (quot (- f (* fm m)) n) gm (quot (- (* gm m)) n)])
       (let [x (quot f g)]
         (recur g gm (- f (* x g)) (- fm (* x gm)))))))
+
+(defn gcd [m n]
+  (loop [f (abs m), g (abs n)]
+    (if (zero? g)
+      f
+      (recur g (mod f g)))))
+
+(defn lcm [m n]
+  (if (and (zero? m) (zero? n))
+    0
+    (abs (* (quot m (gcd m n)) n))))
 
 (defn- combine-rows [M cols i1 i2 f11 f12 f21 f22]
   (let [stuff! (partial reduce conj!)]
@@ -32,7 +46,7 @@
   (let [i0 (first rows), j0 (first cols)]
     (reduce (fn [M i]
               (let [a (M [i0 j0]), b (M [i j0])]
-                (cond (and (not (zero? a)) (zero? (mod b a)))
+                (cond (divides? a b)
                       (combine-rows M cols i0 i 1 0 (- (quot b a)) 1)
                       
                       (not (zero? b))
@@ -48,7 +62,7 @@
     (loop [M M, js (rest cols)]
       (if-let [j (first js)]
         (let [a (M [i0 j0]), b (M [i0 j])]
-          (cond (and (not (zero? a)) (zero? (mod b a)))
+          (cond (divides? a b)
                 (recur (assoc M [i0 j] 0) (rest js))
                       
                 (not (zero? b))

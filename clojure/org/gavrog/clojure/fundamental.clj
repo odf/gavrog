@@ -123,16 +123,6 @@
      :edge-to-word edge2word
      }))
 
-(defn- relator-as-row [nr-gens w]
-  (reduce (fn [r x] (assoc r (abs x) (+ (r (abs x)) (sign x))))
-          (into {} (for [g (range 1 (inc nr-gens))] [g 0]))
-          w))
-
-(defn- relator-matrix [nr-gens relators]
-  (into {} (for [k (range (count relators))
-                 [g n] (relator-as-row nr-gens (get relators k))]
-             [[k g] n])))
-
 (comment
   A test symbol.
   

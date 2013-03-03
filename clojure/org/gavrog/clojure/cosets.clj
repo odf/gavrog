@@ -1,5 +1,6 @@
 (ns org.gavrog.clojure.cosets
   (:use (org.gavrog.clojure
+          arithmetic
           free-word
           partition
           util
@@ -197,3 +198,30 @@
     (induced-table (vec (keys (or (table 0) {})))
                    (fn [es g] (vec (map (fn [e] ((table e) g)) es)))
                    elms)))
+
+(defn- relator-as-row [nr-gens w]
+  (reduce (fn [r x] (assoc r (abs x) (+ (r (abs x)) (sign x))))
+          (into {} (for [g (range 1 (inc nr-gens))] [g 0]))
+          w))
+
+(defn- relator-matrix [nr-gens relators]
+  (into {} (for [k (range (count relators))
+                 [g n] (relator-as-row nr-gens (get relators k))]
+             [[k g] n])))
+
+(defn- abelian-factors [xs]
+  (when (seq xs)
+    (let [tmp (reductions (fn [[a _] b] [(gcd a b) (lcm a b)])
+                          [(first xs)]
+                          (rest xs))]
+      (cons (first (last tmp))
+            (abelian-factors (map second (rest tmp)))))))
+
+(defn abelian-invariants [nr-gens relators]
+  (let [rows (range (count relators))
+        cols (range 1 (inc nr-gens))
+        D (diagonalized (relator-matrix nr-gens relators) rows cols)
+        indices (map vector rows cols)
+        d (map (partial get D) indices)]
+    (concat (->> (abelian-factors d) (filter (partial not= 1)) sort reverse)
+            (repeat (- nr-gens (count d)) 0))))
