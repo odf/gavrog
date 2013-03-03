@@ -76,3 +76,30 @@
                      (cover-for-table ds ct edge-to-word))]
     (some (fn [cov] (when (= [0 0 0] (invariants cov)) cov))
           candidates)))
+
+(defn- check-axes [{:keys [symbol] :as input}]
+  (let [[a b c d] (indices symbol)
+        idx-pairs [[a b] [a c] [a d] [b c] [b d] [c d]]
+        degrees (for [[i j] idx-pairs, D (orbit-reps symbol [i j])]
+                  (v symbol i j D))]
+    (if (every? #{1 2 3 4 6} degrees)
+      input
+      (conj input
+            [:result false]
+            [:explanation "violates crystallographic restriction"]))))
+
+(defn- check-cover [{:keys [symbol] :as input}]
+  (if-let [cover (pseudo-toroidal-cover symbol)]
+    (conj input [:cover cover] [:output cover]) 
+    (conj input [:result false] [:explanation "no pseudo-toroidal cover"])))
+
+(def checks [check-axes check-cover])
+
+(defn check-euclicidity [ds]
+  (loop [data {:symbol ds}, to-do checks]
+    (if (seq to-do)
+      (let [data ((first to-do) data)]
+        (if (nil? (:result data))
+          (recur data (rest to-do))
+          [(:result data) (:explanation data)]))
+      [:maybe "no decision found" (:output data)])))
