@@ -1,5 +1,5 @@
 /*
-Copyright 2012 Olaf Delgado-Friedrichs
+Copyright 2013 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -123,12 +123,22 @@ public class SystreGUI extends BFrame {
     private boolean readArchivesAsInput = false;
     private boolean nonStopMode = false;
 
+    // --- configuration file path
+    private String configFileName = "";
     
     /**
      * Constructs an instance.
      */
     public SystreGUI() {
 		super("Systre " + Version.full);
+
+		configFileName = System.getProperty("user.home") + "/.systrerc";
+		systre.loadOptions(configFileName);
+		
+        final String archivePath = System.getProperty("user.home") + "/.systre";
+        for (final String filename: userDefinedArchives(archivePath)) {
+            systre.processArchive(filename);
+        }
         
 		final BorderContainer main = new BorderContainer();
 		main.setDefaultLayout(
@@ -227,6 +237,16 @@ public class SystreGUI extends BFrame {
 		setVisible(true);
         
         status("Ready to go!");
+    }
+    
+    private List<String> userDefinedArchives(final String path)
+    {
+        final List<String> archives = new LinkedList<String>();
+        
+        for (File f: new File(path).listFiles())
+            archives.add(path + "/" + f.getName());
+        
+        return archives;
     }
     
     public void resizeMessage() {
@@ -458,9 +478,17 @@ public class SystreGUI extends BFrame {
 			return;
 		}
         
-		final BButton okButton = makeButton("Ok", dialog, "dispose");
-		column.add(okButton, new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.NONE,
-				defaultInsets, null));
+        final BorderContainer bottom = new BorderContainer();
+        bottom.setDefaultLayout(
+                new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.NONE,
+                        defaultInsets, null));
+        bottom.setBackground(null);
+        bottom.add(makeButton("Ok", dialog, "dispose"), BorderContainer.WEST);
+        bottom.add(makeButton("Save", this, "doSaveOptions"),
+                BorderContainer.EAST);
+
+        column.add(bottom, new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.NONE,
+                defaultInsets, null));
 
 		dialog.setContent(column);
 
@@ -822,6 +850,10 @@ public class SystreGUI extends BFrame {
     	if (this.taskController != null) {
     		this.taskController.cancel();
     	}
+    }
+    
+    public void doSaveOptions() {
+        systre.saveOptions(configFileName);
     }
     
     public void doQuit() {

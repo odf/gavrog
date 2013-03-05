@@ -1004,13 +1004,14 @@ public class SystreCmdline extends EventSource {
     
     /**
      * This method takes command line arguments one by one and passes them to
-     * {@link #processDataFile} or {@link #processArchive}.
+     * {@link #processDataFile} or {@liSystem.getProperty("user.home") + "/.systrerc";nk #processArchive}.
      * 
      * @param args the command line arguments.
      */
     public void run(final String args[]) {
         final List<String> files = new LinkedList<String>();
         final List<String> archives = new LinkedList<String>();
+         
         boolean archivesAsInput = false;
         String outputArchiveFileName = null;
         
@@ -1157,7 +1158,7 @@ public class SystreCmdline extends EventSource {
 		}
 	}
 	
-    private void saveOptions(final String configFileName) {
+    void saveOptions(final String configFileName) {
     	// --- pick up all property values for this instance
     	final Properties ourProps;
 		try {
@@ -1180,7 +1181,7 @@ public class SystreCmdline extends EventSource {
 		}
     }
 
-    private void loadOptions(final String configFileName) {
+    void loadOptions(final String configFileName) {
     	// --- read the configuration file
     	final Properties ourProps = new Properties();
     	try {
