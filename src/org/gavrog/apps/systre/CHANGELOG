@@ -1,5 +1,6 @@
 Systre 1.1.8:
 
+2013-03-05: TD10 value is rounded to the nearest integer.
 2013-02-26: RCSR archive is current as of today.
 2012-09-11: The Wells point symbols for vertices are displayed on request.
 2012-09-06: Added some support for 1d structures.

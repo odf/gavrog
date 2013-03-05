@@ -1,5 +1,5 @@
 /*
-Copyright 2012 Olaf Delgado-Friedrichs
+Copyright 2013 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,7 +30,6 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -79,8 +78,6 @@ public class SystreCmdline extends EventSource {
     static {
         Locale.setDefault(Locale.US);
     }
-    private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
-
     // --- the last structure processed
     ProcessedNet lastStructure = null;
     
@@ -632,8 +629,8 @@ public class SystreCmdline extends EventSource {
         }
         out.println();
         if (cs_complete) {
-            out.println("   TD10 = "
-                    + fmtReal4.format(((double) cum) / G.numberOfNodes()));
+            double td10 = (double) cum / G.numberOfNodes();
+            out.println("   TD10 = " + (int) (td10 + 0.5));
             out.println();
         }
         out.flush();
