@@ -2,16 +2,19 @@
 
 Open bugs:
 
-- NEW! Euclidicity test can produce falls negatives (no pseudo-toroidal cover)
-
 - Sometimes unit cells are very flat.
 - Disabling and enabling of menu items is missing or clumsily implemented.
 
 =====================================================
 
+For the coming release:
+
+- Keep coordinates from input file for drawing
+
+=====================================================
+
 Planned/requested features:
 
-- Option to keep input embedding.
 - Export embedding.
 - Option to add tile coronas.
 

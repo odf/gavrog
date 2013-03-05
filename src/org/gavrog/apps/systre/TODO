@@ -4,6 +4,15 @@ Open bugs/issues:
 
 =====================================================
 
+For the coming release:
+
+- Drop or update zeolite archive
+- Configuration files
+- More intuitive option names?
+- Round TD10 to nearest integer
+
+=====================================================
+
 Planned/requested features:
 
 - Optionally merge vertices with identical neighbor sets.
