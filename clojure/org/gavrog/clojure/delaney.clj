@@ -608,6 +608,8 @@
                       (- 1 k)
                       k))))))
 
+;; === Generic simplifications of a given symbol
+
 (defn collapse [ds connector to-be-removed]
   (let [to-be-removed (set to-be-removed)]
     (assert (every? (fn [D] (to-be-removed (s ds connector D))) to-be-removed)
