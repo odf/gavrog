@@ -42,3 +42,9 @@
   ([cmp xs ys] (if (neg? (compare-lexicographically cmp xs ys)) xs ys))
   ([cmp xs ys & more] (reduce (partial lexicographically-smallest cmp)
                           (lexicographically-smallest cmp xs ys) more)))
+
+(defn multi-assoc [m k v]
+  (assoc m k (conj (get m k #{}) v)))
+
+(defn multi-map [pairs]
+  (reduce (fn [m [k v]] (multi-assoc m k v)) {} pairs))

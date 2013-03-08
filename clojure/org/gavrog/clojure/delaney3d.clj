@@ -7,9 +7,6 @@
           covers
           [generators :only [results]])))
 
-(defn massoc [m k v]
-  (assoc m k (conj (get m k #{}) v)))
-
 (def ^{:private true} core-type
   {1 :z1, 2 :z2, 3 :z3, 6 :s3, 8 :d4, 12 :a4, 24 :s4})
 
@@ -69,8 +66,7 @@
                  :let [c (intersection-table a b)]
                  :when (and (= 12 (count c)) (flattens-all? c cones))]
              [:d6 c])
-        categorized (reduce (fn [m [k v]] (massoc m k v)) {}
-                            (concat cores z6 d6))
+        categorized (multi-map (concat cores z6 d6))
         candidates (for [type [:z1 :z2 :z3 :z4 :v4 :s3 :z6 :d4 :d6 :a4 :s4]
                          ct (categorized type)]
                      (cover-for-table ds ct edge-to-word))]
