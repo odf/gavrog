@@ -27,10 +27,19 @@
           E (walk ds C 0 1)
           [F G] (map #(s ds 3 %) [D E])
           [D* E* F* G*] (map #(s ds 1 %) [D E F G])
-          ops* (ops ds)
-          ops* (assoc ops* 1 (conj (ops* 1)
-                                   [D E*] [E D*] [D* E] [E* D]
-                                   [F G*] [G F*] [F* G] [G* F]))
-          tmp (DSymbol. 3 (size ds) ops* (vs ds))]
+          ops* (assoc (ops ds) 1 (conj ((ops ds) 1)
+                                       [D E*] [E D*] [D* E] [E* D]
+                                       [F G*] [G F*] [F* G] [G* F]))
+          tmp (make-dsymbol 3 (size ds) ops* (vs ds))]
       (collapse tmp 3 (orbit-elements tmp [0 1 3] C)))
+    ds))
+
+(defn- deg-2-element [ds D]
+  (and (= 2 (m ds 1 2 D))
+       (let [E (walk ds D 2 3)]
+         (not #{E (walk ds E 0 1) (walk ds E 1 0)} D))))
+
+(defn- fix-degree-2-vertex [ds]
+  (if-let [D (first (filter (partial deg-2-element ds)) (orbit-reps ds [1 2]))]
+    nil ;; TODO code here
     ds))
