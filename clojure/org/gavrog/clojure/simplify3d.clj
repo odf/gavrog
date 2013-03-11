@@ -1,8 +1,6 @@
 (ns org.gavrog.clojure.simplify3d
-  (:use (org.gavrog.clojure
-          delaney
-          fundamental
-          util)))
+  (:use (clojure set)
+        (org.gavrog.clojure delaney fundamental util)))
 
 (defn merge-volumes [ds]
   (let [idx (last (indices ds))]
@@ -23,6 +21,9 @@
   (-> ds dual merge-facets dual))
 
 ;; === The following are specific to 3d symbols
+
+(defn- orbits [ds idcs]
+  (map (partial orbit-elements ds idcs) (orbit-reps ds idcs)))
 
 (defn- representatives-map [ds idcs]
   (into {} (for [D (orbit-reps ds idcs)
@@ -48,6 +49,25 @@
 (defn pinch-first-local-1-cut [ds]
   (when-let [[D E] (first (local-1-cuts ds))]
     (pinch-face ds D E)))
+
+(defn- face-intersections [ds]
+  (let [vert-rep (representatives-map ds [1 2])
+        ori (partial-orientation ds)
+        faces (vec (map (partial filter (comp pos? ori)) (orbits ds [0 1])))]
+    (for [i (range (count faces))
+          j (range (inc i) (count faces))
+          :let [[f g] (map faces [i j])
+                [vf vg] (map (comp set (partial map vert-rep)) [f g])
+                common (intersection vf vg)]
+          :when (pos? (count common))]
+      [f g common])))
+
+(defn- local-2-cuts [ds]
+  (filter (fn [[f g common]]
+            (let [verts (map (fn [D] (set (orbit-elements ds [1 2] D))) common)
+                  _ (println verts)]
+            ))
+          (face-intersections ds)))
 
 (defn- pinch-tile [ds D E]
   (let [[D* E*] (map (partial s ds 0) [D E])
