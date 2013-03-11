@@ -35,7 +35,7 @@
         orientation (partial-orientation ds)
         pairs (multi-map (for [D (elements ds) :when (pos? (orientation D))]
                            [[(face-rep D) (vert-rep D)] D]))]
-    (filter (fn [xs] (< 1 (count xs))) pairs)))
+    (for [[_ Ds] pairs :when (< 1 (count Ds))] (vec Ds))))
 
 (defn- pinch-face [ds D E]
   (let [[F G] (map (partial s ds 3) [D E])
