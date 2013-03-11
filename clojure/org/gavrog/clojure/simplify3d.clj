@@ -62,10 +62,16 @@
           :when (pos? (count common))]
       [f g common])))
 
+(defn- positions [p xs]
+  (for [[i x] (zipmap (range) xs) :when (p x)] i))
+
 (defn- local-2-cuts [ds]
   (filter (fn [[f g common]]
             (let [verts (map (fn [D] (set (orbit-elements ds [1 2] D))) common)
-                  _ (println verts)]
+                  find (fn [D] (first (positions #(% D) verts)))
+                  pf (map find f)
+                  pg (map find g)
+                  _ (println pf pg)]
             ))
           (face-intersections ds)))
 
