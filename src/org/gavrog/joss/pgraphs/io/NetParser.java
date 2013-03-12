@@ -1301,7 +1301,9 @@ public class NetParser extends GenericParser {
         return allNodes;
     }
 
-    private double gramMatrixError(int dim, SpaceGroup group, Matrix cellGram) {
+    static private double gramMatrixError(
+            int dim, SpaceGroup group, Matrix cellGram)
+    {
         final double g[] = new double[dim * (dim + 1) / 2];
         int k = 0;
         for (int i = 0; i < dim; ++i) {
@@ -1411,6 +1413,8 @@ public class NetParser extends GenericParser {
         List<Point[]> faces = new ArrayList<Point[]>();
         IArithmetic faceData[] = null;
         int faceDataIndex = 0;
+
+        final List<String> warnings = new ArrayList<String>();
         
         // --- collect data from the input
         for (int i = 0; i < block.length; ++i) {
@@ -1505,12 +1509,14 @@ public class NetParser extends GenericParser {
         
         // --- use reasonable default for missing data
         if (group == null) {
+            warnings.add("Space group missing; assuming P1");
             groupName = "P1";
             group = parseSpaceGroupName(groupName);
             dim = group.getDimension();
             ops.addAll(group.getOperators());
         }
         if (cellGram == null) {
+            warnings.add("Unit cell parameters missing; using defaults");
             cellGram = defaultGramMatrix(groupName, dim);
         }
         
@@ -1543,6 +1549,10 @@ public class NetParser extends GenericParser {
                 System.err.println();
             }
         }
+        
+        // --- warn about illegal cell parameters
+        if (gramMatrixError(dim, group, cellGram) > 0.01)
+                warnings.add("Unit cell parameters illegal for this group");
         
         // --- get info for converting to a primitive setting
         final Matrix primitiveCell = group.primitiveCell();
