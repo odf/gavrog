@@ -31,8 +31,10 @@ import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
+import org.gavrog.joss.dsyms.derived.DSCover;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
+import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.io.GenericParser;
 import org.gavrog.joss.pgraphs.io.NetParser;
 import org.gavrog.joss.pgraphs.io.NetParser.Face;
@@ -276,8 +278,36 @@ public class FaceList {
         }
         
         // --- freeze the constructed symbol
-        //TODO keep given symmetry and record original vertex positions
-        this.ds = new DSymbol(ds.minimal());
+        this.ds = new DSymbol(ds);
+
+        // --- make the tiling object and extract some information
+        final Tiling til = new Tiling(ds);
+        final DSCover<Integer> cov = til.getCover();
+        final Tiling.Skeleton skel = til.getSkeleton();
+
+        // --- map skeleton nodes for the tiling to appropriate positions
+        final Map<INode, Point> positions = new HashMap<INode, Point>();
+
+        for (final Face f: this.faces)
+        {
+            final int n = f.size();
+            final List<Integer> chambers = faceElements.get(f);
+            for (int i = 0; i < 2 * n; ++i)
+            {
+                final int k = (i + 1) / 2 % n;
+                final int D = chambers.get(i);
+                assert(cov.image(D) == D);
+
+                final INode v = skel.nodeForChamber(D);
+                if (D == skel.chamberAtNode(v))
+                {
+                    final Point p = indexToPosition.get(f.vertex(k));
+                    final Vector s = f.shift(k);
+                    final Vector t = til.cornerShift(0, D);
+                    positions.put(v, (Point) p.plus(s).minus(t));
+                }
+            }
+        }
 	}
 	
     private FaceList(final Pair<List<Object>, Map<Integer, Point>> p) {
