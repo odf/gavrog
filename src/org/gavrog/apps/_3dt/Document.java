@@ -102,6 +102,7 @@ public class Document extends DisplayList {
     private DSymbol symbol = null;
     private DSymbol effective_symbol = null;
     private DSCover<Integer> given_cover = null;
+    private Map<Integer, Point> given_positions = null;
     private GenericParser.Block data = null;
     
     // --- The tile and face colors set for this instance
@@ -336,7 +337,10 @@ public class Document extends DisplayList {
     	if (this.symbol == null) {
     		if (this.data != null) {
     			if (this.type == TILING_3D) {
-    				this.symbol = new FaceList(this.data).getSymbol();
+    			    final FaceList fl = new FaceList(data);
+    				this.symbol = fl.getSymbol();
+    				this.given_cover = fl.getCover();
+    				this.given_positions = fl.getPositions();
     			} else {
     				final Net net = new NetParser(
     				        (BufferedReader) null).parseNet(this.data);
@@ -397,12 +401,27 @@ public class Document extends DisplayList {
 		}
 	}
     
+    private Embedder makeEmbedder()
+    {
+        if (given_positions == null)
+            return new Embedder(getNet(), null, false);
+        else
+        {
+            final Map<INode, Point> pos = new HashMap<INode, Point>();
+            final Tiling.Skeleton skel = getNet();
+            for (int D: given_positions.keySet())
+            {
+                pos.put(skel.nodeForChamber(D), given_positions.get(D));
+            }
+            return new Embedder(getNet(), pos, false);
+        }
+    }
+    
     private Embedder getEmbedder() {
         try {
             return (Embedder) cache.get(EMBEDDER);
         } catch (CacheMissException ex) {
-            return (Embedder) cache.put(EMBEDDER,
-                    new Embedder(getNet(), null, false));
+            return (Embedder) cache.put(EMBEDDER, makeEmbedder());
         }
     }
 

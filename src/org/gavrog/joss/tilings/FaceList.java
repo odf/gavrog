@@ -149,6 +149,8 @@ public class FaceList {
     final private Map<Integer, Point> indexToPos;
     final private int dim;
     final private DSymbol ds;
+    final private DSCover<Integer> cover;
+    final private Map<Integer, Point> positions;
     
 	public FaceList(
 			final List<Object> input,
@@ -277,16 +279,14 @@ public class FaceList {
         	throw new RuntimeException("Built non-manifold symbol.");
         }
         
-        // --- freeze the constructed symbol
+        // --- freeze the symbol, make a tiling object, and extract the cover
         this.ds = new DSymbol(ds);
-
-        // --- make the tiling object and extract some information
-        final Tiling til = new Tiling(ds);
-        final DSCover<Integer> cov = til.getCover();
-        final Tiling.Skeleton skel = til.getSkeleton();
+        final Tiling tiling = new Tiling(this.ds);
+        this.cover = tiling.getCover();
 
         // --- map skeleton nodes for the tiling to appropriate positions
-        final Map<INode, Point> positions = new HashMap<INode, Point>();
+        final Tiling.Skeleton skel = tiling.getSkeleton();
+        this.positions = new HashMap<Integer, Point>();
 
         for (final Face f: this.faces)
         {
@@ -296,15 +296,15 @@ public class FaceList {
             {
                 final int k = (i + 1) / 2 % n;
                 final int D = chambers.get(i);
-                assert(cov.image(D) == D);
+                assert(this.cover.image(D) == D);
 
                 final INode v = skel.nodeForChamber(D);
                 if (D == skel.chamberAtNode(v))
                 {
                     final Point p = indexToPosition.get(f.vertex(k));
                     final Vector s = f.shift(k);
-                    final Vector t = til.cornerShift(0, D);
-                    positions.put(v, (Point) p.plus(s).minus(t));
+                    final Vector t = tiling.cornerShift(0, D);
+                    this.positions.put(D, (Point) p.plus(s).minus(t));
                 }
             }
         }
@@ -316,10 +316,6 @@ public class FaceList {
     
     public FaceList(final GenericParser.Block data) {
         this(NetParser.parseFaceList(data));
-    }
-    
-    public DSymbol getSymbol() {
-        return this.ds;
     }
     
     /**
@@ -606,5 +602,17 @@ public class FaceList {
                 }
             }
         }
+    }
+
+    public DSymbol getSymbol() {
+        return ds;
+    }
+
+    public DSCover<Integer> getCover() {
+        return cover;
+    }
+
+    public Map<Integer, Point> getPositions() {
+        return positions;
     }
 }
