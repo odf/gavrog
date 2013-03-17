@@ -292,9 +292,9 @@ public class FaceList {
         {
             final int n = f.size();
             final List<Integer> chambers = faceElements.get(f);
-            for (int i = 0; i < 2 * n; ++i)
+            for (int i = 0; i < 4 * n; ++i)
             {
-                final int k = (i + 1) / 2 % n;
+                final int k = (i % (2 * n) + 1) / 2 % n;
                 final int D = chambers.get(i);
                 assert(this.cover.image(D) == D);
 
