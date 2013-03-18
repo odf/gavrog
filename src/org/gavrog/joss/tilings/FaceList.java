@@ -301,10 +301,20 @@ public class FaceList {
                 final INode v = skel.nodeForChamber(D);
                 if (D == skel.chamberAtNode(v))
                 {
-                    final Point p = indexToPosition.get(f.vertex(k));
-                    final Vector s = f.shift(k);
-                    final Vector t = tiling.cornerShift(0, D);
-                    this.positions.put(D, (Point) p.plus(s).minus(t));
+                    final Point p = (Point) indexToPosition.get(f.vertex(k))
+                            .plus(f.shift(k));
+                    // TODO convert to tiling's coordinate system
+
+                    final Vector t1 = tiling.cornerShift(0, D);
+                    final Vector t2 = (i >= 2 * n) ?
+                            tiling.edgeTranslation(3, D) : Vector.zero(3);
+                    this.positions.put(
+                            D, (Point) p.minus(t1).minus(t2));
+
+                    System.err.println("D = " + D + ", " +
+                                       "p = " + p + ", " +
+                                       "t1 = " + t1 + ", " +
+                                       "t2 = " + t2);
                 }
             }
         }
