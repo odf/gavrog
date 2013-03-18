@@ -21,8 +21,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.compounds.Matrix;
@@ -31,7 +34,9 @@ import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
+import org.gavrog.joss.dsyms.basic.Subsymbol;
 import org.gavrog.joss.dsyms.derived.DSCover;
+import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.INode;
@@ -141,6 +146,31 @@ public class FaceList {
         	return "(" + faceIndex + "," + edgeIndex + "," + reverse + ","
 					+ angle + ")";
         }
+	}
+	
+	private static class Thing {
+	    final public int D;
+	    final public Vector inputShift;
+	    final public Vector tilingShift;
+	    
+	    public Thing(final int D,
+	                 final Vector inputShift,
+	                 final Vector tilingShift)
+	    {
+	        this.D = D;
+	        this.inputShift = inputShift;
+	        this.tilingShift = tilingShift;
+	    }
+	    
+	    public Thing(final int D) {
+	        this(D, Vector.zero(3), Vector.zero(3));
+        }
+
+        public int hashCode()
+	    {
+	        return (D * 37 + inputShift.hashCode()) * 37
+	                + tilingShift.hashCode();
+	    }
 	}
 	
     final private List<Face> faces;
@@ -283,10 +313,11 @@ public class FaceList {
         this.ds = new DSymbol(ds);
         final Tiling tiling = new Tiling(this.ds);
         this.cover = tiling.getCover();
-
+        
         // --- map skeleton nodes for the tiling to appropriate positions
         final Tiling.Skeleton skel = tiling.getSkeleton();
         this.positions = new HashMap<Integer, Point>();
+        final CoordinateChange cc = inputToTiling(faces, tiling, faceElements);
 
         for (final Face f: this.faces)
         {
@@ -302,8 +333,7 @@ public class FaceList {
                 if (D == skel.chamberAtNode(v))
                 {
                     final Point p = (Point) indexToPosition.get(f.vertex(k))
-                            .plus(f.shift(k));
-                    // TODO convert to tiling's coordinate system
+                            .plus(f.shift(k)).times(cc);
 
                     final Vector t1 = tiling.cornerShift(0, D);
                     final Vector t2 = (i >= 2 * n) ?
@@ -320,6 +350,71 @@ public class FaceList {
         }
 	}
 	
+    private CoordinateChange inputToTiling(
+            final List<Face> faces,
+            final Tiling tiling,
+            final Map<Face, List<Integer>> faceElements) 
+    {
+        final Map<Integer, Vector> edgeShifts = new HashMap<Integer, Vector>();
+
+        for (final Face f: faces)
+        {
+            final int n = f.size();
+            final List<Integer> chambers = faceElements.get(f);
+
+            for (int i = 0; i < 2 * n; i += 2)
+            {
+                final int k = i % 2;
+                final Vector t = (Vector) f.shift((k + 1) %n).minus(f.shift(k));
+                final Vector minusT = (Vector) t.times(-1);
+                
+                edgeShifts.put(chambers.get(i), t);
+                edgeShifts.put(chambers.get(i + 1), minusT);
+                edgeShifts.put(chambers.get(2 * n + i), t);
+                edgeShifts.put(chambers.get(2 * n + i + 1), minusT);
+            }
+        }
+        
+        final DSCover<Integer> cover = tiling.getCover();
+        
+        final int D0 = cover.elements().next();
+        final IndexList idcsV = new IndexList(1, 2, 3);
+        final IndexList idcsE = new IndexList(2, 3);
+        
+        final LinkedList<Thing> queue = new LinkedList<Thing>();
+        final Set<Integer> seen = new HashSet<Integer>();
+        final List<Pair<Vector, Vector>> correspondences =
+                new ArrayList<Pair<Vector,Vector>>();
+        
+        queue.addLast(new Thing(D0));
+        seen.add(D0);
+        
+        while (!queue.isEmpty())
+        {
+            final Thing entry = queue.removeFirst();
+            final int D = entry.D;
+            final Vector s1 = entry.inputShift;
+            final Vector s2 = entry.tilingShift;
+
+            final Subsymbol<Integer> sub =
+                    new Subsymbol<Integer>(cover, idcsV, D);
+            for (final int E: sub.orbitReps(idcsE))
+            {
+                final int E0 = cover.op(0, E);
+                final Vector t1 = (Vector) s1.plus(edgeShifts.get(E));
+                final Vector t2 =
+                        (Vector) s2.plus(tiling.edgeTranslation(0, E));
+                if (!seen.contains(E0))
+                    queue.addLast(new Thing(E0, t1, t2));
+                else if (E0 == D)
+                    correspondences.add(new Pair<Vector, Vector>(t1, t2));
+            }
+        }
+        // TODO extract coordinate change from vector correspondences
+        
+        return null;
+    }
+
     private FaceList(final Pair<List<Object>, Map<Integer, Point>> p) {
         this(p.getFirst(), p.getSecond());
     }
