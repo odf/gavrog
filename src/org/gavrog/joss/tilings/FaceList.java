@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Olaf Delgado-Friedrichs
+   Copyright 2013 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -36,7 +36,6 @@ import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.basic.Subsymbol;
 import org.gavrog.joss.dsyms.derived.DSCover;
-import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.INode;
@@ -317,7 +316,7 @@ public class FaceList {
         // --- map skeleton nodes for the tiling to appropriate positions
         final Tiling.Skeleton skel = tiling.getSkeleton();
         this.positions = new HashMap<Integer, Point>();
-        final CoordinateChange cc = inputToTiling(faces, tiling, faceElements);
+        final Matrix M = inputToTiling(faces, tiling, faceElements);
 
         for (final Face f: this.faces)
         {
@@ -332,8 +331,9 @@ public class FaceList {
                 final INode v = skel.nodeForChamber(D);
                 if (D == skel.chamberAtNode(v))
                 {
-                    final Point p = (Point) indexToPosition.get(f.vertex(k))
-                            .plus(f.shift(k)).times(cc);
+                    final Point p0 = (Point) indexToPosition.get(f.vertex(k))
+                            .plus(f.shift(k));
+                    final Point p = (Point) M.times(p0);
 
                     final Vector t1 = tiling.cornerShift(0, D);
                     final Vector t2 = (i >= 2 * n) ?
@@ -350,11 +350,12 @@ public class FaceList {
         }
 	}
 	
-    private CoordinateChange inputToTiling(
+    private Matrix inputToTiling(
             final List<Face> faces,
             final Tiling tiling,
             final Map<Face, List<Integer>> faceElements) 
     {
+        final Map<Integer, Vector> vertShifts = new HashMap<Integer, Vector>();
         final Map<Integer, Vector> edgeShifts = new HashMap<Integer, Vector>();
 
         for (final Face f: faces)
@@ -372,6 +373,12 @@ public class FaceList {
                 edgeShifts.put(chambers.get(i + 1), minusT);
                 edgeShifts.put(chambers.get(2 * n + i), t);
                 edgeShifts.put(chambers.get(2 * n + i + 1), minusT);
+                
+                vertShifts.put(chambers.get(i), f.shift(k));
+                vertShifts.put(chambers.get((i + 2 * n - 1) % (2 * n)),
+                        f.shift(k));
+                vertShifts.put(chambers.get(i + 2 * n), f.shift(k));
+                vertShifts.put(chambers.get(i + 2 * n - 1), f.shift(k));
             }
         }
         
@@ -401,17 +408,55 @@ public class FaceList {
             for (final int E: sub.orbitReps(idcsE))
             {
                 final int E0 = cover.op(0, E);
-                final Vector t1 = (Vector) s1.plus(edgeShifts.get(E));
-                final Vector t2 =
-                        (Vector) s2.plus(tiling.edgeTranslation(0, E));
+                final Vector a = (Vector) edgeShifts.get(E)
+                        .plus(vertShifts.get(E))
+                        .minus(vertShifts.get(D));
+                final Vector t1 = (Vector) s1.plus(a);
+                
+                final Vector b = (Vector) tiling.edgeTranslation(0, E)
+                        .plus(tiling.cornerShift(0, E))
+                        .minus(tiling.cornerShift(0, D));
+                final Vector t2 = (Vector) s2.plus(b);
                 if (!seen.contains(E0))
+                {
                     queue.addLast(new Thing(E0, t1, t2));
+                    seen.add(E0);
+                }
                 else if (E0 == D)
                     correspondences.add(new Pair<Vector, Vector>(t1, t2));
             }
         }
-        // TODO extract coordinate change from vector correspondences
-        
+        System.err.println("correspondences:");
+        for (final Pair<Vector, Vector> p: correspondences)
+            System.err.println("  " + p);
+
+        final int m = correspondences.size();
+        for (int i = 0; i < m - 2; ++i)
+        {
+            final Vector a = correspondences.get(i).getFirst();
+            for (int j = i + 1; j < m - 1; ++j)
+            {
+                final Vector b = correspondences.get(j).getFirst();
+                for (int k = j + 1; k < m; ++k)
+                {
+                    final Vector c = correspondences.get(k).getFirst();
+                    if (!Vector.volume3D(a, b, c).isZero())
+                    {
+                        final List<Vector> vs = new ArrayList<Vector>();
+                        vs.add(a); vs.add(b); vs.add(c);
+                        final Matrix A = Vector.toMatrix(vs);
+
+                        final List<Vector> ws = new ArrayList<Vector>();
+                        ws.add(correspondences.get(i).getSecond());
+                        ws.add(correspondences.get(j).getSecond());
+                        ws.add(correspondences.get(k).getSecond());
+                        final Matrix B = Vector.toMatrix(ws);
+                        
+                        return ((Matrix) A.inverse().times(B)).transposed();
+                    }
+                }
+            }
+        }
         return null;
     }
 
