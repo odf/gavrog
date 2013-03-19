@@ -392,13 +392,18 @@ public class FaceList {
                 new HashSet<Integer>(Iterators.asList(cover.orbit(idcsF, D0)));
         
         final LinkedList<Thing> queue = new LinkedList<Thing>();
-        final Set<Integer> seen = new HashSet<Integer>();
+        queue.addLast(new Thing(D0));
+        
+        final Map<Integer, Vector> seen = new HashMap<Integer, Vector>();
+        for (final int x: orbD0)
+        {
+            final Vector t = (Vector) tiling.cornerShift(2, x)
+                    .minus(tiling.cornerShift(2, D0));
+            seen.put(x, t);
+        }
+
         final List<Pair<Vector, Vector>> correspondences =
                 new ArrayList<Pair<Vector,Vector>>();
-        
-        queue.addLast(new Thing(D0));
-        for (final int x: cover.orbit(idcsF, D0))
-            seen.add(x);
         
         while (!queue.isEmpty())
         {
@@ -424,17 +429,20 @@ public class FaceList {
                         .plus(tiling.cornerShift(2, E))
                         .minus(tiling.cornerShift(2, D));
 
-                if (!seen.contains(E2))
+                if (!seen.containsKey(E2))
                 {
                     queue.addLast(new Thing(E2, t1, t2));
                     for (final int x: cover.orbit(idcsF, E2))
-                        seen.add(x);
+                    {
+                        final Vector t = (Vector) t2
+                                .plus(tiling.cornerShift(2, x))
+                                .minus(tiling.cornerShift(2, E2));
+                        seen.put(x, t);
+                    }
                 }
-                else if (orbD0.contains(E2))
+                else if (!t2.equals(seen.get(E2)))
                 {
-                    final Vector d = (Vector) t2
-                            .plus(tiling.cornerShift(2, D0))
-                            .minus(tiling.cornerShift(2, E2));
+                    final Vector d = (Vector) t2.minus(seen.get(E2));
                     correspondences.add(new Pair<Vector, Vector>(t1, d));
                 }
             }
