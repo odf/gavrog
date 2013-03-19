@@ -365,7 +365,7 @@ public class FaceList {
 
             for (int i = 0; i < 2 * n; i += 2)
             {
-                final int k = i % 2;
+                final int k = i / 2;
                 final Vector t = (Vector) f.shift((k + 1) %n).minus(f.shift(k));
                 final Vector minusT = (Vector) t.times(-1);
                 
@@ -378,11 +378,19 @@ public class FaceList {
                 vertShifts.put(chambers.get((i + 2 * n - 1) % (2 * n)),
                         f.shift(k));
                 vertShifts.put(chambers.get(i + 2 * n), f.shift(k));
-                vertShifts.put(chambers.get(i + 2 * n - 1), f.shift(k));
+                vertShifts.put(chambers.get((i + 2 * n - 1) % (2 * n) + 2 * n),
+                        f.shift(k));
             }
         }
-        
+
         final DSCover<Integer> cover = tiling.getCover();
+        
+        System.err.println("Shifts:");
+        for (int D: cover.elements())
+        {
+            System.err.println(D + " " + vertShifts.get(D)
+                                 + " " + edgeShifts.get(D));
+        }
         
         final int D0 = cover.elements().next();
         final IndexList idcsV = new IndexList(1, 2, 3);
@@ -409,8 +417,8 @@ public class FaceList {
             {
                 final int E0 = cover.op(0, E);
                 final Vector a = (Vector) edgeShifts.get(E)
-                        .plus(vertShifts.get(E))
-                        .minus(vertShifts.get(D));
+                    .plus(vertShifts.get(E))
+                    .minus(vertShifts.get(D));
                 final Vector t1 = (Vector) s1.plus(a);
                 
                 final Vector b = (Vector) tiling.edgeTranslation(0, E)
