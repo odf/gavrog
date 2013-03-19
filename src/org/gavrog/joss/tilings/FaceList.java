@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.gavrog.box.collections.Iterators;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Real;
@@ -34,7 +35,6 @@ import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
-import org.gavrog.joss.dsyms.basic.Subsymbol;
 import org.gavrog.joss.dsyms.derived.DSCover;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
@@ -384,17 +384,12 @@ public class FaceList {
         }
 
         final DSCover<Integer> cover = tiling.getCover();
+        final Map<Integer, Integer> ori = cover.partialOrientation();
         
-        System.err.println("Shifts:");
-        for (int D: cover.elements())
-        {
-            System.err.println(D + " " + vertShifts.get(D)
-                                 + " " + edgeShifts.get(D));
-        }
-        
+        final IndexList idcsF = new IndexList(0, 1, 3);
         final int D0 = cover.elements().next();
-        final IndexList idcsV = new IndexList(1, 2, 3);
-        final IndexList idcsE = new IndexList(2, 3);
+        final Set<Integer> orbD0 =
+                new HashSet<Integer>(Iterators.asList(cover.orbit(idcsF, D0)));
         
         final LinkedList<Thing> queue = new LinkedList<Thing>();
         final Set<Integer> seen = new HashSet<Integer>();
@@ -402,7 +397,8 @@ public class FaceList {
                 new ArrayList<Pair<Vector,Vector>>();
         
         queue.addLast(new Thing(D0));
-        seen.add(D0);
+        for (final int x: cover.orbit(idcsF, D0))
+            seen.add(x);
         
         while (!queue.isEmpty())
         {
@@ -411,27 +407,36 @@ public class FaceList {
             final Vector s1 = entry.inputShift;
             final Vector s2 = entry.tilingShift;
 
-            final Subsymbol<Integer> sub =
-                    new Subsymbol<Integer>(cover, idcsV, D);
-            for (final int E: sub.orbitReps(idcsE))
+            for (final int E: cover.orbit(idcsF, D))
             {
-                final int E0 = cover.op(0, E);
+                if (ori.get(E) < 0)
+                    continue;
+                
+                final int E2 = cover.op(2, E);
+                
                 final Vector a = (Vector) edgeShifts.get(E)
                     .plus(vertShifts.get(E))
                     .minus(vertShifts.get(D));
                 final Vector t1 = (Vector) s1.plus(a);
                 
-                final Vector b = (Vector) tiling.edgeTranslation(0, E)
-                        .plus(tiling.cornerShift(0, E))
-                        .minus(tiling.cornerShift(0, D));
-                final Vector t2 = (Vector) s2.plus(b);
-                if (!seen.contains(E0))
+                final Vector t2 = (Vector) s2
+                        .minus(tiling.edgeTranslation(2, E))
+                        .plus(tiling.cornerShift(2, E))
+                        .minus(tiling.cornerShift(2, D));
+
+                if (!seen.contains(E2))
                 {
-                    queue.addLast(new Thing(E0, t1, t2));
-                    seen.add(E0);
+                    queue.addLast(new Thing(E2, t1, t2));
+                    for (final int x: cover.orbit(idcsF, E2))
+                        seen.add(x);
                 }
-                else if (E0 == D)
-                    correspondences.add(new Pair<Vector, Vector>(t1, t2));
+                else if (orbD0.contains(E2))
+                {
+                    final Vector d = (Vector) t2
+                            .plus(tiling.cornerShift(2, D0))
+                            .minus(tiling.cornerShift(2, E2));
+                    correspondences.add(new Pair<Vector, Vector>(t1, d));
+                }
             }
         }
         System.err.println("correspondences:");
