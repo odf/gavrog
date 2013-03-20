@@ -317,7 +317,8 @@ public class FaceList {
         // --- map skeleton nodes for the tiling to appropriate positions
         final Tiling.Skeleton skel = tiling.getSkeleton();
         this.positions = new HashMap<Integer, Point>();
-        final CoordinateChange cc = inputToTiling(faces, tiling, faceElements);
+        final CoordinateChange cc =
+                inputToTiling(faces, tiling, faceElements, indexToPos);
 
         for (final Face f: this.faces)
         {
@@ -341,11 +342,6 @@ public class FaceList {
                             tiling.edgeTranslation(3, D) : Vector.zero(3);
                     this.positions.put(
                             D, (Point) p.minus(t1).minus(t2));
-
-                    System.err.println("D = " + D + ", " +
-                                       "p = " + p + ", " +
-                                       "t1 = " + t1 + ", " +
-                                       "t2 = " + t2);
                 }
             }
         }
@@ -354,10 +350,11 @@ public class FaceList {
     private CoordinateChange inputToTiling(
             final List<Face> faces,
             final Tiling tiling,
-            final Map<Face, List<Integer>> faceElements) 
+            final Map<Face, List<Integer>> faceElements,
+            final Map<Integer, Point> indexToPos) 
     {
         final Map<Integer, Vector> vertShifts = new HashMap<Integer, Vector>();
-        final Map<Integer, Vector> edgeShifts = new HashMap<Integer, Vector>();
+        final Map<Integer, Point> vertPos = new HashMap<Integer, Point>();
 
         for (final Face f: faces)
         {
@@ -367,20 +364,21 @@ public class FaceList {
             for (int i = 0; i < 2 * n; i += 2)
             {
                 final int k = i / 2;
-                final Vector t = (Vector) f.shift((k + 1) %n).minus(f.shift(k));
-                final Vector minusT = (Vector) t.times(-1);
-                
-                edgeShifts.put(chambers.get(i), t);
-                edgeShifts.put(chambers.get(i + 1), minusT);
-                edgeShifts.put(chambers.get(2 * n + i), t);
-                edgeShifts.put(chambers.get(2 * n + i + 1), minusT);
-                
-                vertShifts.put(chambers.get(i), f.shift(k));
-                vertShifts.put(chambers.get((i + 2 * n - 1) % (2 * n)),
-                        f.shift(k));
-                vertShifts.put(chambers.get(i + 2 * n), f.shift(k));
-                vertShifts.put(chambers.get((i + 2 * n - 1) % (2 * n) + 2 * n),
-                        f.shift(k));
+                final Vector v = f.shift(k);
+                final Point p = (Point) indexToPos.get(f.vertex(k)).plus(v);
+                final int D1 = chambers.get(i);
+                final int D2 = chambers.get((i + 2 * n - 1) % (2 * n));
+                final int D3 = chambers.get(i + 2 * n);
+                final int D4 = chambers.get((i + 2 * n - 1) % (2 * n) + 2 * n);
+
+                vertShifts.put(D1, v);
+                vertShifts.put(D2, v);
+                vertShifts.put(D3, v);
+                vertShifts.put(D4, v);
+                vertPos.put(D1, p);
+                vertPos.put(D2, p);
+                vertPos.put(D3, p);
+                vertPos.put(D4, p);
             }
         }
 
@@ -450,9 +448,6 @@ public class FaceList {
                 }
             }
         }
-        System.err.println("correspondences:");
-        for (final Pair<Vector, Vector> p: correspondences)
-            System.err.println("  " + p);
 
         final int m = correspondences.size();
         for (int i = 0; i < m - 2; ++i)
@@ -476,9 +471,14 @@ public class FaceList {
                         ws.add(correspondences.get(k).getSecond());
                         final Matrix B = Vector.toMatrix(ws);
                         
-                        return new CoordinateChange(
-                                (Matrix) A.inverse().times(B),
-                                Point.origin(3));
+                        final Matrix M =
+                                ((Matrix) A.inverse().times(B)).transposed();
+                        final Vector v =
+                                (Vector) vertPos.get(D0).minus(Point.origin(3));
+                        final Vector w = (Vector) v.times(M);
+                        
+                        return new CoordinateChange(M,
+                                (Point) Point.origin(3).plus(w));
                     }
                 }
             }
