@@ -36,6 +36,7 @@ import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.derived.DSCover;
+import org.gavrog.joss.geometry.CoordinateChange;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.INode;
@@ -316,7 +317,7 @@ public class FaceList {
         // --- map skeleton nodes for the tiling to appropriate positions
         final Tiling.Skeleton skel = tiling.getSkeleton();
         this.positions = new HashMap<Integer, Point>();
-        final Matrix M = inputToTiling(faces, tiling, faceElements);
+        final CoordinateChange cc = inputToTiling(faces, tiling, faceElements);
 
         for (final Face f: this.faces)
         {
@@ -333,7 +334,7 @@ public class FaceList {
                 {
                     final Point p0 = (Point) indexToPosition.get(f.vertex(k))
                             .plus(f.shift(k));
-                    final Point p = (Point) M.times(p0);
+                    final Point p = (Point) p0.times(cc);
 
                     final Vector t1 = tiling.cornerShift(0, D);
                     final Vector t2 = (i >= 2 * n) ?
@@ -350,7 +351,7 @@ public class FaceList {
         }
 	}
 	
-    private Matrix inputToTiling(
+    private CoordinateChange inputToTiling(
             final List<Face> faces,
             final Tiling tiling,
             final Map<Face, List<Integer>> faceElements) 
@@ -394,12 +395,13 @@ public class FaceList {
         final LinkedList<Thing> queue = new LinkedList<Thing>();
         queue.addLast(new Thing(D0));
         
-        final Map<Integer, Vector> seen = new HashMap<Integer, Vector>();
+        final Map<Integer, Pair<Vector, Vector>> seen =
+                new HashMap<Integer, Pair<Vector, Vector>>();
         for (final int x: orbD0)
         {
             final Vector t = (Vector) tiling.cornerShift(2, x)
                     .minus(tiling.cornerShift(2, D0));
-            seen.put(x, t);
+            seen.put(x, new Pair<Vector, Vector>(Vector.zero(3), t));
         }
 
         final List<Pair<Vector, Vector>> correspondences =
@@ -419,10 +421,9 @@ public class FaceList {
                 
                 final int E2 = cover.op(2, E);
                 
-                final Vector a = (Vector) edgeShifts.get(E)
-                    .plus(vertShifts.get(E))
-                    .minus(vertShifts.get(D));
-                final Vector t1 = (Vector) s1.plus(a);
+                final Vector t1 = (Vector) s1
+                        .plus(vertShifts.get(E2))
+                        .minus(vertShifts.get(E));
                 
                 final Vector t2 = (Vector) s2
                         .minus(tiling.edgeTranslation(2, E))
@@ -434,16 +435,18 @@ public class FaceList {
                     queue.addLast(new Thing(E2, t1, t2));
                     for (final int x: cover.orbit(idcsF, E2))
                     {
-                        final Vector t = (Vector) t2
+                        final Vector d2 = (Vector) t2
                                 .plus(tiling.cornerShift(2, x))
                                 .minus(tiling.cornerShift(2, E2));
-                        seen.put(x, t);
+                        seen.put(x, new Pair<Vector, Vector>(t1, d2));
                     }
                 }
-                else if (!t2.equals(seen.get(E2)))
+                else if (!t2.equals(seen.get(E2).getFirst()))
                 {
-                    final Vector d = (Vector) t2.minus(seen.get(E2));
-                    correspondences.add(new Pair<Vector, Vector>(t1, d));
+                    final Pair<Vector, Vector> p = seen.get(E2);
+                    final Vector d1 = (Vector) t1.minus(p.getFirst());
+                    final Vector d2 = (Vector) t2.minus(p.getSecond());
+                    correspondences.add(new Pair<Vector, Vector>(d1, d2));
                 }
             }
         }
@@ -473,7 +476,9 @@ public class FaceList {
                         ws.add(correspondences.get(k).getSecond());
                         final Matrix B = Vector.toMatrix(ws);
                         
-                        return ((Matrix) A.inverse().times(B)).transposed();
+                        return new CoordinateChange(
+                                (Matrix) A.inverse().times(B),
+                                Point.origin(3));
                     }
                 }
             }
