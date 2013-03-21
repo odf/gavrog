@@ -318,9 +318,16 @@ public class FaceList {
         // --- map skeleton nodes for the tiling to appropriate positions
         final Tiling.Skeleton skel = tiling.getSkeleton();
         this.positions = new HashMap<Integer, Point>();
-        final CoordinateChange cc =
-                inputToTiling(faces, tiling, faceElements, indexToPos);
 
+        final Pair<List<Pair<Vector, Vector>>,
+                   Map<Integer, Pair<Vector, Vector>>>
+        result = shiftCorrespondences(faces, tiling, faceElements);
+
+        final List<Pair<Vector, Vector>> translations = result.getFirst();
+        final CoordinateChange cc = inputToTiling(translations);
+
+        final Map<Integer, Pair<Vector, Vector>> shifts = result.getSecond();
+        
         for (final Face f: this.faces)
         {
             final int n = f.size();
@@ -335,7 +342,7 @@ public class FaceList {
                 if (D == skel.chamberAtNode(v))
                 {
                     final Point p0 = (Point) indexToPosition.get(f.vertex(k))
-                            .plus(f.shift(k));
+                            .plus(f.shift(k)).minus(shifts.get(D).getFirst());
                     final Point p = (Point) p0.times(cc);
 
                     final Vector t = tiling.cornerShift(0, D);
@@ -346,39 +353,55 @@ public class FaceList {
 	}
 	
     private CoordinateChange inputToTiling(
-            final List<Face> faces,
-            final Tiling tiling,
-            final Map<Face, List<Integer>> faceElements,
-            final Map<Integer, Point> indexToPos) 
+            final List<Pair<Vector, Vector>> correspondences) 
     {
-        final Map<Integer, Vector> vertShifts = new HashMap<Integer, Vector>();
-        final Map<Integer, Point> vertPos = new HashMap<Integer, Point>();
-
-        for (final Face f: faces)
+        final int m = correspondences.size();
+        for (int i = 0; i < m - 2; ++i)
         {
-            final int n = f.size();
-            final List<Integer> chambers = faceElements.get(f);
-
-            for (int i = 0; i < 2 * n; i += 2)
+            final Vector a = correspondences.get(i).getFirst();
+            for (int j = i + 1; j < m - 1; ++j)
             {
-                final int k = i / 2;
-                final Vector v = f.shift(k);
-                final Point p = (Point) indexToPos.get(f.vertex(k)).plus(v);
-                final int D1 = chambers.get(i);
-                final int D2 = chambers.get((i + 2 * n - 1) % (2 * n));
-                final int D3 = chambers.get(i + 2 * n);
-                final int D4 = chambers.get((i + 2 * n - 1) % (2 * n) + 2 * n);
+                final Vector b = correspondences.get(j).getFirst();
+                for (int k = j + 1; k < m; ++k)
+                {
+                    final Vector c = correspondences.get(k).getFirst();
+                    if (!Vector.volume3D(a, b, c).isZero())
+                    {
+                        final List<Vector> vs = new ArrayList<Vector>();
+                        vs.add(a); vs.add(b); vs.add(c);
+                        final Matrix A = Vector.toMatrix(vs);
 
-                vertShifts.put(D1, v);
-                vertShifts.put(D2, v);
-                vertShifts.put(D3, v);
-                vertShifts.put(D4, v);
-                vertPos.put(D1, p);
-                vertPos.put(D2, p);
-                vertPos.put(D3, p);
-                vertPos.put(D4, p);
+                        final List<Vector> ws = new ArrayList<Vector>();
+                        ws.add(correspondences.get(i).getSecond());
+                        ws.add(correspondences.get(j).getSecond());
+                        ws.add(correspondences.get(k).getSecond());
+                        final Matrix B = Vector.toMatrix(ws);
+
+                        final Operator op = Operator.fromLinear(
+                                (Matrix) A.inverse().times(B));
+                        
+                        return new CoordinateChange(op);
+                    }
+                }
             }
         }
+        return null;
+    }
+
+    /**
+     * @param faces
+     * @param tiling
+     * @param faceElements
+     * @return
+     */
+    private Pair<List<Pair<Vector, Vector>>,
+                 Map<Integer, Pair<Vector, Vector>>>
+    shiftCorrespondences(
+            final List<Face> faces,
+            final Tiling tiling,
+            final Map<Face, List<Integer>> faceElements)
+    {
+        final Map<Integer, Vector> shifts = chamberShifts(faces, faceElements);
 
         final DSCover<Integer> cover = tiling.getCover();
         final Map<Integer, Integer> ori = cover.partialOrientation();
@@ -418,8 +441,8 @@ public class FaceList {
                 final int E2 = cover.op(2, E);
                 
                 final Vector t1 = (Vector) s1
-                        .plus(vertShifts.get(E2))
-                        .minus(vertShifts.get(E));
+                        .plus(shifts.get(E2))
+                        .minus(shifts.get(E));
                 
                 final Vector t2 = (Vector) s2
                         .minus(tiling.edgeTranslation(2, E))
@@ -446,45 +469,42 @@ public class FaceList {
                 }
             }
         }
+        return new Pair<List<Pair<Vector, Vector>>,
+                        Map<Integer, Pair<Vector, Vector>>>
+        (correspondences, seen);
+    }
 
-        final int m = correspondences.size();
-        for (int i = 0; i < m - 2; ++i)
+    /**
+     * @param faces
+     * @param faceElements
+     * @return
+     */
+    private Map<Integer, Vector> chamberShifts(
+            final List<Face> faces,
+            final Map<Face, List<Integer>> faceElements) {
+        final Map<Integer, Vector> shifts = new HashMap<Integer, Vector>();
+
+        for (final Face f: faces)
         {
-            final Vector a = correspondences.get(i).getFirst();
-            for (int j = i + 1; j < m - 1; ++j)
+            final int n = f.size();
+            final List<Integer> chambers = faceElements.get(f);
+
+            for (int i = 0; i < 2 * n; i += 2)
             {
-                final Vector b = correspondences.get(j).getFirst();
-                for (int k = j + 1; k < m; ++k)
-                {
-                    final Vector c = correspondences.get(k).getFirst();
-                    if (!Vector.volume3D(a, b, c).isZero())
-                    {
-                        final List<Vector> vs = new ArrayList<Vector>();
-                        vs.add(a); vs.add(b); vs.add(c);
-                        final Matrix A = Vector.toMatrix(vs);
+                final int k = i / 2;
+                final Vector v = f.shift(k);
+                final int D1 = chambers.get(i);
+                final int D2 = chambers.get((i + 2 * n - 1) % (2 * n));
+                final int D3 = chambers.get(i + 2 * n);
+                final int D4 = chambers.get((i + 2 * n - 1) % (2 * n) + 2 * n);
 
-                        final List<Vector> ws = new ArrayList<Vector>();
-                        ws.add(correspondences.get(i).getSecond());
-                        ws.add(correspondences.get(j).getSecond());
-                        ws.add(correspondences.get(k).getSecond());
-                        final Matrix B = Vector.toMatrix(ws);
-
-                        final Operator op = Operator.fromLinear(
-                                (Matrix) A.inverse().times(B));
-                        final Operator s1 = new Operator(
-                                (Vector) vertPos.get(D0)
-                                    .minus(Point.origin(3))
-                                    .times(-1));
-                        final Operator s2 = new Operator(
-                                tiling.cornerShift(2, D0));
-                        
-                        return new CoordinateChange(
-                                (Operator) s1.times(op).times(s2));
-                    }
-                }
+                shifts.put(D1, v);
+                shifts.put(D2, v);
+                shifts.put(D3, v);
+                shifts.put(D4, v);
             }
         }
-        return null;
+        return shifts;
     }
 
     private FaceList(final Pair<List<Object>, Map<Integer, Point>> p) {
