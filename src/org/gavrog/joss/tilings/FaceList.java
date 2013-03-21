@@ -472,9 +472,9 @@ public class FaceList {
                         ws.add(correspondences.get(j).getSecond());
                         ws.add(correspondences.get(k).getSecond());
                         final Matrix B = Vector.toMatrix(ws);
-                        
+
                         final Operator op = Operator.fromLinear(
-                                (Matrix) A.inverse().times(B).times(-1));
+                                (Matrix) A.inverse().times(B));
                         final Operator s1 = new Operator(
                                 (Vector) vertPos.get(D0)
                                     .minus(Point.origin(3))
