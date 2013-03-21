@@ -37,6 +37,7 @@ import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
 import org.gavrog.joss.dsyms.derived.DSCover;
 import org.gavrog.joss.geometry.CoordinateChange;
+import org.gavrog.joss.geometry.Operator;
 import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.INode;
@@ -336,12 +337,13 @@ public class FaceList {
                     final Point p0 = (Point) indexToPosition.get(f.vertex(k))
                             .plus(f.shift(k));
                     final Point p = (Point) p0.times(cc);
+                    System.out.println("p0 = " + p0);
+                    System.out.println("p = " + p);
 
                     final Vector t1 = tiling.cornerShift(0, D);
                     final Vector t2 = (i >= 2 * n) ?
                             tiling.edgeTranslation(3, D) : Vector.zero(3);
-                    this.positions.put(
-                            D, (Point) p.minus(t1).minus(t2));
+                    this.positions.put(D, (Point) p.minus(t1).minus(t2));
                 }
             }
         }
@@ -471,14 +473,20 @@ public class FaceList {
                         ws.add(correspondences.get(k).getSecond());
                         final Matrix B = Vector.toMatrix(ws);
                         
-                        final Matrix M =
-                                ((Matrix) A.inverse().times(B)).transposed();
-                        final Vector v =
-                                (Vector) vertPos.get(D0).minus(Point.origin(3));
-                        final Vector w = (Vector) v.times(M);
+                        final Operator op = Operator.fromLinear(
+                                (Matrix) A.inverse().times(B).times(-1));
+                        final Operator s1 = new Operator(
+                                (Vector) vertPos.get(D0)
+                                    .minus(Point.origin(3))
+                                    .times(-1));
+                        final Operator s2 = new Operator(
+                                tiling.cornerShift(2, D0));
+                        System.err.println("s1 = " + s1);
+                        System.err.println("op = " + op);
+                        System.err.println("s2 = " + s2);
                         
-                        return new CoordinateChange(M,
-                                (Point) Point.origin(3).plus(w));
+                        return new CoordinateChange(
+                                (Operator) s1.times(op).times(s2));
                     }
                 }
             }

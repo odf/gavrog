@@ -1964,7 +1964,7 @@ public class Main extends EventSource {
 			setTInfo("group", "pending...");
 			setTInfo("net", "pending...");
 		} catch (final UnsupportedOperationException ex) {
-			System.out.println(ex);
+			ex.printStackTrace();
 			return;
 		} catch (final Exception ex) {
 			ex.printStackTrace();
