@@ -337,13 +337,9 @@ public class FaceList {
                     final Point p0 = (Point) indexToPosition.get(f.vertex(k))
                             .plus(f.shift(k));
                     final Point p = (Point) p0.times(cc);
-                    System.out.println("p0 = " + p0);
-                    System.out.println("p = " + p);
 
-                    final Vector t1 = tiling.cornerShift(0, D);
-                    final Vector t2 = (i >= 2 * n) ?
-                            tiling.edgeTranslation(3, D) : Vector.zero(3);
-                    this.positions.put(D, (Point) p.minus(t1).minus(t2));
+                    final Vector t = tiling.cornerShift(0, D);
+                    this.positions.put(D, (Point) p.minus(t));
                 }
             }
         }
@@ -481,9 +477,6 @@ public class FaceList {
                                     .times(-1));
                         final Operator s2 = new Operator(
                                 tiling.cornerShift(2, D0));
-                        System.err.println("s1 = " + s1);
-                        System.err.println("op = " + op);
-                        System.err.println("s2 = " + s2);
                         
                         return new CoordinateChange(
                                 (Operator) s1.times(op).times(s2));
