@@ -341,12 +341,14 @@ public class FaceList {
                 final INode v = skel.nodeForChamber(D);
                 if (D == skel.chamberAtNode(v))
                 {
-                    final Point p0 = (Point) indexToPosition.get(f.vertex(k))
-                            .plus(f.shift(k)).minus(shifts.get(D).getFirst());
-                    final Point p = (Point) p0.times(cc);
+                    final Point p0 = indexToPosition.get(f.vertex(k));
+                    final Vector u = shifts.get(D).getFirst();
+                    final Vector r = f.shift(k);
+                    final Point p = (Point) p0.plus(r).minus(u).times(cc);
 
+                    final Vector s = shifts.get(D).getSecond();
                     final Vector t = tiling.cornerShift(0, D);
-                    this.positions.put(D, (Point) p.minus(t));
+                    this.positions.put(D, (Point) p.plus(s).minus(t));
                 }
             }
         }
