@@ -1,5 +1,5 @@
 /**
-   Copyright 2012 Olaf Delgado-Friedrichs
+   Copyright 2013 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -115,7 +115,9 @@ public class Document extends DisplayList {
     // --- embedding options
     private int equalEdgePriority = 3;
     private int embedderStepLimit = 10000;
-    private boolean useBarycentricPositions = false;
+    private boolean ignoreInputCell = false;
+    private boolean ignoreInputCoordinates = false;
+    private boolean relaxCoordinates = true;
 
     // --- cell choice options
     private boolean usePrimitiveCell = false;
@@ -401,19 +403,18 @@ public class Document extends DisplayList {
 		}
 	}
     
-    private Embedder makeEmbedder()
+    private Map<INode, Point> getNodePositions()
     {
-        if (given_positions == null)
-            return new Embedder(getNet(), null, false);
+        final Tiling.Skeleton skel = getNet();
+
+        if (given_positions == null || getIgnoreInputCoordinates())
+            return skel.barycentricPlacement();
         else
         {
             final Map<INode, Point> pos = new HashMap<INode, Point>();
-            final Tiling.Skeleton skel = getNet();
             for (int D: given_positions.keySet())
-            {
                 pos.put(skel.nodeForChamber(D), given_positions.get(D));
-            }
-            return new Embedder(getNet(), pos, false);
+            return pos;
         }
     }
     
@@ -421,7 +422,8 @@ public class Document extends DisplayList {
         try {
             return (Embedder) cache.get(EMBEDDER);
         } catch (CacheMissException ex) {
-            return (Embedder) cache.put(EMBEDDER, makeEmbedder());
+            return (Embedder) cache.put(EMBEDDER,
+                    new Embedder(getNet(), getNodePositions(), false));
         }
     }
 
@@ -452,13 +454,14 @@ public class Document extends DisplayList {
         } catch (CacheMissException ex) {
             final Embedder embedder = getEmbedder();
             embedder.reset();
+            embedder.setPositions(getNodePositions());
             embedder.setPasses(getEqualEdgePriority());
-            if (embedder.getGraph().isStable() || getUseBarycentricPositions())
+            if (embedder.getGraph().isStable() || !getRelaxCoordinates())
             {
                 embedder.setRelaxPositions(false);
                 embedder.go(500);
             }
-            if (!getUseBarycentricPositions()) {
+            if (getRelaxCoordinates()) {
                 embedder.setRelaxPositions(true);
                 embedder.go(getEmbedderStepLimit());
             }
@@ -1028,14 +1031,36 @@ public class Document extends DisplayList {
         }
     }
 
-    public boolean getUseBarycentricPositions() {
-        return this.useBarycentricPositions;
+    public boolean getIgnoreInputCell() {
+        return this.ignoreInputCell;
     }
 
-    public void setUseBarycentricPositions(boolean useBarycentricPositions) {
-        if (useBarycentricPositions != this.useBarycentricPositions) {
+    public void setIgnoreInputCell(boolean ignoreInputCell) {
+        if (ignoreInputCell != this.ignoreInputCell) {
             invalidateEmbedding();
-            this.useBarycentricPositions = useBarycentricPositions;
+            this.ignoreInputCell = ignoreInputCell;
+        }
+    }
+
+    public boolean getIgnoreInputCoordinates() {
+        return this.ignoreInputCoordinates;
+    }
+
+    public void setIgnoreInputCoordinates(boolean ignoreInputCoordinates) {
+        if (ignoreInputCoordinates != this.ignoreInputCoordinates) {
+            invalidateEmbedding();
+            this.ignoreInputCoordinates = ignoreInputCoordinates;
+        }
+    }
+
+    public boolean getRelaxCoordinates() {
+        return this.relaxCoordinates;
+    }
+
+    public void setRelaxCoordinates(boolean relaxCoordinates) {
+        if (relaxCoordinates != this.relaxCoordinates) {
+            invalidateEmbedding();
+            this.relaxCoordinates = relaxCoordinates;
         }
     }
 

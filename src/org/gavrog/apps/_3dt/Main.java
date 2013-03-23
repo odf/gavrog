@@ -230,7 +230,9 @@ public class Main extends EventSource {
     // --- embedding options
     private int equalEdgePriority = 2;
     private int embedderStepLimit = 100000;
-    private boolean useBarycentricPositions = false;
+    private boolean ignoreInputCell = false;
+    private boolean ignoreInputCoordinates = false;
+    private boolean relaxCoordinates = true;
     
     // --- camera options
     private Color backgroundColor = Color.WHITE;
@@ -2437,7 +2439,9 @@ public class Main extends EventSource {
     private void embed() {
         doc().setEmbedderStepLimit(getEmbedderStepLimit());
         doc().setEqualEdgePriority(getEqualEdgePriority());
-        doc().setUseBarycentricPositions(getUseBarycentricPositions());
+        doc().setIgnoreInputCell(getIgnoreInputCell());
+        doc().setIgnoreInputCoordinates(getIgnoreInputCoordinates());
+        doc().setRelaxCoordinates(getRelaxCoordinates());
 
         final Stopwatch timer = new Stopwatch();
         
@@ -3451,8 +3455,12 @@ public class Main extends EventSource {
     private Widget optionsEmbedding() {
         final ColumnContainer options = emptyOptionsContainer();
         try {
-			options.add(new OptionCheckBox("Skip Relaxation", this,
-			"useBarycentricPositions"));
+            options.add(new OptionCheckBox("Ignore Input Cell", this,
+                    "ignoreInputCell"));
+            options.add(new OptionCheckBox("Ignore Input Coordinates", this,
+                    "ignoreInputCoordinates"));
+			options.add(new OptionCheckBox("Relax Coordinates", this,
+			        "relaxCoordinates"));
             options.add(new OptionInputBox("Relaxation Step Limit", this,
 					"embedderStepLimit"));
 			options.add(new OptionInputBox("Edge Equalizing Priority", this,
@@ -3993,12 +4001,28 @@ public class Main extends EventSource {
     	_setField("equalEdgePriority", value);
     }
 
-	public boolean getUseBarycentricPositions() {
-		return useBarycentricPositions;
+    public boolean getIgnoreInputCell() {
+        return ignoreInputCell;
+    }
+
+    public void setIgnoreInputCell(final boolean value) {
+        _setField("ignoreInputCell", value);
+    }
+
+    public boolean getIgnoreInputCoordinates() {
+        return ignoreInputCoordinates;
+    }
+
+    public void setIgnoreInputCoordinates(final boolean value) {
+        _setField("ignoreInputCoordinates", value);
+    }
+
+	public boolean getRelaxCoordinates() {
+		return relaxCoordinates;
 	}
 
-	public void setUseBarycentricPositions(final boolean value) {
-		_setField("useBarycentricPositions", value);
+	public void setRelaxCoordinates(final boolean value) {
+		_setField("relaxCoordinates", value);
 	}
 
 	public double getAmbientCoefficient() {
