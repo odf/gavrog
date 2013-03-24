@@ -1,3 +1,7 @@
+3dt 0.5.4:
+
+2013-03-24: Coordinates are preserved for input tilings given as face lists
+
 3dt 0.5.3:
 
 2012-05-27: Reverted generated class files to version 49.0 (Java 1.5).
