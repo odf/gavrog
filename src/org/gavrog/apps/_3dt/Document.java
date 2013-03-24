@@ -74,15 +74,12 @@ import de.jreality.scene.Transformation;
 public class Document extends DisplayList {
     // --- the cache keys
 	final protected static Tag TILES = new Tag();
-    final protected static Tag CELL_TO_WORLD = new Tag();
-    final protected static Tag CELL_TO_EMBEDDER = new Tag();
     final protected static Tag EMBEDDER = new Tag();
     final protected static Tag EMBEDDER_OUTPUT = new Tag();
     final protected static Tag FINDER = new Tag();
     final protected static Tag SIGNATURE = new Tag();
     final protected static Tag SPACEGROUP = new Tag();
     final protected static Tag TILING = new Tag();
-    final protected static Tag WORLD_TO_CELL = new Tag();
     final protected static Tag CENTERING_VECTORS = new Tag();
     
     // --- cache for this instance
@@ -728,30 +725,16 @@ public class Document extends DisplayList {
     }
     
     public CoordinateChange getCellToEmbedder() {
-        try {
-            return (CoordinateChange) cache.get(CELL_TO_EMBEDDER);
-        } catch (CacheMissException ex) {
-            final CoordinateChange cc = getFinder().getToStd();
-            return (CoordinateChange) cache.put(CELL_TO_EMBEDDER, cc.inverse());
-        }
+        return (CoordinateChange) getFinder().getToStd().inverse();
     }
   
     public CoordinateChange getCellToWorld() {
-		try {
-			return (CoordinateChange) cache.get(CELL_TO_WORLD);
-		} catch (CacheMissException ex) {
-		    return (CoordinateChange) cache.put(
-		        CELL_TO_WORLD, getCellToEmbedder().times(getEmbedderToWorld()));
-		}
+		return (CoordinateChange)
+		        getCellToEmbedder().times(getEmbedderToWorld());
 	}
     
     public CoordinateChange getWorldToCell() {
-    	try {
-    		return (CoordinateChange) cache.get(WORLD_TO_CELL);
-    	} catch (CacheMissException ex) {
-    		return (CoordinateChange) cache.put(
-    		    WORLD_TO_CELL, getCellToWorld().inverse());
-    	}
+        return (CoordinateChange) getCellToWorld().inverse();
     }
     
     public double[][] getUnitCellVectors() {
