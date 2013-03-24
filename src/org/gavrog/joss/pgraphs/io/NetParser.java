@@ -120,6 +120,27 @@ public class NetParser extends GenericParser {
         }
     }
 
+    /**
+     * Used to pass parsed face list data on to the next processing steps.
+     */
+    public static class FaceListDescriptor {
+        public final List<Object> faceLists;
+        public final Map<Integer, Point> indexToPosition;
+        
+        public FaceListDescriptor(
+                final List<Object> faceLists,
+                final Map<Integer, Point> indexToPosition)
+        {
+            this.faceLists = faceLists;
+            this.indexToPosition = indexToPosition;
+        }
+        
+        public String toString() {
+            return "FaceListDescriptor(" + faceLists + ", " + indexToPosition
+                    + ")";
+        }
+    }
+    
     // The last block that was processed.
     private Block lastBlock;
     
@@ -1397,8 +1418,7 @@ public class NetParser extends GenericParser {
      * @param block the pre-parsed input.
      * @return the ring list in symbolic form.
      */
-    private static Pair<List<Object>, Map<Integer, Point>> parseFaceList(
-            final Entry[] block) {
+    private static FaceListDescriptor parseFaceList(final Entry[] block) {
         final Set<String> seen = new HashSet<String>();
         
         String groupName = null;
@@ -1724,11 +1744,10 @@ public class NetParser extends GenericParser {
         		System.err.println("  " + entry);
         	}
         }
-        return new Pair<List<Object>, Map<Integer, Point>>(result, indexToPos);
+        return new FaceListDescriptor(result, indexToPos);
     }
     
-    public static Pair<List<Object>, Map<Integer, Point>> parseFaceList(
-            final Block block) {
+    public static FaceListDescriptor parseFaceList(final Block block) {
     	return parseFaceList(block.getEntries());
     }
     

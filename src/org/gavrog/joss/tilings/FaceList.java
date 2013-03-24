@@ -44,6 +44,7 @@ import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.io.GenericParser;
 import org.gavrog.joss.pgraphs.io.NetParser;
 import org.gavrog.joss.pgraphs.io.NetParser.Face;
+import org.gavrog.joss.pgraphs.io.NetParser.FaceListDescriptor;
 
 /**
  * Implements a periodic face set meant to define a tiling.
@@ -183,10 +184,11 @@ public class FaceList {
     final private DSCover<Integer> cover;
     final private Map<Integer, Point> positions;
     
-	public FaceList(
-			final List<Object> input,
-			final Map<Integer, Point> indexToPosition)
+	public FaceList(final FaceListDescriptor descriptor)
 	{
+	    final List<Object> input = descriptor.faceLists;
+	    final Map<Integer, Point> indexToPosition = descriptor.indexToPosition;
+	    
 		if (DEBUG) {
 			System.err.println("\nStarting FaceList constructor");
 		}
@@ -509,10 +511,6 @@ public class FaceList {
         return shifts;
     }
 
-    private FaceList(final Pair<List<Object>, Map<Integer, Point>> p) {
-        this(p.getFirst(), p.getSecond());
-    }
-    
     public FaceList(final GenericParser.Block data) {
         this(NetParser.parseFaceList(data));
     }
