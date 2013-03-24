@@ -190,9 +190,6 @@ public class FaceList {
 	    final List<Object> input = descriptor.faceLists;
 	    final Map<Integer, Point> indexToPosition = descriptor.indexToPosition;
 	    
-	    //TODO convert the Gram matrix to tiling coordinates
-	    cellGramMatrix = descriptor.cellGramMatrix;
-	    
 		if (DEBUG) {
 			System.err.println("\nStarting FaceList constructor");
 		}
@@ -330,8 +327,15 @@ public class FaceList {
         result = shiftCorrespondences(faces, tiling, faceElements);
 
         final List<Pair<Vector, Vector>> translations = result.getFirst();
-        final CoordinateChange cc = inputToTiling(translations);
+        final Matrix basis = tilingBasis(translations);
+        final Operator op = Operator.fromLinear(basis);
+        final CoordinateChange cc = new CoordinateChange(op);
+        final Matrix inv = (Matrix) basis.inverse();
 
+        cellGramMatrix = ((Matrix) inv
+                .times(descriptor.cellGramMatrix)
+                .times(inv.transposed())).symmetric();
+        
         final Map<Integer, Pair<Vector, Vector>> shifts = result.getSecond();
         
         for (final Face f: this.faces)
@@ -360,8 +364,7 @@ public class FaceList {
         }
 	}
 	
-    private CoordinateChange inputToTiling(
-            final List<Pair<Vector, Vector>> correspondences) 
+    private Matrix tilingBasis(final List<Pair<Vector, Vector>> correspondences) 
     {
         final int m = correspondences.size();
         for (int i = 0; i < m - 2; ++i)
@@ -385,10 +388,7 @@ public class FaceList {
                         ws.add(correspondences.get(k).getSecond());
                         final Matrix B = Vector.toMatrix(ws);
 
-                        final Operator op = Operator.fromLinear(
-                                (Matrix) A.inverse().times(B));
-                        
-                        return new CoordinateChange(op);
+                        return (Matrix) A.inverse().times(B);
                     }
                 }
             }
