@@ -332,9 +332,12 @@ public class FaceList {
         final CoordinateChange cc = new CoordinateChange(op);
         final Matrix inv = (Matrix) basis.inverse();
 
-        cellGramMatrix = ((Matrix) inv
-                .times(descriptor.cellGramMatrix)
-                .times(inv.transposed())).symmetric();
+        if (descriptor.cellGramMatrix == null)
+            cellGramMatrix = null;
+        else
+            cellGramMatrix = ((Matrix) inv
+                    .times(descriptor.cellGramMatrix)
+                    .times(inv.transposed())).symmetric();
         
         final Map<Integer, Pair<Vector, Vector>> shifts = result.getSecond();
         

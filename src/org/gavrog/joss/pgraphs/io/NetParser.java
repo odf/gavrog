@@ -1538,10 +1538,6 @@ public class NetParser extends GenericParser {
             dim = group.getDimension();
             ops.addAll(group.getOperators());
         }
-        if (cellGram == null) {
-            warnings.add("Unit cell parameters missing; using defaults");
-            cellGram = defaultGramMatrix(groupName, dim);
-        }
         
         // --- output some of the basic data
         if (DEBUG) {
@@ -1574,7 +1570,7 @@ public class NetParser extends GenericParser {
         }
         
         // --- warn about illegal cell parameters
-        if (gramMatrixError(dim, group, cellGram) > 0.01)
+        if (cellGram != null && gramMatrixError(dim, group, cellGram) > 0.01)
                 warnings.add("Unit cell parameters illegal for this group");
         
         // --- get info for converting to a primitive setting
