@@ -183,11 +183,15 @@ public class FaceList {
     final private DSymbol ds;
     final private DSCover<Integer> cover;
     final private Map<Integer, Point> positions;
+    final private Matrix cellGramMatrix;
     
 	public FaceList(final FaceListDescriptor descriptor)
 	{
 	    final List<Object> input = descriptor.faceLists;
 	    final Map<Integer, Point> indexToPosition = descriptor.indexToPosition;
+	    
+	    //TODO convert the Gram matrix to tiling coordinates
+	    cellGramMatrix = descriptor.cellGramMatrix;
 	    
 		if (DEBUG) {
 			System.err.println("\nStarting FaceList constructor");
@@ -811,5 +815,9 @@ public class FaceList {
 
     public Map<Integer, Point> getPositions() {
         return positions;
+    }
+
+    public Matrix getGramMatrix() {
+        return cellGramMatrix;
     }
 }

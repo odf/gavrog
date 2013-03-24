@@ -103,6 +103,7 @@ public class Document extends DisplayList {
     private DSymbol effective_symbol = null;
     private DSCover<Integer> given_cover = null;
     private Map<Integer, Point> given_positions = null;
+    private Matrix given_gram_matrix = null;
     private GenericParser.Block data = null;
     
     // --- The tile and face colors set for this instance
@@ -343,6 +344,7 @@ public class Document extends DisplayList {
     				this.symbol = fl.getSymbol();
     				this.given_cover = fl.getCover();
     				this.given_positions = fl.getPositions();
+    				this.given_gram_matrix = fl.getGramMatrix();
     			} else {
     				final Net net = new NetParser(
     				        (BufferedReader) null).parseNet(this.data);
@@ -456,7 +458,11 @@ public class Document extends DisplayList {
             embedder.reset();
             embedder.setPositions(getNodePositions());
             embedder.setPasses(getEqualEdgePriority());
-            if (embedder.getGraph().isStable() || !getRelaxCoordinates())
+            embedder.setGramMatrix(given_gram_matrix);
+
+            if ((given_gram_matrix == null || getIgnoreInputCell())
+                &&
+                (embedder.getGraph().isStable() || !getRelaxCoordinates()))
             {
                 embedder.setRelaxPositions(false);
                 embedder.go(500);

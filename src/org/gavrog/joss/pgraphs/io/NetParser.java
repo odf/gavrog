@@ -126,13 +126,16 @@ public class NetParser extends GenericParser {
     public static class FaceListDescriptor {
         public final List<Object> faceLists;
         public final Map<Integer, Point> indexToPosition;
+        public final Matrix cellGramMatrix;
         
         public FaceListDescriptor(
                 final List<Object> faceLists,
-                final Map<Integer, Point> indexToPosition)
+                final Map<Integer, Point> indexToPosition,
+                final Matrix cellGramMatrix)
         {
             this.faceLists = faceLists;
             this.indexToPosition = indexToPosition;
+            this.cellGramMatrix = cellGramMatrix;
         }
         
         public String toString() {
@@ -1744,7 +1747,7 @@ public class NetParser extends GenericParser {
         		System.err.println("  " + entry);
         	}
         }
-        return new FaceListDescriptor(result, indexToPos);
+        return new FaceListDescriptor(result, indexToPos, cellGram);
     }
     
     public static FaceListDescriptor parseFaceList(final Block block) {
