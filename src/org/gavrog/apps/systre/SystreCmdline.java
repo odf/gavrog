@@ -990,7 +990,7 @@ public class SystreCmdline extends EventSource {
     
     /**
      * This method takes command line arguments one by one and passes them to
-     * {@link #processDataFile} or {@liSystem.getProperty("user.home") + "/.systrerc";nk #processArchive}.
+     * {@link #processDataFile} or {@link #processArchive}.
      * 
      * @param args the command line arguments.
      */
