@@ -3,7 +3,7 @@
 
 <html>
 <!
-   Copyright 2008 Olaf Delgado-Friedrichs
+   Copyright 2013 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@
 <h1>Systre Help</h1>
 
 <p>
-<b>NOTE: The information in this document is based on the upcoming Systre 1.1.5
+<b>NOTE: The information in this document is based on the Systre 1.1.8
 release. Other versions of Systre may behave slightly differently.</b>
 </p>
 
@@ -38,6 +38,7 @@ release. Other versions of Systre may behave slightly differently.</b>
 <li><a href="#installation">Installation</a></li>
 <li><a href="#usage">Usage</a></li>
 <li><a href="#file_formats">File Formats</a></li>
+<li><a href="#archive_files">Archive Files</a></li>
 <li><a href="#troubleshooting">Troubleshooting</a></li>
 <li><a href="#license">License</a></li>
 <li><a href="#publications">Publications</a></li>
@@ -70,16 +71,16 @@ for molecular modeling software.
 
 <p>
 Currently, S<small>YSTRE</small>'s built-in database contains all
-processable nets from the
+feasible nets from the
 <a href="http://rcsr.anu.edu.au/rcsr_nets">RCSR online resource</a>
 as of February 26, 2013.
 </p>
 
 <p>
-RCSR nets that Systre currently cannot handle are
+The 13 RCSR nets that Systre currently does not recognize are
 <tt>bad</tt>, <tt>bae</tt>, <tt>bai</tt>, <tt>bbu</tt>, <tt>bcr</tt>,
-<tt>cys</tt>, <tt>fco</tt>, <tt>lcw</tt>, <tt>nbo-g</tt>, <tt>uld</tt>
-and <tt>ulm</tt>.
+<tt>cys</tt>, <tt>fco</tt>, <tt>hyx</tt>, <tt>lcw</tt>, <tt>nbo-g</tt>,
+<tt>tep</tt>, <tt>uld</tt> and <tt>ulm</tt>.
 </p>
 
 <p>
@@ -91,13 +92,13 @@ Gavrog Project</a>.
 
 <p>
 S<small>YSTRE</small> requires a Java runtime environment (JRE) of
-version 1.4.2 or higher. Java is now a standard part of Mac OS X. On
-other systems, Java might already be installed as a prerequisite for
-other programs, such as a web browser. Otherwise, the most
+version 1.5 or higher. On
+some systems, Java will already be installed as a prerequisite for
+other programs. Otherwise, the most
 straightforward way to get a JRE is to download it from
-<tt>java.sun.com</tt> and follow the installation instructions given
+<tt>java.com</tt> and follow the installation instructions given
 there. Set all path variables correctly for your system as instructed
-(this should be done automatically if you use a Windows installer), so
+(this should be done automatically in most cases), so
 that the <tt>java</tt> command can be recognized. If supported by your
 system, make sure that the file extension <tt>.jar</tt> is associated
 with the Java executable.
@@ -111,7 +112,6 @@ in the 3dt distribution available from
 <a href="http://www.gavrog.org">http://www.gavrog.org</a>.
 </p>
 
-<h2><a name="usage">Usage</a></h2>
 <p>
 The 3dt installer automatically installs S<small>YSTRE</small> as well
 and creates a batch file <tt>Systre</tt> or <tt>Systre.bat</tt> in the
@@ -122,8 +122,9 @@ machines, the installer can also create desktop icons for both 3dt and
 S<small>YSTRE</small>.
 </p>
 
+<h2><a name="usage">Usage</a></h2>
 <p>
-The simplest way to start S<small>YSTRE</small> is to double-click on
+The simplest way to start S<small>YSTRE</small> is to double-click
 its icon. If that does not work, and you are sure that Java is
 correctly installed and all path variables set correctly, open a
 console window and type the command
@@ -170,7 +171,7 @@ S<small>YSTRE</small> uses three basic file types:
 </p>
 
 <ul>
-<li>Input files (containing definitions of nets) with the extension
+<li>Structure files (containing definitions of nets) with the extension
 <tt>.cgd</tt></li>
 <li>Archive files (containing fingerprints for nets) with the
 extension <tt>.arc</tt></li>
@@ -181,27 +182,10 @@ with the extension <tt>.out</tt></li>
 <p>
 If you read or write a file from within S<small>YSTRE</small>, the
 extension will determine the format of the file and the extend of
-information in it. Typically, you would read an input file and save
+information in it. Typically, you would read a structure file and save
 the output in a protocol file. But you might also want to produce a
 <tt>.cgd</tt> file with the new symmetry group and node positions
 as determined by S<small>YSTRE</small>.
-</p>
-
-<p>
-If you are dealing with a large number of nets that
-S<small>YSTRE</small> does not know of, you might want to read and
-write your own archive files. These contain fingerprints of nets
-processed by S<small>YSTRE</small>. If you read in an archive file
-after starting S<small>YSTRE</small>, it will temporarily add those
-fingerprints to its list of "known" nets and thus recognize
-them. There is of yet no sophisticated way of managing user
-archives. If you write an output file with the extension
-<tt>.arc</tt>, it will contain fingerprints of all the "new" nets so
-far encountered in the current file. Each block of lines in which the
-first line starts with the word <tt>key</tt> and the last line reads
-<tt>end</tt> constitutes one fingerprint. You can use a standard text
-editor to cut and paste those blocks and thus maintain your own
-private archives of nets.
 </p>
 
 <dt><b>Space Group Symbol</b></dt>
@@ -352,6 +336,30 @@ CRYSTAL
     "SI4" 4 0.5396 0.3394 0.3996
 END
 </pre>
+
+<h2><a name="archive_files">Archive Files</a></h2>
+
+<p>
+If you are dealing with a large number of nets that
+S<small>YSTRE</small> does not know of, you might want to read and
+write your own archive files. These contain fingerprints of nets
+processed by S<small>YSTRE</small>. If you read in an archive file
+after starting S<small>YSTRE</small>, it will temporarily add those
+fingerprints to its list of "known" nets and thus recognize
+them. If you write an output file with the extension
+<tt>.arc</tt>, it will contain fingerprints of all the "new" nets so
+far encountered in the current input file. Each block of lines in which the
+first line starts with the word <tt>key</tt> and the last line reads
+<tt>end</tt> constitutes one fingerprint. You can use a standard text
+editor to cut and paste those blocks and thus maintain your own
+private archives of nets.
+</p>
+
+<p>
+As of Version 1.1.8, Systre will look for a folder named <tt>.systre</tt>
+in your user home directory upon startup and load all archive files in that
+folder automatically.
+</p>
 
 <h2><a name="troubleshooting">Troubleshooting</a></h2>
 
