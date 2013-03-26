@@ -154,7 +154,6 @@ public class Main extends EventSource {
 	private static Archive systreArchive = new Archive("1.0");
 	static {
 		readArchive(systreArchive, "org/gavrog/apps/systre/rcsr.arc");
-		readArchive(systreArchive, "org/gavrog/apps/systre/zeolites.arc");
 		SpaceGroupCatalogue.load();
 	}
 	

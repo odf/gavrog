@@ -86,7 +86,6 @@ public class SystreCmdline extends EventSource {
     
     // --- the various archives
     private final Archive builtinArchive;
-    private final Archive zeoliteArchive;
     private final Map<String, Archive> name2archive =
             new HashMap<String, Archive>();
     private final Archive internalArchive = new Archive("1.0");
@@ -118,7 +117,6 @@ public class SystreCmdline extends EventSource {
      */
     public SystreCmdline() {
         builtinArchive = new Archive("1.0");
-        zeoliteArchive = new Archive("1.0");
 
         // --- read the default archives
         final Package pkg = this.getClass().getPackage();
@@ -128,10 +126,6 @@ public class SystreCmdline extends EventSource {
         final InputStream rcsrStream =
                 ClassLoader.getSystemResourceAsStream(rcsrPath);
         builtinArchive.addAll(new InputStreamReader(rcsrStream));
-        final String zeoPath = packagePath + "/zeolites.arc";
-        final InputStream zeoStream =
-                ClassLoader.getSystemResourceAsStream(zeoPath);
-        zeoliteArchive.addAll(new InputStreamReader(zeoStream));
     }
     
     /**
@@ -335,14 +329,6 @@ public class SystreCmdline extends EventSource {
             if (found != null) {
                 ++countMatches;
                 out.println("   Structure was identified with RCSR symbol:");
-                writeEntry(out, found);
-                out.println();
-            }
-            found = zeoliteArchive.getByKey(invariant);
-            if (found != null) {
-                ++countMatches;
-                out.println("   Structure was identified as "
-                        + "zeolite framework type:");
                 writeEntry(out, found);
                 out.println();
             }
