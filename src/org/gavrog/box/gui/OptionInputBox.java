@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Olaf Delgado-Friedrichs
+   Copyright 2013 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -24,9 +24,11 @@ import java.lang.reflect.Method;
 
 import buoy.event.EventProcessor;
 import buoy.event.EventSource;
+import buoy.event.ToolTipEvent;
 import buoy.event.ValueChangedEvent;
 import buoy.widget.BLabel;
 import buoy.widget.BTextField;
+import buoy.widget.BToolTip;
 import buoy.widget.BorderContainer;
 import buoy.widget.LayoutInfo;
 
@@ -38,17 +40,27 @@ public class OptionInputBox extends BorderContainer {
 	public OptionInputBox(
 			final String label, final Object target, final String option)
 			throws Exception {
-		this(label, target, option, 5);
+		this(label, target, option, 5, null);
 	}
 	
+    public OptionInputBox(
+            final String label, final Object target, final String option,
+            final String toolTip)
+            throws Exception {
+        this(label, target, option, 5, toolTip);
+    }
+    
 	public OptionInputBox(
 			final String label, final Object target, final String option,
-			final int size) throws Exception {
+			final int size, final String toolTip) throws Exception {
 
 		super();
 		this.setBackground(null);
 		this.setDefaultLayout(new LayoutInfo(LayoutInfo.WEST, LayoutInfo.NONE,
 				new Insets(2, 10, 2, 10), null));
+
+        if (toolTip != null)
+            this.addEventLink(ToolTipEvent.class, new BToolTip(toolTip));
 
 		this.input = new BTextField(size);
 		this.add(input, BorderContainer.WEST);

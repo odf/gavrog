@@ -491,10 +491,14 @@ public class SystreGUI extends BFrame {
 			        "the initial values (barycentric or existing)."));
 			column.add(new OptionInputBox(
 			        "Importance Of Equal Edge Lengths",
-					this.systre, "relaxPasses"));
+					this.systre, "relaxPasses",
+					"Use 3 for most nets; reduce to 2, 1 or 0 if Systre" +
+					"reports bad angle or non-bonded distance values."));
 			column.add(new OptionInputBox(
 			        "Relaxation Step Limit",
-					this.systre, "relaxSteps"));
+					this.systre, "relaxSteps",
+					"Use 10000 for most nets, higher values if Systre " +
+			        "reports bad angle or non-bonded distance values."));
 			column.add(new BSeparator());
 			column.add(new OptionCheckBox(
 			        "Output Complete Unit Cell Contents",

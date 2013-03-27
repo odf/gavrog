@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Olaf Delgado-Friedrichs
+   Copyright 2013 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -36,6 +36,11 @@ import buoy.widget.LayoutInfo;
 public class OptionCheckBox extends BorderContainer {
 	private boolean eventsLocked = false;
 	
+    public OptionCheckBox(final String label, final Object target,
+            final String option) throws Exception {
+        this(label, target, option, null);
+    }
+
 	public OptionCheckBox(final String label, final Object target,
 			final String option, final String toolTip) throws Exception {
 		super();
@@ -90,11 +95,6 @@ public class OptionCheckBox extends BorderContainer {
 		}
 	}
 	
-    public OptionCheckBox(final String label, final Object target,
-            final String option) throws Exception {
-        this(label, target, option, null);
-    }
-
 	private boolean obtainLock() {
 		if (this.eventsLocked) {
 			return false;
