@@ -31,6 +31,7 @@ import org.gavrog.box.collections.IteratorAdapter;
 import org.gavrog.box.collections.Pair;
 import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.generators.InputIterator;
+import org.gavrog.joss.geometry.Point;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
@@ -146,7 +147,7 @@ public class Net extends PeriodicGraph {
     	warnings.add(text);
     }
     
-   public static Iterator<Net> iterator(final String filePath)
+    public static Iterator<Net> iterator(final String filePath)
             throws FileNotFoundException {
         
         final String extension = filePath
@@ -164,17 +165,7 @@ public class Net extends PeriodicGraph {
                 }
 
                 public Net next() {
-                    final GenericParser.Block data = parser.parseDataBlock();
-                    if (data.getType().toLowerCase().equals("tiling")) {
-                        final FaceList fl = new FaceList(data);
-                        final Tiling til = new Tiling(fl.getSymbol());
-                        final String name = data.getEntriesAsString("name");
-                        final String group = "P1";
-                        return new Net(til.getSkeleton(), name, group);
-                    }
-                    else {
-                        return parser.parseNet(data);
-                    }
+                    return extract(parser);
                 }
 
                 public void remove() {
@@ -208,6 +199,46 @@ public class Net extends PeriodicGraph {
         } else {
             throw new IllegalFileNameException("Unrecognized extension \"."
                     + extension + "\"");
+        }
+    }
+
+    /**
+     * @param parser
+     * @return
+     */
+    private static Net extract(final NetParser parser) {
+        final GenericParser.Block data = parser.parseDataBlock();
+        if (data.getType().toLowerCase().equals("tiling")) {
+            final FaceList fl = new FaceList(data);
+            final Tiling til = new Tiling(fl.getSymbol());
+            final Map<Integer, Point> pos = fl.getPositions();
+            final Tiling.Skeleton skel = til.getSkeleton();
+    
+            final Net net = new Net(
+                    skel.getDimension(),
+                    data.getEntriesAsString("name"),
+                    "P1");
+    
+            final Map<INode, INode> old2new =
+                    new HashMap<INode, INode>();
+            for (final INode v: skel.nodes()) {
+                old2new.put(v, net.newNode());
+            }
+            for (final IEdge e: skel.edges()) {
+                final INode v = old2new.get(e.source());
+                final INode w = old2new.get(e.target());
+                net.newEdge(v, w, skel.getShift(e));
+            }
+    
+            for (final int D: pos.keySet())
+                net.setNodeInfo(
+                        old2new.get(skel.nodeForChamber(D)),
+                        NetParser.POSITION,
+                        pos.get(D));
+            return net;
+        }
+        else {
+            return parser.parseNet(data);
         }
     }
 }
