@@ -25,9 +25,11 @@ import org.gavrog.box.simple.Strings;
 
 import buoy.event.EventProcessor;
 import buoy.event.EventSource;
+import buoy.event.ToolTipEvent;
 import buoy.event.ValueChangedEvent;
 import buoy.widget.BCheckBox;
 import buoy.widget.BLabel;
+import buoy.widget.BToolTip;
 import buoy.widget.BorderContainer;
 import buoy.widget.LayoutInfo;
 
@@ -35,9 +37,12 @@ public class OptionCheckBox extends BorderContainer {
 	private boolean eventsLocked = false;
 	
 	public OptionCheckBox(final String label, final Object target,
-			final String option) throws Exception {
+			final String option, final String toolTip) throws Exception {
 		super();
 		this.setBackground(null);
+		
+		if (toolTip != null)
+		    this.addEventLink(ToolTipEvent.class, new BToolTip(toolTip));
 
 		this.setDefaultLayout(new LayoutInfo(LayoutInfo.WEST, LayoutInfo.NONE,
 				new Insets(2, 5, 2, 5), null));
@@ -85,6 +90,11 @@ public class OptionCheckBox extends BorderContainer {
 		}
 	}
 	
+    public OptionCheckBox(final String label, final Object target,
+            final String option) throws Exception {
+        this(label, target, option, null);
+    }
+
 	private boolean obtainLock() {
 		if (this.eventsLocked) {
 			return false;

@@ -442,36 +442,70 @@ public class SystreGUI extends BFrame {
         try {
 			column.add(new OptionCheckBox(
 			        "Process whole files without stopping",
-					this, "nonStopMode"));
-			column.add(new OptionCheckBox("Use Builtin Archive", this.systre,
-					"useBuiltinArchive"));
+					this, "nonStopMode",
+					"Tells Systre not to wait for you to push 'Next' between " +
+					"structures."));
+			column.add(new OptionCheckBox(
+			        "Use Builtin Archive",
+			        this.systre, "useBuiltinArchive",
+			        "Tells Systre to use its archive of RCSR structures for " +
+			        "identifying nets."));
 			column.add(new OptionCheckBox(
 			        "Process '.arc' files like normal input",
-					this, "readArchivesAsInput"));
+					this, "readArchivesAsInput",
+					"Makes Systre read and process raw net topologies from " +
+					".arc files instead of using them to lookup structures."));
 			column.add(new BSeparator());
-			column.add(new OptionCheckBox("Prefer Second Origin On Input",
-					SpaceGroupCatalogue.class, "preferSecondOrigin"));
-			column.add(new OptionCheckBox("Prefer Hexagonal Setting On Input",
-					SpaceGroupCatalogue.class, "preferHexagonal"));
+			column.add(new OptionCheckBox(
+			        "Prefer Second Origin On Input",
+					SpaceGroupCatalogue.class, "preferSecondOrigin",
+					"Tells Systre whether to use the first or second origin " +
+					"choice for space groups by default."));
+			column.add(new OptionCheckBox(
+			        "Prefer Hexagonal Setting On Input",
+					SpaceGroupCatalogue.class, "preferHexagonal",
+					"Tells Systre whether to use the hexagonal or " +
+					"rhombohedral setting for rhombohedral space groups by " +
+					"default."));
             column.add(new BSeparator());
-            column.add(new OptionCheckBox("Compute Wells point symbols",
-                    this.systre, "computePointSymbols"));
+            column.add(new OptionCheckBox(
+                    "Compute Wells point symbols",
+                    this.systre, "computePointSymbols",
+                    "Makes Systre compute and print the Wells point symbol " +
+                    "for each net."));
 			column.add(new BSeparator());
-			column.add(new OptionCheckBox("Compute an Embedding", this.systre,
-					"computeEmbedding"));
-            column.add(new OptionCheckBox("Start from given Embedding",
-                    this.systre, "useOriginalEmbedding"));
-			column.add(new OptionCheckBox("Relax Node Positions", this.systre,
-					"relaxPositions"));
-			column.add(new OptionInputBox("Importance Of Equal Edge Lengths",
+			column.add(new OptionCheckBox(
+			        "Compute an Embedding",
+			        this.systre, "computeEmbedding",
+			        "Tells Systre whether to compute node coordinates for " +
+			        "nets or simply determine their topological properties."));
+            column.add(new OptionCheckBox(
+                    "Start from given Embedding",
+                    this.systre, "useOriginalEmbedding",
+                    "Tells Systre whether to use existing node coordinates " +
+                    "or compute barycentric positions from scratch."));
+			column.add(new OptionCheckBox(
+			        "Relax Node Positions",
+			        this.systre, "relaxPositions",
+			        "Tells Systre whether to relax node coordinates or use " +
+			        "the initial values (barycentric or existing)."));
+			column.add(new OptionInputBox(
+			        "Importance Of Equal Edge Lengths",
 					this.systre, "relaxPasses"));
-			column.add(new OptionInputBox("Relaxation Step Limit",
+			column.add(new OptionInputBox(
+			        "Relaxation Step Limit",
 					this.systre, "relaxSteps"));
 			column.add(new BSeparator());
-			column.add(new OptionCheckBox("Output Complete Unit Cell Contents",
-					this.systre, "outputFullCell"));
-			column.add(new OptionCheckBox("Save only last net finished", this,
-					"singleWrite"));
+			column.add(new OptionCheckBox(
+			        "Output Complete Unit Cell Contents",
+					this.systre, "outputFullCell",
+					"Tells Systre whether to output node coordinates for " +
+					"an assymetric unit or a full unit cell."));
+			column.add(new OptionCheckBox(
+			        "Save only last net finished",
+			        this, "singleWrite",
+			        "Tells Systre whether to save data for all nets so far " +
+			        "from the current file, or just the most recent."));
 			column.add(new BSeparator());
 		} catch (final Exception ex) {
 			reportException(ex, "FATAL", "serious internal problem", true);
