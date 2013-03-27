@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Olaf Delgado-Friedrichs
+   Copyright 2013 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import org.gavrog.joss.dsyms.generators.InputIterator;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
+import org.gavrog.joss.tilings.FaceList;
 import org.gavrog.joss.tilings.Tiling;
 
 /**
@@ -163,7 +164,17 @@ public class Net extends PeriodicGraph {
                 }
 
                 public Net next() {
-                    return parser.parseNet();
+                    final GenericParser.Block data = parser.parseDataBlock();
+                    if (data.getType().toLowerCase().equals("tiling")) {
+                        final FaceList fl = new FaceList(data);
+                        final Tiling til = new Tiling(fl.getSymbol());
+                        final String name = data.getEntriesAsString("name");
+                        final String group = "P1";
+                        return new Net(til.getSkeleton(), name, group);
+                    }
+                    else {
+                        return parser.parseNet(data);
+                    }
                 }
 
                 public void remove() {
