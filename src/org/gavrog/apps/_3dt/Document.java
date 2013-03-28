@@ -976,7 +976,6 @@ public class Document extends DisplayList {
 	}
 	
 	public String toXML() {
-		//TODO hack!
 		return "<object-stream>\n" + DocumentXStream.instance().toXML(this)
 				+ "\n</object-stream>\n";
 	}

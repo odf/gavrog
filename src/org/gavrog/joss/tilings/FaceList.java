@@ -48,8 +48,6 @@ import org.gavrog.joss.pgraphs.io.NetParser.FaceListDescriptor;
 
 /**
  * Implements a periodic face set meant to define a tiling.
- * 
- * TODO Remove ? and Object as type parameters.
  */
 public class FaceList {
 	final private static boolean DEBUG = false;

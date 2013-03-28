@@ -562,7 +562,6 @@ public class Simplifier {
      * @param E specifies the second edge.
      */
     private void squeezeTile3D(final int D, final int E) {
-        // TODO add a parameter check here
         final int d = ds.op(0, E);
         final int e = ds.op(0, D);
         final int d2 = ds.op(2, d);

@@ -25,6 +25,5 @@ public class TaskStoppedException extends RuntimeException {
      * @param thread
      */
     public TaskStoppedException(Thread thread) {
-        // TODO Auto-generated constructor stub
     }
 }

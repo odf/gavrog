@@ -137,7 +137,7 @@ public class Embedder {
 	 * Constructs an instance.
 	 * 
 	 * @param graph the periodic graph to embed.
-	 * @param checkPositions TODO
+	 * @param checkPositions
 	 */
 	public Embedder(final PeriodicGraph graph,
 	        final Map<INode, Point> initialPlacement,
