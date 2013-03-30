@@ -2,7 +2,7 @@ Thank you for downloading 3dt and Systre. This file contains some
 basic information and can be found under the name README in the folder
 you choose to install the program in.
 
-The following information applies to 3dt version 0.5.3 and Systre version
+The following information applies to 3dt version 0.5.4 and Systre version
 1.1.8.
 
 ===========================================================================
@@ -28,16 +28,15 @@ check the project website http://www.gavrog.org.
 Installation and prerequisites:
 ------------------------------
 
-Gavrog requires a Java runtime environment (JRE) of version 1.6 or higher.
-Java is now a standard part of Mac OS X. On other systems, Java might
-already be installed as a prerequisite for other programs, such as a web
-browser. If that is not the case, the most straightforward way to get a
-JRE is to download it from http://java.com and follow the installation
-instructions given there. Set all path variables correctly for your system
-as instructed (this should be done automatically if you use a Windows
-installer), so that the java command can be recognized. If supported on
-your system, make sure that the file extension '.jar' is associated with
-the Java executable.
+Gavrog requires a Java runtime environment (JRE) of version 1.5 or
+higher.  On some systems, Java might already be installed as a
+prerequisite for other programs. Otherwise, the most straightforward way
+to get a JRE is to download it from http://java.com and follow the
+installation instructions given there. Set all path variables correctly
+for your system as instructed (this should be done automatically for you
+in most case), so that the java command can be recognized. If supported
+on your system, make sure that the file extension '.jar' is associated
+with the Java executable.
 
 You should now be able to execute the installer by either double-clicking
 on it's icon or, if that does not work, type the command
@@ -66,7 +65,7 @@ be called by the following command lines:
     -------
 
 where <installation-path> should be replaced with whatever location
-you choose to install the programs in when prompted by the installer.
+you chose to install the programs in when prompted by the installer.
 
 
 ===========================================================================
@@ -76,9 +75,9 @@ Interface basics:
 
 When 3dt is started, two windows appear - "3dt Viewer" and "3dt Controls".
 
-The viewer window contains the main menu and displays the
-tilings. Most of the menu should be either self-explanatory or reveal itself
-after a bit of experimentation.
+The viewer window contains the main menu and displays the tilings. Most
+of the menu should be either self-explanatory or reveal itself after a
+bit of experimentation.
 
 The current scene can be rotated by dragging with the left mouse button
 pressed, moved around by dragging with the middle button and pulled or
@@ -90,22 +89,19 @@ at the face the mouse is over, whereas <ctrl>-<right-click> removes a tile.
 Right-clicking on a node or edge of the underlying net of a tiling invokes
 similar behavior.
 
-If the context menu does not show up, try to activeate the "MacOS context
-menu workaround" in the "GUI" tab on the controls window.
+If the control window is in the way, you can close it and later re-open
+it by selecting "View/Show Controls" on the viewer window. Please note
+that closing the viewer window terminates the program.
 
-If the controls window is in the way, you can close it and later re-open
-it by selecting "View/Show Controls" on the viewer window. Please note that
-closing the viewer window terminates the program.
+The control window has three parts, which can be changed in size by
+dragging the separating bars. The top left one is used to modify settings
+for 3dt. These are saved to a configuration file after any change and
+reloaded each time the program is started. Press the "Apply" button to
+make changes effective.
 
-The controls window has three parts, which can be changed in size
-by dragging the separating bars. The top left one is used to modify
-settings for 3dt. These are saved to a file after a change and reloaded
-each time the program is started. Press the "Apply" button to make changes
-effective.
-
-The top right part of the controls window contains information about the
-current tile, and the bottom part shows any diagnostic output that might be
-produced.
+The top right part of the control window contains information about the
+current tile, and the bottom part shows any diagnostic output that might
+be produced.
 
 
 ===========================================================================
@@ -239,6 +235,24 @@ this:
     END
 
 Without the extra symmetry, one would need to specify 32 triangles.
+
+In addition to a symmetry group, unit cell parameters can also be
+specified.  This is useful if you want 3dt to use the coordinates from
+the input file directly instead of computing its own. We can add the unit
+cell specification for the first example tiling above like this:
+
+    TILING
+      NAME primitive-cubic
+      CELL  1.0 2.0 3.0  90.0 75.0 60.0
+      FACES
+        4  0 0 0  1 0 0  1 1 0  0 1 0
+        4  0 0 0  1 0 0  1 0 1  0 0 1
+        4  0 0 0  0 1 0  0 1 1  0 0 1
+    END
+
+Here, as usual, the six numbers specify the lengths a, b and c of the x-,
+y- and z-axis, respectively, followed by the y-z angle alpha, the x-z
+angle beta and finally the x-y angle gamma.
 
 
 ===========================================================================

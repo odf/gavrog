@@ -12,8 +12,8 @@ Installation file for Gavrog, currently in particular for 3dt.
     -->
     <info>
         <appname>Gavrog</appname>
-        <appversion>0.5.3</appversion>
-        <appsubpath>Gavrog-0.5.3</appsubpath>
+        <appversion>0.5.4</appversion>
+        <appsubpath>Gavrog-0.5.4</appsubpath>
         <authors>
             <author name="Olaf Delgado-Friedrichs"
 	     email="odf@gavrog.org"/>
