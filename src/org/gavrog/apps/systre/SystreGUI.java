@@ -132,14 +132,6 @@ public class SystreGUI extends BFrame {
     public SystreGUI() {
 		super("Systre " + Version.full);
 
-		configFileName = System.getProperty("user.home") + "/.systrerc";
-		systre.loadOptions(configFileName);
-		
-        final String archivePath = System.getProperty("user.home") + "/.systre";
-        for (final String filename: userDefinedArchives(archivePath)) {
-            systre.processArchive(filename);
-        }
-        
 		final BorderContainer main = new BorderContainer();
 		main.setDefaultLayout(
 		        new LayoutInfo(LayoutInfo.CENTER, LayoutInfo.BOTH, null, null));
@@ -236,15 +228,33 @@ public class SystreGUI extends BFrame {
         
 		setVisible(true);
         
+		status("Initializing...");
+		
+		try {
+		    configFileName = System.getProperty("user.home") + "/.systrerc";
+		    systre.loadOptions(configFileName);
+		    
+		    final String archivePath =
+		            System.getProperty("user.home") + "/.systre";
+		    for (final String filename: userDefinedArchives(archivePath)) {
+		        systre.processArchive(filename);
+		    }
+		} catch (Throwable ex) {
+		    reportException(ex, "FILE", null, true);
+		}
+        
         status("Ready to go!");
     }
     
     private List<String> userDefinedArchives(final String path)
     {
         final List<String> archives = new LinkedList<String>();
+        final File dir = new File(path);
         
-        for (File f: new File(path).listFiles())
-            archives.add(path + "/" + f.getName());
+        if (dir.listFiles() != null)
+            for (File f: dir.listFiles())
+                if (f.getName().endsWith(".arc"))
+                    archives.add(path + "/" + f.getName());
         
         return archives;
     }

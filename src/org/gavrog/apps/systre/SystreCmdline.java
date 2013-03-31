@@ -1159,11 +1159,9 @@ public class SystreCmdline extends EventSource {
 			ourProps.store(new FileOutputStream(configFileName),
 			        "Systre options");
 		} catch (final FileNotFoundException ex) {
-			System.err.println("Could not find configuration file "
-			        + configFileName);
+			out.println("Could not find configuration file " + configFileName);
 		} catch (final IOException ex) {
-			System.err.println(
-			        "Exception occurred while writing configuration file");
+			out.println("Exception occurred while writing configuration file");
 		}
     }
 
@@ -1173,12 +1171,11 @@ public class SystreCmdline extends EventSource {
     	try {
 			ourProps.load(new FileInputStream(configFileName));
 		} catch (FileNotFoundException ex) {
-			System.err.println("Could not find configuration file "
-			        + configFileName);
+			out.println("No configuration file " + configFileName +
+			        " - will use default settings.");
 			return;
 		} catch (IOException ex) {
-			System.err.println(
-			        "Exception occurred while reading configuration file");
+			out.println("Exception occurred while reading configuration file");
 			return;
 		}
 		

@@ -1,5 +1,7 @@
 Systre 1.1.8:
 
+2013-03-30: More graceful handling of errors during initialization
+2013-03-30: Don't crash when $HOME/.systre directory is missing
 2013-03-27: Added tool tips to all option dialog items
 2013-03-27: Systre can read .cgd file entries of type TILING (i.e. face lists)
 2013-03-26: Removed the zeolite archive; only the RCSR archive is built in now
