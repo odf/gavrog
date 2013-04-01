@@ -78,4 +78,20 @@
 (defn- cut-face [ds D E]
   (if (#{(walk ds D 1 0) (walk ds D 0 1)} E)
     ds
-    (let [tmp (append ds wedge)])))
+    (let [tmp (append ds wedge)
+          n (size ds)
+          [F G] (map (partial s ds 3) [D E])
+          [D* E* F* G*] (map (partial s ds 1) [D E F G])
+          [d e* d* e f g* f* g] (map (partial + n) (range 1 9))
+          ops* (assoc (ops tmp) 1 (conj ((ops tmp) 1)
+                                         [D d] [d D] [D* d*] [d* D*]
+                                         [E e] [e E] [E* e*] [e* E*]
+                                         [F f] [f F] [F* f*] [f* F*]
+                                         [G g] [g G] [G* g*] [g* G*]))
+          t (make-dsymbol 3 (size tmp) ops* {})
+          vs* (into {} (for [i (range 3)]
+                        [i (into {} (for [D (orbit-reps t [i (inc i)])
+                                          :let [v* 1]
+                                          E (orbit-elements t [i (inc i)] D)]
+                                      [E v*]))]))]
+      (make-dsymbol (dim t) (size t) ops* vs*))))
