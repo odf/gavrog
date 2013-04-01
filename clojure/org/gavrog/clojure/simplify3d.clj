@@ -50,30 +50,17 @@
   (when-let [[D E] (first (local-1-cuts ds))]
     (pinch-face ds D E)))
 
-(defn- face-intersections [ds]
-  (let [vert-rep (representatives-map ds [1 2])
-        ori (partial-orientation ds)
-        faces (vec (map (partial filter (comp pos? ori)) (orbits ds [0 1])))]
-    (for [i (range (count faces))
-          j (range (inc i) (count faces))
-          :let [[f g] (map faces [i j])
-                [vf vg] (map (comp set (partial map vert-rep)) [f g])
-                common (intersection vf vg)]
-          :when (pos? (count common))]
-      [f g common])))
-
-(defn- positions [p xs]
-  (for [[i x] (zipmap (range) xs) :when (p x)] i))
-
 (defn- local-2-cuts [ds]
-  (filter (fn [[f g common]]
-            (let [verts (map (fn [D] (set (orbit-elements ds [1 2] D))) common)
-                  find (fn [D] (first (positions #(% D) verts)))
-                  pf (map find f)
-                  pg (map find g)
-                  _ (println pf pg)]
-            ))
-          (face-intersections ds)))
+  (let [ori (partial-orientation ds)
+        faces (vec (orbits ds [0 1]))]
+    (for [i (range (count faces))
+          :let [f (set (faces i))
+                marked (set (for [D f, E (orbit-elements ds [1 2] D)
+                                  :when (not (f (s ds 2 E)))] E))]
+          j (range (inc i) (count faces))
+          :let [cut (filter #(and (marked %) (pos? (ori %))) (faces j))]
+          :when (<= 2 (count cut))]
+      [f cut])))
 
 (defn- pinch-tile [ds D E]
   (let [[D* E*] (map (partial s ds 0) [D E])
