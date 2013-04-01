@@ -60,7 +60,9 @@
           j (range (inc i) (count faces))
           :let [cut (filter #(and (marked %) (pos? (ori %))) (faces j))]
           :when (<= 2 (count cut))]
-      [f cut])))
+      (apply concat (for [D cut]
+                      [D (first (filter #(and (f %) (pos? (ori %)))
+                                        (orbit-elements ds [1 2] D)))])))))
 
 (defn- pinch-tile [ds D E]
   (let [[D* E*] (map (partial s ds 0) [D E])
@@ -70,9 +72,10 @@
                                      [F G*] [G F*] [F* G] [G* F]))]
     (make-dsymbol 3 (size ds) ops* (vs ds))))
 
-(defn- cut-face [ds D E])
+(def ^{:private true} wedge
+  (dsymbol "8:2 4 6 8,3 4 7 8,3 4 7 8,5 6 7 8:2 2,1 1 1 1,2 2"))
 
-(defn- cut-conditionally [ds D]
-  (if (< 3 (m ds 0 1 D))
-    (cut-face ds (walk ds D 0) (walk ds D 1 0))
-    ds))
+(defn- cut-face [ds D E]
+  (if (#{(walk ds D 1 0) (walk ds D 0 1)} E)
+    ds
+    (let [tmp (append ds wedge)])))
