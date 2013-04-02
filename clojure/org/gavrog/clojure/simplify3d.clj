@@ -2,6 +2,14 @@
   (:use (clojure set)
         (org.gavrog.clojure delaney fundamental util)))
 
+;;TODO Code assumes input symbols are orientable and trivially branched.
+
+(defn valid-input? [ds]
+  (and (oriented? ds)
+       (every? (partial = 1)
+               (for [i (indices ds), j (indices ds), D (elements ds)]
+                 (v ds i j D))))) 
+
 (defn merge-volumes [ds]
   (let [idx (last (indices ds))]
     (collapse ds idx (for [[D i] (inner-edges ds) :when (= i idx)
@@ -47,8 +55,9 @@
     (make-dsymbol 3 (size ds) ops* (vs ds))))
 
 (defn pinch-first-local-1-cut [ds]
-  (when-let [[D E] (first (local-1-cuts ds))]
-    (pinch-face ds D E)))
+  (if-let [[D E] (first (local-1-cuts ds))]
+    (pinch-face ds D E)
+    ds))
 
 (defn- local-2-cuts [ds]
   (let [ori (partial-orientation ds)
@@ -95,3 +104,12 @@
                                           E (orbit-elements t [i (inc i)] D)]
                                       [E v*]))]))]
       (make-dsymbol (dim t) (size t) ops* vs*))))
+
+(defn- liftable? [ds [A B C D]]
+  (->> A (orbit-elements ds [0 1])
+    (map (partial s ds 3)) (filter #{B D}) count (= 1)))
+
+(defn pinch-first-local-2-cut [ds]
+  (if-let [[A B C D] (first (filter (partial liftable? ds) local-2-cuts ds))]
+    (-> ds (cut-face A C) (cut-face B D) (pinch-tile A D))
+    ds))
