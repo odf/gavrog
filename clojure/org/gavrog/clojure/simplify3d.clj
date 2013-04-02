@@ -22,11 +22,12 @@
                          E (orbit-elements ds [i j] D)]
                      E))))
 
-(defn contract-edges [ds]
-  (-> ds dual merge-volumes dual))
+(defn on-dual [f]
+  (fn [ds] (-> ds dual f dual)))
 
-(defn squish-digons [ds]
-  (-> ds dual merge-facets dual))
+(def contract-edges (on-dual merge-volumes))
+
+(def squish-digons (on-dual merge-facets))
 
 ;; === The following are specific to 3d symbols
 
@@ -113,3 +114,19 @@
   (if-let [[A B C D] (first (filter (partial liftable? ds) local-2-cuts ds))]
     (-> ds (cut-face A C) (cut-face B D) (pinch-tile A D))
     ds))
+
+(defn simplified [ds]
+  (let [clean (fn [ds] (-> ds
+                         merge-volumes merge-facets dual
+                         merge-volumes merge-facets dual))
+        operations [pinch-first-local-1-cut
+                    pinch-first-local-2-cut
+                    (on-dual pinch-first-local-1-cut)
+                    (on-dual pinch-first-local-2-cut)]]
+    (loop [ds (clean ds), pending operations]
+      (if-let [f (first pending)]
+        (let [t (f ds)]
+          (if (= t ds)
+            (recur ds (rest pending))
+            (recur (clean t) operations)))
+        ds))))
