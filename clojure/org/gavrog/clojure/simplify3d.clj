@@ -86,25 +86,25 @@
   (dsymbol "8:2 4 6 8,3 4 7 8,3 4 7 8,5 6 7 8:2 2,1 1 1 1,2 2"))
 
 (defn- cut-face [ds D E]
-  (if (#{(walk ds D 1 0) (walk ds D 0 1)} E)
-    ds
-    (let [tmp (append ds wedge)
-          n (size ds)
-          [F G] (map (partial s ds 3) [D E])
-          [D* E* F* G*] (map (partial s ds 1) [D E F G])
-          [d e* d* e f g* f* g] (map (partial + n) (range 1 9))
-          ops* (assoc (ops tmp) 1 (conj ((ops tmp) 1)
-                                         [D d] [d D] [D* d*] [d* D*]
-                                         [E e] [e E] [E* e*] [e* E*]
-                                         [F f] [f F] [F* f*] [f* F*]
-                                         [G g] [g G] [G* g*] [g* G*]))
-          t (make-dsymbol 3 (size tmp) ops* {})
-          vs* (into {} (for [i (range 3)]
-                        [i (into {} (for [D (orbit-reps t [i (inc i)])
-                                          :let [v* 1]
-                                          E (orbit-elements t [i (inc i)] D)]
-                                      [E v*]))]))]
-      (make-dsymbol (dim t) (size t) ops* vs*))))
+  (cond (= E (walk ds D 1 0)) [ds (s ds 1 D)]
+        (= E (walk ds D 0 1)) [ds D]
+        :else
+        (let [tmp (append ds wedge)
+              n (size ds)
+              [F G] (map (partial s ds 3) [D E])
+              [D* E* F* G*] (map (partial s ds 1) [D E F G])
+              [d e* d* e f g* f* g] (map (partial + n) (range 1 9))
+              ops* (assoc (ops tmp) 1 (conj ((ops tmp) 1)
+                                            [D d] [d D] [D* d*] [d* D*]
+                                            [E e] [e E] [E* e*] [e* E*]
+                                            [F f] [f F] [F* f*] [f* F*]
+                                            [G g] [g G] [G* g*] [g* G*]))
+              t (make-dsymbol 3 (size tmp) ops* {})
+              vs* (into {} (for [i (range 3), :let [j (inc i)]]
+                             [i (into {} (for [D (orbit-reps t [i j])
+                                               E (orbit-elements t [i j] D)]
+                                           [E 1]))]))]
+          [(make-dsymbol (dim t) (size t) ops* vs*) d])))
 
 (defn- liftable? [ds [A B C D]]
   (->> A (orbit-elements ds [0 1])
@@ -112,8 +112,9 @@
 
 (defn pinch-first-local-2-cut [ds]
   (if-let [[A B C D] (first (filter (partial liftable? ds) (local-2-cuts ds)))]
-    (let [t (-> ds (cut-face A C) (cut-face B D))]
-      (pinch-tile t (s t 1 A) (s t 1 D)))
+    (let [[t1 E1] (cut-face ds A C)
+          [t2 E2] (cut-face t1 D B)]
+      (pinch-tile t2 E1 E2))
     ds))
 
 (defn simplified [ds]
@@ -131,8 +132,8 @@
             (recur ds (rest pending))
             (do
               (println (class f))
-              (println ds)
-              (println t)
-              (println (clean t))
+              ;;(println ds)
+              ;;(println t)
+              ;;(println (clean t))
               (recur (clean t) operations))))
         ds))))

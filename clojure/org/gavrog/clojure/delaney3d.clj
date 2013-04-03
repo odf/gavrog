@@ -5,6 +5,7 @@
           fundamental
           cosets
           covers
+          simplify3d
           [generators :only [results]])))
 
 (def ^{:private true} core-type
@@ -90,11 +91,25 @@
     (conj input [:result false] [:explanation "no pseudo-toroidal cover"])))
 
 (def ^{:private true} proto-tori
-  (map (comp canonical pseudo-toroidal-cover dsymbol)
-       ["1 3:1,1,1,1:4,3,4"
-        "8 3:2 4 6 8,6 3 5 7 8,1 2 4 7 8,2 6 5 8:3 4,3 5,4 3"]))
+  (set (map (comp canonical pseudo-toroidal-cover dsymbol)
+            ["1 3:1,1,1,1:4,3,4"
+             "8 3:2 4 6 8,6 3 5 7 8,1 2 4 7 8,2 6 5 8:3 4,3 5,4 3"])))
 
-(def checks [check-axes check-cover])
+(defn- check-simplified [{:keys [cover] :as input}]
+  (let [simple (simplified cover)]
+    (cond (zero? (size simple))
+          (conj input [:result false] [:explanation "cover is a lens space"])
+          
+          (not (connected? cover)) ;; TODO inspect components
+          (conj input [:result :maybe] [:explanation "cover is connected sum"])
+          
+          (proto-tori (canonical simple))
+          (conj input [:result true] [:explanation "simplified cover known"])
+          
+          :else
+          (conj input [:simple simple] [:output simple]))))
+
+(def checks [check-axes check-cover check-simplified])
 
 (defn check-euclicidity [ds]
   (loop [data {:symbol ds}, to-do checks]
