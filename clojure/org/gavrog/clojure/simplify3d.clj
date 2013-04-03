@@ -130,10 +130,5 @@
         (let [t (f ds)]
           (if (= t ds)
             (recur ds (rest pending))
-            (do
-              (println (class f))
-              ;;(println ds)
-              ;;(println t)
-              ;;(println (clean t))
-              (recur (clean t) operations))))
+            (recur (clean t) operations)))
         ds))))
