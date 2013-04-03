@@ -108,11 +108,12 @@
 
 (defn- liftable? [ds [A B C D]]
   (->> A (orbit-elements ds [0 1])
-    (map (partial s ds 3)) (filter #{B D}) count (= 1)))
+    (map (partial s ds 3)) (filter #{B D}) count (not= 1)))
 
 (defn pinch-first-local-2-cut [ds]
-  (if-let [[A B C D] (first (filter (partial liftable? ds) local-2-cuts ds))]
-    (-> ds (cut-face A C) (cut-face B D) (pinch-tile A D))
+  (if-let [[A B C D] (first (filter (partial liftable? ds) (local-2-cuts ds)))]
+    (let [t (-> ds (cut-face A C) (cut-face B D))]
+      (pinch-tile t (s t 1 A) (s t 1 D)))
     ds))
 
 (defn simplified [ds]
@@ -128,5 +129,10 @@
         (let [t (f ds)]
           (if (= t ds)
             (recur ds (rest pending))
-            (recur (clean t) operations)))
+            (do
+              (println (class f))
+              (println ds)
+              (println t)
+              (println (clean t))
+              (recur (clean t) operations))))
         ds))))

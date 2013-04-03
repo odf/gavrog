@@ -89,6 +89,11 @@
     (conj input [:cover cover] [:output cover]) 
     (conj input [:result false] [:explanation "no pseudo-toroidal cover"])))
 
+(def ^{:private true} proto-tori
+  (map (comp canonical pseudo-toroidal-cover dsymbol)
+       ["1 3:1,1,1,1:4,3,4"
+        "8 3:2 4 6 8,6 3 5 7 8,1 2 4 7 8,2 6 5 8:3 4,3 5,4 3"]))
+
 (def checks [check-axes check-cover])
 
 (defn check-euclicidity [ds]
