@@ -110,6 +110,9 @@
   (->> A (orbit-elements ds [0 1])
     (map (partial s ds 3)) (filter #{B D}) count (not= 1)))
 
+(defn- kf-complexity [ds]
+  (reduce + (for [D (orbit-reps ds [0 1 3])] (- (r ds 0 1 D) 2))))
+
 (defn pinch-first-local-2-cut [ds]
   (if-let [[A B C D] (first (filter (partial liftable? ds) (local-2-cuts ds)))]
     (let [[t1 E1] (cut-face ds A C)
@@ -130,5 +133,11 @@
         (let [t (f ds)]
           (if (= t ds)
             (recur ds (rest pending))
-            (recur (clean t) operations)))
+            (let [t (clean t)]
+              (assert (neg? (compare [(kf-complexity t) (size t)]
+                                     [(kf-complexity ds) (size ds)]))
+                      (str "Complexity not reduced by\n  " (prn-str (class f))
+                           (prn-str ds)
+                           "  =>\n" (prn-str t)))
+              (recur t operations))))
         ds))))
