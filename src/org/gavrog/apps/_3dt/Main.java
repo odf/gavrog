@@ -231,6 +231,7 @@ public class Main extends EventSource {
     private int embedderStepLimit = 100000;
     private boolean ignoreInputCell = false;
     private boolean ignoreInputCoordinates = false;
+    private boolean useMaximalSymmetry = true;
     private boolean relaxCoordinates = true;
     
     // --- camera options
@@ -3458,6 +3459,8 @@ public class Main extends EventSource {
                     "ignoreInputCell"));
             options.add(new OptionCheckBox("Ignore Input Coordinates", this,
                     "ignoreInputCoordinates"));
+            //options.add(new OptionCheckBox("Use maximal symmetry", this,
+            //        "useMaximalSymmetry"));
 			options.add(new OptionCheckBox("Relax Coordinates", this,
 			        "relaxCoordinates"));
             options.add(new OptionInputBox("Relaxation Step Limit", this,
@@ -4014,6 +4017,14 @@ public class Main extends EventSource {
 
     public void setIgnoreInputCoordinates(final boolean value) {
         _setField("ignoreInputCoordinates", value);
+    }
+
+    public boolean getUseMaximalSymmetry() {
+        return useMaximalSymmetry;
+    }
+
+    public void setUseMaximalSymmetry(final boolean value) {
+        _setField("useMaximalSymmetry", value);
     }
 
 	public boolean getRelaxCoordinates() {
