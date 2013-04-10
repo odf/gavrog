@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Olaf Delgado-Friedrichs
+   Copyright 2013 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -452,13 +452,22 @@ public class Embedder {
 	}
 
 	private void setGramMatrix(final Matrix gramMatrix, final double p[]) {
-		final double g[] = gramToArray(gramMatrix);
-		final Matrix S = this.gramSpace;
-		final int n = S.numberOfRows();
-		final Matrix M = LinearAlgebra.solutionInRows(S, new Matrix(
-				new double[][] { g }), false);
+        // Grab the appropriate parameter space.
+        final Matrix S = this.gramSpace;
+        final int n = S.numberOfRows();
+        final int m = S.numberOfColumns();
+
+		// Convert the given Gram matrix into a single row.
+        final Matrix a = new Matrix(new double[][] { gramToArray(gramMatrix) });
+
+        // Project it onto the parameter space.
+		final Matrix P = LinearAlgebra.orthogonalProjection(S, Matrix.one(m));
+		final Matrix b = (Matrix) a.times(P);
+
+		// Solve for parameter values.
+		final Matrix g = LinearAlgebra.solutionInRows(S, b, false);
 		for (int i = 0; i < n; ++i) {
-			p[i] = ((Real) M.get(0, i)).doubleValue();
+			p[i] = ((Real) g.get(0, i)).doubleValue();
 		}
 	}
 
