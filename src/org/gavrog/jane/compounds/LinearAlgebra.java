@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2013 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -99,6 +99,46 @@ public class LinearAlgebra {
      */
     public static Matrix orthonormalRowBasis(final Matrix M) {
         return rowOrthonormalized(Matrix.one(M.numberOfRows()), M);
+    }
+
+    /**
+     * Constructs the orthogonal projection of a real vector space onto a
+     * subspace.
+     *
+     * @param spanning a matrix the rows of which span the subspace.
+     * @param G the gram matrix defining the metric.
+     * @return the projection matrix.
+     */
+    public static Matrix orthogonalProjection(
+            final Matrix spanning, final Matrix G) {
+        // --- extract the dimensions of the total space and the subspace
+        final int d = spanning.numberOfColumns();
+        final int k = spanning.rank();
+
+        // --- triangulate to extract a basis
+        Matrix basisSub = spanning.mutableClone();
+        Matrix.triangulate(basisSub, null, true, false);
+        basisSub = basisSub.getSubMatrix(0, 0, k, d);
+
+        // --- extend to a full basis
+        final Matrix basisComplement =
+                LinearAlgebra.columnNullSpace(basisSub, true).transposed();
+        final Matrix basisFull = new Matrix(d, d);
+        basisFull.setSubMatrix(0, 0, basisSub);
+        basisFull.setSubMatrix(k, 0, basisComplement);
+
+        // --- orthonormalize
+        final Matrix basisOrtho =
+                LinearAlgebra.rowOrthonormalized(basisFull, G);
+
+        // --- the projection expressed in the new orthonormal basis
+        final Matrix A = Matrix.one(d).mutableClone();
+        for (int i = k; i < d; ++i) {
+            A.set(i, i, Whole.ZERO);
+        }
+
+        // --- return the projection transformed to the standard basis
+        return (Matrix) A.times(basisOrtho.inverse());
     }
     
     /**
