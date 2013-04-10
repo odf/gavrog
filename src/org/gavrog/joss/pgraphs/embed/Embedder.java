@@ -455,17 +455,12 @@ public class Embedder {
         // Grab the appropriate parameter space.
         final Matrix S = this.gramSpace;
         final int n = S.numberOfRows();
-        final int m = S.numberOfColumns();
 
 		// Convert the given Gram matrix into a single row.
         final Matrix a = new Matrix(new double[][] { gramToArray(gramMatrix) });
 
-        // Project it onto the parameter space.
-		final Matrix P = LinearAlgebra.orthogonalProjection(S, Matrix.one(m));
-		final Matrix b = (Matrix) a.times(P);
-
 		// Solve for parameter values.
-		final Matrix g = LinearAlgebra.solutionInRows(S, b, false);
+		final Matrix g = LinearAlgebra.solutionInRows(S, a, false);
 		for (int i = 0; i < n; ++i) {
 			p[i] = ((Real) g.get(0, i)).doubleValue();
 		}
@@ -653,10 +648,6 @@ public class Embedder {
 		return (Operator) this.node2sym.get(v);
 	}
 
-	private static Matrix defaultGramMatrix(final PeriodicGraph graph) {
-		return resymmetrized(Matrix.one(graph.getDimension()), graph);
-	}
-
 	private static Matrix resymmetrized(final Matrix G,
 			final PeriodicGraph graph) {
 		// -- preparations
@@ -709,11 +700,11 @@ public class Embedder {
 		return optimizePositions;
 	}
 
-	public void setGramMatrix(Matrix gramMatrix) {
-		if (gramMatrix == null) {
-			gramMatrix = defaultGramMatrix(this.graph);
-		}
-		setGramMatrix(gramMatrix, this.p);
+	public void setGramMatrix(final Matrix gram) {
+	    final int d = this.graph.getDimension();
+		final Matrix g = (gram == null) ? Matrix.one(d) : gram;
+
+		setGramMatrix(resymmetrized(g, this.graph), this.p);
 	}
 
 	public Matrix getGramMatrix() {
