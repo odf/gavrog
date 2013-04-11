@@ -1,5 +1,6 @@
 3dt 0.5.4:
 
+2013-04-11: Added an option for always using maximally symmetric tilings
 2013-03-24: Unit cell parameter changes are reflected correctly in display
 2013-03-24: Coordinates are preserved for input tilings given as face lists
 

@@ -299,6 +299,7 @@ public class Main extends EventSource {
 	private SceneGraphComponent unitCell;
     private SceneGraphComponent templates[];
     private Appearance materials[];
+    protected String last_path;
     
     /**
      * Constructs an instance.
@@ -1844,6 +1845,7 @@ public class Main extends EventSource {
 	}
     
     private void openFile(final String path) {
+        this.last_path = path;
     	final String filename = new File(path).getName();
         disableTilingChange();
 		busy();
@@ -1880,6 +1882,31 @@ public class Main extends EventSource {
             	enableTilingChange();
             }
         }).start();
+    }
+    
+    private void reopenFile() {
+        final String path = this.last_path;
+        final String filename = new File(path).getName();
+        disableTilingChange();
+        busy();
+        new Thread(new Runnable() {
+            public void run() {
+                try {
+                    documents = Document.load(path);
+                    done();
+                    enableTilingChange();
+                    doTiling(tilingCounter);
+                    return;
+                } catch (final FileNotFoundException ex) {
+                    log("Could not find file " + filename);
+                } catch (final Exception ex) {
+                    ex.printStackTrace();
+                }
+                done();
+                enableTilingChange();
+            }
+        }).start();
+        
     }
     
     private void busy() {
@@ -1927,6 +1954,8 @@ public class Main extends EventSource {
     private void processTiling(final Document doc) {
 		final Stopwatch timer = new Stopwatch();
 
+		doc.setUseMaximalSymmetry(getUseMaximalSymmetry());
+		
         for (String key : tInfoFields.keySet()) {
         	if (key != "_file") {
         		setTInfo(key, "");
@@ -3234,6 +3263,26 @@ public class Main extends EventSource {
 				snap);
 	}
     
+    private Widget optionsTilings() {
+        final ColumnContainer options = emptyOptionsContainer();
+        try {
+            options.add(new OptionCheckBox("Use maximal symmetry", this,
+                    "useMaximalSymmetry"));
+        } catch (final Exception ex) {
+            log(ex.toString());
+            return null;
+        }
+        
+        final Object apply = new Object() {
+            @SuppressWarnings("unused")
+            public void call() {
+                saveOptions();
+                reopenFile();
+            }
+        };
+        return optionsDialog(options, makeButton("Apply", apply, "call"));
+    }
+    
     private Widget optionsTiles() {
         final ColumnContainer options = emptyOptionsContainer();
         try {
@@ -3459,8 +3508,6 @@ public class Main extends EventSource {
                     "ignoreInputCell"));
             options.add(new OptionCheckBox("Ignore Input Coordinates", this,
                     "ignoreInputCoordinates"));
-            //options.add(new OptionCheckBox("Use maximal symmetry", this,
-            //        "useMaximalSymmetry"));
 			options.add(new OptionCheckBox("Relax Coordinates", this,
 			        "relaxCoordinates"));
             options.add(new OptionInputBox("Relaxation Step Limit", this,
@@ -3568,6 +3615,7 @@ public class Main extends EventSource {
         options.add(optionsCamera(), "Camera");
         options.add(optionsLights(), "Lights");
         options.add(optionsGUI(), "GUI");
+        options.add(optionsTilings(), "Tilings");
 		return options;
     }
     

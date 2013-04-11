@@ -50,6 +50,7 @@ import org.gavrog.joss.dsyms.basic.DSymbol;
 import org.gavrog.joss.dsyms.basic.DelaneySymbol;
 import org.gavrog.joss.dsyms.basic.DynamicDSymbol;
 import org.gavrog.joss.dsyms.basic.IndexList;
+import org.gavrog.joss.dsyms.derived.Covers;
 import org.gavrog.joss.dsyms.derived.DSCover;
 import org.gavrog.joss.dsyms.derived.Signature;
 import org.gavrog.joss.geometry.CoordinateChange;
@@ -62,6 +63,7 @@ import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.INode;
 import org.gavrog.joss.pgraphs.embed.Embedder;
 import org.gavrog.joss.pgraphs.io.GenericParser;
+import org.gavrog.joss.pgraphs.io.GenericParser.Block;
 import org.gavrog.joss.pgraphs.io.Net;
 import org.gavrog.joss.pgraphs.io.NetParser;
 import org.gavrog.joss.tilings.FaceList;
@@ -93,15 +95,21 @@ public class Document extends DisplayList {
     final static public Object TILING_2D = new Type("2d Tiling");
     final static public Object NET       = new Type("Net");
     
-    // --- The type of this instance and its source data
+    // --- The type of this instance, its name and source data
     private Object type;
     final private String name;
+    private GenericParser.Block data = null;
+    private DSymbol given_symbol = null;
+
+    // --- The symbol and other deduced data
     private DSymbol symbol = null;
     private DSymbol effective_symbol = null;
     private DSCover<Integer> given_cover = null;
     private Map<Integer, Point> given_positions = null;
     private Matrix given_gram_matrix = null;
-    private GenericParser.Block data = null;
+    
+    // --- The last remembered viewing transformation
+    private Transformation transformation = null;
     
     // --- The tile and face colors set for this instance
     //TODO this should probably be moved to the DisplayList class.
@@ -117,14 +125,14 @@ public class Document extends DisplayList {
     private boolean ignoreInputCoordinates = false;
     private boolean relaxCoordinates = true;
 
+    // --- tiling options
+    private boolean useMaximalSymmetry = false;
+    
     // --- cell choice options
     private boolean usePrimitiveCell = false;
     
     // --- saved user options
     private Properties  properties = new Properties();
-    
-    // --- The last remembered viewing transformation
-    private Transformation transformation = null;
     
     // --- random number generator
 	private final static Random random = new Random();
@@ -289,23 +297,24 @@ public class Document extends DisplayList {
             final String name,
             final DSCover<Integer> cov)
     {
+        this.given_symbol = ds;
+        this.name = name;
+        this.given_cover = cov;
+
         if (ds.dim() == 2) {
-        	this.symbol = ds;
-            this.effective_symbol = extrusion(ds);
             this.type = TILING_2D;
         } else if (ds.dim() == 3) {
-            this.symbol = ds;
-            this.effective_symbol = ds;
             this.type = TILING_3D;
         } else {
         	final String msg = "only dimensions 2 and 3 supported";
             throw new UnsupportedOperationException(msg);
         }
-        this.name = name;
-        this.given_cover = cov;
     }
     
-    public Document(final GenericParser.Block block, final String defaultName) {
+    public Document(
+            final GenericParser.Block block,
+            final String defaultName)
+    {
     	final String type = block.getType().toLowerCase();
     	if (type.equals("tiling")) {
         	this.type = TILING_3D;
@@ -334,30 +343,63 @@ public class Document extends DisplayList {
     }
     
     public DSymbol getSymbol() {
-    	if (this.symbol == null) {
-    		if (this.data != null) {
-    			if (this.type == TILING_3D) {
-    			    final FaceList fl = new FaceList(data);
-    				this.symbol = fl.getSymbol();
-    				this.given_cover = fl.getCover();
-    				this.given_positions = fl.getPositions();
-    				this.given_gram_matrix = fl.getGramMatrix();
-    			} else {
-    				final Net net = new NetParser(
-    				        (BufferedReader) null).parseNet(this.data);
-    				if (net.getDimension() != 2) {
-    					throw new UnsupportedOperationException(
-    							"Only nets of dimension 2 are supported.");
-    				}
-    				this.symbol = symbolForNet(net);
-    				this.effective_symbol = extrusion(this.symbol);
-    				this.type = TILING_2D;
-    			}
-    		}
-    	}
+        if (this.symbol == null) {
+            if (this.data != null) {
+                if (this.type == TILING_3D)
+                    extractFromFaceList(this.data);
+                else
+                    extractFromNet(this.data);
+            }
+            else if (this.given_symbol != null)
+                extractFromDSymbol(this.given_symbol);
+        }
         return this.symbol;
     }
+
+    private void extractFromDSymbol(final DSymbol ds) {
+        if (this.useMaximalSymmetry)
+            this.symbol = new DSymbol(this.given_symbol.minimal());
+        else
+            this.symbol = this.given_symbol;
+
+        if (this.type == TILING_2D)
+            this.effective_symbol = extrusion(ds);
+        else
+            this.effective_symbol = ds;
+    }
     
+    private void extractFromFaceList(final Block data) {
+        final FaceList fl = new FaceList(data);
+        final DSymbol raw = fl.getSymbol();
+        final DSCover<Integer> cov = fl.getCover();
+        
+        if (this.useMaximalSymmetry) {
+            final DSymbol ds = this.symbol = new DSymbol(raw.minimal());
+            if (cov.size() == Covers.pseudoToroidalCover3D(ds).size()) {
+                this.given_cover = new DSCover<Integer>(fl.getCover(), ds, 1);
+                this.given_positions = fl.getPositions();
+                this.given_gram_matrix = fl.getGramMatrix();
+            }
+        }
+        else {
+            this.symbol = raw;
+            this.given_cover = cov;
+            this.given_positions = fl.getPositions();
+            this.given_gram_matrix = fl.getGramMatrix();
+        }
+    }
+    
+    private void extractFromNet(final Block data) {
+        final Net net = new NetParser((BufferedReader) null).parseNet(data);
+        if (net.getDimension() != 2) {
+            throw new UnsupportedOperationException(
+                    "Only nets of dimension 2 are supported.");
+        }
+        final DSymbol ds = this.symbol = symbolForNet(net);
+        this.effective_symbol = extrusion(ds);
+        this.type = TILING_2D;
+    }
+
     private DSymbol getEffectiveSymbol() {
     	if (this.effective_symbol == null) {
     		if (this.data != null) {
@@ -432,6 +474,20 @@ public class Document extends DisplayList {
     
     public void invalidateEmbedding() {
         cache.remove(EMBEDDER_OUTPUT);
+    }
+    
+    public void invalidateTiling() {
+        removeAll();
+        cache.clear();
+        this.symbol = null;
+        this.effective_symbol = null;
+        this.given_cover = null;
+        this.given_positions = null;
+        this.given_gram_matrix = null;
+        this.transformation = null;
+        this.tileClassColor = null;
+        this.facetClassColor.clear();
+        this.hiddenFacetClasses.clear();
     }
     
     private class EmbedderOutput {
@@ -1049,6 +1105,18 @@ public class Document extends DisplayList {
         if (relaxCoordinates != this.relaxCoordinates) {
             invalidateEmbedding();
             this.relaxCoordinates = relaxCoordinates;
+        }
+    }
+
+    public boolean getUseMaximalSymmetry() {
+        return useMaximalSymmetry;
+    }
+
+    public void setUseMaximalSymmetry(boolean useMaximalSymmetry) {
+        if (useMaximalSymmetry != this.useMaximalSymmetry)
+        {
+            invalidateTiling();
+            this.useMaximalSymmetry = useMaximalSymmetry;
         }
     }
 
