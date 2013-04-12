@@ -126,21 +126,32 @@ public class NetParser extends GenericParser {
     public static class FaceListDescriptor {
         public final List<Object> faceLists;
         public final Map<Integer, Point> indexToPosition;
+        public final List<Operator> symmetries;
         public final Matrix cellGramMatrix;
+        public final Map<Pair<Operator, Integer>, Pair<Integer, Vector>>
+            actions;
         
         public FaceListDescriptor(
                 final List<Object> faceLists,
                 final Map<Integer, Point> indexToPosition,
+                final List<Operator> symmetries,
+                final Map<Pair<Operator, Integer>, Pair<Integer, Vector>>
+                    actions,
                 final Matrix cellGramMatrix)
         {
             this.faceLists = faceLists;
             this.indexToPosition = indexToPosition;
+            this.symmetries = symmetries;
+            this.actions = actions;
             this.cellGramMatrix = cellGramMatrix;
         }
         
         public String toString() {
-            return "FaceListDescriptor(" + faceLists + ", " + indexToPosition
-                    + ")";
+            return "FaceListDescriptor("
+                    + faceLists + ", "
+                    + indexToPosition + ", "
+                    + symmetries + ", "
+                    + cellGramMatrix + ")";
         }
     }
     
@@ -1666,6 +1677,19 @@ public class NetParser extends GenericParser {
 					+ " nodes in primitive cell.\n");
 		}
         
+        // Record symmetry actions on corner points
+        final Map<Pair<Operator, Integer>, Pair<Integer, Vector>> actions =
+                new HashMap<Pair<Operator, Integer>, Pair<Integer, Vector>>();
+
+        for (final Operator oper: ops) {
+            for (final int i: indexToPos.keySet()) {
+                final Point p = (Point) indexToPos.get(i).times(oper);
+                actions.put(new Pair<Operator, Integer>(oper, i),
+                            lookup(p, indexToPos, precision));
+            }
+        }
+        
+        // Apply the symmetries to faces and tiles
         final Set<Object> notNew = new HashSet<Object>();
         final List<Object> result = new ArrayList<Object>();
         for (final List<Point[]> list: faceLists) {
@@ -1743,7 +1767,8 @@ public class NetParser extends GenericParser {
         		System.err.println("  " + entry);
         	}
         }
-        return new FaceListDescriptor(result, indexToPos, cellGram);
+        return new FaceListDescriptor(
+                result, indexToPos, ops, actions, cellGram);
     }
     
     public static FaceListDescriptor parseFaceList(final Block block) {
