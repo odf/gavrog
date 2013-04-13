@@ -9,6 +9,7 @@ Open bugs:
 
 For the coming release:
 
+- maximizing symmetry distorts given node positions in a strange way
 - for face list tiling, restore to originally given symmetry
 
 =====================================================
