@@ -18,8 +18,11 @@
 package org.gavrog.apps._3dt;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.Insets;
 import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
@@ -3676,6 +3679,22 @@ public class Main extends EventSource {
     	}
     }
     
+    private void placeControls(
+            final Component parent,
+            final Component controls)
+    {
+        final GraphicsDevice gd =
+            GraphicsEnvironment.getLocalGraphicsEnvironment()
+            .getDefaultScreenDevice();
+        final int width = gd.getDisplayMode().getWidth();
+        //final int height = gd.getDisplayMode().getHeight();
+
+        final int x = Math.min(parent.getWidth(), width - 700);
+        
+        controls.setSize(600, parent.getHeight());
+        controls.setLocation(x, 0);
+    }
+    
     public void showControls() {
     	if (this.controlsFrame == null) {
     		// The following is a bad hack to make the viewer application's
@@ -3726,8 +3745,7 @@ public class Main extends EventSource {
 					"hideControls");
 			this.controlsFrame.setContent(content);
 			final JDialog jf = this.controlsFrame.getComponent();
-			jf.setSize(600, vF.getHeight());
-			jf.setLocation(vF.getWidth(), 0);
+			placeControls(vF, jf);
 			jf.validate();
 
 			top.setDividerLocation(350);
@@ -3735,8 +3753,7 @@ public class Main extends EventSource {
 		}
     	if (!this.controlsFrame.isVisible()) {
     		final JDialog jf = this.controlsFrame.getComponent();
-    		jf.setSize(600, viewerFrame.getHeight());
-    		jf.setLocation(viewerFrame.getWidth(), 0);
+    		placeControls(viewerFrame, jf);
     	}
     	this.controlsFrame.setVisible(true);
 		this.controlsFrame.repaint();
