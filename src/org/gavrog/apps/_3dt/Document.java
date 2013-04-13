@@ -452,9 +452,19 @@ public class Document extends DisplayList {
             return skel.barycentricPlacement();
         else
         {
+            // Extract the given coordinates
             final Map<INode, Point> pos = new HashMap<INode, Point>();
             for (int D: given_positions.keySet())
                 pos.put(skel.nodeForChamber(D), given_positions.get(D));
+            
+            // Shift to put the first node on the coordinate origin
+            final Point p0 = pos.get(skel.nodes().next());
+            final Point origin = Point.origin(p0.getDimension());
+            final Vector shift = (Vector) p0.minus(origin);
+            for (final INode v: skel.nodes())
+                pos.put(v, (Point) pos.get(v).minus(shift));
+            
+            // Return the result
             return pos;
         }
     }
