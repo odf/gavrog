@@ -61,6 +61,7 @@ import org.gavrog.joss.geometry.SpaceGroupFinder;
 import org.gavrog.joss.geometry.Vector;
 import org.gavrog.joss.pgraphs.basic.IEdge;
 import org.gavrog.joss.pgraphs.basic.INode;
+import org.gavrog.joss.pgraphs.basic.Morphism;
 import org.gavrog.joss.pgraphs.embed.Embedder;
 import org.gavrog.joss.pgraphs.io.GenericParser;
 import org.gavrog.joss.pgraphs.io.GenericParser.Block;
@@ -463,6 +464,21 @@ public class Document extends DisplayList {
             final Vector shift = (Vector) p0.minus(origin);
             for (final INode v: skel.nodes())
                 pos.put(v, (Point) pos.get(v).minus(shift));
+            
+            // Symmetrize node positions
+            // TODO also need to symmetrize within orbits
+            for (final INode v: skel.nodes()) {
+                final Point p = skel.barycentricPlacement().get(v);
+                final int dim = p.getDimension();
+                Matrix s = Matrix.zero(dim + 1, dim + 1);
+                for (final Morphism phi: skel.nodeStabilizer(v)) {
+                    final Operator a = phi.getAffineOperator();
+                    final Vector d = (Vector) p.minus(p.times(a));
+                    final Operator ad = (Operator) a.times(d);
+                    s = (Matrix) s.plus(ad.getCoordinates());
+                }
+                pos.put(v, (Point) pos.get(v).times(new Operator(s)));
+            }
             
             // Return the result
             return pos;
