@@ -424,6 +424,7 @@ public class Main extends EventSource {
         // --- create and populate the Tiling menu
         final JMenu tilingMenu = new JMenu("Tiling");
         
+        tilingMenu.add(actionReload());
         tilingMenu.add(actionFirst());
         tilingMenu.add(actionNext());
         tilingMenu.add(actionPrevious());
@@ -848,6 +849,22 @@ public class Main extends EventSource {
 			KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_MASK));
 		}
 		return ActionRegistry.instance().get(name);
+    }
+
+    private Action actionReload() {
+        final String name = "This (reload)";
+        if (ActionRegistry.instance().get(name) == null) {
+            ActionRegistry.instance().put(new AbstractAction(name) {
+                private static final long serialVersionUID =
+                        6853426916731514941L;
+
+                public void actionPerformed(ActionEvent arg0) {
+                    reloadCurrentTiling();
+                }
+            }, "Reload the current tiling",
+            KeyStroke.getKeyStroke(KeyEvent.VK_T, 0));
+        }
+        return ActionRegistry.instance().get(name);
     }
     
     private Action actionFirst() {
@@ -1823,6 +1840,7 @@ public class Main extends EventSource {
 		Invoke.andWait(new Runnable() {
 			public void run() {
 				actionOpen().setEnabled(false);
+				actionReload().setEnabled(false);
 				actionFirst().setEnabled(false);
 				actionNext().setEnabled(false);
 				actionPrevious().setEnabled(false);
@@ -1837,6 +1855,7 @@ public class Main extends EventSource {
 		Invoke.andWait(new Runnable() {
 			public void run() {
 				actionOpen().setEnabled(true);
+                actionReload().setEnabled(true);
 				actionFirst().setEnabled(true);
 				actionNext().setEnabled(true);
 				actionPrevious().setEnabled(true);
@@ -1887,6 +1906,13 @@ public class Main extends EventSource {
         }).start();
     }
     
+    private void reloadCurrentTiling() {
+        final int n = tilingCounter;
+        documents.set(n - 1, documents.get(n - 1).cleanCopy());
+        doTiling(n);
+    }
+    
+    @SuppressWarnings("unused")
     private void reopenFile() {
         final String path = this.last_path;
         final String filename = new File(path).getName();
@@ -1909,7 +1935,6 @@ public class Main extends EventSource {
                 enableTilingChange();
             }
         }).start();
-        
     }
     
     private void busy() {
@@ -3271,6 +3296,7 @@ public class Main extends EventSource {
         try {
             options.add(new OptionCheckBox("Use maximal symmetry", this,
                     "useMaximalSymmetry"));
+            options.add(new BLabel("(Needs tiling reload to take effect.)"));
         } catch (final Exception ex) {
             log(ex.toString());
             return null;
@@ -3280,10 +3306,10 @@ public class Main extends EventSource {
             @SuppressWarnings("unused")
             public void call() {
                 saveOptions();
-                reopenFile();
+                reloadCurrentTiling();
             }
         };
-        return optionsDialog(options, makeButton("Apply", apply, "call"));
+        return optionsDialog(options, makeButton("Reload", apply, "call"));
     }
     
     private Widget optionsTiles() {

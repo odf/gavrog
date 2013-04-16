@@ -334,6 +334,13 @@ public class Document extends DisplayList {
     public void clearCache() {
         this.cache.clear();
     }
+    
+    public Document cleanCopy() {
+        if (this.data != null)
+            return new Document(this.data, this.name);
+        else
+            return new Document(this.given_symbol, this.name, this.given_cover);
+    }
 
 	public String getName() {
 		return this.name;
