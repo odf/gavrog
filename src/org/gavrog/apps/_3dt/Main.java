@@ -1982,7 +1982,8 @@ public class Main extends EventSource {
     private void processTiling(final Document doc) {
 		final Stopwatch timer = new Stopwatch();
 
-		doc.setUseMaximalSymmetry(getUseMaximalSymmetry());
+		if (doc.isUnprocessed())
+		    doc.setUseMaximalSymmetry(getUseMaximalSymmetry());
 		
         for (String key : tInfoFields.keySet()) {
         	if (key != "_file") {

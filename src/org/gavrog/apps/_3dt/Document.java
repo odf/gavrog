@@ -335,6 +335,10 @@ public class Document extends DisplayList {
         this.cache.clear();
     }
     
+    public boolean isUnprocessed() {
+        return this.symbol == null;
+    }
+    
     public Document cleanCopy() {
         if (this.data != null)
             return new Document(this.data, this.name);
