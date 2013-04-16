@@ -2441,10 +2441,12 @@ public class Main extends EventSource {
 			final SceneGraphNode node = item2node.get(item);
 			item2node.remove(item);
 			node2item.remove(node);
-			if (item.isTile() || item.isFacet()) {
-				SceneGraphUtility.removeChildNode(tiling, node);
-			} else if (item.isEdge() || item.isNode()) {
-				SceneGraphUtility.removeChildNode(net, node);
+			if (item != null && node != null) {
+			    if (item.isTile() || item.isFacet()) {
+			        SceneGraphUtility.removeChildNode(tiling, node);
+			    } else if (item.isEdge() || item.isNode()) {
+			        SceneGraphUtility.removeChildNode(net, node);
+			    }
 			}
 		} else if (e.getEventType() == DisplayList.RECOLOR) {
 			if (item.isTile()) {
