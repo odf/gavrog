@@ -25,11 +25,19 @@
   (and (every? #(not= % (s ds 2 %)) (elements ds))
        (every? (partial good-orbit? ds [1 2]) (orbit-reps ds [1 2]))))
 
+(defn- complete [ds]
+  (let [ops* (ops ds)
+        vs* (into {} (for [i (indices ds) :when (index? ds (inc i))]
+                       [i (into {} (for [D (elements ds)]
+                                     [D (or (v ds i (inc i) D) 1)]))]))]
+    (make-dsymbol (dim ds) (size ds) ops* vs*)))
+
 (defn self-dual-3-4-regular [n]
   (for [i (range (inc (- n 4)))
         :let [face-list (apply append (concat (repeat 4 triangle)
                                               (repeat i quadrangle)))]
-        set (results (combine-tiles face-list) (comp good? first))
+        set (map complete
+                 (results (combine-tiles face-list) (comp good? first)))
         :when (and (self-dual? set) (proto-spherical? set))
         ]
     set))
