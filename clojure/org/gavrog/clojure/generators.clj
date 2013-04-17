@@ -13,7 +13,7 @@
     (when gen
       (if (pred (current gen))
         (if-let [next (step gen)]
-          (lazy-seq (cons gen (traverse next)))
+          (lazy-seq (cons gen (traverse next pred)))
           (list gen))
         (recur (skip gen) pred)))))
 
