@@ -234,8 +234,10 @@ public class Main extends EventSource {
     private int embedderStepLimit = 100000;
     private boolean ignoreInputCell = false;
     private boolean ignoreInputCoordinates = false;
-    private boolean useMaximalSymmetry = true;
     private boolean relaxCoordinates = true;
+    
+    // --- tiling options
+    private boolean useMaximalSymmetry = true;
     
     // --- camera options
     private Color backgroundColor = Color.WHITE;

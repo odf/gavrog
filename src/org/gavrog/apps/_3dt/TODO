@@ -4,13 +4,12 @@ Open bugs:
 
 - Sometimes unit cells are very flat.
 - Disabling and enabling of menu items is missing or clumsily implemented.
+- maximizing symmetry distorts given node positions in a strange way
+- for face list tiling, originally given symmetry is not restored
 
 =====================================================
 
 For the coming release:
-
-- maximizing symmetry distorts given node positions in a strange way
-- for face list tiling, restore to originally given symmetry
 
 =====================================================
 
