@@ -20,6 +20,7 @@ package org.gavrog.apps._3dt;
 import java.awt.Color;
 import java.io.BufferedReader;
 import java.io.EOFException;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -134,6 +135,9 @@ public class Document extends DisplayList {
     
     // --- saved user options
     private Properties  properties = new Properties();
+    
+    // --- default file name for saving the scene in
+    private File saveSceneFile;
     
     // --- random number generator
 	private final static Random random = new Random();
@@ -413,11 +417,9 @@ public class Document extends DisplayList {
     }
 
     private DSymbol getEffectiveSymbol() {
-    	if (this.effective_symbol == null) {
-    		if (this.data != null) {
-                this.effective_symbol = getSymbol();
-    		}
-    	}
+    	getSymbol();
+        if (this.effective_symbol == null)
+            this.effective_symbol = this.symbol;
         return this.effective_symbol;
     }
     
@@ -1184,4 +1186,12 @@ public class Document extends DisplayList {
 	public void setTransformation(final Transformation transformation) {
 		this.transformation = transformation;
 	}
+
+    public File getSaveSceneFile() {
+        return this.saveSceneFile;
+    }
+
+    public void setSaveSceneFile(final File file) {
+        this.saveSceneFile = file;
+    }
 }

@@ -1,5 +1,6 @@
 3dt 0.5.4:
 
+2013-04-21: Ctrl-S saves scene to previous file without further dialogs
 2013-04-21: Rotate clockwise/counterclockwise with Shift-Left/Right (not Ctrl-)
 2013-04-16: The current tiling can be reloaded (e.g. after changing symmetry)
 2013-04-13: Made sure the controls view is not placed outside the screen area

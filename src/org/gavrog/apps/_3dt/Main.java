@@ -404,9 +404,10 @@ public class Main extends EventSource {
     	final JMenu fileMenu = new JMenu("File");
     	
         fileMenu.add(actionOpen());
+        fileMenu.add(actionQuickSaveScene());
+        fileMenu.add(actionSaveScene());
         fileMenu.add(actionSaveTiling());
         fileMenu.add(actionSaveNet());
-        fileMenu.add(actionSaveScene());
         fileMenu.addSeparator();
         
         fileMenu.add(actionScreenshot());
@@ -612,7 +613,7 @@ public class Main extends EventSource {
     }
     
     private Action actionSaveTiling() {
-		final String name = "Save Tiling...";
+		final String name = "Save Tiling as...";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
                 private static final long serialVersionUID =
@@ -653,7 +654,7 @@ public class Main extends EventSource {
     }
     
     private Action actionSaveNet() {
-		final String name = "Save Net...";
+		final String name = "Save Net as...";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
                 private static final long serialVersionUID =
@@ -682,8 +683,46 @@ public class Main extends EventSource {
 		return ActionRegistry.instance().get(name);
     }
     
+    private Action actionQuickSaveScene() {
+        final String name = "Save Scene";
+        if (ActionRegistry.instance().get(name) == null) {
+            ActionRegistry.instance().put(new AbstractAction(name) {
+                private static final long serialVersionUID =
+                        4065514611640844417L;
+
+                public void actionPerformed(ActionEvent e) {
+                    final File file;
+                    if (doc().getSaveSceneFile() == null) {
+                        file = outSceneChooser.pickFile(
+                                ui.getLastSceneOutputPath(), "gsl");
+                        if (file == null) return;
+                        ui.setLastSceneOutputPath(file);
+                        doc().setSaveSceneFile(file);
+                    }
+                    else {
+                        file = doc().getSaveSceneFile();
+                    }
+                    saveOptions();
+                    try {
+                        final Writer out = new FileWriter(file);
+                        doc().setTransformation(getViewingTransformation());
+                        out.write(doc().toXML());
+                        out.flush();
+                        out.close();
+                    } catch (IOException ex) {
+                        log(ex.toString());
+                        return;
+                    }
+                    log("Wrote file " + file.getName() + ".");
+                }
+            }, "Save the scene",
+            KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_MASK));
+        }
+        return ActionRegistry.instance().get(name);
+    }
+    
     private Action actionSaveScene() {
-		final String name = "Save Scene...";
+		final String name = "Save Scene as...";
 		if (ActionRegistry.instance().get(name) == null) {
 			ActionRegistry.instance().put(new AbstractAction(name) {
                 private static final long serialVersionUID =
