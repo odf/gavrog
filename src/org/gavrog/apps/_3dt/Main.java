@@ -1815,7 +1815,7 @@ public class Main extends EventSource {
 				}
 			}, "Rotate the scene clockwise",
 				KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT,
-							InputEvent.CTRL_DOWN_MASK));
+							InputEvent.SHIFT_DOWN_MASK));
 		}
 		return ActionRegistry.instance().get(name);
 	}
@@ -1833,7 +1833,7 @@ public class Main extends EventSource {
 				}
 			}, "Rotate the scene counter-clockwise",
 				KeyStroke.getKeyStroke(KeyEvent.VK_LEFT,
-							InputEvent.CTRL_DOWN_MASK));
+							InputEvent.SHIFT_DOWN_MASK));
 		}
 		return ActionRegistry.instance().get(name);
 	}
