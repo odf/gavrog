@@ -786,14 +786,14 @@ public class NetParser extends GenericParser {
         
         // --- use reasonable default for missing data
         if (group == null) {
-            warnings.add("Space group missing; assuming P1");
+            warnings.add("No space group given - assuming P1");
             groupName = "P1";
             group = parseSpaceGroupName(groupName);
             dim = group.getDimension();
             ops.addAll(group.getOperators());
         }
         if (cellGram == null) {
-            warnings.add("Unit cell parameters missing; using defaults");
+            warnings.add("No unit cell parameters given - using defaults");
             cellGram = defaultGramMatrix(groupName, dim);
         }
         
@@ -1543,7 +1543,7 @@ public class NetParser extends GenericParser {
         
         // --- use reasonable default for missing data
         if (group == null) {
-            warnings.add("Space group missing; assuming P1");
+            warnings.add("No space group given - assuming P1");
             groupName = "P1";
             group = parseSpaceGroupName(groupName);
             dim = group.getDimension();

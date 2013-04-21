@@ -893,11 +893,8 @@ public class SystreCmdline extends EventSource {
             
             if (G.getWarnings().hasNext())
             {
-            	out.println("==================================================");
             	for (Iterator<String> iter = G.getWarnings(); iter.hasNext();)
-            		out.println("!!! WARNING (INPUT) - " + iter.next());
-            	reportErrorLocation(count, displayName);
-                out.println("==================================================");
+            		out.println("   (" + iter.next() + ")");
                 out.println();
             }
             
