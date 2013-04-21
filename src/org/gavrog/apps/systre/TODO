@@ -6,6 +6,9 @@ Open bugs/issues:
 
 For the coming release:
 
+- Display parse warnings less prominently.
+- Better error message when neither edges nor unit cell parameters given.
+
 =====================================================
 
 Planned/requested features:

@@ -11,6 +11,9 @@ Open bugs:
 
 For the coming release:
 
+- Use Ctrl-S to save the scene and only ask for output file name once.
+- Ctrl-Left and Ctrl-Right are taken on MacOS, so use Shift-Left and Shift-Right
+
 =====================================================
 
 Planned/requested features:
