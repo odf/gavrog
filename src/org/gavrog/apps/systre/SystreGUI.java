@@ -417,8 +417,8 @@ public class SystreGUI extends BFrame {
 			final ProcessedNet net,
 			final String transcript) throws IOException
 	{
+        final String lineSeparator = System.getProperty("line.separator");
         if ("out".equals(extension)) {
-            final String lineSeparator = System.getProperty("line.separator");
             // --- write the full transcript
             writer.write(transcript.replaceAll(lineSeparator, "\n"));
             writer.write("\n");
@@ -439,6 +439,10 @@ public class SystreGUI extends BFrame {
                         writer, net.getGraph().canonical(), net.getName());
 				writer.write("\n");
             }
+        } else if (! "arc".equals(extension)) {
+            writer.write("#");
+            writer.write(transcript.replaceAll(lineSeparator, "\n#"));
+            writer.write("\n");
         }
     }
     
