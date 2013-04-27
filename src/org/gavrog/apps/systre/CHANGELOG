@@ -1,5 +1,6 @@
 Systre 1.1.8:
 
+2013-04-27: Special warning when neither cell parameters nor edges are given
 2013-04-24: Error messages from the parser now also appear in .cgd/.pgr output
 2013-03-30: More graceful handling of errors during initialization
 2013-03-30: Don't crash when $HOME/.systre directory is missing

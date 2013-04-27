@@ -793,9 +793,14 @@ public class NetParser extends GenericParser {
             ops.addAll(group.getOperators());
         }
         if (cellGram == null) {
-            warnings.add("No unit cell parameters given - using defaults");
+            if (edgeDescriptors.size() == 0)
+                warnings.add("** WARNING! " +
+                        "Neither cell parameters nor explicit edges given **");
+            else
+                warnings.add("No unit cell parameters given - using defaults");
             cellGram = defaultGramMatrix(groupName, dim);
-        }
+        } else if (edgeDescriptors.size() == 0)
+            warnings.add("No explicit edges given - using nearest nodes");
         
         // --- output some of the basic data
         if (DEBUG) {
