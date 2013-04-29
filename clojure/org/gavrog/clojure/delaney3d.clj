@@ -117,5 +117,9 @@
       (let [data ((first to-do) data)]
         (if (nil? (:result data))
           (recur data (rest to-do))
-          [(:result data) (:explanation data)]))
+          (let [extra (case (:result data)
+                        false []
+                        true  [(:symbol data)]
+                        [(:output data)])]
+            (concat [(:result data) (:explanation data)] extra))))
       [:maybe "no decision found" (:output data)])))

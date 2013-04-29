@@ -113,11 +113,16 @@
 (defn- kf-complexity [ds]
   (reduce + (for [D (orbit-reps ds [0 1 3])] (- (r ds 0 1 D) 2))))
 
+(defn- complexity [ds]
+  [(kf-complexity ds) (size ds)])
+
 (defn pinch-first-local-2-cut [ds]
   (if-let [[A B C D] (first (filter (partial liftable? ds) (local-2-cuts ds)))]
-    (let [[t1 E1] (cut-face ds A C)
-          [t2 E2] (cut-face t1 D B)]
-      (pinch-tile t2 E1 E2))
+    (let [[ds E1] (cut-face ds A C)
+          [ds E2] (cut-face ds D B)
+          ds (pinch-tile ds E1 E2)]
+      (collapse ds 3 (concat (orbit-elements ds [0 1 3] E1)
+                             (orbit-elements ds [0 1 3] E2))))
     ds))
 
 (defn simplified [ds]
@@ -134,10 +139,10 @@
           (if (= t ds)
             (recur ds (rest pending))
             (let [t (clean t)]
-              (assert (neg? (compare [(kf-complexity t) (size t)]
-                                     [(kf-complexity ds) (size ds)]))
+              (assert (neg? (compare [(complexity t) (size t)]
+                                     [(complexity ds) (size ds)]))
                       (str "Complexity not reduced by\n  " (prn-str (class f))
-                           (prn-str ds)
-                           "  =>\n" (prn-str t)))
+                           (prn-str ds) (prn-str (complexity ds)
+                           "  =>\n" (prn-str t) (prn-str (complexity t)))))
               (recur t operations))))
         ds))))
