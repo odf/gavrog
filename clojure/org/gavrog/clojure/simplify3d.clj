@@ -106,9 +106,18 @@
                                            [E 1]))]))]
           [(make-dsymbol (dim t) (size t) ops* vs*) d])))
 
+(defn- o-range [ds i j start end]
+  (if (= start end)
+    (list end)
+    (lazy-seq (cons start (o-range ds i j (walk ds start i j) end)))))
+
 (defn- liftable? [ds [A B C D]]
-  (->> A (orbit-elements ds [0 1])
-    (map (partial s ds 3)) (filter #{B D}) count (not= 1)))
+  (let [r (o-range ds 0 1 A C)
+        s (map #(walk ds % 3 1) r)
+        t (filter #{B D} s)
+        u (count t)]
+    (println [A B C D] r s t u)
+    (not= 1 u)))
 
 (defn- kf-complexity [ds]
   (reduce + (for [D (orbit-reps ds [0 1 3])] (- (r ds 0 1 D) 2))))
@@ -119,10 +128,8 @@
 (defn pinch-first-local-2-cut [ds]
   (if-let [[A B C D] (first (filter (partial liftable? ds) (local-2-cuts ds)))]
     (let [[ds E1] (cut-face ds A C)
-          [ds E2] (cut-face ds D B)
-          ds (pinch-tile ds E1 E2)]
-      (collapse ds 3 (concat (orbit-elements ds [0 1 3] E1)
-                             (orbit-elements ds [0 1 3] E2))))
+          [ds E2] (cut-face ds D B)]
+      (merge-volumes (pinch-tile ds E1 E2)))
     ds))
 
 (defn simplified [ds]
