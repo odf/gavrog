@@ -256,7 +256,7 @@ public class SystreCmdline extends EventSource {
         quitIfCancelled();
         
         // --- determine the point symbols if requested
-        if (getComputePointSymbols()) {
+        if (getComputePointSymbols() && G.getDimension() >= 3) {
             status("Computing Wells point symbols...");
             showPointSymbols(G, node2name);
             quitIfCancelled();
