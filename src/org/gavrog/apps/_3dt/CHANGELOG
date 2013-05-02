@@ -1,5 +1,6 @@
 3dt 0.5.4:
 
+2013-05-02: Added a data file with RCSR tilings to the distribution
 2013-04-21: Ctrl-S saves scene to previous file without further dialogs
 2013-04-21: Rotate clockwise/counterclockwise with Shift-Left/Right (not Ctrl-)
 2013-04-16: The current tiling can be reloaded (e.g. after changing symmetry)
