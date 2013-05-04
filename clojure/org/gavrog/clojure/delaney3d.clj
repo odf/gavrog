@@ -111,7 +111,7 @@
 
 (def checks [check-axes check-cover check-simplified])
 
-(defn check-euclicidity [ds]
+(defn check-euclidicity [ds]
   (loop [data {:symbol ds}, to-do checks]
     (if (seq to-do)
       (let [data ((first to-do) data)]
