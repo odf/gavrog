@@ -60,6 +60,11 @@
     (pinch-face ds D E)
     ds))
 
+(defn- o-range [ds i j start end]
+  (if (= start end)
+    (list end)
+    (lazy-seq (cons start (o-range ds i j (walk ds start i j) end)))))
+
 (defn- local-2-cuts [ds]
   (let [ori (partial-orientation ds)
         faces (vec (orbits ds [0 1]))]
@@ -68,11 +73,13 @@
                 marked (set (for [D f, E (orbit-elements ds [1 2] D)
                                   :when (not (f (s ds 2 E)))] E))]
           j (range (inc i) (count faces))
-          :let [cut (filter #(and (marked %) (pos? (ori %))) (faces j))]
-          :when (<= 2 (count cut))]
-      (apply concat (for [D cut]
-                      [D (first (filter #(and (f %) (pos? (ori %)))
-                                        (orbit-elements ds [1 2] D)))])))))
+          :let [cut (set (filter #(and (marked %) (pos? (ori %))) (faces j)))]
+          :when (<= 2 (count cut))
+          :let [A (first (filter #(not (cut (walk ds % 0 1))) cut))
+                B (first (filter f (o-range ds 2 1 (walk ds A 2 1) A)))
+                C (first (filter cut (o-range ds 0 1 (walk ds A 0 1) A)))
+                D (first (filter f (o-range ds 2 1 (walk ds C 2 1) C)))]]
+      [A B C D])))
 
 (defn- pinch-tile [ds D E]
   (let [[D* E*] (map (partial s ds 0) [D E])
@@ -86,7 +93,7 @@
   (dsymbol "8:2 4 6 8,3 4 7 8,3 4 7 8,5 6 7 8:2 2,1 1 1 1,2 2"))
 
 (defn- cut-face [ds D E]
-  (cond (= E (walk ds D 1 0)) [ds (s ds 1 D)]
+  (cond (= E (walk ds D 1 0)) [ds (walk ds D 1 2)]
         (= E (walk ds D 0 1)) [ds D]
         :else
         (let [tmp (append ds wedge)
@@ -106,11 +113,6 @@
                                            [E 1]))]))]
           [(make-dsymbol (dim t) (size t) ops* vs*) d*])))
 
-(defn- o-range [ds i j start end]
-  (if (= start end)
-    (list end)
-    (lazy-seq (cons start (o-range ds i j (walk ds start i j) end)))))
-
 (defn- liftable? [ds [A B C D]]
   (->> (o-range ds 0 1 A C) (map #(walk ds % 3 1)) (filter #{B D}) count
     (not= 1)))
@@ -121,13 +123,15 @@
 (defn- complexity [ds]
   [(kf-complexity ds) (size ds)])
 
+(defn- pinch-local-2-cut [ds A B C D]
+  (let [[ds E1] (cut-face ds A C)
+        [ds E2] (cut-face ds D B)
+        ds (pinch-tile ds E1 E2)]
+    (merge-volumes ds)))
+
 (defn pinch-first-local-2-cut [ds]
   (if-let [[A B C D] (first (filter (partial liftable? ds) (local-2-cuts ds)))]
-    (let [[ds E1] (cut-face ds A C)
-          [ds E2] (cut-face ds D B)
-          ds (pinch-tile ds E1 E2)
-          _ (println ds)]
-      (merge-volumes ds))
+    (pinch-local-2-cut ds A B C D)
     ds))
 
 (defn simplified [ds]
