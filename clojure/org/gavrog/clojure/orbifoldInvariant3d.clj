@@ -55,13 +55,22 @@
     (concat p (map #(set [%]) (filter (comp not seen) s)))))
 
 (defn- quotient-graph [equiv g]
-  (let [classes (equivalence-classes #(equiv (g %1) (g %2)) (edges g) (keys g))
-        to-rep (into {} (for [cl classes, :let [a (first cl)], b cl]
-                          [b a]))]
+  (let [classes (sort-by (comp :type g first)
+                         (equivalence-classes #(equiv (g %1) (g %2))
+                                              (edges g) (keys g)))
+        to-rep (into {} (for [i (range (count classes)), a (nth classes i)]
+                          [a i]))]
     (into {} (for [cl classes
                    :let [key (to-rep (first cl))
                          adjs (set (for [a cl
                                          b (map to-rep (:adjs (g a)))
                                          :when (not= b key)]
                                      b))]]
-               [key (assoc (g key) :adjs adjs)]))))
+               [key (assoc (g (first cl)) :adjs adjs)]))))
+
+(defn orbifold-graph [ds]
+  (->>
+    (raw-orbifold-graph ds)
+    (filter-graph #(not= "1" (:type %)))
+    (quotient-graph #(= (:type %1) (:type %2)))
+    sort))
