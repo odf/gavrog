@@ -1,16 +1,17 @@
 (ns org.gavrog.clojure.orbifoldInvariant3d
   (:use (org.gavrog.clojure
           delaney
-          delaney2d)))
+          delaney2d
+          partition)))
 
 (defn- orbifold-type [ds idcs D]
   (case (count idcs)
     0 "1"
-    1 (if (= D (s ds (first idcs) D)) "1*" "1")
+    1 (if (= D (s ds (first idcs) D)) "*" "1")
     2 (let [[i j] idcs, n (v ds i j D)]
         (if (orbit-loopless? ds idcs D)
           (if (= n 1) "1" (str n n))
-          (if (= n 1) "1*" (str "*" n n)))) 
+          (if (= n 1) "*" (str "*" n n)))) 
     3 (orbifold-symbol (orbit ds idcs D))))
 
 (defn- sublists
@@ -36,14 +37,24 @@
                    D (orbit-reps ds idcs)]
                [[idcs D] {:type (orbifold-type ds idcs D)
                           :elms (orbit-elements ds idcs D) ;; for debugging
-                          :subs (sub-orbits idcs D)}]))))
+                          :adjs (sub-orbits idcs D)}]))))
 
 (defn- filter-graph [p g]
   (let [good (set (filter (comp p g) (keys g)))]
     (into {} (for [[k v] g :when (good k)]
-               [k (assoc v :subs (filter good (:subs v)))]))))
+               [k (assoc v :adjs (filter good (:adjs v)))]))))
 
-(defn- quotient-graph [keyfn g]
-  )
+(defn- edges [g]
+  (for [[a v] g
+        b (:adjs v)]
+    [a b]))
 
+(defn- classes [equiv pairs s]
+  (let [join (fn [p [a b]] (if (equiv a b) (punion p a b) p))
+        p (reduce join pempty pairs)
+        seen (set (apply concat p))]
+    (concat p (map set (filter (comp not seen) s)))))
 
+(defn- quotient-graph [equiv g]
+  (let [cl (classes #(equiv (g %1) (g %2)) (edges g) (keys g))]
+    cl))
