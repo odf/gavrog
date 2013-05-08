@@ -36,7 +36,6 @@
     (into {} (for [idcs index-combinations
                    D (orbit-reps ds idcs)]
                [[idcs D] {:type (orbifold-type ds idcs D)
-                          :elms (orbit-elements ds idcs D) ;; for debugging
                           :adjs (sub-orbits idcs D)}]))))
 
 (defn- filter-graph [p g]
@@ -49,12 +48,20 @@
         b (:adjs v)]
     [a b]))
 
-(defn- classes [equiv pairs s]
+(defn- equivalence-classes [equiv pairs s]
   (let [join (fn [p [a b]] (if (equiv a b) (punion p a b) p))
         p (reduce join pempty pairs)
         seen (set (apply concat p))]
-    (concat p (map set (filter (comp not seen) s)))))
+    (concat p (map #(set [%]) (filter (comp not seen) s)))))
 
 (defn- quotient-graph [equiv g]
-  (let [cl (classes #(equiv (g %1) (g %2)) (edges g) (keys g))]
-    cl))
+  (let [classes (equivalence-classes #(equiv (g %1) (g %2)) (edges g) (keys g))
+        to-rep (into {} (for [cl classes, :let [a (first cl)], b cl]
+                          [b a]))]
+    (into {} (for [cl classes
+                   :let [key (to-rep (first cl))
+                         adjs (set (for [a cl
+                                         b (map to-rep (:adjs (g a)))
+                                         :when (not= b key)]
+                                     b))]]
+               [key (assoc (g key) :adjs adjs)]))))
