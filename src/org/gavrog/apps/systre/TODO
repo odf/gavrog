@@ -6,23 +6,37 @@ Open bugs/issues:
 
 For the coming release:
 
+- Updated RCSR archive and add nets tsb, tsg, tsh as per email.
+- Round off coordinates in parser error messages to four decimal places.
+- Remove warning about "incorrect embedding" when input has collisions.
+- Default unit cell coordinates are incorrect, e.g. for R3:R
+
 =====================================================
 
 Planned/requested features:
 
+Gavrog 0.5.5:
+- Convert coordinates in parser error messages back to original unit cell.
+- Avoid negative coordinates in output. (?)
+- Issue warning if output has vertex collisions.
+- Analyse ladders similarly to interpenetrating nets.
+
 - Optionally merge vertices with identical neighbor sets.
 - Option to stop on error.
-- Produce a log file when using GUI version in non-step mode.
-
-- Support global node repulsion in embedder.
+- Produce a log file when using GUI version in non-stop mode.
 
 - Better phrasing when component has multiple translates.
+- Make choice of output formats more self-explanatory.
+
+
+Later:
+- Support global node repulsion in embedder.
+
 - Command line version can write cgd files.
 - Option to simplify graphs with 1- or 2-coordinated nodes.
 - Check for edge intersections and similar problems.
 - Compute vertex symbols.
 - If graph has collisions, try to refine anyway.
-- Make choice of output formats more self-explanatory.
 
 - Print parametric positions for nodes and edge centers.
 - Make SystreGUI accept command line arguments.
