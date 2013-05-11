@@ -7,11 +7,11 @@
 (defn- orbifold-type [ds idcs D]
   (case (count idcs)
     0 "1"
-    1 (if (= D (s ds (first idcs) D)) "*" "1")
+    1 (if (= D (s ds (first idcs) D)) "1*" "1")
     2 (let [[i j] idcs, n (v ds i j D)]
         (if (orbit-loopless? ds idcs D)
           (if (= n 1) "1" (str n n))
-          (if (= n 1) "*" (str "*" n n)))) 
+          (if (= n 1) "1*" (str "*" n n)))) 
     3 (orbifold-symbol (orbit ds idcs D))))
 
 (defn- sublists

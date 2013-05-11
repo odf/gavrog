@@ -55,13 +55,13 @@
                      (reduce + (map #(/ (dec %) %) cones))
                      (reduce + (map #(/ (dec %) (* 2 %)) corners))
                      (if (loopless? ds) 0 1)))
-        tmp (concat (sort cones)
+        tmp (concat (vec (reverse (sort cones)))
                     (if (loopless? ds) [] ["*"])
-                    (sort corners)
+                    (vec (reverse (sort corners)))
                     (if (weakly-oriented? ds)
                       (repeat (/ cost 2) "o")
                       (repeat cost "x")))]
-    (if (pos? (count tmp)) (apply str tmp) "1")))
+    (apply str (if (#{[] ["*"]} tmp) (concat ["1"] tmp) tmp))))
 
 (defn toroidal-cover [ds]
   (assert (euclidean? ds))
