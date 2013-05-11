@@ -2,7 +2,9 @@
   (:use (org.gavrog.clojure
           delaney
           delaney2d
-          partition)))
+          partition
+          fundamental
+          cosets)))
 
 (defn- orbifold-type [ds idcs D]
   (case (count idcs)
@@ -74,3 +76,13 @@
     (filter-graph #(not= "1" (:type %)))
     (quotient-graph #(= (:type %1) (:type %2)))
     sort))
+
+(defn orbifold-invariant [ds]
+  (let [g (orbifold-graph ds)
+        inv (let [{:keys [nr-generators relators]} (fundamental-group ds)]
+              (abelian-invariants nr-generators relators))
+        a (map (comp :type second) g)
+        b [(if (oriented? ds) 2 (if (weakly-oriented? ds) 1 0))
+           (reduce + (map (comp count :adjs second) g))
+           (count inv)]]
+        (apply str (interpose "/" (concat a b inv)))))
