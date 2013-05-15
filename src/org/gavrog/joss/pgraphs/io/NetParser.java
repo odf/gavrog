@@ -985,7 +985,8 @@ public class NetParser extends GenericParser {
         	} else {
         		c = groupName.charAt(1);
         	}
-        	if (c == '3' || c == '6') {
+        	if ((c == '3' || c == '6')
+        	        && !groupName.toLowerCase().endsWith(":r")) {
         		return new Matrix(new double[][] {
         				{  1.0, -0.5,  0.0 },
         				{ -0.5,  1.0,  0.0 },
