@@ -224,8 +224,7 @@ public class SystreCmdline extends EventSource {
             throw new SystreException(SystreException.STRUCTURE, msg);
         }
         if (!G.isStable()) {
-            final String msg = "!!! WARNING (STRUCTURE) - Structure has "
-                    + "collisions. Output embedding may be incorrect.";
+            final String msg = "Structure has collisions.";
             out.println(msg);
             out.println();
         }
