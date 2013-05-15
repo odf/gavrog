@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -1226,6 +1227,20 @@ public class NetParser extends GenericParser {
         }
     }
 
+    private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
+
+    private String format(final Point p)
+    {
+        String out = "";
+
+        for (int i = 0; i < p.getDimension(); ++i) {
+            if (i > 0)
+                out += " ";
+            out += fmtReal4.format(((Real) p.get(i)).doubleValue());
+        }
+        return out;
+    }
+    
     /**
      * @param G
      * @param edgeDescriptors
@@ -1275,11 +1290,11 @@ public class NetParser extends GenericParser {
                         lookup(q, nodeToPosition, precision);
                 if (pAdr == null) {
                     throw new DataFormatException("no point at "
-                            + p.times(from));
+                            + format((Point) p.times(from)));
                 }
                 if (qAdr == null) {
                     throw new DataFormatException("no point at "
-                            + q.times(from));
+                            + format((Point) q.times(from)));
                 }
                 final INode v = pAdr.getFirst();
                 final INode w = qAdr.getFirst();
