@@ -85,4 +85,4 @@
         b [(if (oriented? ds) 2 (if (weakly-oriented? ds) 1 0))
            (reduce + (map (comp count :adjs second) g))
            (count inv)]]
-        (apply str (interpose "/" (concat a b inv)))))
+        (apply str (interpose "/" (concat [(count a)] a b inv)))))

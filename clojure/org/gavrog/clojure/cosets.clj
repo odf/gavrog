@@ -206,7 +206,7 @@
 
 (defn- relator-matrix [nr-gens relators]
   (into {} (for [k (range (count relators))
-                 [g n] (relator-as-row nr-gens (get relators k))]
+                 [g n] (relator-as-row nr-gens (nth relators k))]
              [[k g] n])))
 
 (defn- abelian-factors [xs]
