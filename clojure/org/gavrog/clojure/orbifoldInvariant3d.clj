@@ -40,10 +40,14 @@
                [[idcs D] {:type (orbifold-type ds idcs D)
                           :adjs (sub-orbits idcs D)}]))))
 
-(defn- filter-graph [p g]
+(defn- filter-nodes [p g]
   (let [good (set (filter (comp p g) (keys g)))]
     (into {} (for [[k v] g :when (good k)]
                [k (assoc v :adjs (filter good (:adjs v)))]))))
+
+(defn- filter-edges [p g]
+  (into {} (for [[k v] g]
+             [k (assoc v :adjs (filter #(p (g k) (g %)) (:adjs v)))])))
 
 (defn- edges [g]
   (for [[a v] g
@@ -73,8 +77,12 @@
 (defn orbifold-graph [ds]
   (->>
     (raw-orbifold-graph ds)
-    (filter-graph #(not= "1" (:type %)))
+    (filter-nodes #(not= "1" (:type %)))
     (quotient-graph #(= (:type %1) (:type %2)))
+    (filter-edges (fn [v w]
+                    (let [[s t] (map :type [v w])]
+                      (not (and (= "1*" t)
+                                (= \* (first s)) (= 4 (count s)))))))
     sort))
 
 (defn orbifold-invariant [ds]
