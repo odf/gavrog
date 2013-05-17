@@ -82,7 +82,8 @@
     (filter-edges (fn [v w]
                     (let [[s t] (map :type [v w])]
                       (not (and (= "1*" t)
-                                (= \* (first s)) (= 4 (count s)))))))
+                                (or (not= \* (first s))
+                                    (= 4 (count s))))))))
     sort))
 
 (defn orbifold-invariant [ds]

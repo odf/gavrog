@@ -223,5 +223,5 @@
         D (diagonalized (relator-matrix nr-gens relators) rows cols)
         indices (map vector rows cols)
         d (map (partial get D) indices)]
-    (concat (->> (abelian-factors d) (filter (partial not= 1)) sort reverse)
-            (repeat (- nr-gens (count d)) 0))))
+    (concat (repeat (- nr-gens (count d)) 0)
+            (->> (abelian-factors d) (filter (partial not= 1)) sort))))

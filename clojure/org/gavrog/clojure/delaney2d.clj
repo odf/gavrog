@@ -61,7 +61,7 @@
                     (if (weakly-oriented? ds)
                       (repeat (/ cost 2) "o")
                       (repeat cost "x")))]
-    (apply str (if (#{[] ["*"]} tmp) (concat ["1"] tmp) tmp))))
+    (apply str (if (#{[] ["*"] ["x"]} tmp) (concat ["1"] tmp) tmp))))
 
 (defn toroidal-cover [ds]
   (assert (euclidean? ds))
