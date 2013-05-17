@@ -6,6 +6,8 @@
           cosets
           covers
           simplify3d
+          orbifoldInvariant3d
+          euclideanInvariants
           [generators :only [results]])))
 
 (def ^{:private true} core-type
@@ -85,6 +87,12 @@
             [:result false]
             [:explanation "violates crystallographic restriction"]))))
 
+(defn- check-orbifold [{:keys [symbol] :as input}]
+  (if (invars (orbifold-invariant symbol))
+    input
+    (conj input [:result false]
+          [:explanation "orbifold invariants do not match"])))
+
 (defn- check-cover [{:keys [symbol] :as input}]
   (if-let [cover (pseudo-toroidal-cover symbol)]
     (conj input [:cover cover] [:output cover]) 
@@ -109,7 +117,7 @@
           :else
           (conj input [:simple simple] [:output simple]))))
 
-(def checks [check-axes check-cover check-simplified])
+(def checks [check-axes check-orbifold check-cover check-simplified])
 
 (defn check-euclidicity [ds]
   (loop [data {:symbol ds}, to-do checks]
