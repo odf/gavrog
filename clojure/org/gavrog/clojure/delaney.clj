@@ -593,7 +593,9 @@
         vs (into {} (for [[i j] (zipmap idcs (rest idcs))]
                       [i (into {} (for [D (orbit-reps t [i j])
                                         :let [D0 (-> D dec (mod n) inc)
-                                              v* (/ (m ds i j D0) (r t i j D))]
+                                              v* (/ (or (m ds i j D0) 0)
+                                                    (r t i j D))]
+                                        :when (pos? v*)
                                         E (orbit-elements t [i j] D)]
                                     [E v*]))]))]
     (DSymbol. d (size t) ops vs)))

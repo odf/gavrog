@@ -34,7 +34,7 @@
             todo (pop todo)]
         (if (and (on-bnd [D i])
                  (or (nil? j)
-                     (= n (* 2 (m ds i j D)))))
+                     (= n (* 2 (or (m ds i j D) 0)))))
           (recur (update-todo ds todo opposite D i)
                  (glue-boundary ds boundary D i)
                  (conj glued [D i j]))
@@ -116,9 +116,9 @@
                      :when (seq w)]
                  [D i j (relator-rep w) (v ds i j D)])]
     {:nr-generators (count gen2edge)
-     :relators (sort (concat (for [[D i j w v] orbits] (-** w v))
+     :relators (sort (concat (for [[D i j w v] orbits :when v] (-** w v))
                              (mirror-relators ds gen2edge)))
-     :cones (sort (for [[D i j w v] orbits, :when (> v 1)] [w v]))
+     :cones (sort (for [[D i j w v] orbits, :when (and v (> v 1))] [w v]))
      :gen-to-edge gen2edge
      :edge-to-word edge2word
      }))
