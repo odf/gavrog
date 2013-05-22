@@ -139,7 +139,7 @@
                   (nil? nval) 1
                   :else (- nval oval))))))
 
-(defn- canonical [table gens]
+(defn- canonical-table [table gens]
   (every? (fn [start] (not (neg? (compare-renumbered-from table gens start))))
           (range 1 (count table))))
 
@@ -172,7 +172,7 @@
                                   [t equiv]
                                   (scan-relations rels [] t pempty k)]
                                   :when (and (empty? equiv)
-                                             (canonical t gens))]
+                                             (canonical-table t gens))]
                              t))))})))
 
 (defn- induced-table [gens img img0]
