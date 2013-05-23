@@ -547,7 +547,8 @@
             pairs (fn [i] (for [D reps] [(emap D) (emap (pfind p (s ds i D)))]))
             ops (into {} (for [i idcs] [(imap i), (into {} (pairs i))]))
             t (DSymbol. (dim ds) (count reps) ops {})
-            spin (fn [i j D] (/ (m ds i j D) (r t (imap i) (imap j) (emap D))))
+            spin (fn [i j D]
+                   (/ (or (m ds i j D) 0) (r t (imap i) (imap j) (emap D))))
             spins (fn [i j] (for [D reps] [(emap D) (spin i j D)]))
             ipairs (zipmap idcs (rest idcs))
             vs (into {} (for [[i j] ipairs] [(imap i) (into {} (spins i j))]))]
