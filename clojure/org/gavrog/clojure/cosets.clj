@@ -123,6 +123,7 @@
   (loop [o2n {start 0}, n2o {0 start}, row 0, col 0]
     (assert (or (< row (count o2n)) (>= row (count table)))
             (str table " is not transitive."))
+    ; (println "o2n =" o2n " n2o =" n2o " row =" row " col =" col) 
     (cond (>= row (count table)) 0
           (>= col (count gens)) (recur o2n n2o (inc row) 0)
           :else
@@ -225,3 +226,17 @@
         d (map (partial get D) indices)]
     (concat (repeat (- nr-gens (count d)) 0)
             (->> (abelian-factors d) (filter (partial not= 1)) sort))))
+
+(comment
+  (table-generator 4 [[1 1] [2 2] [3 3] [4 4] [1 3 1 3] [1 4 1 4] [2 4 2 4]] 8)
+  
+  ; seems to miss this:
+  
+  (def ct {0 {1 1 -1 1 2 2 -2 2 3 3 -3 3 4 4 -4 4}
+           1 {1 0 -1 0 2 5 -2 5 3 6 -3 6 4 7 -4 7}
+           2 {1 5 -1 5 2 0 -2 0 3 7 -3 7 4 6 -4 6}
+           3 {1 6 -1 6 2 7 -2 7 3 0 -3 0 4 5 -4 5}
+           4 {1 7 -1 7 2 6 -2 6 3 5 -3 5 4 0 -4 0}
+           5 {1 2 -1 2 2 1 -2 1 3 4 -3 4 4 3 -4 3}
+           6 {1 3 -1 3 2 4 -2 4 3 1 -3 1 4 2 -4 2}
+           7 {1 4 -1 4 2 3 -2 3 3 2 -3 2 4 1 -4 1}}))
