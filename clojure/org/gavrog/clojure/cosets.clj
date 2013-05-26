@@ -51,7 +51,8 @@
           [(-> table
              (assoc-in [head (get w a)] tail)
              (assoc-in [tail (- (get w a))] head))
-           equiv]
+           equiv
+           head]
           
           (and (= a b) (not= head tail))
           (identify table equiv head tail)
@@ -159,6 +160,20 @@
         g gens :when (nil? (row g))]
     [k g]))
 
+(defn- scan-recursively [rels table k]
+  (loop [q empty-queue, k k, t table, rs rels]
+    (cond (seq rs)
+          (let [[t equiv n] (scan t pempty (first rs) k)]
+            (if (seq equiv)
+              nil
+              (recur (if (nil? n) q (conj q n)) k t (rest rs))))
+          
+          (seq q)
+          (recur (pop q) (first q) t rels)
+          
+          :else
+          t)))
+
 (defn- potential-children [table gens rels max-cosets]
   (when-let [[k g] (first (free-in-table table gens))]
     (let [g* (- g)
@@ -167,7 +182,7 @@
           candidates (if (< n max-cosets) (conj matches n) matches)]
       (for [k* candidates]
         (let [t (-> table (assoc-in [k g] k*) (assoc-in [k* g*] k))]
-          (scan-relations rels [] t pempty k))))))
+          (scan-recursively rels t k))))))
 
 (defn table-generator [nr-gens relators max-cosets]
   (let [gens (expand-generators nr-gens)
@@ -177,9 +192,9 @@
       {:root {0 {}}
        :extract (fn [table] (when (empty? (free table)) table))
        :children (fn [table]
-                   (for [[t equiv]
+                   (for [t
                          (potential-children table gens rels max-cosets)
-                         :when (and (empty? equiv) (canonical-table t gens))]
+                         :when (and (not (nil? t)) (canonical-table t gens))]
                      t))})))
 
 (defn- induced-table [gens img img0]
@@ -234,7 +249,12 @@
             (->> (abelian-factors d) (filter (partial not= 1)) sort))))
 
 
-;; ----
+;; ---- TODO turn these into tests
+
+(defn- print-table [t]
+  (doseq [[key row] (sort t)]
+            (println key row))
+          (println))
 
 (defn- debug-generator []
   (let [nr-gens 4
@@ -256,13 +276,7 @@
         (fn [t s] (every? identity (for [[key row] s [gen val] row]
                                      (= val ((t key) gen)))))
         
-        steps (traverse generator (partial contains? table))
-        
-        print-table
-        (fn [t]
-          (doseq [[key row] (sort t)]
-            (println key row))
-          (println))]
+        steps (traverse generator (partial contains? table))]
 
     (doseq [gen steps] (print-table (current gen)))
     (println "---")
@@ -275,3 +289,23 @@
               :when (contains? table t)]
         (println "Equivalences:" (seq equiv))
         (print-table t)))))
+
+(defn- debug-scanrel []
+  (let [gens (expand-generators 4)
+        rels (expand-relators
+               [[1 1] [2 2] [3 3] [4 4] [1 3 1 3] [1 4 1 4] [2 4 2 4]])
+        max-cosets 8
+        
+        table {0 {1 1 -1 1 2 2 -2 2 3 3 -3 3 4 4 -4 4}
+               1 {1 0 -1 0 2 5 -2 5 3 6 -3 6 4 7 -4 7}
+               2 {1 5 -1 5 2 0 -2 0 3 7 -3 7 4 6 -4 6}
+               3 {1 6 -1 6          3 0 -3 0         }
+               4 {1 7 -1 7          3 5 -3 5 4 0 -4 0}
+               5 {1 2 -1 2 2 1 -2 1 3 4 -3 4         }
+               6 {1 3 -1 3          3 1 -3 1 4 2 -4 2}
+               7 {1 4 -1 4          3 2 -3 2 4 1 -4 1}}
+        
+        start 2]
+    
+    (print-table (scan-recursively rels table start))))
+
