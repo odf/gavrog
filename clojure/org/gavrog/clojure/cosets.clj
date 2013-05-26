@@ -144,37 +144,43 @@
   (every? (fn [start] (not (neg? (compare-renumbered-from table gens start))))
           (range 1 (count table))))
 
+(defn- expand-generators [nr-gens]
+  (vec (concat (range 1 (inc nr-gens))
+               (range -1 (- (inc nr-gens)) -1))))
+
+(defn- expand-relators [relators]
+  (let [with-inverses (fn [ws] (vec (into #{} (concat ws (map inverse ws)))))]
+    (with-inverses (for [w relators, i (range (count w))]
+                     (into (subvec w i) (subvec w 0 i))))))
+
+(defn- free-in-table [table gens]
+  (for [k (range (count table))
+        :let [row (table k)]
+        g gens :when (nil? (row g))]
+    [k g]))
+
+(defn- potential-children [table gens rels max-cosets]
+  (when-let [[k g] (first (free-in-table table gens))]
+    (let [g* (- g)
+          n (count table)
+          matches (filter (fn [k] (nil? ((table k) g*))) (range k n))
+          candidates (if (< n max-cosets) (conj matches n) matches)]
+      (for [k* candidates]
+        (let [t (-> table (assoc-in [k g] k*) (assoc-in [k* g*] k))]
+          (scan-relations rels [] t pempty k))))))
+
 (defn table-generator [nr-gens relators max-cosets]
-  (let [with-inverses (fn [ws] (vec (into #{} (concat ws (map inverse ws)))))
-        gens (vec (concat (range 1 (inc nr-gens))
-                          (range -1 (- (inc nr-gens)) -1)))
-        rels (with-inverses (for [w relators, i (range (count w))]
-                              (into (subvec w i) (subvec w 0 i))))
-        free (fn [table] (for [k (range (count table))
-                               :let [row (table k)]
-                               g gens :when (nil? (row g))]
-                           [k g]))]
+  (let [gens (expand-generators nr-gens)
+        rels (expand-relators relators)
+        free (fn [t] (free-in-table t gens))]
     (make-backtracker
       {:root {0 {}}
        :extract (fn [table] (when (empty? (free table)) table))
        :children (fn [table]
-                   (if-let [[k g] (first (free table))]
-                     (let [g* (- g)
-                           n (count table)
-                           matches (filter (fn [k] (nil? ((table k) g*)))
-                                           (range k n))
-                           candidates (if (< n max-cosets)
-                                        (conj matches n)
-                                        matches)]
-                       (for [k* candidates
-                             :let [t (-> table
-                                      (assoc-in [k g] k*)
-                                      (assoc-in [k* g*] k))
-                                  [t equiv]
-                                  (scan-relations rels [] t pempty k)]
-                                  :when (and (empty? equiv)
-                                             (canonical-table t gens))]
-                             t))))})))
+                   (for [[t equiv]
+                         (potential-children table gens rels max-cosets)
+                         :when (and (empty? equiv) (canonical-table t gens))]
+                     t))})))
 
 (defn- induced-table [gens img img0]
   (loop [table {0 {}}, o2n {img0 0}, n2o {0 img0}, i 0, j 0]
@@ -227,16 +233,45 @@
     (concat (repeat (- nr-gens (count d)) 0)
             (->> (abelian-factors d) (filter (partial not= 1)) sort))))
 
-(comment
-  (table-generator 4 [[1 1] [2 2] [3 3] [4 4] [1 3 1 3] [1 4 1 4] [2 4 2 4]] 8)
+
+;; ----
+
+(defn- debug-generator []
+  (let [nr-gens 4
+        rels [[1 1] [2 2] [3 3] [4 4] [1 3 1 3] [1 4 1 4] [2 4 2 4]]
+        max-cosets 8
+
+        generator (table-generator nr-gens rels max-cosets)
   
-  ; seems to miss this:
-  
-  (def ct {0 {1 1 -1 1 2 2 -2 2 3 3 -3 3 4 4 -4 4}
-           1 {1 0 -1 0 2 5 -2 5 3 6 -3 6 4 7 -4 7}
-           2 {1 5 -1 5 2 0 -2 0 3 7 -3 7 4 6 -4 6}
-           3 {1 6 -1 6 2 7 -2 7 3 0 -3 0 4 5 -4 5}
-           4 {1 7 -1 7 2 6 -2 6 3 5 -3 5 4 0 -4 0}
-           5 {1 2 -1 2 2 1 -2 1 3 4 -3 4 4 3 -4 3}
-           6 {1 3 -1 3 2 4 -2 4 3 1 -3 1 4 2 -4 2}
-           7 {1 4 -1 4 2 3 -2 3 3 2 -3 2 4 1 -4 1}}))
+        table {0 {1 1 -1 1 2 2 -2 2 3 3 -3 3 4 4 -4 4}
+               1 {1 0 -1 0 2 5 -2 5 3 6 -3 6 4 7 -4 7}
+               2 {1 5 -1 5 2 0 -2 0 3 7 -3 7 4 6 -4 6}
+               3 {1 6 -1 6 2 7 -2 7 3 0 -3 0 4 5 -4 5}
+               4 {1 7 -1 7 2 6 -2 6 3 5 -3 5 4 0 -4 0}
+               5 {1 2 -1 2 2 1 -2 1 3 4 -3 4 4 3 -4 3}
+               6 {1 3 -1 3 2 4 -2 4 3 1 -3 1 4 2 -4 2}
+               7 {1 4 -1 4 2 3 -2 3 3 2 -3 2 4 1 -4 1}}
+        
+        contains?
+        (fn [t s] (every? identity (for [[key row] s [gen val] row]
+                                     (= val ((t key) gen)))))
+        
+        steps (traverse generator (partial contains? table))
+        
+        print-table
+        (fn [t]
+          (doseq [[key row] (sort t)]
+            (println key row))
+          (println))]
+
+    (doseq [gen steps] (print-table (current gen)))
+    (println "---")
+    (doseq [gen (traverse (sub-generator (last steps)))]
+      (print-table (current gen))
+      (doseq [[t equiv] (potential-children (current gen)
+                                 (expand-generators nr-gens)
+                                 (expand-relators rels)
+                                 max-cosets)
+              :when (contains? table t)]
+        (println "Equivalences:" (seq equiv))
+        (print-table t)))))
