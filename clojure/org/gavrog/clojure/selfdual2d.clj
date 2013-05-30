@@ -1,9 +1,9 @@
 (ns org.gavrog.clojure.selfdual2d
   (:use (org.gavrog.clojure
-          [delaney]
-          [delaney2d]
+          delaney
+          delaney2d
+          covers
           [generators :only [results]]
-          [dsets :only [dsets]]
           [branchings2d :only [branchings]]))
   (:import (org.gavrog.joss.tilings Tiling))
   (:gen-class))
@@ -28,18 +28,11 @@
         t (/ (double (- (. System (nanoTime)) start-time)) 1000000000.0)]
     (println (format-summary n t))))
 
-(defn- orbits-okay? [ds]
-  (>= 4 (count (for [i (indices ds)
-                     j (indices ds) :when (> j i)
-                     D (orbit-reps ds [i j])
-                     :when (< (or (r ds i j D) 3) (if (> j (inc i)) 2 3))]
-                 [i j D]))))
-
 ;; All self-dual, 2d Delaney sets that have non-negative curvature after
 ;; setting m to the minimal feasible value on each (i,j)-orbit when face and
 ;; edge degrees in a derived tiling are both to be at least three.
 (defn d-sets [max-size]
-  (for [dset (results (dsets 2 max-size) (comp orbits-okay? first))
+  (for [dset (covers (dsymbol "1:1,1,1:0,0") max-size)
         :when (and (self-dual? dset) (proto-euclidean? dset))]
     dset))
 
