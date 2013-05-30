@@ -639,7 +639,9 @@
 ;; === Reading a sequence of symbols from a file (very naive method for now)
 
 (defn read-symbols [filename]
-     (->> (-> filename slurp (.split "<")) (drop 1) (map dsymbol)))
+     (->> (-> filename slurp (.replaceAll "#.*\\n" "") (.split "<"))
+       (drop 1)
+       (map dsymbol)))
 
 ;; === Tests
 
