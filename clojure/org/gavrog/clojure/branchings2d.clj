@@ -22,9 +22,9 @@
 
 (defn branchings
   [ds & {:keys [face-sizes-at-least
-                   vertex-degrees-at-least
-                   curvature-at-least
-                   try-spins]
+                vertex-degrees-at-least
+                curvature-at-least
+                try-spins]
             :or {face-sizes-at-least 3
                  vertex-degrees-at-least 3
                  curvature-at-least 0

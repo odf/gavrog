@@ -65,3 +65,22 @@
                           (:children spec)
                           (list [(:root spec) nil 0])))
 
+(def empty-generator
+  (make-backtracker {:root nil, :extract (fn [x]), :children (fn [x])}))
+
+(defn singleton-generator [x]
+  (make-backtracker {:root x, :extract identity, :children (fn [x])}))
+
+(defn generator-chain [first-gen & constructors]
+  (make-backtracker
+    {:root [first-gen constructors]
+     :extract (fn [[current-gen constructors]]
+                (when (and current-gen (empty? constructors))
+                  (result current-gen)))
+     :children (fn [[current-gen constructors]]
+                 (when current-gen
+                   (concat (when (seq constructors)
+                             [[((first constructors) current-gen)
+                               (rest constructors)]])
+                           [[(step current-gen) constructors]])))}))
+
