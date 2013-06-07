@@ -345,7 +345,7 @@ public class SpaceGroup {
         int k = 0;
         for (int i = 0; i < d; ++i) {
             for (int j = i; j < d; ++j) {
-                final Vector v = (Vector) Vector.unit(m, k++).times(1.0);
+                final Vector v = Vector.unit(m, k++);
                 M.set(i, j, v);
                 M.set(j, i, v);
             }
@@ -377,7 +377,7 @@ public class SpaceGroup {
         Matrix.triangulate(A, null, false, true);
         
         // --- solve the system and return the solution
-        return LinearAlgebra.columnNullSpace(A, false).transposed();
+        return LinearAlgebra.columnNullSpace(A, true).transposed();
     }
 
     /**
