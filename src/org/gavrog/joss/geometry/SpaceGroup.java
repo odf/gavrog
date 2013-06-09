@@ -374,10 +374,15 @@ public class SpaceGroup {
         for (int i = 0; i < eqns.size(); ++i) {
             A.setRow(i, (Matrix) eqns.get(i));
         }
-        Matrix.triangulate(A, null, false, true);
+        Matrix.triangulate(A, null, false, false);
+        final int nrEqs = A.rank();
+        final Matrix B = A.getSubMatrix(0, 0, nrEqs, m);
+        System.err.println("B = " + B);
+        System.err.println("result: "
+        		+ LinearAlgebra.columnNullSpace(B, false).transposed());
         
         // --- solve the system and return the solution
-        return LinearAlgebra.columnNullSpace(A, true).transposed();
+        return LinearAlgebra.columnNullSpace(B, false).transposed();
     }
 
     /**
