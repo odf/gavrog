@@ -2,11 +2,11 @@
 
 Open bugs/issues:
 
+- unit cell parameter space computation can 'freeze' (via Greg McColm)
+
 =====================================================
 
 For the coming release:
-
-- Updated RCSR archive and add nets tsb, tsg, tsh as per email.
 
 =====================================================
 
