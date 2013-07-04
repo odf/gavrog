@@ -136,10 +136,19 @@ public class Morphism {
                     img2src.put(e2, e1);
                     final INode u1 = e1.target();
                     final INode u2 = e2.target();
-					img2src.put(u2, u1);
+                    
+                    if (img2src.containsKey(u2)) {
+                        if (!img2src.get(u2).equals(u1)) {
+                            injective = false;
+                        }
+                    } else {
+                        img2src.put(u2, u1);
+                    }
                     if (!src2img.containsKey(u1)) {
 						src2img.put(u1, u2);
 						queue.addLast(u1);
+					} else if (!src2img.get(u1).equals(u2)) {
+	                    throw new NoSuchMorphismException("no such morphism");					    
 					}
                 }
             }
