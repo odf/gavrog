@@ -29,7 +29,7 @@ end
 # --- create an empty archive
 archive = Archive.new "1.0"
 
-# --- add entries from RCSR and zeolite archive files
+# --- add entries from RCSR archive file
 archive_read archive, "org/gavrog/apps/systre/rcsr.arc"
 
 

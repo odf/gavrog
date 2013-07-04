@@ -14,7 +14,7 @@ import java.io.InputStreamReader
 import java.io.BufferedReader
 
 # ============================================================
-#   Prepare for RCSR and Zeolite Atlas lookup
+#   Prepare for RCSR lookup
 # ============================================================
 
 def archive_read(archive, path)
@@ -27,9 +27,8 @@ end
 # --- create an empty archive
 archive = Archive.new "1.0"
 
-# --- add entries from RCSR and zeolite archive files
+# --- add entries from RCSR archive file
 archive_read archive, "org/gavrog/apps/systre/rcsr.arc"
-archive_read archive, "org/gavrog/apps/systre/zeolites.arc"
 
 
 # ============================================================
