@@ -890,7 +890,7 @@ public class SystreCmdline extends EventSource {
             out.println("Structure #" + count + " - " + displayName + ".");
             out.println();
             
-            if (G.getWarnings().hasNext())
+            if (G != null && G.getWarnings().hasNext())
             {
             	for (Iterator<String> iter = G.getWarnings(); iter.hasNext();)
             		out.println("   (" + iter.next() + ")");
