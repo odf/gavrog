@@ -1,10 +1,12 @@
 (ns org.gavrog.clojure.test)
 
-(def G (first (iterator-seq (org.gavrog.joss.pgraphs.io.Net/iterator "x.cgd"))))
-(def C (.getGraph (first (.connectedComponents G))))
-(def M (-> C .minimalImage .canonical))
-(def nodes (iterator-seq (.nodes M)))
-(def I (org.gavrog.joss.geometry.Operator/identity 3))
+(def G
+  (-> (org.gavrog.joss.pgraphs.io.Net/iterator "x2d.pgr")
+    iterator-seq
+    first))
+
+(def nodes (iterator-seq (.nodes G)))
+(def I (org.gavrog.joss.geometry.Operator/identity (.getDimension G)))
 
 (def phi
   (org.gavrog.joss.pgraphs.basic.Morphism. (nth nodes 0) (nth nodes 1) I))

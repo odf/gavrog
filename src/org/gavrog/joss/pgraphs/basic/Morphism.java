@@ -19,6 +19,7 @@ package org.gavrog.joss.pgraphs.basic;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Real;
@@ -119,6 +120,10 @@ public class Morphism {
             final Map<Vector, IEdge> n1 = neighborVectors(w1);
             final Map<Vector, IEdge> n2 = neighborVectors(w2);
             
+//            System.out.println("n1 = " + n1);
+//            System.out.println("n2 = " + n2);
+//            System.out.println("");
+            
             for (final Vector dist: n1.keySet()) {
                 final IEdge e1 = n1.get(dist);
                 final IEdge e2 = n2.get(dist.times(M));
@@ -188,7 +193,7 @@ public class Morphism {
      */
     private Map<Vector, IEdge> neighborVectors(final INode v) {
         final PeriodicGraph G = (PeriodicGraph) v.owner();
-        final Map<Vector, IEdge> result = new HashMap<Vector, IEdge>();
+        final Map<Vector, IEdge> result = new TreeMap<Vector, IEdge>();
         
         for (final IEdge ee: v.incidences()) {
             final IEdge e = ee.oriented();
