@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Olaf Delgado-Friedrichs
+   Copyright 2013 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -74,6 +74,8 @@ public class PeriodicGraph extends UndirectedGraph {
     final protected static Tag CONVENTIONAL_CELL = new Tag();
     final protected static Tag TRANSLATIONAL_EQUIVALENCE_CLASSES = new Tag();
     final protected static Tag MINIMAL_IMAGE_MAP = new Tag();
+    final protected static Tag HAS_SECOND_ORDER_COLLISIONS = new Tag();
+
 
     private static final Tag TRANSLATIONAL_EQUIVALENCES = null;
 
@@ -1071,6 +1073,42 @@ public class PeriodicGraph extends UndirectedGraph {
             }
             this.cache.put(IS_LOCALLY_STABLE, true);
             return true;
+        }
+    }
+    
+    /**
+     * Checks if the graph has any pairs of vertices with identical positions
+     * in the barycentric placements for which the sets of neighbor positions
+     * are also identical.
+     */
+    public boolean hasSecondOrderCollisions() {
+        try {
+            return (Boolean) this.cache.get(HAS_SECOND_ORDER_COLLISIONS);
+        } catch (CacheMissException ex) {
+            final Map<INode, Point> positions = barycentricPlacement();
+            final Set<List<Point>> seen = new HashSet<List<Point>>();
+            for (final INode v: nodes()) {
+                final Point p = positions.get(v);
+                final Real x[] = new Real[p.getDimension()];
+                for (int i = 0; i < p.getDimension(); ++i) {
+                    x[i] = (Real) p.get(i).mod(Whole.ONE);
+                }
+                final Point p0 = new Point(x);
+                final LinkedList<Point> l = new LinkedList<Point>();
+                for (Vector t: Morphism.neighborVectors(v).keySet()) {
+                    l.add((Point) t.plus(p0));
+                }
+                Collections.sort(l);
+                l.addFirst(p0);
+                if (seen.contains(l)) {
+                    this.cache.put(HAS_SECOND_ORDER_COLLISIONS, true);
+                    return true;
+                } else {
+                    seen.add(l);
+                }
+            }
+            this.cache.put(HAS_SECOND_ORDER_COLLISIONS, false);
+            return false;
         }
     }
     

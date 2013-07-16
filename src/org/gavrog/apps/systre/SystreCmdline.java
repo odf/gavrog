@@ -223,6 +223,11 @@ public class SystreCmdline extends EventSource {
             final String msg = "Structure is non-crystallographic (a 'ladder')";
             throw new SystreException(SystreException.STRUCTURE, msg);
         }
+        if (G.hasSecondOrderCollisions()) {
+            final String msg = "Structure has second-order collisions."
+                    + " Systre does not currently support such structures.";
+            throw new SystreException(SystreException.STRUCTURE, msg);
+        }
         if (!G.isStable()) {
             final String msg = "Structure has collisions.";
             out.println(msg);

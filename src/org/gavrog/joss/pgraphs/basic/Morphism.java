@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Olaf Delgado-Friedrichs
+   Copyright 2013 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -191,7 +191,7 @@ public class Morphism {
      * @param v a node.
      * @return a map from distance vectors to edge representatives.
      */
-    private Map<Vector, IEdge> neighborVectors(final INode v) {
+    public static Map<Vector, IEdge> neighborVectors(final INode v) {
         final PeriodicGraph G = (PeriodicGraph) v.owner();
         final Map<Vector, IEdge> result = new TreeMap<Vector, IEdge>();
         
