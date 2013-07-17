@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Olaf Delgado-Friedrichs
+   Copyright 2013 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package org.gavrog.joss.pgraphs.basic;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.gavrog.jane.compounds.Matrix;
 import org.gavrog.jane.numbers.Real;
@@ -119,6 +120,10 @@ public class Morphism {
             final Map<Vector, IEdge> n1 = neighborVectors(w1);
             final Map<Vector, IEdge> n2 = neighborVectors(w2);
             
+//            System.out.println("n1 = " + n1);
+//            System.out.println("n2 = " + n2);
+//            System.out.println("");
+            
             for (final Vector dist: n1.keySet()) {
                 final IEdge e1 = n1.get(dist);
                 final IEdge e2 = n2.get(dist.times(M));
@@ -136,10 +141,19 @@ public class Morphism {
                     img2src.put(e2, e1);
                     final INode u1 = e1.target();
                     final INode u2 = e2.target();
-					img2src.put(u2, u1);
+                    
+                    if (img2src.containsKey(u2)) {
+                        if (!img2src.get(u2).equals(u1)) {
+                            injective = false;
+                        }
+                    } else {
+                        img2src.put(u2, u1);
+                    }
                     if (!src2img.containsKey(u1)) {
 						src2img.put(u1, u2);
 						queue.addLast(u1);
+					} else if (!src2img.get(u1).equals(u2)) {
+	                    throw new NoSuchMorphismException("no such morphism");					    
 					}
                 }
             }
@@ -177,9 +191,9 @@ public class Morphism {
      * @param v a node.
      * @return a map from distance vectors to edge representatives.
      */
-    private Map<Vector, IEdge> neighborVectors(final INode v) {
+    public static Map<Vector, IEdge> neighborVectors(final INode v) {
         final PeriodicGraph G = (PeriodicGraph) v.owner();
-        final Map<Vector, IEdge> result = new HashMap<Vector, IEdge>();
+        final Map<Vector, IEdge> result = new TreeMap<Vector, IEdge>();
         
         for (final IEdge ee: v.incidences()) {
             final IEdge e = ee.oriented();

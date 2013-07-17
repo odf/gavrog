@@ -223,6 +223,11 @@ public class SystreCmdline extends EventSource {
             final String msg = "Structure is non-crystallographic (a 'ladder')";
             throw new SystreException(SystreException.STRUCTURE, msg);
         }
+        if (G.hasSecondOrderCollisions()) {
+            final String msg = "Structure has second-order collisions."
+                    + " Systre does not currently support such structures.";
+            throw new SystreException(SystreException.STRUCTURE, msg);
+        }
         if (!G.isStable()) {
             final String msg = "Structure has collisions.";
             out.println(msg);
@@ -590,6 +595,11 @@ public class SystreCmdline extends EventSource {
             int sum = 1;
             boolean mismatch = false;
             for (int i = 0; i < 10; ++i) {
+                if (sum > 10000) {
+                    cs_complete = false;
+                    out.print(" ...");
+                    break;
+                }
             	final int x = cs.next();
                 out.print(" " + x);
                 out.flush();
@@ -599,10 +609,6 @@ public class SystreCmdline extends EventSource {
                 	if (x != y) {
                 		mismatch = true;
                 	}
-                }
-                if (sum > 10000) {
-                    cs_complete = false;
-                    break;
                 }
             }
             out.println();
@@ -890,7 +896,7 @@ public class SystreCmdline extends EventSource {
             out.println("Structure #" + count + " - " + displayName + ".");
             out.println();
             
-            if (G.getWarnings().hasNext())
+            if (G != null && G.getWarnings().hasNext())
             {
             	for (Iterator<String> iter = G.getWarnings(); iter.hasNext();)
             		out.println("   (" + iter.next() + ")");

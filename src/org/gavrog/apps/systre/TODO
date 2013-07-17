@@ -13,6 +13,8 @@ For the coming release:
 Planned/requested features:
 
 Gavrog 0.5.5:
+- If possible, implement a more general test for ladders.
+
 - Convert coordinates in parser error messages back to original unit cell.
 - Avoid negative coordinates in output. (?)
 - Issue warning if output has vertex collisions.

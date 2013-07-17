@@ -1,5 +1,7 @@
 Systre 1.1.8:
 
+2013-07-17: Incomplete coordination sequences are indicated by ellipses.
+2013-07-16: Systre rejects nets with second-order collisions.
 2013-05-22: RCSR archive is current as of today.
 2013-05-15: Fixed default unit cell parameters for trigonal groups in :R setting
 2013-05-15: Round off point coordinates in some net parser error messages
