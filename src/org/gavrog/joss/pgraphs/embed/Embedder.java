@@ -452,20 +452,15 @@ public class Embedder {
 	}
 
 	private void setGramMatrix(final Matrix gramMatrix, final double p[]) {
-		System.err.println("setGramMatrix: gramMatrix = " + gramMatrix);
-
         // Grab the appropriate parameter space.
         final Matrix S = this.gramSpace;
         final int n = S.numberOfRows();
-        System.err.println("S = " + S);
 
 		// Convert the given Gram matrix into a single row.
         final Matrix a = new Matrix(new double[][] { gramToArray(gramMatrix) });
-        System.err.println("a = " + a);
 
 		// Solve for parameter values.
 		final Matrix g = LinearAlgebra.solutionInRows(S, a, false);
-		System.err.println("g = " + g);
 		for (int i = 0; i < n; ++i) {
 			p[i] = ((Real) g.get(0, i)).doubleValue();
 		}
