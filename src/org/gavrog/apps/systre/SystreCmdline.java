@@ -595,6 +595,11 @@ public class SystreCmdline extends EventSource {
             int sum = 1;
             boolean mismatch = false;
             for (int i = 0; i < 10; ++i) {
+                if (sum > 10000) {
+                    cs_complete = false;
+                    out.print(" ...");
+                    break;
+                }
             	final int x = cs.next();
                 out.print(" " + x);
                 out.flush();
@@ -604,10 +609,6 @@ public class SystreCmdline extends EventSource {
                 	if (x != y) {
                 		mismatch = true;
                 	}
-                }
-                if (sum > 10000) {
-                    cs_complete = false;
-                    break;
                 }
             }
             out.println();

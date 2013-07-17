@@ -1,9 +1,9 @@
 (ns org.gavrog.clojure.test)
 
-(def G
-  (-> (org.gavrog.joss.pgraphs.io.Net/iterator "x2d.pgr")
-    iterator-seq
-    first))
+(def nets
+  (iterator-seq (org.gavrog.joss.pgraphs.io.Net/iterator "Fivecases.cgd")))
+
+(def G (first nets))
 
 (def nodes (iterator-seq (.nodes G)))
 (def I (org.gavrog.joss.geometry.Operator/identity (.getDimension G)))
