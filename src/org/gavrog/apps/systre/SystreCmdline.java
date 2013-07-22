@@ -595,7 +595,7 @@ public class SystreCmdline extends EventSource {
             int sum = 1;
             boolean mismatch = false;
             for (int i = 0; i < 10; ++i) {
-                if (sum > 10000) {
+                if (sum > 100000) {
                     cs_complete = false;
                     out.print(" ...");
                     break;
@@ -622,8 +622,10 @@ public class SystreCmdline extends EventSource {
         if (cs_complete) {
             double td10 = (double) cum / G.numberOfNodes();
             out.println("   TD10 = " + (int) (td10 + 0.5));
-            out.println();
+        } else {
+            out.println("   TD10 not computed.");
         }
+        out.println();
         out.flush();
     }
 

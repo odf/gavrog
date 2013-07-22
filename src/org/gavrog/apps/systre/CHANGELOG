@@ -1,7 +1,10 @@
 Systre 1.1.8:
 
+2013-07-22: Added message "TD10 not computed" when CS computation incomplete.
+2013-07-22: Increased threshold for CS computation from 10,000 to 100,000.
 2013-07-17: Incomplete coordination sequences are indicated by ellipses.
 2013-07-16: Systre rejects nets with second-order collisions.
+2013-07-04: Corrected automorphism detection for nets with collisions.
 2013-05-22: RCSR archive is current as of today.
 2013-05-15: Fixed default unit cell parameters for trigonal groups in :R setting
 2013-05-15: Round off point coordinates in some net parser error messages
