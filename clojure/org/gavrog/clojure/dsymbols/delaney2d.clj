@@ -1,5 +1,5 @@
-(ns org.gavrog.clojure.delaney2d
-  (:use (org.gavrog.clojure delaney covers)))
+(ns org.gavrog.clojure.dsymbols.delaney2d
+  (:use (org.gavrog.clojure.dsymbols delaney covers)))
 
 (defn- index-pairs [ds]
   (let [[i j k] (indices ds)]

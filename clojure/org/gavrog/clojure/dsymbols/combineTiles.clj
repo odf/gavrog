@@ -1,12 +1,12 @@
-(ns org.gavrog.clojure.combineTiles
+(ns org.gavrog.clojure.dsymbols.combineTiles
   (:use (clojure
           [set :only [difference union]])
         (org.gavrog.clojure.common
           [util :only [empty-queue]]
-          [generators :only [make-backtracker results]])
-        (org.gavrog.clojure
-          delaney
-          partition)))
+          [generators :only [make-backtracker results]]
+          partition)
+        (org.gavrog.clojure.dsymbols
+          delaney)))
 
 (defn- components-with-multiplicities [ds]
   (let [idcs (indices ds)]

@@ -1,8 +1,9 @@
 (ns org.gavrog.clojure.selfdual2d
-  (:use (org.gavrog.clojure
+  (:use (org.gavrog.clojure.dsymbols
           delaney
           delaney2d
-          covers
+          covers)
+        (org.gavrog.clojure.common
           [generators :only [results]]
           [branchings2d :only [branchings]]))
   (:import (org.gavrog.joss.tilings Tiling))

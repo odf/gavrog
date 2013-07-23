@@ -1,9 +1,10 @@
-(ns org.gavrog.clojure.covers
-  (:use (org.gavrog.clojure
-         delaney
-         fundamental
-         cosets
-         [generators :only [results]])))
+(ns org.gavrog.clojure.dsymbols.covers
+  (:use (org.gavrog.clojure.dsymbols
+          delaney
+          fundamental)
+        (org.gavrog.clojure.common
+          cosets
+          [generators :only [results]])))
 
 (defn cover-for-table [ds table edge-to-word]
   (cover ds (count table) (fn [k i D]

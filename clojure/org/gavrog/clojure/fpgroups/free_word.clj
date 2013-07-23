@@ -1,4 +1,4 @@
-(ns org.gavrog.clojure.free-word)
+(ns org.gavrog.clojure.fpgroups.free-word)
 
 ;; Operations for free words over the natural numbers (positive integers).
 ;; Inverses are represented as negative numbers.

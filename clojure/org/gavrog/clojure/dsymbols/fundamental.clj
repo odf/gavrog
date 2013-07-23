@@ -1,6 +1,7 @@
-(ns org.gavrog.clojure.fundamental
-  (:use (org.gavrog.clojure
-          delaney
+(ns org.gavrog.clojure.dsymbols.fundamental
+  (:use (org.gavrog.clojure.dsymbols
+          delaney)
+        (org.gavrog.clojure.fpgroups
           free-word)
         (org.gavrog.clojure.common
           util)))

@@ -1,6 +1,7 @@
-(ns org.gavrog.clojure.branchings2d
-  (:use (org.gavrog.clojure
-          [generators :only [make-backtracker results]]
+(ns org.gavrog.clojure.dsymbols.branchings2d
+  (:use (org.gavrog.clojure.common
+          [generators :only [make-backtracker results]])
+        (org.gavrog.clojure.dsymbols
           [delaney]
           [delaney2d])))
 

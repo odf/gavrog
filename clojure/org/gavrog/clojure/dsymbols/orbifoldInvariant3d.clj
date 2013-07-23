@@ -1,9 +1,11 @@
-(ns org.gavrog.clojure.orbifoldInvariant3d
-  (:use (org.gavrog.clojure
+(ns org.gavrog.clojure.dsymbols.orbifoldInvariant3d
+  (:use (org.gavrog.clojure.dsymbols
           delaney
           delaney2d
-          partition
-          fundamental
+          fundamental)
+        (org.gavrog.clojure.common
+          partition)
+        (org.gavrog.clojure.fpgroups
           cosets)))
 
 (defn- orbifold-type [ds idcs D]

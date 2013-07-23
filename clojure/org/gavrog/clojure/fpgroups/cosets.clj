@@ -1,10 +1,10 @@
-(ns org.gavrog.clojure.cosets
-  (:use (org.gavrog.clojure
-          arithmetic
-          free-word
-          partition)
+(ns org.gavrog.clojure.fpgroups.cosets
+  (:use (org.gavrog.clojure.fpgroups
+          free-word)
         (org.gavrog.clojure.common
+          arithmetic
           util
+          partition
           generators)))
 
 (defn- merge-rows [table equiv q a b]

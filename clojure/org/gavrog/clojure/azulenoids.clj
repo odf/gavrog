@@ -1,5 +1,5 @@
 (ns org.gavrog.clojure.azulenoids
-  (:use (org.gavrog.clojure
+  (:use (org.gavrog.clojure.dsymbols
           [delaney]
           [delaney2d]
           [branchings2d :only [branchings]]

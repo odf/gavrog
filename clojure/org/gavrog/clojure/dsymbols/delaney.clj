@@ -1,4 +1,4 @@
-(ns org.gavrog.clojure.delaney
+(ns org.gavrog.clojure.dsymbols.delaney
   (:require (clojure [string :as s]))
   (:use (clojure test)
         (org.gavrog.clojure.common partition util))

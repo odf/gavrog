@@ -1,6 +1,6 @@
-(ns org.gavrog.clojure.simplify3d
+(ns org.gavrog.clojure.dsymbols.simplify3d
   (:use (clojure set)
-        (org.gavrog.clojure delaney fundamental)
+        (org.gavrog.clojure.dsymbols delaney fundamental)
         (org.gavrog.clojure.common util)))
 
 ;;TODO Code assumes input symbols are orientable and trivially branched.
