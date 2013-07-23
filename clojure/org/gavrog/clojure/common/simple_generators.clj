@@ -1,5 +1,6 @@
-(ns org.gavrog.clojure.simple-generators
-  (:use (org.gavrog.clojure [generators :only [make-backtracker results]])))
+(ns org.gavrog.clojure.common.simple-generators
+  (:use (org.gavrog.clojure.common
+          [generators :only [make-backtracker results]])))
 
 (defn permutations [n]
   (make-backtracker 

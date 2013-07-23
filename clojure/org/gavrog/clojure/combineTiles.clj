@@ -1,9 +1,10 @@
 (ns org.gavrog.clojure.combineTiles
   (:use (clojure
           [set :only [difference union]])
-        (org.gavrog.clojure
+        (org.gavrog.clojure.common
           [util :only [empty-queue]]
-          [generators :only [make-backtracker results]]
+          [generators :only [make-backtracker results]])
+        (org.gavrog.clojure
           delaney
           partition)))
 

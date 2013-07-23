@@ -1,4 +1,4 @@
-(ns org.gavrog.clojure.generators)
+(ns org.gavrog.clojure.common.generators)
 
 (defprotocol SubstepGenerator
   (current [_])

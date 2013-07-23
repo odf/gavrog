@@ -1,4 +1,4 @@
-(ns org.gavrog.clojure.util)
+(ns org.gavrog.clojure.common.util)
 
 (defn abs [n] (if (neg? n) (- n) n))
 

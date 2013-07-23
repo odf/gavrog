@@ -1,14 +1,15 @@
 (ns org.gavrog.clojure.delaney3d
   (:use (org.gavrog.clojure
-          util
           delaney
           fundamental
           cosets
           covers
           simplify3d
           orbifoldInvariant3d
-          euclideanInvariants
-          [generators :only [results]])))
+          euclideanInvariants)
+        (org.gavrog.clojure.common
+          util
+          [generators :only [results]]))
 
 (def ^{:private true} core-type
   {1 :z1, 2 :z2, 3 :z3, 6 :s3, 8 :d4, 12 :a4, 24 :s4})

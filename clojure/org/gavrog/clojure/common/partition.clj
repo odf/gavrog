@@ -1,4 +1,4 @@
-(ns org.gavrog.clojure.partition
+(ns org.gavrog.clojure.common.partition
   (:use (clojure test)))
 
 (defprotocol IPartition

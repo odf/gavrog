@@ -1,8 +1,7 @@
 (ns org.gavrog.clojure.delaney
   (:require (clojure [string :as s]))
   (:use (clojure test)
-        (org.gavrog.clojure partition)
-        (org.gavrog.clojure util))
+        (org.gavrog.clojure.common partition util))
   (:import (org.gavrog.joss.dsyms.basic DelaneySymbol)
            (java.io Writer)))
 

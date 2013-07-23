@@ -1,7 +1,8 @@
 (ns org.gavrog.clojure.fundamental
   (:use (org.gavrog.clojure
           delaney
-          free-word
+          free-word)
+        (org.gavrog.clojure.common
           util)))
 
 (defn- other [a b c]

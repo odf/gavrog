@@ -2,7 +2,8 @@
   (:use (org.gavrog.clojure
           arithmetic
           free-word
-          partition
+          partition)
+        (org.gavrog.clojure.common
           util
           generators)))
 

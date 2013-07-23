@@ -1,11 +1,12 @@
 (ns org.gavrog.clojure.azulenoids
   (:use (org.gavrog.clojure
-          [util :only [iterate-cycle]]
           [delaney]
           [delaney2d]
-          [generators :only [results]]
           [branchings2d :only [branchings]]
-          [combineTiles :only [combine-tiles]]))
+          [combineTiles :only [combine-tiles]])
+        (org.gavrog.clojure.common
+          [util :only [iterate-cycle]]
+          [generators :only [results]]))
   (:gen-class))
 
 ;; Azulenoid-specific functions

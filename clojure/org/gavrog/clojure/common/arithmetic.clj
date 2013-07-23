@@ -1,5 +1,5 @@
-(ns org.gavrog.clojure.arithmetic
-  (:use (org.gavrog.clojure util)))
+(ns org.gavrog.clojure.common.arithmetic
+  (:use (org.gavrog.clojure.common util)))
 
 (defn divides? [a b]
   (and (not (zero? a)) (zero? (mod b a))))
