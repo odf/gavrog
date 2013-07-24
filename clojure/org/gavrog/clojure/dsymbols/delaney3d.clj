@@ -7,9 +7,10 @@
           euclideanInvariants)
         (org.gavrog.clojure.common
           util
-          cosets
           fundamental
-          [generators :only [results]])))
+          [generators :only [results]])
+        (org.gavrog.clojure.fpgroups
+          cosets)))
 
 (def ^{:private true} core-type
   {1 :z1, 2 :z2, 3 :z3, 6 :s3, 8 :d4, 12 :a4, 24 :s4})

@@ -2,10 +2,10 @@
   (:use (org.gavrog.clojure.dsymbols
           delaney
           delaney2d
-          covers)
+          covers
+          [branchings2d :only [branchings]])
         (org.gavrog.clojure.common
-          [generators :only [results]]
-          [branchings2d :only [branchings]]))
+          [generators :only [results]]))
   (:import (org.gavrog.joss.tilings Tiling))
   (:gen-class))
 

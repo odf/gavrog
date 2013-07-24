@@ -3,8 +3,9 @@
           delaney
           fundamental)
         (org.gavrog.clojure.common
-          cosets
-          [generators :only [results]])))
+          [generators :only [results]])
+        (org.gavrog.clojure.fpgroups
+          cosets)))
 
 (defn cover-for-table [ds table edge-to-word]
   (cover ds (count table) (fn [k i D]
