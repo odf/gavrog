@@ -6,14 +6,17 @@
 (defn nets [filename]
   (iterator-seq (Net/iterator filename)))
 
+(defn identity-matrix [net]
+  (Operator/identity (.getDimension net)))
+
+(defn barycentric-positions [net]
+  (into {} (.barycentricPlacement net)))
+
 (defn cover-node [net node]
   (PeriodicGraph$CoverNode. net node))
 
 (defn cover-node-position [pos node]
   (.plus (pos (.getOrbitNode node)) (.getShift node)))
-
-(defn identity-matrix [net]
-  (Operator/identity (.getDimension net)))
 
 (defn adjacent [node]
   (map #(.target %) (iterator-seq (.incidences node))))
@@ -26,14 +29,7 @@
     (map second (iterate next-shell-pair [#{node} (set (adjacent node))]))
     #{node}))
 
-(defn shell-positions [net node]
-  (let [pos (into {} (.barycentricPlacement net))]
-    (map (partial map (partial cover-node-position pos))
-         (shells net (cover-node net node)))))
-
-(defn node-signatures [net]
-  (let [pos (.barycentricPlacement net)
-        pos* (zipmap (keys pos) (map #(.modZ %) (vals pos)))
-        shifts (zipmap (keys pos) (map #(.minus (pos %) (pos* %)) (keys pos)))
-        by-pos (group-by pos* (.nodes net))]
-    by-pos))
+(defn shell-positions [net pos node]
+  (let [shift (.minus (pos node) (.modZ (pos node)))
+        pos* (fn [v] (.minus (cover-node-position pos v) shift))]
+    (map (comp sort (partial map pos*)) (shells net (cover-node net node)))))
