@@ -12,6 +12,22 @@
 (defn barycentric-positions [net]
   (into {} (.barycentricPlacement net)))
 
+(defn distances [net]
+  "Pair-wise distances between vertices using the Floyd-Warshall algorithm"
+  (let [nodes (iterator-seq (.nodes net))
+        edges (iterator-seq (.edges net))
+        n (count nodes)
+        dist (into {} (for [v nodes, w nodes] [[v w] (if (= v w) 0 n)]))
+        dist (into dist (for [e edges, e* [e (.reverse e)]]
+                          [[(.source e*) (.target e*)] 1]))]
+    (reduce (fn [d [u v w]]
+              (assoc d [v w] (min (d [v w]) (+ (d [v u]) (d [u w])))))
+            dist
+            (for [u nodes, v nodes, w nodes] [u v w]))))
+
+(defn diameter [net]
+  (apply max (vals (distances net))))
+
 (defn cover-node [net node]
   (PeriodicGraph$CoverNode. net node))
 
