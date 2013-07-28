@@ -49,3 +49,18 @@
   (let [shift (.minus (pos node) (.modZ (pos node)))
         pos* (fn [v] (.minus (cover-node-position pos v) shift))]
     (map (comp sort (partial map pos*)) (shells net (cover-node net node)))))
+
+(defn classify [items2seqs]
+  (loop [done []
+         todo [[[] (seq items2seqs)]]]
+    (if (empty? todo)
+      done
+      (let [finished (fn [key group] (or (nil? (last key)) (= 1 (count group))))
+            refined (group-by first (for [[key group] todo, [item s] group]
+                                      [(conj key (first s)) [item (rest s)]]))
+            done (into done (for [[key group] refined
+                                  :when (finished key group)]
+                              [key (map (comp first second) group)]))
+            todo (for [[key group] refined :when (not (finished key group))]
+                   [key (map second group)])]
+        (recur done todo)))))
