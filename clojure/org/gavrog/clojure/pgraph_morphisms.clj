@@ -65,3 +65,10 @@
                        (if (nil? key)
                          [0 k cl]
                          [(- (count cl)) (conj k key) cl]))))))))
+
+(defn node-signatures [net]
+  (let [pos (barycentric-positions net)
+        nodes (iterator-seq (.nodes net))
+        dia (diameter net)
+        shells (for [v nodes] (take dia (shell-positions net pos v)))]
+    (classify-recursively (zipmap nodes shells))))
