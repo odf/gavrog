@@ -70,5 +70,6 @@
   (let [pos (barycentric-positions net)
         nodes (iterator-seq (.nodes net))
         dia (diameter net)
-        shells (for [v nodes] (take dia (shell-positions net pos v)))]
+        shells (for [v nodes]
+                 (vec (map vec (take (inc dia) (shell-positions net pos v)))))]
     (classify-recursively (zipmap nodes shells))))
