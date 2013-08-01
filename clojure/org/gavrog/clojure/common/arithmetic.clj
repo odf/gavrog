@@ -24,6 +24,14 @@
     0
     (abs (* (quot m (gcd m n)) n))))
 
+(defn abelian-factors [xs]
+  (when (seq xs)
+    (let [tmp (reductions (fn [[a _] b] [(gcd a b) (lcm a b)])
+                          [(first xs)]
+                          (rest xs))]
+      (cons (first (last tmp))
+            (abelian-factors (map second (rest tmp)))))))
+
 (defn- combine-rows [M cols i1 i2 f11 f12 f21 f22]
   (let [stuff! (partial reduce conj!)]
     (-> (transient M)

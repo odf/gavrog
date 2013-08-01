@@ -232,14 +232,6 @@
                  [g n] (relator-as-row nr-gens (nth relators k))]
              [[k g] n])))
 
-(defn- abelian-factors [xs]
-  (when (seq xs)
-    (let [tmp (reductions (fn [[a _] b] [(gcd a b) (lcm a b)])
-                          [(first xs)]
-                          (rest xs))]
-      (cons (first (last tmp))
-            (abelian-factors (map second (rest tmp)))))))
-
 (defn abelian-invariants [nr-gens relators]
   (let [rows (range (count relators))
         cols (range 1 (inc nr-gens))
