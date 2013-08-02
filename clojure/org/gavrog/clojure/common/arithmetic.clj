@@ -54,14 +54,7 @@
   (let [i0 (first rows), j0 (first cols)]
     (reduce (fn [M i]
               (let [a (M [i0 j0]), b (M [i j0])]
-                (cond (divides? a b)
-                      (combine-rows M cols i0 i 1 0 (- (quot b a)) 1)
-                      
-                      (not (zero? b))
-                      (apply combine-rows M cols i0 i (gcdex a b))
-                      
-                      :else
-                      M)))
+                (if (zero? b) M (apply combine-rows M cols i0 i (gcdex a b)))))
             M
             (rest rows))))
 
@@ -70,14 +63,9 @@
     (loop [M M, js (rest cols)]
       (if-let [j (first js)]
         (let [a (M [i0 j0]), b (M [i0 j])]
-          (cond (divides? a b)
-                (recur (assoc M [i0 j] 0) (rest js))
-                      
-                (not (zero? b))
-                [(apply combine-cols M rows j0 j (gcdex a b)) true]
-                      
-                :else
-                (recur M (rest js))))
+          (if (divides? a b)
+            (recur (assoc M [i0 j] 0) (rest js))
+            [(apply combine-cols M rows j0 j (gcdex a b)) true]))
         [M false]))))
 
 (defn- eliminate [M rows cols]
