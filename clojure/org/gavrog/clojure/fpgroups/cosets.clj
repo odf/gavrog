@@ -235,7 +235,7 @@
 (defn abelian-invariants [nr-gens relators]
   (let [rows (range (count relators))
         cols (range 1 (inc nr-gens))
-        D (diagonalized (relator-matrix nr-gens relators) rows cols)
+        D (diagonalized (relator-matrix nr-gens relators) rows cols false)
         indices (map vector rows cols)
         d (map (partial get D) indices)]
     (concat (repeat (- nr-gens (count d)) 0)
