@@ -2,12 +2,12 @@
   (:use (org.gavrog.clojure.dsymbols
           delaney
           covers
+          fundamental
           simplify3d
           orbifoldInvariant3d
           euclideanInvariants)
         (org.gavrog.clojure.common
           util
-          fundamental
           [generators :only [results]])
         (org.gavrog.clojure.fpgroups
           cosets)))
