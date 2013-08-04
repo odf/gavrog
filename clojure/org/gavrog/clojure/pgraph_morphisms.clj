@@ -1,7 +1,10 @@
 (ns org.gavrog.clojure.pgraph-morphisms
-  (:import (org.gavrog.joss.pgraphs.basic PeriodicGraph$CoverNode)
+  (:import (org.gavrog.joss.pgraphs.basic
+             PeriodicGraph$CoverNode Morphism Morphism$NoSuchMorphismException)
            (org.gavrog.joss.pgraphs.io Net)
-           (org.gavrog.joss.geometry Operator Vector)))
+           (org.gavrog.joss.geometry Operator Vector)
+           (org.gavrog.jane.compounds Matrix)
+           (org.gavrog.jane.numbers Whole)))
 
 (defn nets [filename]
   (iterator-seq (Net/iterator filename)))
@@ -73,3 +76,26 @@
         shells (for [v nodes]
                  (vec (map vec (take (inc dia) (shell-positions net pos v)))))]
     (classify-recursively (zipmap nodes shells))))
+
+(defn extend-matrix [M]
+  (let [n (.numberOfRows M)
+        m (.numberOfColumns M)
+        M* (Matrix/zero (inc n) (inc m))]
+    (.setSubMatrix M* 0 0 M)
+    (.set M* n m (Whole/ONE))
+    M*))
+
+(defn morphism [v w M]
+  (if (.isUnimodularIntegerMatrix M)
+    (try
+      (Morphism. v w (Operator. (extend-matrix M)))
+      (catch Morphism$NoSuchMorphismException ex nil))))
+
+(defn symmetries [net]
+  (let [bases (iterator-seq (.getCharacteristicBases net))
+        b (first bases)
+        start #(.source (.get % 0))
+        mat #(.differenceMatrix net %)
+        iso #(morphism (start b) (start %) (Matrix/solve (mat b) (mat %)))
+        generators (->> (rest bases) (map iso) (filter identity))]
+    generators))
