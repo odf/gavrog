@@ -1622,7 +1622,7 @@ public class PeriodicGraph extends UndirectedGraph {
             M.set(d, d, Whole.ONE);
             M.setSubMatrix(d, 0, Matrix.zero(1, d));
             M.setSubMatrix(0, d, Matrix.zero(d, 1));
-            if (isUnimodularIntegerMatrix(M)) {
+            if (M.isUnimodularIntegerMatrix()) {
                 final Morphism iso;
                 try {
                     iso = new Morphism(v0, v, new Operator(M));
@@ -1696,7 +1696,7 @@ public class PeriodicGraph extends UndirectedGraph {
      * @param edges a list of edges.
      * @return a matrix composed of difference vectors
      */
-    private Matrix differenceMatrix(final List<IEdge> edges) {
+    public Matrix differenceMatrix(final List<IEdge> edges) {
         final int n = edges.size();
         
         final Matrix M = new Matrix(n, getDimension());
@@ -1704,24 +1704,6 @@ public class PeriodicGraph extends UndirectedGraph {
             M.setRow(i, differenceVector(edges.get(i)).getCoordinates());
         }
         return M;
-    }
-    
-    /**
-     * Checks if all entries of the given matrix are whole numbers and the determinant is
-     * one.
-     * 
-     * @param M a matrix
-     * @return true if M has only integer entries
-     */
-    private boolean isUnimodularIntegerMatrix(final Matrix M) {
-        for (int i = 0; i < M.numberOfRows(); ++i) {
-            for (int j = 0; j < M.numberOfColumns(); ++j) {
-                if (!(M.get(i, j) instanceof Whole)) {
-                    return false;
-                }
-            }
-        }
-        return M.determinant().norm().isOne();
     }
     
     /**

@@ -1,5 +1,5 @@
 /*
-   Copyright 2005 Olaf Delgado-Friedrichs
+   Copyright 2013 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -444,6 +444,25 @@ public class Matrix extends ArithmeticBase {
         res.makeImmutable();
         return res;
     }
+    
+    /**
+     * Checks if all entries of the given matrix are whole numbers and the determinant is
+     * one.
+     * 
+     * @param M a matrix
+     * @return true if M has only integer entries
+     */
+    public boolean isUnimodularIntegerMatrix() {
+        for (int i = 0; i < numberOfRows(); ++i) {
+            for (int j = 0; j < numberOfColumns(); ++j) {
+                if (!(get(i, j) instanceof Whole)) {
+                    return false;
+                }
+            }
+        }
+        return determinant().norm().isOne();
+    }
+    
 
     /**
      * Converts a matrix into upper triangular form using row operations.
