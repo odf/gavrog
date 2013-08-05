@@ -48,3 +48,21 @@
 
 (defn multi-map [pairs]
   (reduce (fn [m [k v]] (multi-assoc m k v)) {} pairs))
+
+(defn traversal [adj seen todo push head tail]
+  "Generic traversal function"
+  (when-let [node (head todo)]
+    (let [neighbors (adj node)
+          todo (reduce push (tail todo) (filter (complement seen) neighbors))
+          seen (into (conj seen node) neighbors)]
+      (lazy-seq (cons node (traversal adj seen todo push head tail))))))
+
+(defn dfs [adj & sources]
+  "Performs a lazy depth first traversal of the directed graph determined by
+  the list 'sources' of source nodes and the adjacency function 'adj'."
+  (traversal adj #{} (into '() sources) conj first rest))
+
+(defn bfs [adj & sources]
+  "Performs a lazy breadth first traversal of the directed graph determined by
+  the list 'sources' of source nodes and the adjacency function 'adj'."
+  (traversal adj #{} (into empty-queue sources) conj first pop))

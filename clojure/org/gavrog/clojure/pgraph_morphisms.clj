@@ -1,4 +1,5 @@
 (ns org.gavrog.clojure.pgraph-morphisms
+  (:use (org.gavrog.clojure.common [util :only [bfs]]))
   (:import (org.gavrog.joss.pgraphs.basic
              PeriodicGraph$CoverNode Morphism Morphism$NoSuchMorphismException)
            (org.gavrog.joss.pgraphs.io Net)
