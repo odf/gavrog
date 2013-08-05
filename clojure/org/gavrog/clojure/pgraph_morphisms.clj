@@ -92,10 +92,9 @@
       (catch Morphism$NoSuchMorphismException ex nil))))
 
 (defn symmetries [net]
-  (let [bases (iterator-seq (.getCharacteristicBases net))
+  (let [bases (iterator-seq (.iterator (.characteristicBases net)))
         b (first bases)
         start #(.source (.get % 0))
         mat #(.differenceMatrix net %)
-        iso #(morphism (start b) (start %) (Matrix/solve (mat b) (mat %)))
-        generators (->> (rest bases) (map iso) (filter identity))]
-    generators))
+        iso #(morphism (start b) (start %) (Matrix/solve (mat b) (mat %)))]
+    (->> bases (map iso) (filter identity))))
