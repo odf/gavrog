@@ -78,6 +78,12 @@
                  (vec (map vec (take (inc dia) (shell-positions net pos v)))))]
     (classify-recursively (zipmap nodes shells))))
 
+(defn map-vv [f vv]
+  (into (vector) (map #(into (vector) (map f %)) vv)))
+
+(defn map-sig [M sig]
+  (map-vv #(.times % M) sig))
+
 (defn extend-matrix [M]
   (let [n (.numberOfRows M)
         m (.numberOfColumns M)
