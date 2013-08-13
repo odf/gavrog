@@ -1,5 +1,5 @@
 (ns org.gavrog.clojure.pgraph-morphisms
-  (:use (org.gavrog.clojure.common [util :only [bfs]]))
+  (:use (org.gavrog.clojure.common [util :only [empty-queue]]))
   (:import (org.gavrog.joss.pgraphs.basic
              PeriodicGraph$CoverNode Morphism Morphism$NoSuchMorphismException)
            (org.gavrog.joss.pgraphs.io Net)
@@ -101,12 +101,27 @@
   (when (.isUnimodularIntegerMatrix M)
     (let [sigs (node-signatures net)
           d (.minus (first (first (sigs w))) (first (first (sigs v))))
-          op (.times (Operator. (extend-matrix M)) (Operator. d))]
-      (if (= (map-sig op (sigs v)) (sigs w))
-        (println "@@" v w op " okay! @@"))
-      (try
-        (Morphism. v w op)
-        (catch Morphism$NoSuchMorphismException ex nil)))))
+          op (.times (Operator. (extend-matrix M)) (Operator. d))
+          check-sigs (fn [v w] (= (map-sig op (sigs v)) (sigs w)))]
+      (loop [src2img {}
+             q (into empty-queue [v w])]
+        (cond
+          (empty? q)
+          src2img
+          
+          (= w (src2img v))
+          (recur src2img (pop q))
+          
+          (not (and (check-sigs v w) (nil? (src2img v))))
+          nil
+          
+          :else
+          (let [src2img (assoc src2img v w)]))))))
+
+(comment "previous version using Java:"
+  (try
+    (Morphism. v w op)
+    (catch Morphism$NoSuchMorphismException ex nil)))
 
 (defn symmetries [net]
   (let [bases (iterator-seq (.iterator (.characteristicBases net)))
