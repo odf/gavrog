@@ -106,23 +106,34 @@
           op (.times (Operator. (extend-matrix M)) (Operator. d))
           check-sigs (fn [v w] (= (map-sig op (sigs v)) (sigs w)))]
       (loop [src2img {}
-             q (into empty-queue [v w])]
+             q (conj empty-queue [v w])]
         (let [[a b] (first q)]
           (cond
             (empty? q)
             src2img
-            
+
             (= b (src2img a))
             (recur src2img (pop q))
             
-            (not (and (check-sigs a b) (nil? (src2img a))))
+            (not (nil? (src2img a)))
+            nil
+
+            (instance? IEdge a)
+            (recur (assoc src2img a b) (conj (pop q) [(.target a) (.target b)]))
+            
+            (not (check-sigs a b))
             nil
             
-            (instance? INode a)
-            (let [src2img (assoc src2img a b)
-                  nv (Morphism/neighborVectors a)
+            :else
+            (let [nv (Morphism/neighborVectors a)
                   nw (Morphism/neighborVectors b)]
-              )))))))
+              (recur (assoc src2img a b)
+                     (into (pop q)
+                           (for [d (keys nv)
+                                 :let [e1 (.get nv d)
+                                       e2 (.get nw (.times d op))]
+                                 :when e2]
+                             [e1 e2]))))))))))
 
 (comment "previous version using Java:"
   (try
