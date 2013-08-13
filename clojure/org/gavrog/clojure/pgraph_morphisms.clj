@@ -1,6 +1,8 @@
 (ns org.gavrog.clojure.pgraph-morphisms
   (:use (org.gavrog.clojure.common [util :only [empty-queue]]))
   (:import (org.gavrog.joss.pgraphs.basic
+             INode
+             IEdge
              PeriodicGraph$CoverNode Morphism Morphism$NoSuchMorphismException)
            (org.gavrog.joss.pgraphs.io Net)
            (org.gavrog.joss.geometry Operator Vector)
@@ -105,18 +107,22 @@
           check-sigs (fn [v w] (= (map-sig op (sigs v)) (sigs w)))]
       (loop [src2img {}
              q (into empty-queue [v w])]
-        (cond
-          (empty? q)
-          src2img
-          
-          (= w (src2img v))
-          (recur src2img (pop q))
-          
-          (not (and (check-sigs v w) (nil? (src2img v))))
-          nil
-          
-          :else
-          (let [src2img (assoc src2img v w)]))))))
+        (let [[a b] (first q)]
+          (cond
+            (empty? q)
+            src2img
+            
+            (= b (src2img a))
+            (recur src2img (pop q))
+            
+            (not (and (check-sigs a b) (nil? (src2img a))))
+            nil
+            
+            (instance? INode a)
+            (let [src2img (assoc src2img a b)
+                  nv (Morphism/neighborVectors a)
+                  nw (Morphism/neighborVectors b)]
+              )))))))
 
 (comment "previous version using Java:"
   (try
