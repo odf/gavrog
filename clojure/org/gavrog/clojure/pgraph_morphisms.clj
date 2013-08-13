@@ -70,13 +70,18 @@
                          [0 k cl]
                          [(- (count cl)) (conj k key) cl]))))))))
 
-(defn node-signatures [net]
+(defn node-classification [net]
   (let [pos (barycentric-positions net)
         nodes (iterator-seq (.nodes net))
         dia (diameter net)
         shells (for [v nodes]
                  (vec (map vec (take (inc dia) (shell-positions net pos v)))))]
     (classify-recursively (zipmap nodes shells))))
+
+(defn node-signatures [net]
+  (let [nclass (node-classification net)]
+    (when (every? (fn [xs] (== 1 (count xs))) (vals nclass))
+      (into {} (for [[key vals] nclass] [(first vals) key])))))
 
 (defn map-vv [f vv]
   (into (vector) (map #(into (vector) (map f %)) vv)))
@@ -92,16 +97,21 @@
     (.set M* n m (Whole/ONE))
     M*))
 
-(defn morphism [v w M]
-  (if (.isUnimodularIntegerMatrix M)
-    (try
-      (Morphism. v w (Operator. (extend-matrix M)))
-      (catch Morphism$NoSuchMorphismException ex nil))))
+(defn morphism [net v w M]
+  (when (.isUnimodularIntegerMatrix M)
+    (let [sigs (node-signatures net)
+          d (.minus (first (first (sigs w))) (first (first (sigs v))))
+          op (.times (Operator. (extend-matrix M)) (Operator. d))]
+      (if (= (map-sig op (sigs v)) (sigs w))
+        (println "@@" v w op " okay! @@"))
+      (try
+        (Morphism. v w op)
+        (catch Morphism$NoSuchMorphismException ex nil)))))
 
 (defn symmetries [net]
   (let [bases (iterator-seq (.iterator (.characteristicBases net)))
         b (first bases)
         start #(.source (.get % 0))
         mat #(.differenceMatrix net %)
-        iso #(morphism (start b) (start %) (Matrix/solve (mat b) (mat %)))]
+        iso #(morphism net (start b) (start %) (Matrix/solve (mat b) (mat %)))]
     (->> bases (map iso) (filter identity))))
