@@ -85,11 +85,10 @@
     (when (every? (fn [xs] (== 1 (count xs))) (vals nclass))
       (into {} (for [[key vals] nclass] [(first vals) key])))))
 
-(defn map-vv [f vv]
-  (into (vector) (map #(into (vector) (map f %)) vv)))
-
 (defn map-sig [M sig]
-  (map-vv #(.times % M) sig))
+  (into (vector)
+        (map (fn [s] (->> s (map #(.times % M)) sort (into (vector))))
+             sig)))
 
 (defn extend-matrix [M]
   (let [n (.numberOfRows M)
