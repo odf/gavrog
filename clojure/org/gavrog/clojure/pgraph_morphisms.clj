@@ -99,12 +99,18 @@
     (.set M* n m (Whole/ONE))
     M*))
 
+(defn equal-sigs? [a b]
+  (let [d (.minus (first (first a)) (first (first b)))]
+    (and (every? (partial instance? Whole)
+                 (map #(.get d %) (range (inc (.getDimension d)))))
+         (= (map-sig (Operator. d) b) a))))
+
 (defn morphism [net v w M]
   (when (.isUnimodularIntegerMatrix M)
     (let [sigs (node-signatures net)
           d (.minus (first (first (sigs w))) (first (first (sigs v))))
           op (.times (Operator. (extend-matrix M)) (Operator. d))
-          check-sigs (fn [v w] (= (map-sig op (sigs v)) (sigs w)))]
+          check-sigs (fn [a b] (equal-sigs? (map-sig op (sigs v)) (sigs w)))]
       (loop [src2img {}
              q (conj empty-queue [v w])]
         (let [[a b] (first q)]
@@ -134,11 +140,6 @@
                                        e2 (.get nw (.times d op))]
                                  :when e2]
                              [e1 e2]))))))))))
-
-(comment "previous version using Java:"
-  (try
-    (Morphism. v w op)
-    (catch Morphism$NoSuchMorphismException ex nil)))
 
 (defn symmetries [net]
   (let [bases (iterator-seq (.iterator (.characteristicBases net)))
