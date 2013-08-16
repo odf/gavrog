@@ -864,109 +864,26 @@
     <color red="102" green="210" blue="255"/>
     <color red="223" green="102" blue="255"/>
   </palette>
-  <tile templateNr="7">
-    <shift>-1 -2 0</shift>
-  </tile>
-  <node id="30">
-    <shift>-2 -2 -1</shift>
-  </node>
-  <edge source="29" target="19">
-    <label>0 0 1</label>
-    <shift>-1 -1 -1</shift>
-  </edge>
-  <node id="15">
-    <shift>-1 -2 0</shift>
-  </node>
-  <edge source="31" target="29">
-    <label>0 1 0</label>
-    <shift>-1 -2 -1</shift>
-  </edge>
-  <edge source="18" target="38">
-    <label>1 1 -1</label>
-    <shift>-1 -2 0</shift>
-  </edge>
-  <node id="55">
-    <shift>0 -1 0</shift>
-  </node>
-  <edge source="55" target="13">
-    <label>-1 0 0</label>
-    <shift>0 -1 0</shift>
-  </edge>
-  <node id="29">
-    <shift>-1 -1 -1</shift>
-  </node>
-  <node id="15">
-    <shift>-2 -2 0</shift>
-  </node>
-  <edge source="19" target="16">
-    <label>0 0 0</label>
-    <shift>-2 -2 0</shift>
-  </edge>
-  <node id="42">
+  <node id="19">
     <shift>-1 -3 1</shift>
   </node>
-  <node id="16">
+  <node id="6">
     <shift>-1 -3 1</shift>
   </node>
-  <edge source="6" target="55">
-    <label>1 1 0</label>
-    <shift>-1 -2 0</shift>
-  </edge>
-  <node id="30">
-    <shift>-1 -2 0</shift>
-  </node>
-  <tile templateNr="7">
+  <node id="39">
     <shift>-1 -2 1</shift>
-  </tile>
-  <tile templateNr="0">
-    <shift>-1 -2 1</shift>
-  </tile>
-  <tile templateNr="0">
-    <shift>-1 -2 0</shift>
-  </tile>
-  <node id="31">
-    <shift>-1 -3 0</shift>
   </node>
   <edge source="6" target="15">
     <label>0 0 0</label>
     <shift>-1 -3 1</shift>
   </edge>
-  <node id="48">
-    <shift>0 -2 0</shift>
-  </node>
-  <node id="56">
-    <shift>-1 -2 0</shift>
-  </node>
-  <edge source="38" target="30">
-    <label>-1 0 0</label>
-    <shift>0 -1 -1</shift>
-  </edge>
-  <edge source="16" target="32">
-    <label>0 -1 0</label>
-    <shift>-1 -1 0</shift>
-  </edge>
-  <edge source="28" target="29">
-    <label>0 0 0</label>
-    <shift>-1 -2 -1</shift>
-  </edge>
-  <node id="49">
-    <shift>-1 -3 0</shift>
-  </node>
   <edge source="32" target="39">
     <label>1 1 0</label>
     <shift>-1 -3 1</shift>
   </edge>
-  <node id="16">
+  <tile templateNr="8">
     <shift>-2 -2 0</shift>
-  </node>
-  <edge source="28" target="35">
-    <label>0 0 0</label>
-    <shift>-1 -2 -1</shift>
-  </edge>
-  <edge source="29" target="19">
-    <label>0 0 1</label>
-    <shift>-1 -2 -1</shift>
-  </edge>
+  </tile>
   <edge source="31" target="29">
     <label>0 1 0</label>
     <shift>-1 -3 0</shift>
@@ -975,50 +892,20 @@
     <label>0 0 1</label>
     <shift>-1 -2 0</shift>
   </edge>
+  <node id="19">
+    <shift>-1 -2 1</shift>
+  </node>
   <edge source="38" target="18">
     <label>-1 -1 1</label>
     <shift>0 -2 0</shift>
   </edge>
-  <node id="55">
-    <shift>0 -2 1</shift>
-  </node>
-  <node id="29">
-    <shift>-1 -2 0</shift>
-  </node>
-  <node id="42">
-    <shift>-1 -2 0</shift>
-  </node>
   <edge source="55" target="6">
     <label>-1 -1 0</label>
     <shift>0 -2 1</shift>
   </edge>
-  <node id="29">
-    <shift>-1 -2 -1</shift>
-  </node>
-  <node id="16">
-    <shift>-1 -2 0</shift>
-  </node>
-  <node id="16">
-    <shift>-1 -2 1</shift>
-  </node>
-  <node id="48">
-    <shift>0 -1 -1</shift>
-  </node>
-  <edge source="18" target="19">
-    <label>0 0 0</label>
-    <shift>-2 -2 0</shift>
-  </edge>
-  <node id="17">
-    <shift>-1 -3 1</shift>
-  </node>
-  <edge source="30" target="35">
-    <label>1 0 0</label>
-    <shift>-2 -2 -1</shift>
-  </edge>
-  <edge source="49" target="18">
-    <label>-1 0 1</label>
-    <shift>-1 -2 -1</shift>
-  </edge>
+  <tile templateNr="2">
+    <shift>-2 -2 1</shift>
+  </tile>
   <edge source="39" target="38">
     <label>0 0 -1</label>
     <shift>0 -2 1</shift>
@@ -1031,13 +918,6 @@
     <label>0 -1 0</label>
     <shift>-1 -2 1</shift>
   </edge>
-  <edge source="38" target="39">
-    <label>0 0 1</label>
-    <shift>-1 -2 -1</shift>
-  </edge>
-  <node id="49">
-    <shift>-1 -2 -1</shift>
-  </node>
   <edge source="15" target="39">
     <label>1 1 0</label>
     <shift>-1 -3 1</shift>
@@ -1046,131 +926,64 @@
     <label>0 0 1</label>
     <shift>-1 -2 0</shift>
   </edge>
-  <tile templateNr="1">
-    <shift>-1 -2 0</shift>
+  <tile templateNr="9">
+    <shift>-2 -3 0</shift>
   </tile>
-  <tile templateNr="1">
-    <shift>-1 -2 -1</shift>
-  </tile>
-  <node id="25">
-    <shift>-1 -2 -1</shift>
-  </node>
   <edge source="19" target="18">
     <label>0 0 0</label>
     <shift>-1 -3 1</shift>
   </edge>
+  <node id="55">
+    <shift>0 -2 1</shift>
+  </node>
+  <tile templateNr="3">
+    <shift>-1 -2 1</shift>
+  </tile>
   <edge source="15" target="39">
     <label>1 1 0</label>
     <shift>-2 -3 1</shift>
   </edge>
-  <tile templateNr="9">
-    <shift>-2 -3 0</shift>
-  </tile>
-  <edge source="16" target="15">
-    <label>0 0 0</label>
-    <shift>-2 -2 0</shift>
-  </edge>
-  <tile templateNr="9">
-    <shift>-2 -3 -1</shift>
-  </tile>
-  <tile templateNr="2">
-    <shift>-2 -2 0</shift>
-  </tile>
-  <node id="16">
-    <shift>-1 -1 0</shift>
+  <node id="48">
+    <shift>0 -2 0</shift>
   </node>
-  <tile templateNr="2">
-    <shift>-2 -2 1</shift>
-  </tile>
-  <node id="17">
-    <shift>-1 -2 0</shift>
-  </node>
-  <edge source="16" target="15">
-    <label>0 0 0</label>
-    <shift>-1 -2 0</shift>
-  </edge>
-  <edge source="38" target="39">
-    <label>0 0 1</label>
-    <shift>0 -1 -1</shift>
-  </edge>
-  <edge source="14" target="39">
-    <label>0 0 0</label>
-    <shift>-1 -1 0</shift>
-  </edge>
   <edge source="17" target="6">
     <label>0 0 0</label>
     <shift>-1 -3 1</shift>
   </edge>
-  <edge source="39" target="15">
-    <label>-1 -1 0</label>
-    <shift>0 -1 0</shift>
-  </edge>
+  <node id="49">
+    <shift>-1 -3 0</shift>
+  </node>
   <node id="18">
-    <shift>-1 -3 1</shift>
+    <shift>-2 -3 1</shift>
   </node>
-  <edge source="19" target="30">
-    <label>0 0 -1</label>
-    <shift>-1 -1 0</shift>
-  </edge>
-  <node id="32">
-    <shift>-1 -2 0</shift>
-  </node>
-  <node id="39">
-    <shift>-1 -1 0</shift>
-  </node>
-  <edge source="17" target="14">
-    <label>0 0 0</label>
-    <shift>-1 -2 0</shift>
-  </edge>
-  <node id="25">
+  <node id="28">
     <shift>-1 -3 0</shift>
   </node>
   <edge source="55" target="13">
     <label>-1 0 0</label>
     <shift>0 -2 1</shift>
   </edge>
-  <node id="15">
-    <shift>-2 -3 1</shift>
-  </node>
-  <node id="30">
-    <shift>-1 -1 -1</shift>
-  </node>
+  <tile templateNr="4">
+    <shift>-1 -2 0</shift>
+  </tile>
   <edge source="15" target="16">
     <label>0 0 0</label>
     <shift>-1 -3 1</shift>
   </edge>
-  <edge source="55" target="32">
-    <label>-1 -1 0</label>
-    <shift>0 -1 0</shift>
-  </edge>
-  <edge source="14" target="39">
-    <label>0 0 0</label>
-    <shift>-1 -2 0</shift>
-  </edge>
-  <node id="18">
-    <shift>-1 -2 0</shift>
+  <node id="13">
+    <shift>-1 -2 1</shift>
   </node>
   <edge source="14" target="39">
     <label>0 0 0</label>
     <shift>-1 -2 1</shift>
   </edge>
-  <node id="31">
-    <shift>-1 -2 -1</shift>
+  <node id="42">
+    <shift>-1 -3 1</shift>
   </node>
-  <edge source="15" target="6">
-    <label>0 0 0</label>
-    <shift>-1 -2 0</shift>
-  </edge>
   <edge source="48" target="25">
     <label>-1 -1 0</label>
     <shift>0 -2 0</shift>
   </edge>
-  <node id="19">
-    <shift>-1 -3 1</shift>
-  </node>
-  <node id="32">
-    <shift>-1 -3 1</shift>
-  </node>
   <edge source="14" target="13">
     <label>0 0 0</label>
     <shift>-1 -2 1</shift>
@@ -1179,75 +992,38 @@
     <label>0 0 0</label>
     <shift>-1 -3 1</shift>
   </edge>
-  <tile templateNr="3">
-    <shift>-1 -2 1</shift>
-  </tile>
-  <edge source="39" target="32">
-    <label>-1 -1 0</label>
-    <shift>-1 -2 0</shift>
-  </edge>
-  <edge source="14" target="16">
-    <label>0 0 0</label>
-    <shift>-1 -2 0</shift>
-  </edge>
   <edge source="18" target="48">
     <label>1 1 -1</label>
     <shift>-1 -3 1</shift>
   </edge>
-  <node id="19">
-    <shift>-2 -2 0</shift>
-  </node>
-  <node id="19">
-    <shift>-1 -2 0</shift>
-  </node>
   <edge source="49" target="31">
     <label>0 0 0</label>
     <shift>-1 -3 0</shift>
   </edge>
-  <node id="19">
+  <node id="14">
     <shift>-1 -2 1</shift>
   </node>
   <edge source="16" target="14">
     <label>0 0 0</label>
     <shift>-1 -2 1</shift>
   </edge>
-  <edge source="35" target="49">
-    <label>0 0 0</label>
-    <shift>-1 -2 -1</shift>
-  </edge>
-  <edge source="48" target="28">
-    <label>-1 -1 0</label>
-    <shift>0 -1 -1</shift>
-  </edge>
-  <edge source="29" target="38">
-    <label>0 0 0</label>
-    <shift>-1 -2 -1</shift>
-  </edge>
-  <edge source="38" target="18">
-    <label>-1 -1 1</label>
-    <shift>-1 -1 -1</shift>
-  </edge>
+  <tile templateNr="1">
+    <shift>-1 -2 0</shift>
+  </tile>
   <edge source="38" target="29">
     <label>0 0 0</label>
     <shift>-1 -2 0</shift>
   </edge>
-  <node id="38">
-    <shift>0 -2 0</shift>
-  </node>
-  <node id="38">
-    <shift>-1 -2 0</shift>
+  <node id="15">
+    <shift>-1 -3 1</shift>
   </node>
   <edge source="42" target="15">
     <label>-1 0 0</label>
     <shift>-1 -3 1</shift>
   </edge>
-  <node id="38">
-    <shift>-1 -2 -1</shift>
+  <node id="15">
+    <shift>-2 -3 1</shift>
   </node>
-  <edge source="30" target="25">
-    <label>0 -1 0</label>
-    <shift>-1 -1 -1</shift>
-  </edge>
   <edge source="32" target="55">
     <label>1 1 0</label>
     <shift>-1 -3 1</shift>
@@ -1256,262 +1032,118 @@
     <label>-1 -1 1</label>
     <shift>-1 -2 0</shift>
   </edge>
-  <edge source="19" target="30">
-    <label>0 0 -1</label>
-    <shift>-2 -2 0</shift>
-  </edge>
-  <node id="13">
-    <shift>-1 -2 1</shift>
-  </node>
-  <edge source="13" target="14">
-    <label>0 0 0</label>
-    <shift>-1 -1 0</shift>
-  </edge>
   <edge source="19" target="16">
     <label>0 0 0</label>
     <shift>-1 -2 1</shift>
   </edge>
-  <edge source="16" target="19">
-    <label>0 0 0</label>
+  <node id="29">
     <shift>-1 -2 0</shift>
-  </edge>
-  <edge source="15" target="39">
-    <label>1 1 0</label>
-    <shift>-2 -2 0</shift>
-  </edge>
-  <tile templateNr="4">
-    <shift>-1 -2 0</shift>
-  </tile>
-  <tile templateNr="4">
-    <shift>-1 -2 -1</shift>
-  </tile>
-  <edge source="19" target="18">
-    <label>0 0 0</label>
-    <shift>-1 -2 0</shift>
-  </edge>
-  <edge source="56" target="17">
-    <label>0 0 0</label>
-    <shift>-1 -2 0</shift>
-  </edge>
-  <edge source="31" target="25">
-    <label>0 0 0</label>
-    <shift>-1 -2 -1</shift>
-  </edge>
-  <edge source="25" target="48">
-    <label>1 1 0</label>
-    <shift>-1 -2 -1</shift>
-  </edge>
-  <node id="38">
-    <shift>0 -1 -1</shift>
-  </node>
-  <edge source="15" target="42">
-    <label>1 0 0</label>
-    <shift>-2 -2 0</shift>
-  </edge>
-  <tile templateNr="8">
-    <shift>-2 -2 0</shift>
-  </tile>
-  <edge source="14" target="16">
-    <label>0 0 0</label>
-    <shift>-1 -1 0</shift>
-  </edge>
-  <tile templateNr="8">
-    <shift>-2 -2 -1</shift>
-  </tile>
-  <node id="39">
-    <shift>-1 -2 1</shift>
-  </node>
-  <edge source="48" target="18">
-    <label>-1 -1 1</label>
-    <shift>0 -1 -1</shift>
-  </edge>
-  <node id="39">
-    <shift>-1 -2 0</shift>
-  </node>
-  <edge source="19" target="16">
-    <label>0 0 0</label>
-    <shift>-1 -1 0</shift>
-  </edge>
-  <node id="39">
-    <shift>0 -2 1</shift>
   </node>
   <edge source="28" target="48">
     <label>1 1 0</label>
     <shift>-1 -3 0</shift>
   </edge>
-  <node id="19">
-    <shift>-1 -1 0</shift>
+  <node id="16">
+    <shift>-1 -3 1</shift>
   </node>
   <edge source="25" target="30">
     <label>0 1 0</label>
     <shift>-1 -3 0</shift>
   </edge>
-  <node id="38">
-    <shift>-1 -1 -1</shift>
-  </node>
-  <edge source="17" target="6">
-    <label>0 0 0</label>
-    <shift>-1 -2 0</shift>
-  </edge>
-  <node id="13">
-    <shift>-1 -1 0</shift>
+  <node id="39">
+    <shift>0 -2 1</shift>
   </node>
   <tile templateNr="5">
     <shift>-2 -2 0</shift>
   </tile>
-  <edge source="32" target="16">
-    <label>0 1 0</label>
-    <shift>-2 -3 0</shift>
-  </edge>
-  <edge source="30" target="38">
-    <label>1 0 0</label>
-    <shift>-2 -2 -1</shift>
-  </edge>
-  <edge source="39" target="38">
-    <label>0 0 -1</label>
-    <shift>-1 -1 0</shift>
-  </edge>
-  <tile templateNr="5">
-    <shift>-2 -2 -1</shift>
-  </tile>
-  <edge source="56" target="32">
-    <label>-1 -1 0</label>
-    <shift>-1 -2 0</shift>
-  </edge>
-  <node id="14">
-    <shift>-1 -2 0</shift>
+  <node id="17">
+    <shift>-1 -3 1</shift>
   </node>
+  <tile templateNr="7">
+    <shift>-1 -2 1</shift>
+  </tile>
   <edge source="31" target="25">
     <label>0 0 0</label>
     <shift>-1 -3 0</shift>
   </edge>
-  <node id="35">
-    <shift>-1 -2 -1</shift>
-  </node>
   <edge source="13" target="42">
     <label>0 -1 0</label>
     <shift>-1 -2 1</shift>
   </edge>
+  <node id="30">
+    <shift>-1 -2 0</shift>
+  </node>
+  <node id="31">
+    <shift>-1 -3 0</shift>
+  </node>
+  <node id="16">
+    <shift>-1 -2 1</shift>
+  </node>
   <node id="18">
-    <shift>-2 -3 1</shift>
+    <shift>-1 -3 1</shift>
   </node>
-  <node id="6">
+  <node id="38">
+    <shift>0 -2 0</shift>
+  </node>
+  <node id="38">
     <shift>-1 -2 0</shift>
   </node>
-  <node id="28">
-    <shift>-1 -2 -1</shift>
-  </node>
-  <node id="39">
-    <shift>0 -1 0</shift>
-  </node>
-  <edge source="32" target="39">
-    <label>1 1 0</label>
+  <tile templateNr="6">
     <shift>-1 -2 0</shift>
-  </edge>
-  <node id="14">
-    <shift>-1 -1 0</shift>
-  </node>
-  <edge source="42" target="56">
-    <label>0 0 0</label>
-    <shift>-1 -2 0</shift>
-  </edge>
-  <edge source="13" target="42">
-    <label>0 -1 0</label>
-    <shift>-1 -1 0</shift>
-  </edge>
+  </tile>
   <edge source="18" target="49">
     <label>1 0 -1</label>
     <shift>-2 -3 1</shift>
-  </edge>
-  <edge source="49" target="31">
-    <label>0 0 0</label>
-    <shift>-1 -2 -1</shift>
   </edge>
   <edge source="38" target="30">
     <label>-1 0 0</label>
     <shift>0 -2 0</shift>
   </edge>
-  <node id="18">
-    <shift>-2 -2 0</shift>
-  </node>
-  <tile templateNr="6">
-    <shift>-1 -2 0</shift>
-  </tile>
-  <node id="32">
-    <shift>-2 -3 0</shift>
-  </node>
-  <node id="14">
-    <shift>-1 -2 1</shift>
-  </node>
-  <node id="28">
+  <node id="25">
     <shift>-1 -3 0</shift>
   </node>
-  <node id="6">
+  <node id="32">
     <shift>-1 -3 1</shift>
   </node>
-  <tile templateNr="6">
-    <shift>-1 -2 -1</shift>
+  <tile templateNr="0">
+    <shift>-1 -2 1</shift>
   </tile>
-  <edge source="38" target="29">
-    <label>0 0 0</label>
-    <shift>-1 -1 -1</shift>
-  </edge>
-  <node id="15">
-    <shift>-1 -3 1</shift>
-  </node>
   <options>
-    <property key="org.gavrog.apps._3dt.Main.light3AngleY">120.0</property>
-    <property key="org.gavrog.apps._3dt.Main.light3AngleX">0.0</property>
-    <property key="org.gavrog.apps._3dt.Main.light2AngleY">0.0</property>
-    <property key="org.gavrog.apps._3dt.Main.light2AngleX">0.0</property>
-    <property key="org.gavrog.apps._3dt.Main.light1AngleY">-30.0</property>
-    <property key="org.gavrog.apps._3dt.Main.usePrimitiveCell">false</property>
-    <property key="org.gavrog.apps._3dt.Main.light1AngleX">30.0</property>
     <property key="org.gavrog.apps._3dt.Main.edgeWidth">0.05</property>
     <property key="org.gavrog.apps._3dt.Main.ambientColor">white</property>
     <property key="org.gavrog.apps._3dt.Main.edgeRoundingLevel">2</property>
     <property key="org.gavrog.apps._3dt.Main.netEdgeColor">-14941953</property>
     <property key="org.gavrog.apps._3dt.Main.smoothFaces">true</property>
     <property key="org.gavrog.apps._3dt.Main.fieldOfView">1.0</property>
-    <property key="org.gavrog.apps._3dt.Main.light1Intensity">0.75</property>
-    <property key="org.gavrog.apps._3dt.Main.light1Color">white</property>
-    <property key="org.gavrog.apps._3dt.Main.light3Color">blue</property>
     <property key="org.gavrog.apps._3dt.Main.drawFaces">true</property>
     <property key="org.gavrog.apps._3dt.Main.unitCellColor">-16764007</property>
     <property key="org.gavrog.apps._3dt.Main.netNodeRadius">0.12</property>
     <property key="org.gavrog.apps._3dt.Main.tileRelaxationSteps">3</property>
     <property key="org.gavrog.apps._3dt.Main.drawEdges">true</property>
     <property key="org.gavrog.apps._3dt.Main.specularExponent">15.0</property>
-    <property key="org.gavrog.apps._3dt.Main.light2Intensity">0.75</property>
+    <property key="org.gavrog.apps._3dt.Main.useBarycentricPositions">false</property>
     <property key="org.gavrog.apps._3dt.Main.unitCellEdgeWidth">0.05</property>
     <property key="org.gavrog.apps._3dt.Main.maxZ">0</property>
     <property key="org.gavrog.apps._3dt.Main.maxY">0</property>
     <property key="org.gavrog.apps._3dt.Main.maxX">0</property>
-    <property key="org.gavrog.apps._3dt.Main.faceTransparency">0.0</property>
     <property key="org.gavrog.apps._3dt.Main.specularColor">white</property>
-    <property key="org.gavrog.apps._3dt.Main.specularCoefficient">0.05</property>
     <property key="org.gavrog.apps._3dt.Main.subdivisionLevel">2</property>
-    <property key="org.gavrog.apps._3dt.Main.useMaximalSymmetry">true</property>
+    <property key="org.gavrog.apps._3dt.Main.specularCoefficient">0.05</property>
     <property key="org.gavrog.apps._3dt.Main.edgeColor">white</property>
     <property key="org.gavrog.apps._3dt.Main.ambientCoefficient">0.0</property>
     <property key="org.gavrog.apps._3dt.Main.backgroundColor">-7302964</property>
     <property key="org.gavrog.apps._3dt.Main.tileSize">0.96</property>
-    <property key="org.gavrog.apps._3dt.Main.light3Intensity">0.6</property>
     <property key="org.gavrog.apps._3dt.Main.useFog">false</property>
-    <property key="org.gavrog.apps._3dt.Main.ignoreInputCell">false</property>
-    <property key="org.gavrog.apps._3dt.Main.ignoreInputCoordinates">false</property>
-    <property key="org.gavrog.apps._3dt.Main.relaxCoordinates">true</property>
     <property key="org.gavrog.apps._3dt.Main.showUnitCell">true</property>
     <property key="org.gavrog.apps._3dt.Main.equalEdgePriority">0</property>
     <property key="org.gavrog.apps._3dt.Main.showNet">true</property>
-    <property key="org.gavrog.apps._3dt.Main.light2Color">white</property>
     <property key="org.gavrog.apps._3dt.Main.clearOnFill">true</property>
     <property key="org.gavrog.apps._3dt.Main.embedderStepLimit">100000</property>
     <property key="org.gavrog.apps._3dt.Main.edgeOpacity">0.4</property>
     <property key="org.gavrog.apps._3dt.Main.netNodeColor">-39322</property>
     <property key="org.gavrog.apps._3dt.Main.fogColor">white</property>
     <property key="org.gavrog.apps._3dt.Main.diffuseCoefficient">0.8</property>
-    <property key="org.gavrog.apps._3dt.Main.minZ">-1</property>
+    <property key="org.gavrog.apps._3dt.Main.minZ">0</property>
     <property key="org.gavrog.apps._3dt.Main.minY">0</property>
     <property key="org.gavrog.apps._3dt.Main.minX">0</property>
     <property key="org.gavrog.apps._3dt.Main.useEdgeColor">true</property>
