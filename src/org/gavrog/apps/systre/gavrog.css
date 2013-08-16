@@ -1,26 +1,31 @@
 body {
-  padding: 40px;
   margin: auto;
-  background: #ffe url(bg.jpg) center repeat;
-  font-size: 10pt;
-  max-width: 60em;
+  font-size: 11pt;
+  width: 60em;
+  color: #444;
+  background-color: #fcfaf8;
+  padding-bottom: 1in;
 }
 body, h1, h2, h3 {
-  font-family: verdana, sans-serif;
+  font-family: arial, sans-serif;
+}
+.content { 
+  margin: 0 2em;
 }
 h1 {
+  background-color: #edc;
   font-size: 400%;
   text-align: center;
-  padding: 0;
+  padding: 0.5em 0;
   margin: 0 0 1em 0;
   color: #963;
-  border-bottom: 0.2em solid #eed;
+  border: none;
 }
 h2 {
   font-size: 150%;
   background-color: #edc;
   color: #963;
-  border-top: 2px solid #963;
+  border: none;
   margin: 3em 0 1em 0;
   padding: 2px 5px 2px 20px;
 }
@@ -35,7 +40,6 @@ h2, h3 {
   clear: both;
 }
 p {
-  background: #ffe;
   text-indent: 1em;
   text-align: justify;
   margin: 0.5em 0;
@@ -62,11 +66,12 @@ a:link {
 a:visited {
   color: #786;
 }
+img {
+  border: 1px solid #d8d8d8;
+}
 .news {
   margin: 40px;
   padding: 0 2em;
-  background-color: white;
-  border: 2px solid #00a;
 }
 .news h2 {
   margin: 0.7em 0;
@@ -84,7 +89,7 @@ a:visited {
   padding: 1px 5px;
 }
 .news dd {
-  color: #00a;
+  color: #04a;
   margin: 0.7em 0 0.7em 2em;
 }
 .clickie {
@@ -92,23 +97,22 @@ a:visited {
 }
 .clickie a:link,
 .clickie a:visited {
-  font-family: sans-serif;
   font-size: 150%;
   line-height: 150%;
 }
+.content { 
+  padding-bottom: 5em;
+}
 .footer {
+  border: solid #963;
+  border-width: 2px 1px 0;
+  background-color: #edc;
   margin-top: 5em;
-  border: 1px solid #ccc;
   padding: 15px;
-  background-color: #eed;
+  clear: both;
 }
 .footer p {
   margin: 0.5em 0 0 0;
   text-align: center;
   background-color: transparent;
-}
-.footer img {
-  display: block;
-  border: 1px solid #ccc;
-  outline: none;
 }
