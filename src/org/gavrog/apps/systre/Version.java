@@ -19,9 +19,9 @@ package org.gavrog.apps.systre;
 public class Version {
 	final public static int major = 1;
 
-	final public static int minor = 1;
+	final public static int minor = 2;
 
-	final public static int patchLevel = 9;
+	final public static int patchLevel = 0;
 
 	final public static String maturity = "beta";
 

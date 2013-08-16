@@ -19,9 +19,9 @@ package org.gavrog.apps._3dt;
 public class Version {
 	final public static int major = 0;
 
-	final public static int minor = 5;
+	final public static int minor = 6;
 
-	final public static int patchLevel = 4;
+	final public static int patchLevel = 0;
 
 	final public static String maturity = "beta";
 
