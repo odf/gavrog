@@ -1,5 +1,7 @@
 3dt 0.5.4:
 
+2013-08-24: (beta2) Fixed a bug in 2d net to tiling conversion
+
 2013-05-02: Added a data file with RCSR tilings to the distribution
 2013-04-21: Ctrl-S saves scene to previous file without further dialogs
 2013-04-21: Rotate clockwise/counterclockwise with Shift-Left/Right (not Ctrl-)
