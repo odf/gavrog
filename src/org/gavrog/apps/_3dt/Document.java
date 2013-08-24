@@ -204,7 +204,7 @@ public class Document extends DisplayList {
 	}
 	
 	// --- construct the 2d Delaney symbol for a given periodic net
-	private DSymbol symbolForNet(final Net net) {
+	public static DSymbol symbolForNet(final Net net) {
 		// -- check if the argument is supported
 		if (net.getDimension() != 2) {
 			throw new UnsupportedOperationException(
@@ -237,8 +237,8 @@ public class Document extends DisplayList {
 		final DynamicDSymbol ds = new DynamicDSymbol(2);
 		for (final IEdge e: net.edges()) {
 			final List<Integer> elms = ds.grow(4);
-			edge2chamber.put(e, elms.get(0));
-			edge2chamber.put(e.reverse(), elms.get(2));
+			edge2chamber.put(e.oriented(), elms.get(0));
+			edge2chamber.put(e.oriented().reverse(), elms.get(2));
 			ds.redefineOp(2, elms.get(0), elms.get(1));
 			ds.redefineOp(2, elms.get(2), elms.get(3));
 			ds.redefineOp(0, elms.get(0), elms.get(3));
