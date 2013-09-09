@@ -108,8 +108,7 @@
   (when (.isUnimodularIntegerMatrix M)
     (let [sigs (node-signatures net)
           d (.minus (first (first (sigs w))) (first (first (sigs v))))
-          op (.times (Operator. (extend-matrix M)) (Operator. d))
-          check-sigs (fn [a b] (equal-sigs? (map-sig op (sigs v)) (sigs w)))]
+          op (.times (Operator. (extend-matrix M)) (Operator. d))]
       (loop [src2img {}
              q (conj empty-queue [v w])]
         (let [[a b] (first q)]
@@ -117,6 +116,9 @@
             (empty? q)
             src2img
 
+            (nil? b)
+            nil
+            
             (= b (src2img a))
             (recur src2img (pop q))
             
@@ -126,7 +128,7 @@
             (instance? IEdge a)
             (recur (assoc src2img a b) (conj (pop q) [(.target a) (.target b)]))
             
-            (not (check-sigs a b))
+            (not (equal-sigs? (map-sig op (sigs a)) (sigs b)))
             nil
             
             :else
@@ -136,8 +138,7 @@
                      (into (pop q)
                            (for [d (keys nv)
                                  :let [e1 (.get nv d)
-                                       e2 (.get nw (.times d op))]
-                                 :when e2]
+                                       e2 (.get nw (.times d op))]]
                              [e1 e2]))))))))))
 
 (defn symmetries [net]
