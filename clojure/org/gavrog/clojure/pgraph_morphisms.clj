@@ -141,10 +141,13 @@
                                        e2 (.get nw (.times d op))]]
                              [e1 e2]))))))))))
 
+(defn symmetry-from-base-pair [net b1 b2]
+  (let [start #(.source (.get % 0))
+        mat #(.differenceMatrix net %)]
+    (morphism net (start b1) (start b2) (Matrix/solve (mat b1) (mat b2)))))
+
 (defn symmetries [net]
-  (let [bases (iterator-seq (.iterator (.characteristicBases net)))
-        b (first bases)
-        start #(.source (.get % 0))
-        mat #(.differenceMatrix net %)
-        iso #(morphism net (start b) (start %) (Matrix/solve (mat b) (mat %)))]
-    (->> bases (map iso) (filter identity))))
+  (let [bases (iterator-seq (.iterator (.characteristicBases net)))]
+    (->> bases
+      (map (partial symmetry-from-base-pair net (first bases)))
+      (filter identity))))
