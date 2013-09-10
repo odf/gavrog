@@ -134,6 +134,7 @@
             :else
             (let [nv (Morphism/neighborVectors a)
                   nw (Morphism/neighborVectors b)]
+              ;; TODO this does not work with next-nearest neighbor collisions 
               (recur (assoc src2img a b)
                      (into (pop q)
                            (for [d (keys nv)
