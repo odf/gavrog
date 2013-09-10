@@ -114,7 +114,7 @@
         (let [[a b] (first q)]
           (cond
             (empty? q)
-            src2img
+            [M src2img]
 
             (nil? b)
             nil
