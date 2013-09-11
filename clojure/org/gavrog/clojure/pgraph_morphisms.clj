@@ -134,15 +134,16 @@
             nil
             
             :else
-            (let [nv (Morphism/neighborVectors a)
-                  nw (Morphism/neighborVectors b)]
-              ;; TODO this does not work with next-nearest neighbor collisions 
-              (recur (assoc src2img a b)
-                     (into (pop q)
-                           (for [d (keys nv)
-                                 :let [e1 (.get nv d)
-                                       e2 (.get nw (.times d op))]]
-                             [e1 e2]))))))))))
+            (let [nv (incidences-by-signature net a sigs)
+                  nw (incidences-by-signature net b sigs)]
+              (when (= (count nv) (count nw))
+                (recur (assoc src2img a b)
+                       (into (pop q)
+                             (for [[d sig] (keys nv)
+                                   :let [e1 (.get nv [d sig])
+                                         e2 (.get nw [(.times d op)
+                                                      (map-sig op sig)])]]
+                               [e1 e2])))))))))))
 
 (defn symmetry-from-base-pair [net b1 b2]
   (let [start #(.source (.get % 0))
