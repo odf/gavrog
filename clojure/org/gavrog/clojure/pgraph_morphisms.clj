@@ -86,9 +86,11 @@
       (into {} (for [[key vals] nclass] [(first vals) key])))))
 
 (defn map-sig [M sig]
-  (into (vector)
-        (map (fn [s] (->> s (map #(.times % M)) sort (into (vector))))
-             sig)))
+  (let [p (.times (first (first sig)) M)
+        op (.times M (Operator. (.minus (.modZ p) p)))]
+    (into (vector)
+          (map (fn [s] (->> s (map #(.times % op)) sort (into (vector))))
+               sig))))
 
 (defn extend-matrix [M]
   (let [n (.numberOfRows M)
@@ -97,12 +99,6 @@
     (.setSubMatrix M* 0 0 M)
     (.set M* n m (Whole/ONE))
     M*))
-
-(defn equal-sigs? [a b]
-  (let [d (.minus (first (first a)) (first (first b)))]
-    (and (every? (partial instance? Whole)
-                 (map #(.get d %) (range (inc (.getDimension d)))))
-         (= (map-sig (Operator. d) b) a))))
 
 (defn morphism [net v w M]
   (when (.isUnimodularIntegerMatrix M)
@@ -128,7 +124,7 @@
             (instance? IEdge a)
             (recur (assoc src2img a b) (conj (pop q) [(.target a) (.target b)]))
             
-            (not (equal-sigs? (map-sig op (sigs a)) (sigs b)))
+            (not= (map-sig op (sigs a)) (sigs b))
             nil
             
             :else
