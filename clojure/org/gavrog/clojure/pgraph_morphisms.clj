@@ -92,6 +92,12 @@
           (map (fn [s] (->> s (map #(.times % op)) sort (into (vector))))
                sig))))
 
+(defn incidences-by-signature [net v sigs]
+  (into {} (for [e0 (map #(.oriented %) (.incidences v))
+                 e [e0 (.reverse e0)]
+                 :when (= v (.source e))]
+             [[(.differenceVector net e) (sigs (.target e))] e])))
+
 (defn extend-matrix [M]
   (let [n (.numberOfRows M)
         m (.numberOfColumns M)
