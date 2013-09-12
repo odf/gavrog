@@ -98,14 +98,6 @@
                  :when (= v (.source e))]
              [[(.differenceVector net e) (sigs (.target e))] e])))
 
-(defn extend-matrix [M]
-  (let [n (.numberOfRows M)
-        m (.numberOfColumns M)
-        M* (Matrix/zero (inc n) (inc m))]
-    (.setSubMatrix M* 0 0 M)
-    (.set M* n m (Whole/ONE))
-    M*))
-
 (defn matched-incidences [net v w op sigs]
   (let [nv (incidences-by-signature net v sigs)
         nw (incidences-by-signature net w sigs)]
@@ -115,42 +107,54 @@
                   e2 (.get nw [(.times d op) (map-sig op sig)])]]
         [e1 e2]))))
 
-(defn morphism [net v w M]
-  (when (.isUnimodularIntegerMatrix M)
-    (let [sigs (node-signatures net)
-          d (.minus (first (first (sigs w))) (first (first (sigs v))))
-          op (.times (Operator. (extend-matrix M)) (Operator. d))]
-      (loop [src2img {}
-             q (conj empty-queue [v w])]
-        (let [[a b] (first q)]
-          (cond
-            (empty? q)
-            [M src2img]
+(defn extend-matrix [M]
+  (let [n (.numberOfRows M)
+        m (.numberOfColumns M)
+        M* (Matrix/zero (inc n) (inc m))]
+    (.setSubMatrix M* 0 0 M)
+    (.set M* n m (Whole/ONE))
+    M*))
 
-            (nil? b)
-            nil
+(defn morphism
+  ([net v w M sigs]
+    (when (.isUnimodularIntegerMatrix M)
+      (let [d (.minus (first (first (sigs w))) (first (first (sigs v))))
+            op (.times (Operator. (extend-matrix M)) (Operator. d))]
+        (loop [src2img {}
+               q (conj empty-queue [v w])]
+          (let [[a b] (first q)]
+            (cond
+              (empty? q)
+              [M src2img]
+              
+              (nil? b)
+              nil
             
-            (= b (src2img a))
-            (recur src2img (pop q))
+              (= b (src2img a))
+              (recur src2img (pop q))
             
-            (not (nil? (src2img a)))
-            nil
+              (not (nil? (src2img a)))
+              nil
 
-            (instance? IEdge a)
-            (recur (assoc src2img a b) (conj (pop q) [(.target a) (.target b)]))
+              (instance? IEdge a)
+              (recur (assoc src2img a b)
+                     (conj (pop q) [(.target a) (.target b)]))
             
-            :else
-            (when-let [matches (matched-incidences net a b op sigs)]
-              (recur (assoc src2img a b) (into (pop q) matches)))))))))
+              :else
+              (when-let [matches (matched-incidences net a b op sigs)]
+                (recur (assoc src2img a b) (into (pop q) matches)))))))))
+  ([net v w M]
+    (morphism net v w M (node-signatures net))))
 
-(defn symmetry-from-base-pair [net b1 b2]
+(defn symmetry-from-base-pair [net b1 b2 sigs]
   (let [start #(.source (.get % 0))
         mat #(.differenceMatrix net %)]
-    (morphism net (start b1) (start b2) (Matrix/solve (mat b1) (mat b2)))))
+    (morphism net (start b1) (start b2) (Matrix/solve (mat b1) (mat b2)) sigs)))
 
 (defn symmetries [net]
-  (assert (node-signatures net))
-  (let [bases (iterator-seq (.iterator (.characteristicBases net)))]
-    (->> bases
-      (map (partial symmetry-from-base-pair net (first bases)))
-      (filter identity))))
+  (let [sigs (node-signatures net)]
+    (assert sigs)
+    (let [bases (iterator-seq (.iterator (.characteristicBases net)))]
+      (->> bases
+        (map #(symmetry-from-base-pair net (first bases) % sigs))
+        (filter identity)))))
