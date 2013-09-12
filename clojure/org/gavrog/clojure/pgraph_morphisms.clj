@@ -106,6 +106,15 @@
     (.set M* n m (Whole/ONE))
     M*))
 
+(defn matched-incidences [net v w op sigs]
+  (let [nv (incidences-by-signature net v sigs)
+        nw (incidences-by-signature net w sigs)]
+    (when (= (count nv) (count nw))
+      (for [[d sig] (keys nv)
+            :let [e1 (.get nv [d sig])
+                  e2 (.get nw [(.times d op) (map-sig op sig)])]]
+        [e1 e2]))))
+
 (defn morphism [net v w M]
   (when (.isUnimodularIntegerMatrix M)
     (let [sigs (node-signatures net)
@@ -130,20 +139,9 @@
             (instance? IEdge a)
             (recur (assoc src2img a b) (conj (pop q) [(.target a) (.target b)]))
             
-            (not= (map-sig op (sigs a)) (sigs b))
-            nil
-            
             :else
-            (let [nv (incidences-by-signature net a sigs)
-                  nw (incidences-by-signature net b sigs)]
-              (when (= (count nv) (count nw))
-                (recur (assoc src2img a b)
-                       (into (pop q)
-                             (for [[d sig] (keys nv)
-                                   :let [e1 (.get nv [d sig])
-                                         e2 (.get nw [(.times d op)
-                                                      (map-sig op sig)])]]
-                               [e1 e2])))))))))))
+            (when-let [matches (matched-incidences net a b op sigs)]
+              (recur (assoc src2img a b) (into (pop q) matches)))))))))
 
 (defn symmetry-from-base-pair [net b1 b2]
   (let [start #(.source (.get % 0))
@@ -151,6 +149,7 @@
     (morphism net (start b1) (start b2) (Matrix/solve (mat b1) (mat b2)))))
 
 (defn symmetries [net]
+  (assert (node-signatures net))
   (let [bases (iterator-seq (.iterator (.characteristicBases net)))]
     (->> bases
       (map (partial symmetry-from-base-pair net (first bases)))
