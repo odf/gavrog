@@ -5,7 +5,7 @@
              IEdge
              PeriodicGraph$CoverNode Morphism Morphism$NoSuchMorphismException)
            (org.gavrog.joss.pgraphs.io Net)
-           (org.gavrog.joss.geometry Operator Vector)
+           (org.gavrog.joss.geometry Operator Vector SpaceGroup)
            (org.gavrog.jane.compounds Matrix)
            (org.gavrog.jane.numbers Whole)))
 
@@ -125,7 +125,7 @@
           (let [[a b] (first q)]
             (cond
               (empty? q)
-              [M src2img]
+              [op src2img]
               
               (nil? b)
               nil
@@ -158,3 +158,6 @@
       (->> bases
         (map #(symmetry-from-base-pair net (first bases) % sigs))
         (filter identity)))))
+
+(defn spacegroup [net]
+  (SpaceGroup. (.getDimension net) (map first (symmetries net))))
