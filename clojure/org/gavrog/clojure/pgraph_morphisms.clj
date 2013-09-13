@@ -175,6 +175,6 @@
       (when (not good) (println n1 n2))
       good))
 
-  (doseq [f ["dia.pgr", "test.pgr", "Fivecases.cgd"]
+  (doseq [f ["dia.pgr", "test.pgr", "Fivecases.cgd", "xbad.pgr"]
           g (nets f)]
         (is (test-net g))))
