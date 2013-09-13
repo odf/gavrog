@@ -119,8 +119,11 @@
 (defn morphism
   ([net v w M sigs]
     (when (.isUnimodularIntegerMatrix M)
-      (let [d (.minus (first (first (sigs w))) (first (first (sigs v))))
-            op (.times (Operator. (extend-matrix M)) (Operator. d))]
+      (let [M* (Operator. (extend-matrix M))
+            pv (first (first (sigs v)))
+            pw (first (first (sigs w)))
+            d (.minus pw (.times pv M*))
+            op (.times M* (Operator. d))]
         (loop [src2img {}
                q (conj empty-queue [v w])]
           (let [[a b] (first q)]
@@ -163,18 +166,18 @@
 (defn spacegroup [net]
   (SpaceGroup. (.getDimension net) (map first (symmetries net))))
 
+(defn systreable? [net]
+  (and (.isLocallyStable net) (not (.hasSecondOrderCollisions net))))
+
+(defn test-net [net]
+  (let [n1 (when (systreable? net) (.getName (.getSpaceGroup net)))
+        n2 (when (node-signatures net) (.getName (spacegroup net)))
+        good (or (nil? n1) (= n1 n2))]
+    (when (not good) (println net n1 n2))
+    good))
+
 
 (deftest spacegroup-test
-  (defn systreable? [net]
-    (and (.isLocallyStable net) (not (.hasSecondOrderCollisions net))))
-
-  (defn test-net [net]
-    (let [n1 (when (systreable? net) (.getName (.getSpaceGroup net)))
-          n2 (when (node-signatures net) (.getName (spacegroup net)))
-          good (or (nil? n1) (= n1 n2))]
-      (when (not good) (println n1 n2))
-      good))
-
   (doseq [f ["dia.pgr", "test.pgr", "Fivecases.cgd", "xbad.pgr"]
           g (nets f)]
         (is (test-net g))))
