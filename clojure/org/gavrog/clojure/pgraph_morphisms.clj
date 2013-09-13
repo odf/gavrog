@@ -1,5 +1,6 @@
 (ns org.gavrog.clojure.pgraph-morphisms
-  (:use (org.gavrog.clojure.common [util :only [empty-queue]]))
+  (:use (clojure test)
+        (org.gavrog.clojure.common [util :only [empty-queue]]))
   (:import (org.gavrog.joss.pgraphs.basic
              INode
              IEdge
@@ -161,3 +162,19 @@
 
 (defn spacegroup [net]
   (SpaceGroup. (.getDimension net) (map first (symmetries net))))
+
+
+(deftest spacegroup-test
+  (defn systreable? [net]
+    (and (.isLocallyStable net) (not (.hasSecondOrderCollisions net))))
+
+  (defn test-net [net]
+    (let [n1 (when (systreable? net) (.getName (.getSpaceGroup net)))
+          n2 (when (node-signatures net) (.getName (spacegroup net)))
+          good (or (nil? n1) (= n1 n2))]
+      (when (not good) (println n1 n2))
+      good))
+
+  (doseq [f ["dia.pgr", "test.pgr", "Fivecases.cgd"]
+          g (nets f)]
+        (is (test-net g))))
