@@ -63,15 +63,23 @@
     [k (map second c)]))
 
 (defn classify-recursively [items2seqs]
-  (loop [classes (sorted-set [(- (count items2seqs)) [] items2seqs])]
-    (let [[n k c] (first classes)]
-      (if (or (nil? n) (>= n -1))
-        (zipmap (map second classes) (map #(map first (last %)) classes))
-        (recur (into (disj classes (first classes))
-                     (for [[key cl] (classify-once c)]
-                       (if (nil? key)
-                         [0 k cl]
-                         [(- (count cl)) (conj k key) cl]))))))))
+  (cond
+    (empty? items2seqs)
+    {}
+    
+    (= 1 (count items2seqs))
+    { (vec (take 1 (second (first items2seqs)))) (take 1 (first items2seqs)) }
+    
+    :else
+    (loop [classes (sorted-set [(- (count items2seqs)) [] items2seqs])]
+      (let [[n k c] (first classes)]
+        (if (or (nil? n) (>= n -1))
+          (zipmap (map second classes) (map #(map first (last %)) classes))
+          (recur (into (disj classes (first classes))
+                       (for [[key cl] (classify-once c)]
+                         (if (nil? key)
+                           [0 k cl]
+                           [(- (count cl)) (conj k key) cl])))))))))
 
 (defn node-classification [net]
   (let [pos (barycentric-positions net)
