@@ -8,7 +8,8 @@
            (org.gavrog.joss.pgraphs.io Net)
            (org.gavrog.joss.geometry Operator Vector SpaceGroup)
            (org.gavrog.jane.compounds Matrix)
-           (org.gavrog.jane.numbers Whole)))
+           (org.gavrog.jane.numbers Whole))
+  (:gen-class))
 
 (defn nets [filename]
   (iterator-seq (Net/iterator filename)))
@@ -175,17 +176,30 @@
   (SpaceGroup. (.getDimension net) (map first (symmetries net))))
 
 (defn systreable? [net]
-  (and (.isLocallyStable net) (not (.hasSecondOrderCollisions net))))
-
-(defn test-net [net]
-  (let [n1 (when (systreable? net) (.getName (.getSpaceGroup net)))
-        n2 (when (node-signatures net) (.getName (spacegroup net)))
-        good (or (nil? n1) (= n1 n2))]
-    (when (not good) (println net n1 n2))
-    good))
-
+  (and (.isConnected net)
+       (.isLocallyStable net)
+       (not (.hasSecondOrderCollisions net))))
 
 (deftest spacegroup-test
+  (defn test-net [net]
+    (let [n1 (when (systreable? net) (.getName (.getSpaceGroup net)))
+          n2 (when (node-signatures net) (.getName (spacegroup net)))]
+      (or (nil? n1) (= n1 n2))))
+
   (doseq [f ["dia.pgr", "test.pgr", "Fivecases.cgd", "xbad.pgr"]
           g (nets f)]
-        (is (test-net g))))
+        (when (.isConnected g) (is (test-net g)))))
+
+(defn -main [path]
+  (doseq [G (nets path)]
+    (print (.getName G) "")
+    (if (not (systreable? G))
+      (println "n.a.")
+      (try
+        (let [n1 (.getName (.getSpaceGroup G))
+              n2 (.getName (spacegroup G))]
+          (if (= n1 n2)
+            (println "good")
+            (println (str "bad (" n1 " vs " n2 ")"))))
+        (catch Throwable x
+          (do (println "error") (throw x)))))))
