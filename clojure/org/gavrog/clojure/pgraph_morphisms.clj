@@ -72,22 +72,23 @@
     { (vec (take 1 (second (first items2seqs)))) (take 1 (first items2seqs)) }
     
     :else
-    (loop [classes (sorted-set [(- (count items2seqs)) [] items2seqs])]
-      (let [[n k c] (first classes)]
+    (loop [classes (sorted-map [(- (count items2seqs)) []] items2seqs)]
+      (let [[[n k] c] (first classes)]
         (if (or (nil? n) (>= n -1))
-          (zipmap (map second classes) (map #(map first (last %)) classes))
-          (recur (into (disj classes (first classes))
+          (zipmap (map (comp second first) classes)
+                  (map #(map first (last %)) classes))
+          (recur (into (dissoc classes [n k])
                        (for [[key cl] (classify-once c)]
                          (if (nil? key)
-                           [0 k cl]
-                           [(- (count cl)) (conj k key) cl])))))))))
+                           [[0 k] cl]
+                           [[(- (count cl)) (conj k key)] cl])))))))))
 
 (defn node-classification [net]
   (let [pos (barycentric-positions net)
         nodes (iterator-seq (.nodes net))
         dia (diameter net)
         shells (for [v nodes]
-                 (vec (map vec (take (inc dia) (shell-positions net pos v)))))]
+                 (map vec (take (inc dia) (shell-positions net pos v))))]
     (classify-recursively (zipmap nodes shells))))
 
 (defn node-signatures [net]
