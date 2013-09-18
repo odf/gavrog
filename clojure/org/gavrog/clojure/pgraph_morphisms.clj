@@ -22,24 +22,16 @@
 
 (defn distances [net]
   "Pair-wise distances between vertices using the Floyd-Warshall algorithm"
-  (let [nodes (vec (iterator-seq (.nodes net)))
+  (let [nodes (iterator-seq (.nodes net))
         edges (iterator-seq (.edges net))
         n (count nodes)
-        idx (into {} (for [i (range n)] [(nth nodes i) i]))
-        dist (make-array Long/TYPE n n)]
-    (dotimes [i n]
-      (dotimes [j n]
-        (aset dist i j (if (= i j) 0 n))))
-    (doseq [e edges, e* [e (.reverse e)]]
-      (aset dist (idx (.source e*)) (idx (.target e*)) 1))
-    (dotimes [i n]
-      (dotimes [j n]
-        (dotimes [k n]
-          (aset dist j k (min (aget dist j k)
-                              (+ (aget dist j i) (aget dist i k)))))))
-    (into {}
-          (for [u nodes, v nodes]
-            [[u v] (aget dist (idx u) (idx v))]))))
+        dist (into {} (for [v nodes, w nodes] [[v w] (if (= v w) 0 n)]))
+        dist (into dist (for [e edges, e* [e (.reverse e)]]
+                          [[(.source e*) (.target e*)] 1]))]
+    (reduce (fn [d [u v w]]
+              (assoc d [v w] (min (d [v w]) (+ (d [v u]) (d [u w])))))
+            dist
+            (for [u nodes, v nodes, w nodes] [u v w]))))
 
 (defn diameter [net]
   (apply max (vals (distances net))))
