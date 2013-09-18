@@ -27,12 +27,16 @@
         n (count nodes)
         idx (into {} (for [i (range n)] [(nth nodes i) i]))
         dist (make-array Long/TYPE n n)]
-    (doseq [i (range n), j (range n)]
-      (aset dist i j (if (= i j) 0 n)))
+    (dotimes [i n]
+      (dotimes [j n]
+        (aset dist i j (if (= i j) 0 n))))
     (doseq [e edges, e* [e (.reverse e)]]
       (aset dist (idx (.source e*)) (idx (.target e*)) 1))
-    (doseq [i (range n), j (range n), k (range n)]
-      (aset dist j k (min (aget dist j k) (+ (aget dist j i) (aget dist i k)))))
+    (dotimes [i n]
+      (dotimes [j n]
+        (dotimes [k n]
+          (aset dist j k (min (aget dist j k)
+                              (+ (aget dist j i) (aget dist i k)))))))
     (into {}
           (for [u nodes, v nodes]
             [[u v] (aget dist (idx u) (idx v))]))))
