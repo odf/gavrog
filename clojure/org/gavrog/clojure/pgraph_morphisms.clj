@@ -191,13 +191,15 @@
 (defn -main [path]
   (doseq [G (nets path)]
     (print (.getName G) "")
-    (if (not (systreable? G))
-      (println "n.a.")
-      (try
+    (try
+      (if (not (systreable? G))
+        (if (and (.isConnected G) (node-signatures G))
+          (println "->" (.getName (spacegroup G)))
+          (println "n.a."))
         (let [n1 (.getName (.getSpaceGroup G))
               n2 (.getName (spacegroup G))]
           (if (= n1 n2)
             (println "good")
-            (println (str "bad (" n1 " vs " n2 ")"))))
-        (catch Throwable x
-          (do (println "error") (throw x)))))))
+            (println (str "bad (" n1 " vs " n2 ")")))))
+      (catch Throwable x
+        (do (println "error") (throw x))))))
