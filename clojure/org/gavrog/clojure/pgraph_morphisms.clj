@@ -20,30 +20,27 @@
 (defn barycentric-positions [net]
   (into {} (.barycentricPlacement net)))
 
-(defn distances [net]
-  "Pair-wise distances between vertices using the Floyd-Warshall algorithm"
-  (let [nodes (iterator-seq (.nodes net))
-        edges (iterator-seq (.edges net))
-        n (count nodes)
-        dist (into {} (for [v nodes, w nodes] [[v w] (if (= v w) 0 n)]))
-        dist (into dist (for [e edges, e* [e (.reverse e)]]
-                          [[(.source e*) (.target e*)] 1]))]
-    (reduce (fn [d [u v w]]
-              (assoc d [v w] (min (d [v w]) (+ (d [v u]) (d [u w])))))
-            dist
-            (for [u nodes, v nodes, w nodes] [u v w]))))
+(defn adjacent [node]
+  (map #(.target %) (iterator-seq (.incidences node))))
+
+(defn bfs-radius [net node]
+  (loop [seen #{node}, maxdist 0, q (conj empty-queue [node 0])]
+    (if (empty? q)
+      maxdist
+      (let [[v d] (first q)
+            ws (remove seen (adjacent v))]
+        (recur (into seen ws)
+               (max maxdist d)
+               (into (pop q) (map vector ws (repeat (inc d)))))))))
 
 (defn diameter [net]
-  (apply max (vals (distances net))))
+  (apply max (map (partial bfs-radius net) (iterator-seq (.nodes net)))))
 
 (defn cover-node [net node]
   (PeriodicGraph$CoverNode. net node))
 
 (defn cover-node-position [pos node]
   (.plus (pos (.getOrbitNode node)) (.getShift node)))
-
-(defn adjacent [node]
-  (map #(.target %) (iterator-seq (.incidences node))))
 
 (defn next-shell-pair [[prev this]]
   [this (set (for [u this, v (adjacent u) :when (not (prev v))] v))])
