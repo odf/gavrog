@@ -1,4 +1,4 @@
-Systre 1.1.8:
+Systre 1.1.8/1.2.0:
 
 2013-07-22: Added message "TD10 not computed" when CS computation incomplete.
 2013-07-22: Increased threshold for CS computation from 10,000 to 100,000.

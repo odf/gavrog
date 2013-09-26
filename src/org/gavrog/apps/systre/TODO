@@ -13,7 +13,7 @@ For the coming release:
 
 Planned/requested features:
 
-Gavrog 0.5.5:
+Next version (Gavrog 0.7.0):
 - If possible, implement a more general test for ladders.
 
 - Convert coordinates in parser error messages back to original unit cell.
