@@ -429,11 +429,11 @@ public class SystreGUI extends BFrame {
 				        net.getName()).toString();
 				writer.write(txt);
 				writer.write("\n");
-            } else if ("cgd".equals(extension)) {
+            } else if ("cgd".equals(extension) && net.hasEmbedding()) {
             	// --- write embedding structure with full symmetry
                 net.writeEmbedding(
                         writer, true, systre.getOutputFullCell(), "");
-            } else if ("pgr".equals(extension)) {
+            } else if ("pgr".equals(extension) || "cgd".equals(extension)) {
             	// --- write abstract, unembedded periodic graph
                 Output.writePGR(
                         writer, net.getGraph().canonical(), net.getName());

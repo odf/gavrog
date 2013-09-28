@@ -1,7 +1,8 @@
 Systre 1.2.0-beta2:
 
+2013-09-28: BUG FIX: write plain graph to .cgd when no embedding present
 2013-09-28: BUG FIX: don't use relaxPasses for unit cell pre-optimization
-2013-09-28: BUG FIX: no more duplication of last transcript in .out file.
+2013-09-28: BUG FIX: no more duplication of last transcript in .out file
 
 Systre 1.1.8/1.2.0-beta:
 

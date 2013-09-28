@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Olaf Delgado-Friedrichs
+   Copyright 2013 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -820,5 +820,9 @@ public class ProcessedNet {
      */
     public void setVerified(boolean verified) {
         this.verified = verified;
+    }
+
+    public boolean hasEmbedding() {
+        return this.embedder != null;
     }
 }
