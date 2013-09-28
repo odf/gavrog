@@ -2,7 +2,6 @@
 
 Open bugs/issues:
 
-- relaxPasses option is observed even when not relaxing node positions
 - null pointer exception when writing .cgd with embedding disabled
 - class cast exception when saving files with "All Files" type option
 - unit cell parameter space computation can 'freeze' (via Greg McColm)

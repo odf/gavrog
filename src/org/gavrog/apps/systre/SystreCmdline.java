@@ -710,6 +710,7 @@ public class SystreCmdline extends EventSource {
                     new Embedder(G, initialPlacement, checkPositions);
             try {
                 embedder.setRelaxPositions(false);
+                embedder.setPasses(0);
                 embedder.go(500);
                 embedder.setRelaxPositions(relaxPositions && pass == 0);
                 embedder.setPasses(this.relaxPasses);
