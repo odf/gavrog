@@ -685,6 +685,7 @@ public class SystreGUI extends BFrame {
             out.println("Finished structure #" + this.count + displayName
                     + ".");
             this.lastFinishedTranscript = this.currentTranscript.toString();
+            this.currentTranscript.delete(0, this.currentTranscript.length());
             final ProcessedNet tmp;
             if (success) {
                 tmp = this.systre.getLastStructure();
