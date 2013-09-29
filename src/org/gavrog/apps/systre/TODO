@@ -3,17 +3,13 @@
 Open bugs/issues:
 
 - unit cell parameter space computation can 'freeze' (via Greg McColm)
-- space group difference reported when monoclinic setting differs
-
-=====================================================
-
-For the coming release:
 
 =====================================================
 
 Planned/requested features:
 
 Next version (Gavrog 0.7.0):
+- distinguish between space group and setting differences (monoclinic only?)
 - If possible, implement a more general test for ladders.
 
 - Convert coordinates in parser error messages back to original unit cell.

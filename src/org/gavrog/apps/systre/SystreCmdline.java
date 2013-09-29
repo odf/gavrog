@@ -451,8 +451,8 @@ public class SystreCmdline extends EventSource {
         out.println("   Ideal space group is " + groupName + ".");
         final String givenName = SpaceGroupCatalogue.normalizedName(givenGroup);
         if (!givenName.equals(groupName)) {
-            out.println("   Ideal group differs from given (" + groupName
-                    + " vs " + givenName + ").");
+            out.println("   Ideal group or setting differs from given ("
+                    + groupName + " vs " + givenName + ").");
         }
         final String ext = finder.getExtension();
         if ("1".equals(ext)) {
