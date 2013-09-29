@@ -37,6 +37,7 @@ import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileFilter;
 
 import org.gavrog.box.collections.Pair;
 import org.gavrog.box.gui.ExtensionFilter;
@@ -338,8 +339,7 @@ public class SystreGUI extends BFrame {
             final int n = filename.lastIndexOf('.');
             final String ext = filename.substring(n+1);
             final String filetype;
-        	final ExtensionFilter filter = (ExtensionFilter) outFileChooser
-					.getFileFilter();
+        	final FileFilter filter = outFileChooser.getFileFilter();
 			if (filter.accept(new File("x.cgd"))) {
 				filetype = "cgd";
 			} else if (filter.accept(new File("x.pgr"))) {

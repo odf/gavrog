@@ -2,7 +2,6 @@
 
 Open bugs/issues:
 
-- class cast exception when saving files with "All Files" type option
 - unit cell parameter space computation can 'freeze' (via Greg McColm)
 - space group difference reported when monoclinic setting differs
 
