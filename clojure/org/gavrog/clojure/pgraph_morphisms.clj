@@ -123,44 +123,48 @@
     (.set M* n m (Whole/ONE))
     M*))
 
-(defn morphism
-  ([net v w M sigs]
-    (when (.isUnimodularIntegerMatrix M)
-      (let [M* (Operator. (extend-matrix M))
-            pv (first (first (sigs v)))
-            pw (first (first (sigs w)))
-            d (.minus pw (.times pv M*))
-            op (.times M* (Operator. d))]
-        (loop [src2img {}
-               q (conj empty-queue [v w])]
-          (let [[a b] (first q)]
-            (cond
-              (empty? q)
-              [op src2img]
-              
-              (nil? b)
-              nil
-            
-              (= b (src2img a))
-              (recur src2img (pop q))
-            
-              (not (nil? (src2img a)))
-              nil
+(defn affineOperator [v w M sigs]
+  (let [M* (Operator. (extend-matrix M))
+        pv (first (first (sigs v)))
+        pw (first (first (sigs w)))
+        d (.minus pw (.times pv M*))]
+    (.times M* (Operator. d))))
 
-              (instance? IEdge a)
-              (recur (assoc src2img a b)
-                     (conj (pop q) [(.target a) (.target b)]))
+(defn morphism
+  ([net v w op sigs]
+    (loop [src2img {}
+           q (conj empty-queue [v w])]
+      (let [[a b] (first q)]
+        (cond
+          (empty? q)
+          [op src2img]
+              
+          (nil? b)
+          nil
             
-              :else
-              (when-let [matches (matched-incidences net a b op sigs)]
-                (recur (assoc src2img a b) (into (pop q) matches)))))))))
-  ([net v w M]
-    (morphism net v w M (node-signatures net))))
+          (= b (src2img a))
+          (recur src2img (pop q))
+            
+          (not (nil? (src2img a)))
+          nil
+
+          (instance? IEdge a)
+          (recur (assoc src2img a b) (conj (pop q) [(.target a) (.target b)]))
+          
+          :else
+          (when-let [matches (matched-incidences net a b op sigs)]
+            (recur (assoc src2img a b) (into (pop q) matches)))))))
+  ([net v w op]
+    (morphism net v w op (node-signatures net))))
 
 (defn symmetry-from-base-pair [net b1 b2 sigs]
   (let [start #(.source (.get % 0))
-        mat #(.differenceMatrix net %)]
-    (morphism net (start b1) (start b2) (Matrix/solve (mat b1) (mat b2)) sigs)))
+        mat #(.differenceMatrix net %)
+        v (start b1)
+        w (start b2)
+        M (Matrix/solve (mat b1) (mat b2))]
+    (when (.isUnimodularIntegerMatrix M)
+      (morphism net v w (affineOperator v w M sigs)))))
 
 (defn symmetries [net]
   (let [sigs (node-signatures net)]
