@@ -11,49 +11,53 @@
            (org.gavrog.jane.numbers Whole))
   (:gen-class))
 
-(defn nets [filename]
-  (iterator-seq (Net/iterator filename)))
+;; --- TODO put generic functions into packages under common
 
-(defn identity-matrix [net]
-  (Operator/identity (.getDimension net)))
-
-(defn barycentric-positions [net]
-  (into {} (.barycentricPlacement net)))
-
-(defn adjacent [node]
-  (map #(.target %) (iterator-seq (.incidences node))))
-
-(defn bfs-radius [net node]
-  (loop [seen #{node}, maxdist 0, q (conj empty-queue [node 0])]
+(defn bfs-radius [seed adj]
+  (loop [seen #{seed}, maxdist 0, q (conj empty-queue [seed 0])]
     (if (empty? q)
       maxdist
       (let [[v d] (first q)
-            ws (remove seen (adjacent v))]
+            ws (remove seen (adj v))]
         (recur (into seen ws)
                (max maxdist d)
                (into (pop q) (map vector ws (repeat (inc d)))))))))
 
-(defn diameter [net]
-  (apply max (map (partial bfs-radius net) (iterator-seq (.nodes net)))))
+(defn diameter [all-nodes adj]
+  (apply max (map #(bfs-radius % adj) all-nodes)))
 
-(defn cover-node [net node]
-  (PeriodicGraph$CoverNode. net node))
+(defn shells [seed adj]
+  (let [next
+        (fn [[prev this]]
+          [this (set (for [u this, v (adj u) :when (not (prev v))] v))])]
+    (conj
+      (map second (iterate next-shell-pair [#{seed} (set (adj seed))]))
+      #{seed})))
 
-(defn cover-node-position [pos node]
-  (.plus (pos (.getOrbitNode node)) (.getShift node)))
+(defn morphism [v w edge-target incidence-pairs]
+  (loop [src2img {}
+         q (conj empty-queue [v w])]
+    (let [[a b] (first q)]
+      (cond
+        (empty? q)
+        src2img
+              
+        (nil? b)
+        nil
+            
+        (= b (src2img a))
+        (recur src2img (pop q))
+            
+        (not (nil? (src2img a)))
+        nil
 
-(defn next-shell-pair [[prev this]]
-  [this (set (for [u this, v (adjacent u) :when (not (prev v))] v))])
-
-(defn shells [net node]
-  (conj
-    (map second (iterate next-shell-pair [#{node} (set (adjacent node))]))
-    #{node}))
-
-(defn shell-positions [net pos node]
-  (let [shift (.minus (pos node) (.modZ (pos node)))
-        pos* (fn [v] (.minus (cover-node-position pos v) shift))]
-    (map (comp sort (partial map pos*)) (shells net (cover-node net node)))))
+        (instance? IEdge a)
+        (recur (assoc src2img a b)
+               (conj (pop q) [(edge-target a) (edge-target b)]))
+          
+        :else
+        (when-let [matches (incidence-pairs a b)]
+          (recur (assoc src2img a b) (into (pop q) matches)))))))
 
 (defn classify-once [items2seqs]
   (for [[k c] (group-by first (for [[item s] items2seqs]
@@ -80,13 +84,50 @@
                            [[0 k] cl]
                            [[(- (count cl)) (conj k key)] cl])))))))))
 
+;; ---
+
+(defn extend-matrix [M]
+  (let [n (.numberOfRows M)
+        m (.numberOfColumns M)
+        M* (Matrix/zero (inc n) (inc m))]
+    (.setSubMatrix M* 0 0 M)
+    (.set M* n m (Whole/ONE))
+    M*))
+
+(defn nets [filename]
+  (iterator-seq (Net/iterator filename)))
+
+(defn identity-matrix [net]
+  (Operator/identity (.getDimension net)))
+
+(defn nodes [net]
+  (iterator-seq (.nodes net)))
+
+(defn barycentric-positions [net]
+  (into {} (.barycentricPlacement net)))
+
+(defn adjacent [node]
+  (map #(.target %) (iterator-seq (.incidences node))))
+
+(defn cover-node [net node]
+  (PeriodicGraph$CoverNode. net node))
+
+(defn cover-node-position [pos node]
+  (.plus (pos (.getOrbitNode node)) (.getShift node)))
+
+(defn shell-positions [net pos node]
+  (let [shift (.minus (pos node) (.modZ (pos node)))
+        pos* (fn [v] (.minus (cover-node-position pos v) shift))]
+    (map (comp sort (partial map pos*))
+         (shells (cover-node net node) adjacent))))
+
 (defn node-classification [net]
   (let [pos (barycentric-positions net)
-        nodes (iterator-seq (.nodes net))
-        dia (diameter net)
-        shells (for [v nodes]
+        vs (nodes net)
+        dia (diameter vs adjacent)
+        shells (for [v vs]
                  (map vec (take (inc dia) (shell-positions net pos v))))]
-    (classify-recursively (zipmap nodes shells))))
+    (classify-recursively (zipmap vs shells))))
 
 (defn node-signatures [net]
   (let [nclass (node-classification net)]
@@ -115,14 +156,6 @@
                   e2 (.get nw [(.times d op) (map-sig op sig)])]]
         [e1 e2]))))
 
-(defn extend-matrix [M]
-  (let [n (.numberOfRows M)
-        m (.numberOfColumns M)
-        M* (Matrix/zero (inc n) (inc m))]
-    (.setSubMatrix M* 0 0 M)
-    (.set M* n m (Whole/ONE))
-    M*))
-
 (defn affineOperator [v w M sigs]
   (let [M* (Operator. (extend-matrix M))
         pv (first (first (sigs v)))
@@ -130,41 +163,15 @@
         d (.minus pw (.times pv M*))]
     (.times M* (Operator. d))))
 
-(defn morphism
-  ([net v w op sigs]
-    (loop [src2img {}
-           q (conj empty-queue [v w])]
-      (let [[a b] (first q)]
-        (cond
-          (empty? q)
-          [op src2img]
-              
-          (nil? b)
-          nil
-            
-          (= b (src2img a))
-          (recur src2img (pop q))
-            
-          (not (nil? (src2img a)))
-          nil
-
-          (instance? IEdge a)
-          (recur (assoc src2img a b) (conj (pop q) [(.target a) (.target b)]))
-          
-          :else
-          (when-let [matches (matched-incidences net a b op sigs)]
-            (recur (assoc src2img a b) (into (pop q) matches)))))))
-  ([net v w op]
-    (morphism net v w op (node-signatures net))))
-
 (defn symmetry-from-base-pair [net b1 b2 sigs]
-  (let [start #(.source (.get % 0))
-        mat #(.differenceMatrix net %)
-        v (start b1)
-        w (start b2)
-        M (Matrix/solve (mat b1) (mat b2))]
+  (let [v (.source (.get b1 0))
+        w (.source (.get b2 0))
+        M (Matrix/solve (.differenceMatrix net b1) (.differenceMatrix net b2))
+        op (affineOperator v w M sigs)
+        incidence-pairs (fn [a b] (matched-incidences net a b op sigs))]
     (when (.isUnimodularIntegerMatrix M)
-      (morphism net v w (affineOperator v w M sigs)))))
+      (when-let [phi (morphism v w #(.target %) incidence-pairs)]
+        [op phi]))))
 
 (defn symmetries [net]
   (let [sigs (node-signatures net)]
