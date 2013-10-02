@@ -9,22 +9,27 @@
 
 (def empty-queue clojure.lang.PersistentQueue/EMPTY)
 
-(defn pop-while [pred coll]
+(defn pop-while
   "Like drop-while, but with pop."
-  (cond
-    (empty? coll) coll
-    (pred (first coll)) (recur pred (pop coll))
-    :else coll))
+  ([pred coll]
+    (cond
+      (empty? coll) coll
+      (pred (first coll)) (recur pred (pop coll))
+      :else coll)))
 
-(defn iterate-cycle [coll x]
+(defn iterate-cycle
   "Returns a lazy sequence of intermediate results, starting at x, of
    cycling through the functions in coll and applying each to the
    previous result."
-  (reductions #(%2 %1) x (cycle coll)))
+  ([coll x]
+    (reductions #(%2 %1) x (cycle coll))))
 
 (defn compare-lexicographically
+  "Compares two sequences lexicographically. In the first form, the given
+   function cmp is used for element-wise comparison. In the second form, the
+   standard compare function is used, and the elements of xs must implement
+   Comparable."
   ([cmp xs ys]
-    "Compares two sequences lexicographically via the given function cmp."
     (cond (empty? xs) (if (empty? ys) 0 -1)
           (empty? ys) 1
           :else (let [d (cmp (first xs) (first ys))]
@@ -32,12 +37,11 @@
                     d
                     (recur cmp (rest xs) (rest ys))))))
   ([xs ys]
-    "Compares two sequences lexicographically via compare. Elements of
-     the first sequence must implements Comparable."   
     (compare-lexicographically compare xs ys)))
 
 (defn lexicographically-smallest
-  "Returns the lexicographically smallest sequence, via compare."
+  "Returns the lexicographically smallest sequence, using cmp for element-wise
+   comparison."
   ([cmp xs] xs)
   ([cmp xs ys] (if (neg? (compare-lexicographically cmp xs ys)) xs ys))
   ([cmp xs ys & more] (reduce (partial lexicographically-smallest cmp)
@@ -49,23 +53,26 @@
 (defn multi-map [pairs]
   (reduce (fn [m [k v]] (multi-assoc m k v)) {} pairs))
 
-(defn traversal [adj seen todo push head tail]
+(defn traversal
   "Generic traversal function"
-  (when-let [node (head todo)]
-    (let [neighbors (adj node)
-          todo (reduce push (tail todo) (filter (complement seen) neighbors))
-          seen (into (conj seen node) neighbors)]
-      (lazy-seq (cons node (traversal adj seen todo push head tail))))))
+  ([adj seen todo push head tail]
+    (when-let [node (head todo)]
+      (let [neighbors (adj node)
+            todo (reduce push (tail todo) (filter (complement seen) neighbors))
+            seen (into (conj seen node) neighbors)]
+        (lazy-seq (cons node (traversal adj seen todo push head tail)))))))
 
-(defn dfs [adj & sources]
+(defn dfs
   "Performs a lazy depth first traversal of the directed graph determined by
   the list 'sources' of source nodes and the adjacency function 'adj'."
-  (traversal adj #{} (into '() sources) conj first rest))
+  ([adj & sources]
+    (traversal adj #{} (into '() sources) conj first rest)))
 
-(defn bfs [adj & sources]
+(defn bfs
   "Performs a lazy breadth first traversal of the directed graph determined by
   the list 'sources' of source nodes and the adjacency function 'adj'."
-  (traversal adj #{} (into empty-queue sources) conj first pop))
+  ([adj & sources]
+    (traversal adj #{} (into empty-queue sources) conj first pop)))
 
 (defn classify
   "Given a map that assigns sequences to items, this function determines the
