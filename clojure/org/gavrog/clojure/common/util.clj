@@ -66,3 +66,36 @@
   "Performs a lazy breadth first traversal of the directed graph determined by
   the list 'sources' of source nodes and the adjacency function 'adj'."
   (traversal adj #{} (into empty-queue sources) conj first pop))
+
+(defn classify
+  "Given a map that assigns sequences to items, this function determines the
+  shortest subsequences, if any, that characterize each item uniquely. The
+  result is a map from sequences to lists of items.
+
+  Example:
+  => (classify {:a [1 2] :b [1 3] :c [2 4] :d [1 2]})
+  {[1 2] (:a :d), [1 3] (:b), [2] (:c)}"
+
+  ([items2seqs]
+    (cond
+      (empty? items2seqs)
+      {}
+
+      (= 1 (count items2seqs))
+      { (vec (take 1 (second (first items2seqs)))) (take 1 (first items2seqs)) }
+
+      :else
+      (let [step (fn [m] (->> m
+                           (map (fn [[k s]] [(first s) [k (rest s)]]))
+                           (group-by first)
+                           (map (fn [[k c]] [k (map second c)]))))]
+        (loop [classes (sorted-map [(- (count items2seqs)) []] items2seqs)]
+          (let [[[n k] c] (first classes)]
+            (if (or (nil? n) (>= n -1))
+              (zipmap (map (comp second first) classes)
+                      (map #(map first (last %)) classes))
+              (recur (into (dissoc classes [n k])
+                           (for [[key cl] (step c)]
+                             (if (nil? key)
+                               [[0 k] cl]
+                               [[(- (count cl)) (conj k key)] cl])))))))))))

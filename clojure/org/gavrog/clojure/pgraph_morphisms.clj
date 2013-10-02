@@ -1,6 +1,6 @@
 (ns org.gavrog.clojure.pgraph-morphisms
   (:use (clojure test)
-        (org.gavrog.clojure.common [util :only [empty-queue]]))
+        (org.gavrog.clojure.common [util :only [empty-queue classify]]))
   (:import (org.gavrog.joss.pgraphs.basic
              INode
              IEdge
@@ -31,7 +31,7 @@
         (fn [[prev this]]
           [this (set (for [u this, v (adj u) :when (not (prev v))] v))])]
     (conj
-      (map second (iterate next-shell-pair [#{seed} (set (adj seed))]))
+      (map second (iterate next [#{seed} (set (adj seed))]))
       #{seed})))
 
 (defn morphism [v w edge-target incidence-pairs]
@@ -58,31 +58,6 @@
         :else
         (when-let [matches (incidence-pairs a b)]
           (recur (assoc src2img a b) (into (pop q) matches)))))))
-
-(defn classify-once [items2seqs]
-  (for [[k c] (group-by first (for [[item s] items2seqs]
-                                [(first s) [item (rest s)]]))]
-    [k (map second c)]))
-
-(defn classify-recursively [items2seqs]
-  (cond
-    (empty? items2seqs)
-    {}
-    
-    (= 1 (count items2seqs))
-    { (vec (take 1 (second (first items2seqs)))) (take 1 (first items2seqs)) }
-    
-    :else
-    (loop [classes (sorted-map [(- (count items2seqs)) []] items2seqs)]
-      (let [[[n k] c] (first classes)]
-        (if (or (nil? n) (>= n -1))
-          (zipmap (map (comp second first) classes)
-                  (map #(map first (last %)) classes))
-          (recur (into (dissoc classes [n k])
-                       (for [[key cl] (classify-once c)]
-                         (if (nil? key)
-                           [[0 k] cl]
-                           [[(- (count cl)) (conj k key)] cl])))))))))
 
 ;; ---
 
@@ -127,7 +102,7 @@
         dia (diameter vs adjacent)
         shells (for [v vs]
                  (map vec (take (inc dia) (shell-positions net pos v))))]
-    (classify-recursively (zipmap vs shells))))
+    (classify (zipmap vs shells))))
 
 (defn node-signatures [net]
   (let [nclass (node-classification net)]
