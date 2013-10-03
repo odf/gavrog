@@ -13,8 +13,8 @@
 
 ;; --- TODO put generic functions into packages under common
 
-(defn bfs-radius [seed adj]
-  (loop [seen #{seed}, maxdist 0, q (conj empty-queue [seed 0])]
+(defn bfs-radius [adj source]
+  (loop [seen #{source}, maxdist 0, q (conj empty-queue [source 0])]
     (if (empty? q)
       maxdist
       (let [[v d] (first q)
@@ -23,16 +23,16 @@
                (max maxdist d)
                (into (pop q) (map vector ws (repeat (inc d)))))))))
 
-(defn diameter [all-nodes adj]
-  (apply max (map #(bfs-radius % adj) all-nodes)))
+(defn diameter [adj sources]
+  (apply max (map (partial bfs-radius adj) sources)))
 
-(defn shells [seed adj]
+(defn bfs-shells [adj source]
   (let [next
         (fn [[prev this]]
           [this (set (for [u this, v (adj u) :when (not (prev v))] v))])]
     (conj
-      (map second (iterate next [#{seed} (set (adj seed))]))
-      #{seed})))
+      (map second (iterate next [#{source} (set (adj source))]))
+      #{source})))
 
 (defn morphism [v w edge-target incidence-pairs]
   (loop [src2img {}
@@ -94,12 +94,12 @@
   (let [shift (.minus (pos node) (.modZ (pos node)))
         pos* (fn [v] (.minus (cover-node-position pos v) shift))]
     (map (comp sort (partial map pos*))
-         (shells (cover-node net node) adjacent))))
+         (bfs-shells adjacent (cover-node net node)))))
 
 (defn node-classification [net]
   (let [pos (barycentric-positions net)
         vs (nodes net)
-        dia (diameter vs adjacent)
+        dia (diameter adjacent vs)
         shells (for [v vs]
                  (map vec (take (inc dia) (shell-positions net pos v))))]
     (classify (zipmap vs shells))))
