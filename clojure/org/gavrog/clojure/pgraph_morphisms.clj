@@ -1,6 +1,9 @@
 (ns org.gavrog.clojure.pgraph-morphisms
   (:use (clojure test)
-        (org.gavrog.clojure.common [util :only [empty-queue classify]]))
+        (org.gavrog.clojure.common
+          [util :only [empty-queue classify]])
+        (org.gavrog.clojure.common
+          [graphs :only [diameter bfs-shells morphism]]))
   (:import (org.gavrog.joss.pgraphs.basic
              INode
              IEdge
@@ -11,55 +14,6 @@
            (org.gavrog.jane.numbers Whole))
   (:gen-class))
 
-;; --- TODO put generic functions into packages under common
-
-(defn bfs-radius [adj source]
-  (loop [seen #{source}, maxdist 0, q (conj empty-queue [source 0])]
-    (if (empty? q)
-      maxdist
-      (let [[v d] (first q)
-            ws (remove seen (adj v))]
-        (recur (into seen ws)
-               (max maxdist d)
-               (into (pop q) (map vector ws (repeat (inc d)))))))))
-
-(defn diameter [adj sources]
-  (apply max (map (partial bfs-radius adj) sources)))
-
-(defn bfs-shells [adj source]
-  (let [next
-        (fn [[prev this]]
-          [this (set (for [u this, v (adj u) :when (not (prev v))] v))])]
-    (conj
-      (map second (iterate next [#{source} (set (adj source))]))
-      #{source})))
-
-(defn morphism [v w edge-target incidence-pairs]
-  (loop [src2img {}
-         q (conj empty-queue [v w])]
-    (let [[a b] (first q)]
-      (cond
-        (empty? q)
-        src2img
-              
-        (nil? b)
-        nil
-            
-        (= b (src2img a))
-        (recur src2img (pop q))
-            
-        (not (nil? (src2img a)))
-        nil
-
-        (instance? IEdge a)
-        (recur (assoc src2img a b)
-               (conj (pop q) [(edge-target a) (edge-target b)]))
-          
-        :else
-        (when-let [matches (incidence-pairs a b)]
-          (recur (assoc src2img a b) (into (pop q) matches)))))))
-
-;; ---
 
 (defn extend-matrix [M]
   (let [n (.numberOfRows M)
