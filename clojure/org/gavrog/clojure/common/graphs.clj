@@ -1,6 +1,27 @@
 (ns org.gavrog.clojure.common.graphs
   (:require (org.gavrog.clojure.common [util :as util])))
 
+(defn traversal
+  "Generic traversal function"
+  ([adj seen todo push head tail]
+    (when-let [node (head todo)]
+      (let [neighbors (adj node)
+            todo (reduce push (tail todo) (filter (complement seen) neighbors))
+            seen (into (conj seen node) neighbors)]
+        (lazy-seq (cons node (traversal adj seen todo push head tail)))))))
+
+(defn dfs
+  "Performs a lazy depth first traversal of the directed graph determined by
+  the list 'sources' of source nodes and the adjacency function 'adj'."
+  ([adj & sources]
+    (traversal adj #{} (into '() sources) conj first rest)))
+
+(defn bfs
+  "Performs a lazy breadth first traversal of the directed graph determined by
+  the list 'sources' of source nodes and the adjacency function 'adj'."
+  ([adj & sources]
+    (traversal adj #{} (into empty-queue sources) conj first pop)))
+
 (defn bfs-radius [adj source]
   (loop [seen #{source}, maxdist 0, q (conj util/empty-queue [source 0])]
     (if (empty? q)
