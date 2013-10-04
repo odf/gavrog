@@ -20,7 +20,7 @@
   "Performs a lazy breadth first traversal of the directed graph determined by
   the list 'sources' of source nodes and the adjacency function 'adj'."
   ([adj & sources]
-    (traversal adj #{} (into empty-queue sources) conj first pop)))
+    (traversal adj #{} (into util/empty-queue sources) conj first pop)))
 
 (defn bfs-radius [adj source]
   (loop [seen #{source}, maxdist 0, q (conj util/empty-queue [source 0])]
@@ -38,7 +38,8 @@
 (defn bfs-shells [adj source]
   (let [next
         (fn [[prev this]]
-          [this (set (for [u this, v (adj u) :when (not (prev v))] v))])]
+          [this (set (for [u this, v (adj u)
+                           :when (not (or (this v) (prev v)))] v))])]
     (conj
       (map second (iterate next [#{source} (set (adj source))]))
       #{source})))
