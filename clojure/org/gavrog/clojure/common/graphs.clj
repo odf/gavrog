@@ -22,27 +22,21 @@
   ([adj & sources]
     (traversal adj #{} (into util/empty-queue sources) conj first pop)))
 
-(defn bfs-radius [adj source]
-  (loop [seen #{source}, maxdist 0, q (conj util/empty-queue [source 0])]
-    (if (empty? q)
-      maxdist
-      (let [[v d] (first q)
-            ws (remove seen (adj v))]
-        (recur (into seen ws)
-               (max maxdist d)
-               (into (pop q) (map vector ws (repeat (inc d)))))))))
-
-(defn diameter [adj sources]
-  (apply max (map (partial bfs-radius adj) sources)))
-
 (defn bfs-shells [adj source]
   (let [next
         (fn [[prev this]]
           [this (set (for [u this, v (adj u)
                            :when (not (or (this v) (prev v)))] v))])]
-    (conj
-      (map second (iterate next [#{source} (set (adj source))]))
-      #{source})))
+    (take-while seq
+                (conj
+                  (map second (iterate next [#{source} (set (adj source))]))
+                  #{source}))))
+
+(defn bfs-radius [adj source]
+  (dec (count (bfs-shells adj source))))
+
+(defn diameter [adj sources]
+  (apply max (map (partial bfs-radius adj) sources)))
 
 (defn morphism [v w edge-target incidence-pairs]
   (loop [src2img {}
