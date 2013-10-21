@@ -6,6 +6,7 @@ Open bugs:
 - Disabling and enabling of menu items is missing or clumsily implemented.
 - maximizing symmetry distorts given node positions in a strange way
 - for face list tiling, originally given symmetry is not restored
+- for nets with collisions etc, show Systre messages instead of "pending..."
 
 =====================================================
 
