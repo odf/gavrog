@@ -9,6 +9,7 @@ Open bugs/issues:
 Planned/requested features:
 
 Next version (Gavrog 0.7.0):
+- option to output barycentric coordinates if Systre refuses a net
 - distinguish between space group and setting differences (monoclinic only?)
 - If possible, implement a more general test for ladders.
 
