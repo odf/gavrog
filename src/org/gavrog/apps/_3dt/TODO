@@ -2,6 +2,9 @@
 
 Open bugs:
 
+- variables in installer scripts are not properly quoted
+- installer may insert an incompatible Java version into scripts
+
 - Sometimes unit cells are very flat.
 - Disabling and enabling of menu items is missing or clumsily implemented.
 - maximizing symmetry distorts given node positions in a strange way
