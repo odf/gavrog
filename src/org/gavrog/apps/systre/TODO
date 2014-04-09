@@ -9,8 +9,9 @@ Open bugs/issues:
 Planned/requested features:
 
 Next version (Gavrog 0.7.0):
-- option to output barycentric coordinates if Systre refuses a net
-- distinguish between space group and setting differences (monoclinic only?)
+- When using defaults, say which ones.
+- Option to output barycentric coordinates if Systre refuses a net.
+- Distinguish between space group and setting differences (monoclinic only?).
 - If possible, implement a more general test for ladders.
 
 - Convert coordinates in parser error messages back to original unit cell.
@@ -23,6 +24,7 @@ Next version (Gavrog 0.7.0):
 - Produce a log file when using GUI version in non-stop mode.
 
 - Better phrasing when component has multiple translates.
+- Handle case where components of quotient graph describe isomorphic nets.
 - Make choice of output formats more self-explanatory.
 
 
