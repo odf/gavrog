@@ -2,6 +2,7 @@
 
 Open bugs:
 
+- locale is used when writing data files, leading to incorrect decimals
 - variables in installer scripts are not properly quoted
 - installer may insert an incompatible Java version into scripts
 
