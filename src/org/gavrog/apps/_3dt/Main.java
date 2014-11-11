@@ -1,5 +1,5 @@
 /*
-   Copyright 2013 Olaf Delgado-Friedrichs
+   Copyright 2014 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -2578,7 +2578,7 @@ public class Main extends EventSource {
     	
         final IndexedLineSetFactory ilsf = new IndexedLineSetFactory();
         ilsf.setVertexCount(corners.length);
-        //ilsf.setLineCount(idcs.length);
+        ilsf.setEdgeCount(idcs.length);
         ilsf.setVertexCoordinates(corners);
         ilsf.setEdgeIndices(idcs);
 		ilsf.update();
@@ -2986,7 +2986,7 @@ public class Main extends EventSource {
     private void updateLights() {
 		final Light l1 = new DirectionalLight();
 		l1.setIntensity(getLight1Intensity());
-		l1.setColor(getLight1Color());
+		l1.setColor(new de.jreality.shader.Color(getLight1Color().getRGB()));
 		final Transformation t1 = new Transformation();
 		MatrixBuilder.euclidean().rotateX(deg(-getLight1AngleX())).rotateY(
 				deg(getLight1AngleY())).assignTo(t1);
@@ -2994,7 +2994,7 @@ public class Main extends EventSource {
 		
 		final Light l2 = new DirectionalLight();
 		l2.setIntensity(getLight2Intensity());
-		l2.setColor(getLight2Color());
+		l2.setColor(new de.jreality.shader.Color(getLight2Color().getRGB()));
 		final Transformation t2 = new Transformation();
 		MatrixBuilder.euclidean().rotateX(deg(-getLight2AngleX())).rotateY(
 				deg(getLight2AngleY())).assignTo(t2);
@@ -3002,7 +3002,7 @@ public class Main extends EventSource {
 		
 		final Light l3 = new DirectionalLight();
 		l3.setIntensity(getLight3Intensity());
-		l3.setColor(getLight3Color());
+		l3.setColor(new de.jreality.shader.Color(getLight3Color().getRGB()));
 		final Transformation t3 = new Transformation();
 		MatrixBuilder.euclidean().rotateX(deg(-getLight3AngleX())).rotateY(
 				deg(getLight3AngleY())).assignTo(t3);
@@ -4283,8 +4283,8 @@ public class Main extends EventSource {
 		_setField("useFog", value);
 	}
 
-	public de.jreality.shader.Color getLight1Color() {
-		return new de.jreality.shader.Color(light1Color.getRGB());
+	public Color getLight1Color() {
+		return light1Color;
 	}
 	
 	public void setLight1Color(final Color value) {
@@ -4315,8 +4315,8 @@ public class Main extends EventSource {
 		_setField("light1AngleY", value);
 	}
 
-	public de.jreality.shader.Color getLight2Color() {
-		return new de.jreality.shader.Color(light2Color.getRGB());
+	public Color getLight2Color() {
+		return light2Color;
 	}
 	
 	public void setLight2Color(final Color value) {
@@ -4347,8 +4347,8 @@ public class Main extends EventSource {
 		_setField("light2AngleY", value);
 	}
 
-	public de.jreality.shader.Color getLight3Color() {
-		return new de.jreality.shader.Color(light3Color.getRGB());
+	public Color getLight3Color() {
+		return light3Color;
 	}
 	
 	public void setLight3Color(final Color value) {

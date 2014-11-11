@@ -1,5 +1,5 @@
 /*
-   Copyright 2012 Olaf Delgado-Friedrichs
+   Copyright 2014 Olaf Delgado-Friedrichs
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 
 package org.gavrog.apps._3dt;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
@@ -51,6 +50,7 @@ import de.jreality.scene.SceneGraphPath;
 import de.jreality.scene.Transformation;
 import de.jreality.scene.Viewer;
 import de.jreality.shader.CommonAttributes;
+import de.jreality.shader.Color;
 import de.jreality.softviewer.SoftViewer;
 import de.jreality.tools.ClickWheelCameraZoomTool;
 import de.jreality.tools.DraggingTool;
@@ -98,7 +98,7 @@ public class ViewerFrame extends JFrame {
 		MatrixBuilder.euclidean().translate(0, 0, 3).assignTo(cameraNode);
 
 		final Appearance rootApp = new Appearance();
-		rootApp.setAttribute(CommonAttributes.BACKGROUND_COLOR, Color.DARK_GRAY);
+		rootApp.setAttribute(CommonAttributes.BACKGROUND_COLOR, Color.GRAY);
 		rootApp.setAttribute(CommonAttributes.DIFFUSE_COLOR, Color.RED);
 		rootNode.setAppearance(rootApp);
 

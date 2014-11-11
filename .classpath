@@ -12,5 +12,8 @@
 	<classpathentry kind="lib" path="Deploy/jReality/lib/xstream-1.4.2.jar"/>
 	<classpathentry kind="lib" path="Deploy/jReality/lib/beans.jar"/>
 	<classpathentry kind="lib" path="Deploy/jReality/jogl/jogl-all.jar"/>
+	<classpathentry kind="lib" path="Deploy/jReality/jogl/gluegen-rt.jar"/>
+	<classpathentry kind="lib" path="Deploy/jReality/lib/sunflow.jar"/>
+	<classpathentry kind="lib" path="Deploy/jReality/lib/janino.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
