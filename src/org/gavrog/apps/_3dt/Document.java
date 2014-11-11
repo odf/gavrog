@@ -1009,44 +1009,43 @@ public class Document extends DisplayList {
 		} else if (ext.equals("ds") || ext.equals("tgs")){
 			final StringBuffer buffer = new StringBuffer(200);
 			String name = null;
-			while (true) {
-				String line;
-				try {
-					line = reader.readLine();
-				} catch (IOException ex) {
-					throw new RuntimeException(ex);
-				}
-				if (line == null) {
-					break;
-				}
-				line = line.trim();
-				if (line.length() == 0) {
-					continue;
-				}
-				if (line.charAt(0) == '#') {
-					if (line.charAt(1) == '@') {
-						line = line.substring(2).trim();
-						if (line.startsWith("name ")) {
-							name = line.substring(5);
+			try {
+				while (true) {
+					String line = reader.readLine();
+					if (line == null) {
+						break;
+					}
+					line = line.trim();
+					if (line.length() == 0) {
+						continue;
+					}
+					if (line.charAt(0) == '#') {
+						if (line.charAt(1) == '@') {
+							line = line.substring(2).trim();
+							if (line.startsWith("name ")) {
+								name = line.substring(5);
+							}
+						}
+					} else {
+						int i = line.indexOf('#');
+						if (i >= 0) {
+							line = line.substring(0, i);
+						}
+						buffer.append(' ');
+						buffer.append(line);
+						if (buffer.toString().trim().endsWith(">")) {
+							final DSymbol ds = new DSymbol(buffer.toString().trim());
+							buffer.delete(0, buffer.length());
+							if (name == null) {
+								name = "#" + (result.size() + 1);
+							}
+							result.add(new Document(ds, name));
+							name = null;
 						}
 					}
-				} else {
-					int i = line.indexOf('#');
-					if (i >= 0) {
-						line = line.substring(0, i);
-					}
-					buffer.append(' ');
-					buffer.append(line);
-					if (buffer.toString().trim().endsWith(">")) {
-						final DSymbol ds = new DSymbol(buffer.toString().trim());
-						buffer.delete(0, buffer.length());
-						if (name == null) {
-							name = "#" + (result.size() + 1);
-						}
-						result.add(new Document(ds, name));
-						name = null;
-					}
 				}
+			} catch (IOException ex) {
+				throw new RuntimeException(ex);
 			}
 		} else if (ext.equals("gsl")) {
 			try {

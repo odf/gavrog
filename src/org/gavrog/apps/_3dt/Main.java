@@ -2578,7 +2578,7 @@ public class Main extends EventSource {
     	
         final IndexedLineSetFactory ilsf = new IndexedLineSetFactory();
         ilsf.setVertexCount(corners.length);
-        ilsf.setLineCount(idcs.length);
+        //ilsf.setLineCount(idcs.length);
         ilsf.setVertexCoordinates(corners);
         ilsf.setEdgeIndices(idcs);
 		ilsf.update();
@@ -4283,8 +4283,8 @@ public class Main extends EventSource {
 		_setField("useFog", value);
 	}
 
-	public Color getLight1Color() {
-		return light1Color;
+	public de.jreality.shader.Color getLight1Color() {
+		return new de.jreality.shader.Color(light1Color.getRGB());
 	}
 	
 	public void setLight1Color(final Color value) {
@@ -4315,8 +4315,8 @@ public class Main extends EventSource {
 		_setField("light1AngleY", value);
 	}
 
-	public Color getLight2Color() {
-		return light2Color;
+	public de.jreality.shader.Color getLight2Color() {
+		return new de.jreality.shader.Color(light2Color.getRGB());
 	}
 	
 	public void setLight2Color(final Color value) {
@@ -4347,8 +4347,8 @@ public class Main extends EventSource {
 		_setField("light2AngleY", value);
 	}
 
-	public Color getLight3Color() {
-		return light3Color;
+	public de.jreality.shader.Color getLight3Color() {
+		return new de.jreality.shader.Color(light3Color.getRGB());
 	}
 	
 	public void setLight3Color(final Color value) {

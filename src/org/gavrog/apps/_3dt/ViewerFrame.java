@@ -37,7 +37,7 @@ import javax.swing.JMenuBar;
 
 import org.gavrog.box.gui.Invoke;
 
-import de.jreality.geometry.GeometryUtility;
+import de.jreality.geometry.BoundingBoxUtility;
 import de.jreality.geometry.Primitives;
 import de.jreality.math.Matrix;
 import de.jreality.math.MatrixBuilder;
@@ -203,7 +203,7 @@ public class ViewerFrame extends JFrame {
 		toAvatar.multiplyOnRight(avatarPath.getInverseMatrix(null));
 		
 		// --- compute bounding box of scene
-		final Rectangle3D bounds = GeometryUtility.calculateBoundingBox(
+		final Rectangle3D bounds = BoundingBoxUtility.calculateBoundingBox(
 				toAvatar.getArray(), scenePath.getLastComponent());
 		if (bounds.isEmpty()) {
 			return;
@@ -249,7 +249,7 @@ public class ViewerFrame extends JFrame {
 
 		if (lastCenter == null) {
 			// --- compute the center of the scene in world coordinates
-			final Rectangle3D bounds = GeometryUtility
+			final Rectangle3D bounds = BoundingBoxUtility
 					.calculateBoundingBox(root);
 			if (bounds.isEmpty()) {
 				return;
