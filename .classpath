@@ -3,28 +3,14 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="src" path="clojure"/>
-	<classpathentry kind="lib" path="Deploy/jogl/gluegen-rt.jar">
-		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="gavrog/Deploy/jogl-unix"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="Deploy/jogl/jogl.jar">
-		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="gavrog/Deploy/jogl-mac"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="Deploy/jReality/bsh.jar"/>
-	<classpathentry kind="lib" path="Deploy/jReality/jReality.jar"/>
-	<classpathentry kind="lib" path="Deploy/jReality/jtem-beans.jar"/>
-	<classpathentry kind="lib" path="Deploy/jReality/jterm.jar"/>
-	<classpathentry kind="lib" path="Deploy/sunflow/janino.jar"/>
-	<classpathentry kind="lib" path="Deploy/sunflow/sunflow.jar"/>
-	<classpathentry kind="lib" path="Deploy/XStream/xpp3.jar"/>
-	<classpathentry kind="lib" path="Deploy/XStream/xstream.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="clojure.jar" sourcepath="clojure-src.jar"/>
 	<classpathentry kind="lib" path="classes"/>
 	<classpathentry kind="lib" path="criterium-0.2.1.jar"/>
+	<classpathentry kind="lib" path="Deploy/jReality/jReality.jar"/>
+	<classpathentry kind="lib" path="Deploy/jReality/lib/xstream-1.4.2.jar"/>
+	<classpathentry kind="lib" path="Deploy/jReality/lib/beans.jar"/>
+	<classpathentry kind="lib" path="Deploy/jReality/jogl/jogl-all.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
