@@ -102,6 +102,7 @@ public class SystreCmdline extends EventSource {
     private boolean outputSystreKey = false;
     private boolean duplicateIsError = false;
     private BufferedWriter outputArchive = null;
+	private boolean includeReadableOutput = false;
     
     // --- the last file that was opened for processing
     private String lastFileNameWithoutExtension;
@@ -823,6 +824,13 @@ public class SystreCmdline extends EventSource {
                         getOutputFullCell(),
                         embedder.positionsRelaxed() ?
                                 "Relaxed" : Strings.capitalized(posType));
+                if (getIncludeReadableOutput()) {
+                	out.println();
+                	out.println("   Systre input for result:");
+                	out.println();
+                	net.writeEmbedding(new PrintWriter(out), true,
+                		getOutputFullCell(), "");
+                }
                 net.setVerified(true);
                 status("Done!");
                 break;
@@ -1077,6 +1085,8 @@ public class SystreCmdline extends EventSource {
                 }
             } else if (s.equals("-x")) {
                 archivesAsInput = !archivesAsInput;
+            } else if (s.equals("--includeCGD")) {
+            	setIncludeReadableOutput(true);
             } else {
                 if (args[i].endsWith(".arc") && !archivesAsInput) {
                     archives.add(args[i]);
@@ -1296,5 +1306,13 @@ public class SystreCmdline extends EventSource {
 
 	public void setOutputSystreKey(boolean outputSystreKey) {
 		this.outputSystreKey = outputSystreKey;
+	}
+    
+	public boolean getIncludeReadableOutput() {
+		return this.includeReadableOutput;
+	}
+
+	public void setIncludeReadableOutput(boolean includeReadableOutput) {
+		this.includeReadableOutput = includeReadableOutput;
 	}
 }
