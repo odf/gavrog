@@ -9,6 +9,11 @@ Open bugs/issues:
 Planned/requested features:
 
 Next version (Gavrog 0.7.0):
+- Shift reported edge centers to lie in standard [0-1)^3 domain.
+- Add "1+sum=..." after each coordination sequence.
+- Report point symbols for 2-periodic structures.
+- Normalize lattice vectors for oblique 2d structures as in 3d triclinic.
+- Add a builtin archive for 2d structure.
 - When using defaults, say which ones.
 - Option to output barycentric coordinates if Systre refuses a net.
 - Distinguish between space group and setting differences (monoclinic only?).
