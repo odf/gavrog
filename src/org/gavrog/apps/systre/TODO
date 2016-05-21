@@ -12,6 +12,7 @@ Next version (Gavrog 0.7.0):
 - When using defaults, say which ones.
 - Option to output barycentric coordinates if Systre refuses a net.
 - Distinguish between space group and setting differences (monoclinic only?).
+- support symmetry computation relative to vertex/edge colorings
 - If possible, implement a more general test for ladders.
 
 - Convert coordinates in parser error messages back to original unit cell.
