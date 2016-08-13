@@ -51,6 +51,14 @@ for G0 in Net.iterator(sys.argv[1]):
         name = "unamed-%03d" % count
     print "Net %03d (%s): " % (count, name),
 
+    errors = [err.message for err in G0.errors]
+    if errors:
+        print '\tcontains errors'
+        for err in errors:
+            print "\t%s" % err
+        print
+        continue
+
     # --- IMPORTANT: use the minimal ideal translation unit
     G = G0.minimalImage()
 
