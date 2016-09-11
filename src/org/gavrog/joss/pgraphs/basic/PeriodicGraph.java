@@ -61,7 +61,7 @@ import org.gavrog.joss.geometry.Vector;
 public class PeriodicGraph extends UndirectedGraph {
 
     // --- enables or disables debugging
-    final protected static boolean DEBUG = false;
+    final protected static boolean DEBUG = true;
     
     // --- the cache keys
     final protected static Tag CONNECTED_COMPONENTS = new Tag();
@@ -1880,9 +1880,6 @@ public class PeriodicGraph extends UndirectedGraph {
             taskController.bailOutIfCancelled();
             
             final List<IEdge> b = bases.get(i);
-            if (DEBUG) {
-                System.out.println("  Checking basis " + b);
-            }
             final INode v0 = b.get(0).source();
             final Matrix B = differenceMatrix(b);
             final Matrix B_1 = (Matrix) B.inverse();
@@ -1982,50 +1979,37 @@ public class PeriodicGraph extends UndirectedGraph {
                         if (vn < wn || (vn == wn && shift.sign() < 0)) {
                             // --- compare with the best result to date
                             final EdgeCmd newEdge = new EdgeCmd(vn, wn, shift);
-                            if (DEBUG) {
-                                System.out.print("    New edge " + newEdge);
-                            }
                             
                             if (equal) {
-                                if (DEBUG) {
-                                    System.out.print(" - compared to " + bestScript[edgesSoFar] + " at " + edgesSoFar + " -");
-                                }
                                 final int cmp = newEdge.compareTo(bestScript[edgesSoFar]);
                                 if (cmp < 0) {
-                                    if (DEBUG) {
-                                        System.out.print(" is a winner.");
-                                    }
                                     equal = false;
                                 } else if (cmp > 0) {
-                                    if (DEBUG) {
-                                        System.out.println(" is a loser.");
-                                    }
                                     throw new Break();
-                                } else {
-                                    if (DEBUG) {
-                                        System.out.print(" is equal.");
-                                    }
                                 }
-                            }
-                            if (DEBUG) {
-                                System.out.println("");
                             }
                             if (!equal) {
-                                if (DEBUG) {
-                                    System.out.println("    Writing " + newEdge + " at position " + edgesSoFar);
-                                }
                                 bestScript[edgesSoFar] = newEdge;
                             }
                             edgesSoFar++;
                         }
                     }
                 }
+                if (equal)
+                	continue;
             } catch (Break done) {
                 continue;
             }
             bestBasis = (Matrix) basisAdjustment.getBasis()
                     .times(differenceMatrix(b));
             bestStart = b.get(0).source();
+            if (DEBUG) {
+            	System.out.println("Best basis so far: " + bestBasis);
+            	System.out.println("Best traversal so far:");
+            	for (EdgeCmd e: bestScript)
+            		System.out.println("  " + e);
+            	System.out.println();
+            }
         }
         
         // --- collect the shift vectors and extract a basis
