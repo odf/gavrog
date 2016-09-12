@@ -2004,7 +2004,6 @@ public class PeriodicGraph extends UndirectedGraph {
                     .times(differenceMatrix(b));
             bestStart = b.get(0).source();
             if (DEBUG) {
-            	System.out.println("Best basis so far: " + bestBasis);
             	System.out.println("Best traversal so far:");
             	for (EdgeCmd e: bestScript)
             		System.out.println("  " + e);
@@ -2020,6 +2019,8 @@ public class PeriodicGraph extends UndirectedGraph {
         }
         Matrix.triangulate(A, null, true, false);
         final Matrix B = A.getSubMatrix(0, 0, d, d);
+        if (DEBUG)
+            System.out.println("Shift basis: " + B);
 
         final CoordinateChange basisChange = new CoordinateChange(B);
         
