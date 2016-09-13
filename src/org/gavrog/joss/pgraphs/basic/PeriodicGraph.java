@@ -61,7 +61,7 @@ import org.gavrog.joss.geometry.Vector;
 public class PeriodicGraph extends UndirectedGraph {
 
     // --- enables or disables debugging
-    final protected static boolean DEBUG = true;
+    final protected static boolean DEBUG = false;
     
     // --- the cache keys
     final protected static Tag CONNECTED_COMPONENTS = new Tag();
