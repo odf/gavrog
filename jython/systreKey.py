@@ -8,9 +8,16 @@ from org.gavrog.joss.pgraphs.io import Net, Output
 
 for G in Net.iterator(sys.argv[1]):
     print G.name
-    dim = G.dimension
-    inv = G.invariant()
 
-    for i in range(1, len(inv), dim + 2):
-        print '  %s' % inv[i : i + dim + 2]
+    if not G.isConnected():
+        print "  Error: net '%s' is not connected" % G.name
+    elif not G.isLocallyStable():
+        print "  Error: net '%s' is not locally stable" % G.name
+    else:
+        dim = G.dimension
+        inv = G.minimalImage().invariant()
+
+        for i in range(1, len(inv), dim + 2):
+            print '  %s' % inv[i : i + dim + 2]
+
     print
