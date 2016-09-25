@@ -32,8 +32,31 @@ archive.addAll(reader)
 
 
 # ============================================================
+#   Helper function
+# ============================================================
+
+def minimalImageWithNodeNames(net):
+    if net.isMinimal():
+        return net, dict((v, [str(net.getNodeName(v))]) for v in net.nodes())
+    else:
+        phi = net.minimalImageMap()
+        imageGraph = phi.getImageGraph()
+
+        names = {}
+        for v in net.nodes():
+            names.setdefault(phi.getImage(v), set()).add(net.getNodeName(v))
+
+        nodeToNames = {}
+        for v in imageGraph.nodes():
+            nodeToNames[v] = sorted(map(str, names[v]))
+
+        return imageGraph, nodeToNames
+
+
+# ============================================================
 #   Main data processing
 # ============================================================
+
 
 # --- dictionary of seen nets
 seen = {}
@@ -60,7 +83,7 @@ for G0 in Net.iterator(sys.argv[1]):
         continue
 
     # --- IMPORTANT: use the minimal ideal translation unit
-    G = G0.minimalImage()
+    G, nodeToNames = minimalImageWithNodeNames(G0)
 
     # --- compute the Systre key and check if we've seen it
     key = G.systreKey
@@ -73,6 +96,11 @@ for G0 in Net.iterator(sys.argv[1]):
     else:
         print "\tnew entry"
     seen[key] = name
+
+    # --- print node names, possibly composites from original names
+    print "\tNodes:"
+    for v in G.nodes():
+        print "\t\t%s %s" % (v.id(), " ".join(nodeToNames[v]))
 
     # --- print coordination sequences for the unique nodes
     print "\tCS:",
@@ -108,20 +136,29 @@ for G0 in Net.iterator(sys.argv[1]):
     else:
         print "\tnot found"
 
-    # --- print out the minimal graph in canonical form (the Systre key)
-    print "\tCode:",
-    print "\t%s" % key
-
-    # --- print out the barycentric positions for the canonical form
+    # --- print out the barycentric positions
     print "\tPositions:"
-    canonical = G.canonical()
-    pos = canonical.barycentricPlacement()
-    for v in canonical.nodes():
+    pos = G.barycentricPlacement()
+    for v in G.nodes():
         print "\t\t%s" % v.id(),
         p = pos[v]
         for i in range(p.dimension):
             print "%9.5f" % p[i],
         print
+
+    print "\tEdges:"
+    for e in G.edges():
+        v = e.source()
+        w = e.target()
+        s = G.getShift(e)
+        print "\t\t%s %s " % (v.id(), w.id()),
+        for i in range(s.dimension):
+            print "%2s" % s[i],
+        print
+
+    # --- print out the minimal graph in canonical form (the Systre key)
+    print "\tCode:",
+    print "\t%s" % key
 
     # --- print out the graph expressed in terms of a conventional unit cell
     cover = G.conventionalCellCover()
