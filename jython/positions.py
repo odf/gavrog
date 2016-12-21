@@ -15,8 +15,12 @@ for G in Net.iterator(sys.argv[1]):
         dim = G.dimension
         pos = G.barycentricPlacement()
 
-        for v in G.nodes():
+        nodes = [(int(G.getNodeName(v)), v) for v in G.nodes()]
+        nodes.sort()
+
+        for name, v in nodes:
             p = pos[v]
-            print "  %s %s" % (v.id(), ' '.join([str(p[i]) for i in range(dim)]))
+            positionAsString = ' '.join([str(p[i]) for i in range(dim)])
+            print "  %d %s" % (name, positionAsString)
 
     print
