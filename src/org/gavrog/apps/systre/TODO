@@ -9,6 +9,8 @@ Open bugs/issues:
 Planned/requested features:
 
 Next version (Gavrog 0.7.0):
+- Allow embedding in given symmetry.
+
 - When using defaults, say which ones.
 - Option to output barycentric coordinates if Systre refuses a net.
 - Distinguish between space group and setting differences (monoclinic only?).
