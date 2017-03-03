@@ -34,10 +34,22 @@ def readArchiveFromFile(fname):
 
 
 def prefixedLineWriter(prefix=''):
-    def write(s):
+    def write(s=''):
         print "%s%s" % (prefix, s)
 
     return write
+
+
+def processGraph(
+    graph,
+    options,
+    writeInfo=prefixedLineWriter(),
+    writeData=prefixedLineWriter(),
+    lookupArchives={},
+    runArchive=makeArchive(),
+    outputArchiveFp=None):
+
+    pass
 
 
 def processDataFile(
@@ -49,7 +61,53 @@ def processDataFile(
     runArchive=makeArchive(),
     outputArchiveFp=None):
 
+    count = 0
+    fileBaseName = os.path.splitext(os.path.basename(fname))[0]
+
     writeInfo("Data file %s" % fname)
+
+    for G in org.gavrog.joss.pgraphs.io.Net.iterator(fname):
+        writeData()
+        if count:
+            writeData()
+            writeData()
+
+        count += 1
+
+        name = G.name or "%s-#%03d" % (fileBaseName, count)
+
+        writeInfo("Structure #%d - %s" % (count, name))
+        writeData()
+
+        hasWarnings = False
+        for text in G.warnings:
+            writeInfo("   (%s)" % text)
+            hasWarnings = True
+
+        if hasWarnings:
+            writeData()
+
+        hasErrors = False
+        for err in G.errors:
+            writeInfo("!!! ERROR (INPUT) - %s" % err.message)
+            hasErrors = True
+
+        if hasErrors:
+            continue
+
+        processGraph(
+            G,
+            options,
+            writeInfo=writeInfo,
+            writeData=writeData,
+            lookupArchives=lookupArchives,
+            runArchive=runArchive,
+            outputArchiveFp=outputArchiveFp)
+
+        writeInfo("Finished structure #%d - %s" % (count, name))
+
+    writeData()
+    writeInfo("Finished data file \"%s\"." % fname)
 
 
 def parseOptions():
