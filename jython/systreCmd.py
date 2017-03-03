@@ -10,8 +10,15 @@ import java.util
 import org.gavrog
 
 
-def isArchive(filename):
+def isArchiveFileName(filename):
     return os.path.splitext(filename)[1] == '.arc'
+
+
+def makeArchive(reader=None):
+    archive = org.gavrog.joss.pgraphs.io.Archive('1.0')
+    if reader:
+        archive.addAll(reader)
+    return archive
 
 
 def readBuiltinArchive(name):
@@ -19,17 +26,11 @@ def readBuiltinArchive(name):
     rcsrPath = "org/gavrog/apps/systre/%s" % name
     rcsrStream = loader.getResourceAsStream(rcsrPath)
 
-    archive = org.gavrog.joss.pgraphs.io.Archive('1.0')
-    archive.addAll(java.io.InputStreamReader(rcsrStream))
-
-    return archive
+    return makeArchive(java.io.InputStreamReader(rcsrStream))
 
 
 def readArchiveFromFile(fname):
-    archive = org.gavrog.joss.pgraphs.io.Archive('1.0')
-    archive.addAll(java.io.FileReader(fname))
-
-    return archive
+    return makeArchive(java.io.FileReader(fname))
 
 
 def prefixedLineWriter(prefix=''):
@@ -45,13 +46,13 @@ def processDataFile(
     writeInfo=prefixedLineWriter(),
     writeData=prefixedLineWriter(),
     lookupArchives={},
-    runArchive=org.gavrog.joss.pgraphs.io.Archive('1.0'),
+    runArchive=makeArchive(),
     outputArchiveFp=None):
 
     writeInfo("Data file %s" % fname)
 
 
-def run():
+def parseOptions():
     parser = optparse.OptionParser("usage: %prog [OPTIONS] FILE...")
 
     parser.add_option('-a', '--output-archive-name', metavar='FILE',
@@ -104,14 +105,18 @@ def run():
                       default=False, action='store_true',
                       help='process archive files as normal net input')
 
-    (options, args) = parser.parse_args()
+    return parser.parse_args()
+
+
+def run():
+    options, args = parseOptions()
 
     if options.archivesAsInput:
         inputFileNames = args
         archiveFileNames = []
     else:
-        archiveFileNames = filter(isArchive, args)
-        inputFileNames = filter(lambda s: not isArchive(s), args)
+        archiveFileNames = filter(isArchiveFileName, args)
+        inputFileNames = filter(lambda s: not isArchiveFileName(s), args)
 
     lookupArchives = {}
     if options.useBuiltinArchive:
@@ -120,7 +125,7 @@ def run():
     for fname in archiveFileNames:
         lookupArchives[fname] = readArchiveFromFile(fname)
 
-    runArchive = org.gavrog.joss.pgraphs.io.Archive('1.0')
+    runArchive = makeArchive()
 
     arcFp = options.outputArchiveName and file(options.outputArchiveName, 'wb')
 
