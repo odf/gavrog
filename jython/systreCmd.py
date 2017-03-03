@@ -11,7 +11,7 @@ import org.gavrog
 
 
 def isArchive(filename):
-    return os.path.splitext(filename)[1] == '.arc';
+    return os.path.splitext(filename)[1] == '.arc'
 
 
 def readBuiltinArchive(name):
@@ -32,14 +32,23 @@ def readArchiveFromFile(fname):
     return archive
 
 
+def prefixedLineWriter(prefix=''):
+    def write(s):
+        print "%s%s" % (prefix, s)
+
+    return write
+
+
 def processDataFile(
     fname,
     options,
-    archivesByName,
-    runArchive,
-    outArchiveFp=None):
+    writeInfo=prefixedLineWriter(),
+    writeData=prefixedLineWriter(),
+    lookupArchives={},
+    runArchive=org.gavrog.joss.pgraphs.io.Archive('1.0'),
+    outputArchiveFp=None):
 
-    pass
+    writeInfo("Data file %s" % fname)
 
 
 def run():
@@ -104,23 +113,33 @@ def run():
         archiveFileNames = filter(isArchive, args)
         inputFileNames = filter(lambda s: not isArchive(s), args)
 
-    archivesByName = {}
+    lookupArchives = {}
     if options.useBuiltinArchive:
-        archivesByName['__rcsr__'] = readBuiltinArchive('rcsr.arc')
+        lookupArchives['__rcsr__'] = readBuiltinArchive('rcsr.arc')
 
     for fname in archiveFileNames:
-        archivesByName[fname] = readArchiveFromFile(fname)
+        lookupArchives[fname] = readArchiveFromFile(fname)
 
     runArchive = org.gavrog.joss.pgraphs.io.Archive('1.0')
 
     arcFp = options.outputArchiveName and file(options.outputArchiveName, 'wb')
 
-    for name in inputFileNames:
-        processDataFile(name, options, archivesByName, runArchive, arcFp)
+    infoPrefix = '## ' if options.outputFormatCGD else ''
 
-    if arcFp:
-        arcFp.flush()
-        arcFp.close()
+    try:
+        for name in inputFileNames:
+            processDataFile(
+                name,
+                options,
+                writeInfo=prefixedLineWriter(infoPrefix),
+                writeData=prefixedLineWriter(),
+                lookupArchives=lookupArchives,
+                runArchive=runArchive,
+                outputArchiveFp=arcFp)
+    finally:
+        if arcFp:
+            arcFp.flush()
+            arcFp.close()
 
 
 if __name__ == "__main__":
