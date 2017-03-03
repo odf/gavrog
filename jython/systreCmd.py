@@ -1,8 +1,8 @@
 #!/bin/env jython
 
-import sys
 import optparse
 import os.path
+import sys
 
 import java.io
 import java.util
@@ -30,6 +30,16 @@ def readArchiveFromFile(fname):
     archive.addAll(java.io.FileReader(fname))
 
     return archive
+
+
+def processDataFile(
+    fname,
+    options,
+    archivesByName,
+    runArchive,
+    outArchiveFp=None):
+
+    pass
 
 
 def run():
@@ -101,9 +111,16 @@ def run():
     for fname in archiveFileNames:
         archivesByName[fname] = readArchiveFromFile(fname)
 
-    print "options  = %s" % (options,)
-    print "archives = %s" % (archiveFileNames,)
-    print "inputs   = %s" % (inputFileNames,)
+    runArchive = org.gavrog.joss.pgraphs.io.Archive('1.0')
+
+    arcFp = options.outputArchiveName and file(options.outputArchiveName, 'wb')
+
+    for name in inputFileNames:
+        processDataFile(name, options, archivesByName, runArchive, arcFp)
+
+    if arcFp:
+        arcFp.flush()
+        arcFp.close()
 
 
 if __name__ == "__main__":
