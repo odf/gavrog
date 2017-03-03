@@ -24,6 +24,10 @@ def run():
                       dest='relaxPositions',
                       default=True, action='store_false',
                       help='output barycentric instead of relaxed positions')
+    parser.add_option('-c', '--output-format-cgd',
+                      dest='outputFormatCGD',
+                      default=False, action='store_true',
+                      help='produce .cgd file format instead of default output')
     parser.add_option('-d', '--duplicate-is-error',
                       dest='duplicateIsError',
                       default=False, action='store_true',
