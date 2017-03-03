@@ -17,7 +17,7 @@ def isArchive(filename):
 def run():
     parser = optparse.OptionParser("usage: %prog [OPTIONS] FILE...")
 
-    parser.add_option('-a', '--output-archive-name',
+    parser.add_option('-a', '--output-archive-name', metavar='FILE',
                       dest='outputArchiveName', type='string',
                       help='file name for optional output archive')
     parser.add_option('-b', '--barycentric',
@@ -30,7 +30,7 @@ def run():
                       help='terminate if a net is encountered twice')
     parser.add_option('-e', '--equal-edge-priority', metavar='N',
                       dest='relaxPasses', type='int', default=3,
-                      help='importance of edge lengths over unit cell volume')
+                      help='equal edge lengths priority (default 3)')
     parser.add_option('-f', '--prefer-first-origin',
                       dest='preferSecondOrigin',
                       default=True, action='store_false',
@@ -49,7 +49,7 @@ def run():
                       help='prefer rhombohedral over hexagonal setting')
     parser.add_option('-s', '--relaxation-steps', metavar='N',
                       dest='relaxSteps', type='int', default=10000,
-                      help='max. number of iterations when relaxing positions')
+                      help='iterations in net relaxation (default 10000)')
     parser.add_option('-t', '--skip-embedding',
                       dest='computeEmbedding',
                       default=True, action='store_false',
