@@ -14,6 +14,24 @@ def isArchive(filename):
     return os.path.splitext(filename)[1] == '.arc';
 
 
+def readBuiltinArchive(name):
+    loader = java.lang.ClassLoader.getSystemClassLoader()
+    rcsrPath = "org/gavrog/apps/systre/%s" % name
+    rcsrStream = loader.getResourceAsStream(rcsrPath)
+
+    archive = org.gavrog.joss.pgraphs.io.Archive('1.0')
+    archive.addAll(java.io.InputStreamReader(rcsrStream))
+
+    return archive
+
+
+def readArchiveFromFile(fname):
+    archive = org.gavrog.joss.pgraphs.io.Archive('1.0')
+    archive.addAll(java.io.FileReader(fname))
+
+    return archive
+
+
 def run():
     parser = optparse.OptionParser("usage: %prog [OPTIONS] FILE...")
 
@@ -75,6 +93,13 @@ def run():
     else:
         archiveFileNames = filter(isArchive, args)
         inputFileNames = filter(lambda s: not isArchive(s), args)
+
+    archivesByName = {}
+    if options.useBuiltinArchive:
+        archivesByName['__rcsr__'] = readBuiltinArchive('rcsr.arc')
+
+    for fname in archiveFileNames:
+        archivesByName[fname] = readArchiveFromFile(fname)
 
     print "options  = %s" % (options,)
     print "archives = %s" % (archiveFileNames,)
