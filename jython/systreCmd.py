@@ -10,6 +10,10 @@ import java.util
 import org.gavrog
 
 
+def pluralize(n, s):
+    return "%d %s%s" % (n, s, "s" if n > 1 else "")
+
+
 def isArchiveFileName(filename):
     return os.path.splitext(filename)[1] == '.arc'
 
@@ -40,6 +44,26 @@ def prefixedLineWriter(prefix=''):
     return write
 
 
+def reportSystreError(errorType, message, writeInfo):
+    writeInfo("!!! ERROR (%s) - %s." % (errorType, message))
+
+
+def processDisconnectedGraph(
+    graph,
+    options,
+    writeInfo=prefixedLineWriter(),
+    writeData=prefixedLineWriter(),
+    lookupArchives={},
+    runArchive=makeArchive(),
+    outputArchiveFp=None):
+
+    writeInfo("   Structure is not connected.")
+    writeInfo("   Processing components separately.")
+    writeInfo()
+
+    #TODO implement this
+
+
 def processGraph(
     graph,
     options,
@@ -49,7 +73,60 @@ def processGraph(
     runArchive=makeArchive(),
     outputArchiveFp=None):
 
-    pass
+    d = graph.dimension
+    n = graph.numberOfNodes()
+    m = graph.numberOfEdges()
+
+    writeInfo("   Input structure described as %d-periodic." % d)
+    writeInfo("   Given space group is %s." % graph.givenGroup)
+    writeInfo("   %s and %s in repeat unit as given." % (
+            pluralize(n, "node"), pluralize(m, "edge")))
+    writeInfo()
+
+    if not graph.isConnected():
+        return processDisconnecteGraph(
+            G,
+            options,
+            writeInfo=writeInfo,
+            writeData=writeData,
+            lookupArchives=lookupArchives,
+            runArchive=runArchive,
+            outputArchiveFp=outputArchiveFp)
+
+    pos = graph.barycentricPlacement()
+
+    if not graph.isLocallyStable():
+        msg = ("Structure has collisions between next-nearest neighbors."
+               + " Systre does not currently support such structures.")
+        return reportSystreError("STRUCTURE", msg, writeInfo)
+
+    if graph.isLadder():
+        msg = "Structure is non-crystallographic (a 'ladder')"
+        return reportSystreError("STRUCTURE", msg, writeInfo)
+
+    if graph.hasSecondOrderCollisions():
+        msg = ("Structure has second-order collisions."
+               + " Systre does not currently support such structures.")
+        return reportSystreError("STRUCTURE", msg, writeInfo)
+
+    if not graph.isStable():
+        writeInfo("Structure has collisions.")
+        writeInfo()
+
+    M = graph.minimalImageMap()
+    G = M.imageGraph
+
+    if G.numberOfEdges() < m:
+        writeInfo("   Ideal repeat unit smaller than given (%d vs %d edges)."
+                  % (G.numberOfEdges(), m))
+    else:
+        writeInfo("   Given repeat unit is accurate.")
+
+    ops = G.symmetryOperators()
+
+    writeInfo("   Point group has %d elements." % len(ops))
+    writeInfo("   %s of node." % pluralize(len(list(G.nodeOrbits())), "kind"))
+    writeInfo()
 
 
 def processDataFile(
