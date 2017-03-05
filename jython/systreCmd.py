@@ -141,8 +141,7 @@ def processDisconnectedGraph(
     options,
     writeInfo=prefixedLineWriter(),
     writeData=prefixedLineWriter(),
-    lookupArchives={},
-    runArchive=makeArchive(),
+    archives=[],
     outputArchiveFp=None):
 
     writeInfo("   Structure is not connected.")
@@ -157,8 +156,7 @@ def processGraph(
     options,
     writeInfo=prefixedLineWriter(),
     writeData=prefixedLineWriter(),
-    lookupArchives={},
-    runArchive=makeArchive(),
+    archives=[],
     outputArchiveFp=None):
 
     d = graph.dimension
@@ -177,8 +175,7 @@ def processGraph(
             options,
             writeInfo=writeInfo,
             writeData=writeData,
-            lookupArchives=lookupArchives,
-            runArchive=runArchive,
+            archives=archives,
             outputArchiveFp=outputArchiveFp)
 
     pos = graph.barycentricPlacement()
@@ -239,6 +236,29 @@ def processGraph(
     invariant = G.systreKey
     if options.outputSystreKey:
         writeInfo("   Systre key: \"%s\"" % invariant)
+        writeInfo()
+
+    countMatches = 0
+    for name, arc in archives:
+        found = arc.getByKey(invariant)
+        if found:
+            countMatches += 1
+            if name == '__rcsr__':
+                writeInfo("   Structure was identified with RCSR symbol:")
+            elif name == '__internal__':
+                writeInfo("   Structure already seen in this run.")
+            else:
+                writeInfo("   Structure was found in archive \"%s\":" % name)
+
+            writeInfo("       Name:            %s" % found.name)
+            if found.description:
+                writeInfo("       Description:     %s" % found.description)
+            if found.reference:
+                writeInfo("       Reference:       %s" % found.reference)
+            if found.getURL():
+                writeInfo("       URL:             %s" % found.getURL())
+
+            writeInfo()
 
 
 def processDataFile(
@@ -246,8 +266,7 @@ def processDataFile(
     options,
     writeInfo=prefixedLineWriter(),
     writeData=prefixedLineWriter(),
-    lookupArchives={},
-    runArchive=makeArchive(),
+    archives=[],
     outputArchiveFp=None):
 
     count = 0
@@ -289,8 +308,7 @@ def processDataFile(
             options,
             writeInfo=writeInfo,
             writeData=writeData,
-            lookupArchives=lookupArchives,
-            runArchive=runArchive,
+            archives=archives,
             outputArchiveFp=outputArchiveFp)
 
         writeInfo("Finished structure #%d - %s" % (count, name))
@@ -313,10 +331,6 @@ def parseOptions():
                       dest='outputFormatCGD',
                       default=False, action='store_true',
                       help='produce .cgd file format instead of default output')
-    parser.add_option('-d', '--duplicate-is-error',
-                      dest='duplicateIsError',
-                      default=False, action='store_true',
-                      help='terminate if a net is encountered twice')
     parser.add_option('-e', '--equal-edge-priority', metavar='N',
                       dest='relaxPasses', type='int', default=3,
                       help='equal edge lengths priority (default 3)')
@@ -369,14 +383,12 @@ def run():
         archiveFileNames = filter(isArchiveFileName, args)
         inputFileNames = filter(lambda s: not isArchiveFileName(s), args)
 
-    lookupArchives = {}
+    archives = []
     if options.useBuiltinArchive:
-        lookupArchives['__rcsr__'] = readBuiltinArchive('rcsr.arc')
-
+        archives.append(('__rcsr__', readBuiltinArchive('rcsr.arc')))
     for fname in archiveFileNames:
-        lookupArchives[fname] = readArchiveFromFile(fname)
-
-    runArchive = makeArchive()
+        archives.append((fname, readArchiveFromFile(fname)))
+    archives.append(('__internal__', makeArchive()))
 
     arcFp = options.outputArchiveName and file(options.outputArchiveName, 'wb')
 
@@ -389,8 +401,7 @@ def run():
                 options,
                 writeInfo=prefixedLineWriter(infoPrefix),
                 writeData=prefixedLineWriter(),
-                lookupArchives=lookupArchives,
-                runArchive=runArchive,
+                archives=archives,
                 outputArchiveFp=arcFp)
     finally:
         if arcFp:
