@@ -48,6 +48,35 @@ def reportSystreError(errorType, message, writeInfo):
     writeInfo("!!! ERROR (%s) - %s." % (errorType, message))
 
 
+def nodeNameMapping(phi):
+    imageNode2Orbit = {}
+    for orbit in phi.imageGraph.nodeOrbits():
+        for v in orbit:
+            imageNode2Orbit[v] = orbit
+
+    orbit2name = {}
+    node2name = {}
+    mergedNames = []
+    mergedNamesSeen = set()
+
+    for v in phi.sourceGraph.nodes():
+        name = phi.sourceGraph.getNodeName(v)
+        w = phi.getImage(v)
+        orbit = imageNode2Orbit[w]
+
+        if name != orbit2name.get(orbit, name):
+            pair = (name, orbit2name[orbit])
+            if pair not in mergedNamesSeen:
+                mergedNames.append(pair)
+                mergedNamesSeen.add(pair)
+        else:
+            orbit2name[orbit] = name
+
+        node2name[w] = orbit2name[orbit]
+
+    return node2name, mergedNames
+
+
 def processDisconnectedGraph(
     graph,
     options,
@@ -126,6 +155,13 @@ def processGraph(
 
     writeInfo("   Point group has %d elements." % len(ops))
     writeInfo("   %s of node." % pluralize(len(list(G.nodeOrbits())), "kind"))
+    writeInfo()
+
+    nodeToName, mergedNames = nodeNameMapping(M)
+
+    writeInfo("   Equivalences for non-unique nodes:")
+    for old, new in mergedNames:
+        writeInfo("      %s --> %s" % (old, new))
     writeInfo()
 
 
