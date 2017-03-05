@@ -204,6 +204,13 @@ def processGraph(
 
     showCoordinationSequences(G, nodeToName, writeInfo)
 
+    if options.computePointSymbols and G.dimension >= 3:
+        writeInfo("   Wells point symbols:")
+        for orbit in G.nodeOrbits():
+            v = orbit.iterator().next()
+            writeInfo("      Node %s:   %s" % (nodeToName[v], G.pointSymbol(v)))
+        writeInfo()
+
 
 def processDataFile(
     fname,
@@ -296,6 +303,10 @@ def parseOptions():
                       dest='useBuiltinArchive',
                       default=True, action='store_false',
                       help='do not use the builtin Systre archive')
+    parser.add_option('-p', '--point-symbols',
+                      dest='computePointSymbols',
+                      default=False, action='store_true',
+                      help='compute Wells point symbols')
     parser.add_option('-r', '--prefer-rhombohedral',
                       dest='preferHexagonal',
                       default=True, action='store_false',
