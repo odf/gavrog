@@ -236,6 +236,10 @@ def processGraph(
         org.gavrog.joss.geometry.SpaceGroup(d, ops))
     showSpaceGroup(graph.givenGroup, finder, writeInfo)
 
+    invariant = G.systreKey
+    if options.outputSystreKey:
+        writeInfo("   Systre key: \"%s\"" % invariant)
+
 
 def processDataFile(
     fname,
