@@ -115,6 +115,27 @@ def showCoordinationSequences(G, nodeToName, writeInfo):
     writeInfo()
 
 
+def showSpaceGroup(givenGroup, finder, writeInfo):
+    writeInfo("   Ideal space group is %s." % finder.groupName)
+
+    givenName = org.gavrog.joss.geometry.SpaceGroupCatalogue.normalizedName(
+        givenGroup)
+    if finder.groupName != givenName:
+        writeInfo("   Ideal group or setting differs from given (%s vs %s)."
+                  % (finder.groupName, givenName))
+
+    if finder.extension == '1':
+        writeInfo("     (using first origin choice)")
+    elif finder.extension == '2':
+        writeInfo("     (using second origin choice)")
+    elif finder.extension == 'H':
+        writeInfo("     (using hexagonal setting)")
+    elif finder.extension == 'R':
+        writeInfo("     (using rhombohedral setting)")
+
+    writeInfo()
+
+
 def processDisconnectedGraph(
     graph,
     options,
@@ -210,6 +231,10 @@ def processGraph(
             v = orbit.iterator().next()
             writeInfo("      Node %s:   %s" % (nodeToName[v], G.pointSymbol(v)))
         writeInfo()
+
+    finder = org.gavrog.joss.geometry.SpaceGroupFinder(
+        org.gavrog.joss.geometry.SpaceGroup(d, ops))
+    showSpaceGroup(graph.givenGroup, finder, writeInfo)
 
 
 def processDataFile(
