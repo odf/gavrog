@@ -77,6 +77,44 @@ def nodeNameMapping(phi):
     return node2name, mergedNames
 
 
+def showCoordinationSequences(G, nodeToName, writeInfo):
+    writeInfo("   Coordination sequences:")
+
+    cum = 0
+    complete = True
+
+    for orbit in G.nodeOrbits():
+        v = orbit.iterator().next()
+        cs = G.coordinationSequence(v)
+        cs.next()
+        s = 1
+        out = ["      Node %s:   " % nodeToName[v]]
+
+        for i in range(10):
+            if s > 100000:
+                complete = False
+                out.append('...')
+                break
+
+            x = cs.next()
+            out.append(x)
+            s += x
+
+        cum += orbit.size() * s
+
+        writeInfo(' '.join(map(str, out)))
+
+    writeInfo()
+
+    if complete:
+        td10 = cum / G.numberOfNodes()
+        writeInfo("   TD10 = %s" % int(td10 + 0.5))
+    else:
+        writeInfo("   TD10 not computed.")
+
+    writeInfo()
+
+
 def processDisconnectedGraph(
     graph,
     options,
@@ -163,6 +201,8 @@ def processGraph(
     for old, new in mergedNames:
         writeInfo("      %s --> %s" % (old, new))
     writeInfo()
+
+    showCoordinationSequences(G, nodeToName, writeInfo)
 
 
 def processDataFile(
