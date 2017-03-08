@@ -136,8 +136,36 @@ def showSpaceGroup(givenGroup, finder, writeInfo):
     writeInfo()
 
 
+def showAndCountGraphMatches(invariant, archives, writeInfo):
+    count = 0
+
+    for name, arc in archives:
+        found = arc.getByKey(invariant)
+        if found:
+            count += 1
+            if name == '__rcsr__':
+                writeInfo("   Structure was identified with RCSR symbol:")
+            elif name == '__internal__':
+                writeInfo("   Structure already seen in this run.")
+            else:
+                writeInfo("   Structure was found in archive \"%s\":" % name)
+
+            writeInfo("       Name:            %s" % found.name)
+            if found.description:
+                writeInfo("       Description:     %s" % found.description)
+            if found.reference:
+                writeInfo("       Reference:       %s" % found.reference)
+            if found.getURL():
+                writeInfo("       URL:             %s" % found.getURL())
+
+            writeInfo()
+
+    return count
+
+
 def processDisconnectedGraph(
     graph,
+    name,
     options,
     writeInfo=prefixedLineWriter(),
     writeData=prefixedLineWriter(),
@@ -153,6 +181,7 @@ def processDisconnectedGraph(
 
 def processGraph(
     graph,
+    name,
     options,
     writeInfo=prefixedLineWriter(),
     writeData=prefixedLineWriter(),
@@ -172,6 +201,7 @@ def processGraph(
     if not graph.isConnected():
         return processDisconnecteGraph(
             G,
+            name,
             options,
             writeInfo=writeInfo,
             writeData=writeData,
@@ -238,27 +268,17 @@ def processGraph(
         writeInfo("   Systre key: \"%s\"" % invariant)
         writeInfo()
 
-    countMatches = 0
-    for name, arc in archives:
-        found = arc.getByKey(invariant)
-        if found:
-            countMatches += 1
-            if name == '__rcsr__':
-                writeInfo("   Structure was identified with RCSR symbol:")
-            elif name == '__internal__':
-                writeInfo("   Structure already seen in this run.")
-            else:
-                writeInfo("   Structure was found in archive \"%s\":" % name)
+    countMatches = showAndCountGraphMatches(invariant, archives, writeInfo)
+    if countMatches == 0:
+        writeInfo("   Structure is new for this run.")
+        writeInfo()
+        entry = org.gavrog.joss.pgraphs.io.Archive.Entry(
+            invariant, G.invariantVersion, name)
+        archives[-1][1].add(entry)
 
-            writeInfo("       Name:            %s" % found.name)
-            if found.description:
-                writeInfo("       Description:     %s" % found.description)
-            if found.reference:
-                writeInfo("       Reference:       %s" % found.reference)
-            if found.getURL():
-                writeInfo("       URL:             %s" % found.getURL())
-
-            writeInfo()
+        if outputArchiveFp:
+            outputArchiveFp.write(entry.toString())
+            outputArchiveFp.write('\n')
 
 
 def processDataFile(
@@ -305,6 +325,7 @@ def processDataFile(
 
         processGraph(
             G,
+            name,
             options,
             writeInfo=writeInfo,
             writeData=writeData,
