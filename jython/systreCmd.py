@@ -10,6 +10,23 @@ import java.util
 import org.gavrog
 
 
+class OrderedDict:
+    def __init__(self):
+        self.__dict = {}
+        self.__keys = []
+
+    def __iter__(self):
+        return self.__keys.__iter__()
+
+    def __getitem__(self, key):
+        return self.__dict[key]
+
+    def __setitem__(self, key, value):
+        if not self.__dict.has_key(key):
+            self.__keys.append(key)
+        self.__dict[key] = value
+
+
 def pluralize(n, s):
     return "%d %s%s" % (n, s, "s" if n > 1 else "")
 
@@ -139,7 +156,8 @@ def showSpaceGroup(givenGroup, finder, writeInfo):
 def showAndCountGraphMatches(invariant, archives, writeInfo):
     count = 0
 
-    for name, arc in archives:
+    for name in archives:
+        arc = archives[name]
         found = arc.getByKey(invariant)
         if found:
             count += 1
@@ -169,7 +187,7 @@ def processDisconnectedGraph(
     options,
     writeInfo=prefixedLineWriter(),
     writeData=prefixedLineWriter(),
-    archives=[],
+    archives=OrderedDict(),
     outputArchiveFp=None):
 
     writeInfo("   Structure is not connected.")
@@ -185,7 +203,7 @@ def processGraph(
     options,
     writeInfo=prefixedLineWriter(),
     writeData=prefixedLineWriter(),
-    archives=[],
+    archives=OrderedDict(),
     outputArchiveFp=None):
 
     d = graph.dimension
@@ -274,7 +292,7 @@ def processGraph(
         writeInfo()
         entry = org.gavrog.joss.pgraphs.io.Archive.Entry(
             invariant, G.invariantVersion, name)
-        archives[-1][1].add(entry)
+        archives['__internal__'].add(entry)
 
         if outputArchiveFp:
             outputArchiveFp.write(entry.toString())
@@ -286,7 +304,7 @@ def processDataFile(
     options,
     writeInfo=prefixedLineWriter(),
     writeData=prefixedLineWriter(),
-    archives=[],
+    archives=OrderedDict(),
     outputArchiveFp=None):
 
     count = 0
@@ -404,12 +422,12 @@ def run():
         archiveFileNames = filter(isArchiveFileName, args)
         inputFileNames = filter(lambda s: not isArchiveFileName(s), args)
 
-    archives = []
+    archives = OrderedDict()
     if options.useBuiltinArchive:
-        archives.append(('__rcsr__', readBuiltinArchive('rcsr.arc')))
+        archives['__rcsr__'] = readBuiltinArchive('rcsr.arc')
     for fname in archiveFileNames:
-        archives.append((fname, readArchiveFromFile(fname)))
-    archives.append(('__internal__', makeArchive()))
+        archives[fname] = readArchiveFromFile(fname)
+    archives['__internal__'] = makeArchive()
 
     arcFp = options.outputArchiveName and file(options.outputArchiveName, 'wb')
 
