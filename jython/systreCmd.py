@@ -258,6 +258,8 @@ def processGraph(
     archives=OrderedDict(),
     outputArchiveFp=None):
 
+    showGraphBasics(graph, writeInfo)
+
     if not checkGraph(graph, writeInfo):
         return
 
