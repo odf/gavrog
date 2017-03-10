@@ -174,7 +174,10 @@ def showPointSymbols(G, nodeToName, writeInfo):
     writeInfo()
 
 
-def showSpaceGroup(givenGroup, finder, writeInfo):
+def showSpaceGroup(graph, ops, givenGroup, writeInfo):
+    finder = org.gavrog.joss.geometry.SpaceGroupFinder(
+        org.gavrog.joss.geometry.SpaceGroup(graph.dimension, ops))
+
     writeInfo("   Ideal space group is %s." % finder.groupName)
 
     givenName = org.gavrog.joss.geometry.SpaceGroupCatalogue.normalizedName(
@@ -223,13 +226,7 @@ def showAndCountGraphMatches(invariant, archives, writeInfo):
     return count
 
 
-def embedAndShowGraph(
-    graph,
-    name,
-    options,
-    writeInfo=prefixedLineWriter(),
-    writeData=prefixedLineWriter()):
-
+def showEmbedding(graph, name, options, writeInfo, writeData):
     #TODO implement this
     pass
 
@@ -242,6 +239,8 @@ def processDisconnectedGraph(
     writeData=prefixedLineWriter(),
     archives=OrderedDict(),
     outputArchiveFp=None):
+
+    showGraphBasics(graph, writeInfo)
 
     writeInfo("   Structure is not connected.")
     writeInfo("   Processing components separately.")
@@ -258,18 +257,6 @@ def processGraph(
     writeData=prefixedLineWriter(),
     archives=OrderedDict(),
     outputArchiveFp=None):
-
-    showGraphBasics(graph, writeInfo)
-
-    if not graph.isConnected():
-        return processDisconnecteGraph(
-            G,
-            name,
-            options,
-            writeInfo=writeInfo,
-            writeData=writeData,
-            archives=archives,
-            outputArchiveFp=outputArchiveFp)
 
     if not checkGraph(graph, writeInfo):
         return
@@ -299,9 +286,7 @@ def processGraph(
     if options.computePointSymbols and G.dimension >= 3:
         showPointSymbols(G, nodeToName, writeInfo)
 
-    finder = org.gavrog.joss.geometry.SpaceGroupFinder(
-        org.gavrog.joss.geometry.SpaceGroup(graph.dimension, ops))
-    showSpaceGroup(graph.givenGroup, finder, writeInfo)
+    showSpaceGroup(G, ops, graph.givenGroup, writeInfo)
 
     invariant = G.systreKey
     if options.outputSystreKey:
@@ -319,8 +304,7 @@ def processGraph(
         if outputArchiveFp:
             outputArchiveFp.write(entry.toString() + '\n')
 
-    embedAndShowGraph(
-        graph, name, options, writeInfo=writeInfo, writeData=writeData)
+    showEmbedding(graph, name, options, writeInfo, writeData)
 
 
 def processDataFile(
@@ -365,7 +349,7 @@ def processDataFile(
         if hasErrors:
             continue
 
-        processGraph(
+        (processGraph if G.isConnected() else processDisconnectedGraph)(
             G,
             name,
             options,
