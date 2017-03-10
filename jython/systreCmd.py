@@ -94,6 +94,31 @@ def nodeNameMapping(phi):
     return node2name, mergedNames
 
 
+def checkGraph(graph, writeInfo):
+    if not graph.isLocallyStable():
+        msg = ("Structure has collisions between next-nearest neighbors."
+               + " Systre does not currently support such structures.")
+        reportSystreError("STRUCTURE", msg, writeInfo)
+        return False
+
+    if graph.isLadder():
+        msg = "Structure is non-crystallographic (a 'ladder')"
+        reportSystreError("STRUCTURE", msg, writeInfo)
+        return False
+
+    if graph.hasSecondOrderCollisions():
+        msg = ("Structure has second-order collisions."
+               + " Systre does not currently support such structures.")
+        reportSystreError("STRUCTURE", msg, writeInfo)
+        return False
+
+    if not graph.isStable():
+        writeInfo("Structure has collisions.")
+        writeInfo()
+
+    return True
+
+
 def showCoordinationSequences(G, nodeToName, writeInfo):
     writeInfo("   Coordination sequences:")
 
@@ -129,6 +154,23 @@ def showCoordinationSequences(G, nodeToName, writeInfo):
     else:
         writeInfo("   TD10 not computed.")
 
+    writeInfo()
+
+
+def showGraphBasics(graph, writeInfo):
+    writeInfo("   Input structure described as %d-periodic." % graph.dimension)
+    writeInfo("   Given space group is %s." % graph.givenGroup)
+    writeInfo("   %s and %s in repeat unit as given."
+              % (pluralize(graph.numberOfNodes(), "node"),
+                 pluralize(graph.numberOfEdges(), "edge")))
+    writeInfo()
+
+
+def showPointSymbols(G, nodeToName, writeInfo):
+    writeInfo("   Wells point symbols:")
+    for orbit in G.nodeOrbits():
+        v = orbit.iterator().next()
+        writeInfo("      Node %s:   %s" % (nodeToName[v], G.pointSymbol(v)))
     writeInfo()
 
 
@@ -181,6 +223,17 @@ def showAndCountGraphMatches(invariant, archives, writeInfo):
     return count
 
 
+def embedAndShowGraph(
+    graph,
+    name,
+    options,
+    writeInfo=prefixedLineWriter(),
+    writeData=prefixedLineWriter()):
+
+    #TODO implement this
+    pass
+
+
 def processDisconnectedGraph(
     graph,
     name,
@@ -206,15 +259,7 @@ def processGraph(
     archives=OrderedDict(),
     outputArchiveFp=None):
 
-    d = graph.dimension
-    n = graph.numberOfNodes()
-    m = graph.numberOfEdges()
-
-    writeInfo("   Input structure described as %d-periodic." % d)
-    writeInfo("   Given space group is %s." % graph.givenGroup)
-    writeInfo("   %s and %s in repeat unit as given." % (
-            pluralize(n, "node"), pluralize(m, "edge")))
-    writeInfo()
+    showGraphBasics(graph, writeInfo)
 
     if not graph.isConnected():
         return processDisconnecteGraph(
@@ -226,43 +271,24 @@ def processGraph(
             archives=archives,
             outputArchiveFp=outputArchiveFp)
 
-    pos = graph.barycentricPlacement()
-
-    if not graph.isLocallyStable():
-        msg = ("Structure has collisions between next-nearest neighbors."
-               + " Systre does not currently support such structures.")
-        return reportSystreError("STRUCTURE", msg, writeInfo)
-
-    if graph.isLadder():
-        msg = "Structure is non-crystallographic (a 'ladder')"
-        return reportSystreError("STRUCTURE", msg, writeInfo)
-
-    if graph.hasSecondOrderCollisions():
-        msg = ("Structure has second-order collisions."
-               + " Systre does not currently support such structures.")
-        return reportSystreError("STRUCTURE", msg, writeInfo)
-
-    if not graph.isStable():
-        writeInfo("Structure has collisions.")
-        writeInfo()
+    if not checkGraph(graph, writeInfo):
+        return
 
     M = graph.minimalImageMap()
     G = M.imageGraph
 
-    if G.numberOfEdges() < m:
+    if G.numberOfEdges() < graph.numberOfEdges():
         writeInfo("   Ideal repeat unit smaller than given (%d vs %d edges)."
                   % (G.numberOfEdges(), m))
     else:
         writeInfo("   Given repeat unit is accurate.")
 
     ops = G.symmetryOperators()
-
     writeInfo("   Point group has %d elements." % len(ops))
     writeInfo("   %s of node." % pluralize(len(list(G.nodeOrbits())), "kind"))
     writeInfo()
 
     nodeToName, mergedNames = nodeNameMapping(M)
-
     writeInfo("   Equivalences for non-unique nodes:")
     for old, new in mergedNames:
         writeInfo("      %s --> %s" % (old, new))
@@ -271,14 +297,10 @@ def processGraph(
     showCoordinationSequences(G, nodeToName, writeInfo)
 
     if options.computePointSymbols and G.dimension >= 3:
-        writeInfo("   Wells point symbols:")
-        for orbit in G.nodeOrbits():
-            v = orbit.iterator().next()
-            writeInfo("      Node %s:   %s" % (nodeToName[v], G.pointSymbol(v)))
-        writeInfo()
+        showPointSymbols(G, nodeToName, writeInfo)
 
     finder = org.gavrog.joss.geometry.SpaceGroupFinder(
-        org.gavrog.joss.geometry.SpaceGroup(d, ops))
+        org.gavrog.joss.geometry.SpaceGroup(graph.dimension, ops))
     showSpaceGroup(graph.givenGroup, finder, writeInfo)
 
     invariant = G.systreKey
@@ -295,8 +317,10 @@ def processGraph(
         archives['__internal__'].add(entry)
 
         if outputArchiveFp:
-            outputArchiveFp.write(entry.toString())
-            outputArchiveFp.write('\n')
+            outputArchiveFp.write(entry.toString() + '\n')
+
+    embedAndShowGraph(
+        graph, name, options, writeInfo=writeInfo, writeData=writeData)
 
 
 def processDataFile(
@@ -385,6 +409,10 @@ def parseOptions():
                       dest='useBuiltinArchive',
                       default=True, action='store_false',
                       help='do not use the builtin Systre archive')
+    parser.add_option('-o', '--use-original-embedding',
+                      dest='useOriginalEmbedding',
+                      default=False, action='store_true',
+                      help='start relaxation from original positions')
     parser.add_option('-p', '--point-symbols',
                       dest='computePointSymbols',
                       default=False, action='store_true',
