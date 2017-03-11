@@ -174,10 +174,7 @@ def showPointSymbols(G, nodeToName, writeInfo):
     writeInfo()
 
 
-def showSpaceGroup(graph, ops, givenGroup, writeInfo):
-    finder = org.gavrog.joss.geometry.SpaceGroupFinder(
-        org.gavrog.joss.geometry.SpaceGroup(graph.dimension, ops))
-
+def showSpaceGroup(graph, finder, givenGroup, writeInfo):
     writeInfo("   Ideal space group is %s." % finder.groupName)
 
     givenName = org.gavrog.joss.geometry.SpaceGroupCatalogue.normalizedName(
@@ -226,9 +223,35 @@ def showAndCountGraphMatches(invariant, archives, writeInfo):
     return count
 
 
-def showEmbedding(graph, name, options, writeInfo, writeData):
-    #TODO implement this
+def originalPositions(graph):
+    key = org.gavrog.joss.pgraphs.io.NetParser.POSITION
+    firstPos = graph.getNodeInfo(graph.nodes().next(), key)
+
+    if firstPos:
+        offset = org.gavrog.joss.geometry.Vector(firstPos.coordinates)
+        return [graph.getNodeInfo(v, key).minus(offset) for v in graph.nodes()]
+    else:
+        return None
+
+
+def computeEmbedding(graph, pos, check, mode):
     pass
+
+
+def showEmbedding(graph, name, nodeToName, finder,
+                  options, writeInfo, writeData):
+    if options.computeEmbedding:
+        if options.useOriginalEmbedding and originalPositions(graph):
+            pos, check, mode = originalPositions(graph), True, 'adjusted'
+        else:
+            pos, check, mode = None, False, 'barycentric'
+
+        embedder = computeEmbedding(graph, pos, check, mode)
+    else:
+        embedder = None
+
+    net = org.gavrog.joss.pgraphs.embed.ProcessedNet(
+        graph, name, nodeToName, finder, embedder)
 
 
 def processDisconnectedGraph(
@@ -288,7 +311,10 @@ def processGraph(
     if options.computePointSymbols and G.dimension >= 3:
         showPointSymbols(G, nodeToName, writeInfo)
 
-    showSpaceGroup(G, ops, graph.givenGroup, writeInfo)
+    finder = org.gavrog.joss.geometry.SpaceGroupFinder(
+        org.gavrog.joss.geometry.SpaceGroup(graph.dimension, ops))
+
+    showSpaceGroup(G, finder, graph.givenGroup, writeInfo)
 
     invariant = G.systreKey
     if options.outputSystreKey:
@@ -306,7 +332,8 @@ def processGraph(
         if outputArchiveFp:
             outputArchiveFp.write(entry.toString() + '\n')
 
-    showEmbedding(graph, name, options, writeInfo, writeData)
+    showEmbedding(graph, name, nodeToName, finder,
+                  options, writeInfo, writeData)
 
 
 def processDataFile(
