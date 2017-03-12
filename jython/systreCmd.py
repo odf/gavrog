@@ -234,8 +234,28 @@ def originalPositions(graph):
         return None
 
 
-def computeEmbedding(graph, pos, check, mode):
-    pass
+def runEmbedder(embedder, nrSteps, nrPasses, relaxPositions):
+    embedder.setRelaxPositions(relaxPositions)
+    embedder.setPasses(nrPasses)
+    embedder.go(nrSteps)
+    embedder.normalize()
+
+
+def verifyEmbedding(graph, name, nodeToName, finder, embedder):
+    det = embedder.gramMatrix.determinant()
+    if det.doubleValue < 0.001:
+        return False
+
+    if not graph.isStable():
+        return True
+
+    net = org.gavrog.joss.pgraphs.embed.ProcessedNet(
+        graph, name, nodeToName, finder, embedder)
+
+    cgdStringWriter = java.io.StringWriter()
+    cgd = java.io.PrintWriter(cgdStringWriter)
+    net.writeEmbedding(cgd, True, False, "")
+    cgdString = cgdStringWriter.toString()
 
 
 def showEmbedding(graph, name, nodeToName, finder,
@@ -246,9 +266,27 @@ def showEmbedding(graph, name, nodeToName, finder,
         else:
             pos, check, mode = None, False, 'barycentric'
 
-        embedder = computeEmbedding(graph, pos, check, mode)
+        embedder = org.gavrog.joss.pgraphs.embed.Embedder(graph, pos, check)
+        steps = options.relaxSteps
+        passes = options.relaxPasses
+        relaxPositions = options.relaxPositions
+
+        runEmbedder(embedder, 500, 0, False)
+
+        try:
+            runEmbedder(embedder, steps, passes, relaxPositions)
+            success = verifyEmbedding(graph, name, nodeToName, finder, embedder)
+        except Exception:
+            success = False
+
+        if not success:
+            embedder.reset()
+            runEmbedder(embedder, 500, 0, False)
+            runEmbedder(embedder, steps, passes, False)
+            success = verifyEmbedding(graph, name, nodeToName, finder, embedder)
     else:
         embedder = None
+        success = True
 
     net = org.gavrog.joss.pgraphs.embed.ProcessedNet(
         graph, name, nodeToName, finder, embedder)
