@@ -56,7 +56,8 @@ def readArchiveFromFile(fname):
 
 def prefixedLineWriter(prefix=''):
     def write(s=''):
-        print "%s%s" % (prefix, s)
+        for line in s.split('\n'):
+            print "%s%s" % (prefix, line)
 
     return write
 
@@ -241,6 +242,13 @@ def runEmbedder(embedder, nrSteps, nrPasses, relaxPositions):
     embedder.normalize()
 
 
+def serializedNet(net, asCGD=False, writeFullCell=False, prefix=''):
+    stringWriter = java.io.StringWriter()
+    writer = java.io.PrintWriter(stringWriter)
+    net.writeEmbedding(writer, asCGD, writeFullCell, prefix)
+    return stringWriter.toString()
+
+
 def verifyEmbedding(graph, name, nodeToName, finder, embedder):
     det = embedder.gramMatrix.determinant()
     if det.doubleValue < 0.001:
@@ -251,20 +259,19 @@ def verifyEmbedding(graph, name, nodeToName, finder, embedder):
 
     net = org.gavrog.joss.pgraphs.embed.ProcessedNet(
         graph, name, nodeToName, finder, embedder)
+    cgd = serializedNet(net, asCGD=True)
+    test = org.gavrog.joss.pgraphs.io.NetParser.stringToNet(cgd)
 
-    cgdStringWriter = java.io.StringWriter()
-    cgd = java.io.PrintWriter(cgdStringWriter)
-    net.writeEmbedding(cgd, True, False, "")
-    cgdString = cgdStringWriter.toString()
+    return test.minimalImage().equals(graph)
 
 
 def showEmbedding(graph, name, nodeToName, finder,
                   options, writeInfo, writeData):
     if options.computeEmbedding:
         if options.useOriginalEmbedding and originalPositions(graph):
-            pos, check, mode = originalPositions(graph), True, 'adjusted'
+            pos, check, mode = originalPositions(graph), True, 'Adjusted'
         else:
-            pos, check, mode = None, False, 'barycentric'
+            pos, check, mode = None, False, 'Barycentric'
 
         embedder = org.gavrog.joss.pgraphs.embed.Embedder(graph, pos, check)
         steps = options.relaxSteps
@@ -288,8 +295,19 @@ def showEmbedding(graph, name, nodeToName, finder,
         embedder = None
         success = True
 
-    net = org.gavrog.joss.pgraphs.embed.ProcessedNet(
-        graph, name, nodeToName, finder, embedder)
+    if success:
+        net = org.gavrog.joss.pgraphs.embed.ProcessedNet(
+            graph, name, nodeToName, finder, embedder)
+
+        prefix = 'Relaxed' if embedder.positionsRelaxed() else mode
+        output = serializedNet(net, False, options.outputFullCell, prefix)
+        writeInfo(output)
+
+        if options.outputFormatCGD:
+            output = serializedNet(net, True, options.outputFullCell)
+            writeData(output.strip())
+
+        writeInfo()
 
 
 def processDisconnectedGraph(
@@ -388,17 +406,17 @@ def processDataFile(
     writeInfo("Data file %s" % fname)
 
     for G in org.gavrog.joss.pgraphs.io.Net.iterator(fname):
-        writeData()
+        writeInfo()
         if count:
-            writeData()
-            writeData()
+            writeInfo()
+            writeInfo()
 
         count += 1
 
         name = G.name or "%s-#%03d" % (fileBaseName, count)
 
         writeInfo("Structure #%d - %s" % (count, name))
-        writeData()
+        writeInfo()
 
         hasWarnings = False
         for text in G.warnings:
@@ -406,7 +424,7 @@ def processDataFile(
             hasWarnings = True
 
         if hasWarnings:
-            writeData()
+            writeInfo()
 
         hasErrors = False
         for err in G.errors:
@@ -427,7 +445,7 @@ def processDataFile(
 
         writeInfo("Finished structure #%d - %s" % (count, name))
 
-    writeData()
+    writeInfo()
     writeInfo("Finished data file \"%s\"." % fname)
 
 
