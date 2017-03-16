@@ -63,7 +63,10 @@ def prefixedLineWriter(prefix=''):
 
 
 def reportSystreError(errorType, message, writeInfo):
+    writeInfo("==================================================")
     writeInfo("!!! ERROR (%s) - %s." % (errorType, message))
+    writeInfo("==================================================")
+    writeInfo()
 
 
 def nodeNameMapping(phi):
@@ -150,7 +153,7 @@ def showCoordinationSequences(G, nodeToName, writeInfo):
     writeInfo()
 
     if complete:
-        td10 = cum / G.numberOfNodes()
+        td10 = float(cum) / G.numberOfNodes()
         writeInfo("   TD10 = %s" % int(td10 + 0.5))
     else:
         writeInfo("   TD10 not computed.")
@@ -211,7 +214,7 @@ def showAndCountGraphMatches(invariant, archives, writeInfo):
             else:
                 writeInfo("   Structure was found in archive \"%s\":" % name)
 
-            writeInfo("       Name:            %s" % found.name)
+            writeInfo(    "       Name:            %s" % found.name)
             if found.description:
                 writeInfo("       Description:     %s" % found.description)
             if found.reference:
@@ -299,9 +302,10 @@ def showEmbedding(graph, name, nodeToName, finder,
         net = org.gavrog.joss.pgraphs.embed.ProcessedNet(
             graph, name, nodeToName, finder, embedder)
 
-        prefix = 'Relaxed' if embedder.positionsRelaxed() else mode
-        output = serializedNet(net, False, options.outputFullCell, prefix)
-        writeInfo(output)
+        if options.computeEmbedding:
+            prefix = 'Relaxed' if embedder.positionsRelaxed() else mode
+            output = serializedNet(net, False, options.outputFullCell, prefix)
+            writeInfo(output)
 
         if options.outputFormatCGD:
             output = serializedNet(net, True, options.outputFullCell)
@@ -357,10 +361,11 @@ def processGraph(
     writeInfo()
 
     nodeToName, mergedNames = nodeNameMapping(M)
-    writeInfo("   Equivalences for non-unique nodes:")
-    for old, new in mergedNames:
-        writeInfo("      %s --> %s" % (old, new))
-    writeInfo()
+    if mergedNames:
+        writeInfo("   Equivalences for non-unique nodes:")
+        for old, new in mergedNames:
+            writeInfo("      %s --> %s" % (old, new))
+        writeInfo()
 
     showCoordinationSequences(G, nodeToName, writeInfo)
 
@@ -403,47 +408,59 @@ def processDataFile(
     count = 0
     fileBaseName = os.path.splitext(os.path.basename(fname))[0]
 
-    writeInfo("Data file %s" % fname)
+    writeInfo("Data file \"%s\"." % fname)
 
-    for G in org.gavrog.joss.pgraphs.io.Net.iterator(fname):
+    inputs = org.gavrog.joss.pgraphs.io.Net.iterator(fname)
+
+    while inputs.hasNext():
         writeInfo()
         if count:
             writeInfo()
             writeInfo()
 
         count += 1
+        inputEx = None
+        name = '-'
 
-        name = G.name or "%s-#%03d" % (fileBaseName, count)
+        try:
+            G = inputs.next()
+            name = G.name or "%s-#%03d" % (fileBaseName, count)
+        except:
+            inputEx = sys.exc_info()[1]
 
-        writeInfo("Structure #%d - %s" % (count, name))
+        writeInfo("Structure #%d - \"%s\"." % (count, name))
         writeInfo()
 
         hasWarnings = False
-        for text in G.warnings:
-            writeInfo("   (%s)" % text)
-            hasWarnings = True
-
-        if hasWarnings:
-            writeInfo()
-
         hasErrors = False
-        for err in G.errors:
-            writeInfo("!!! ERROR (INPUT) - %s" % err.message)
+
+        if inputEx:
+            reportSystreError('INTERNAL', inputEx, writeInfo)
             hasErrors = True
 
-        if hasErrors:
-            continue
+        if G:
+            for text in G.warnings:
+                writeInfo("   (%s)" % text)
+                hasWarnings = True
 
-        (processGraph if G.isConnected() else processDisconnectedGraph)(
-            G,
-            name,
-            options,
-            writeInfo=writeInfo,
-            writeData=writeData,
-            archives=archives,
-            outputArchiveFp=outputArchiveFp)
+            if hasWarnings:
+                writeInfo()
 
-        writeInfo("Finished structure #%d - %s" % (count, name))
+            for err in G.errors:
+                reportSystreError('INPUT', err.message, writeInfo)
+                hasErrors = True
+
+        if G and not hasErrors:
+            (processGraph if G.isConnected() else processDisconnectedGraph)(
+                G,
+                name,
+                options,
+                writeInfo=writeInfo,
+                writeData=writeData,
+                archives=archives,
+                outputArchiveFp=outputArchiveFp)
+
+        writeInfo("Finished structure #%d - \"%s\"." % (count, name))
 
     writeInfo()
     writeInfo("Finished data file \"%s\"." % fname)
