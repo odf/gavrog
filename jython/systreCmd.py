@@ -351,7 +351,7 @@ def processGraph(
 
     if G.numberOfEdges() < graph.numberOfEdges():
         writeInfo("   Ideal repeat unit smaller than given (%d vs %d edges)."
-                  % (G.numberOfEdges(), m))
+                  % (G.numberOfEdges(), graph.numberOfEdges()))
     else:
         writeInfo("   Given repeat unit is accurate.")
 
