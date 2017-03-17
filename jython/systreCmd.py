@@ -64,7 +64,7 @@ def prefixedLineWriter(prefix=''):
 
 def reportSystreError(errorType, message, writeInfo):
     writeInfo("==================================================")
-    writeInfo("!!! ERROR (%s) - %s." % (errorType, message))
+    writeInfo("!!! ERROR (%s) - %s" % (errorType, message))
     writeInfo("==================================================")
     writeInfo()
 
