@@ -450,14 +450,17 @@ def processDataFile(
                 hasErrors = True
 
         if G and not hasErrors:
-            (processGraph if G.isConnected() else processDisconnectedGraph)(
-                G,
-                name,
-                options,
-                writeInfo=writeInfo,
-                writeData=writeData,
-                archives=archives,
-                outputArchiveFp=outputArchiveFp)
+            try:
+                (processGraph if G.isConnected() else processDisconnectedGraph)(
+                    G,
+                    name,
+                    options,
+                    writeInfo=writeInfo,
+                    writeData=writeData,
+                    archives=archives,
+                    outputArchiveFp=outputArchiveFp)
+            except:
+                reportSystreError('INTERNAL', sys.exc_info()[1], writeInfo)
 
         writeInfo("Finished structure #%d - \"%s\"." % (count, name))
 
