@@ -393,8 +393,7 @@ def processGraph(
         if outputArchiveFp:
             outputArchiveFp.write(entry.toString() + '\n')
 
-    showEmbedding(graph, name, nodeToName, finder,
-                  options, writeInfo, writeData)
+    showEmbedding(G, name, nodeToName, finder, options, writeInfo, writeData)
 
 
 def processDataFile(
