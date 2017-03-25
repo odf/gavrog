@@ -3,6 +3,7 @@
 import optparse
 import os.path
 import sys
+import traceback
 
 import java.io
 import java.util
@@ -461,6 +462,7 @@ def processDataFile(
                     outputArchiveFp=outputArchiveFp)
             except:
                 reportSystreError('INTERNAL', sys.exc_info()[1], writeInfo)
+                writeInfo(traceback.format_exc())
 
         writeInfo("Finished structure #%d - \"%s\"." % (count, name))
 
