@@ -287,7 +287,7 @@ def showEmbedding(graph, name, nodeToName, finder,
         try:
             runEmbedder(embedder, steps, passes, relaxPositions)
             success = verifyEmbedding(graph, name, nodeToName, finder, embedder)
-        except Exception:
+        except:
             success = False
 
         if not success:
