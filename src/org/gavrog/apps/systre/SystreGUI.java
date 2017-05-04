@@ -513,6 +513,11 @@ public class SystreGUI extends BFrame {
 					this.systre, "relaxSteps",
 					"Use 10000 for most nets, higher values if Systre " +
 			        "reports bad angle or non-bonded distance values."));
+            column.add(new OptionCheckBox(
+                    "Skip output verification",
+                    this.systre, "skipOutputTest",
+                    "Allows output that Systre can not read back in properly, " +
+                    "e.g. containing colliding vertices."));
 			column.add(new BSeparator());
 			column.add(new OptionCheckBox(
 			        "Output Complete Unit Cell Contents",
