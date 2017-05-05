@@ -96,6 +96,7 @@ public class SystreCmdline extends EventSource {
     private boolean relaxPositions = true;
     private int relaxPasses = 3;
     private int relaxSteps = 10000;
+    private boolean skipOutputTest = false;
     private boolean computePointSymbols = false;
     private boolean useBuiltinArchive = true;
     private boolean outputFullCell = false;
@@ -779,7 +780,7 @@ public class SystreCmdline extends EventSource {
             final String cgdString = cgdStringWriter.toString();
 			boolean success = false;
             try {
-                if (G.isStable()) {
+                if (!this.skipOutputTest && G.isStable()) {
                     status("Consistency test: reading output back in...");
                     final PeriodicGraph test = NetParser.stringToNet(cgdString);
 
@@ -1051,6 +1052,9 @@ public class SystreCmdline extends EventSource {
                 } else {
                     this.relaxSteps = Integer.parseInt(args[++i]);
                 }
+            } else if (s.equalsIgnoreCase("--skipOutputTest")
+                       || s.equalsIgnoreCase("-skipOutputTest")) {
+                setSkipOutputTest(true);
             } else if (s.equalsIgnoreCase("--arcAsInput")
                     || s.equalsIgnoreCase("-arcAsInput")) {
                 archivesAsInput = true;
@@ -1257,6 +1261,14 @@ public class SystreCmdline extends EventSource {
 	public void setRelaxSteps(int relaxSteps) {
 		this.relaxSteps = relaxSteps;
 	}
+
+    public boolean getSkipOutputTest() {
+        return this.skipOutputTest;
+    }
+
+    public void setSkipOutputTest(boolean skipOutputTest) {
+        this.skipOutputTest = skipOutputTest;
+    }
 
 	public boolean getComputePointSymbols() {
         return computePointSymbols;
