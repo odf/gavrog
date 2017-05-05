@@ -253,12 +253,12 @@ def serializedNet(net, asCGD=False, writeFullCell=False, prefix=''):
     return stringWriter.toString()
 
 
-def verifyEmbedding(graph, name, nodeToName, finder, embedder):
+def verifyEmbedding(graph, name, nodeToName, finder, embedder, options):
     det = embedder.gramMatrix.determinant()
     if det.doubleValue < 0.001:
         return False
 
-    if not graph.isStable():
+    if options.skipOutputTest or not graph.isStable():
         return True
 
     net = org.gavrog.joss.pgraphs.embed.ProcessedNet(
@@ -286,7 +286,8 @@ def showEmbedding(graph, name, nodeToName, finder,
 
         try:
             runEmbedder(embedder, steps, passes, relaxPositions)
-            success = verifyEmbedding(graph, name, nodeToName, finder, embedder)
+            success = verifyEmbedding(
+                graph, name, nodeToName, finder, embedder, options)
         except:
             success = False
 
@@ -294,7 +295,8 @@ def showEmbedding(graph, name, nodeToName, finder,
             embedder.reset()
             runEmbedder(embedder, 500, 0, False)
             runEmbedder(embedder, steps, passes, False)
-            success = verifyEmbedding(graph, name, nodeToName, finder, embedder)
+            success = verifyEmbedding(
+                graph, name, nodeToName, finder, embedder, options)
     else:
         embedder = None
         success = True
@@ -487,6 +489,9 @@ def parseOptions():
     parser.add_option('-e', '--equal-edge-priority', metavar='N',
                       dest='relaxPasses', type='int', default=3,
                       help='equal edge lengths priority (default 3)')
+    parser.add_option('--skip-output-test', dest='skipOutputTest',
+                      default=False, action='store_true',
+                      help='allow output that would be illegal as input')
     parser.add_option('-f', '--prefer-first-origin',
                       dest='preferSecondOrigin',
                       default=True, action='store_false',
