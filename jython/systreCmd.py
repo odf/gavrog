@@ -73,6 +73,7 @@ def reportSystreError(errorType, message, writeInfo):
 def nodeNameMapping(phi):
     imageNode2Orbit = {}
     for orbit in phi.imageGraph.nodeOrbits():
+        orbit = frozenset(orbit)
         for v in orbit:
             imageNode2Orbit[v] = orbit
 
