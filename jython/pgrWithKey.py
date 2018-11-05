@@ -9,13 +9,13 @@ out = java.io.OutputStreamWriter(sys.stdout)
 
 
 for G in Net.iterator(sys.argv[1]):
-    key = G.minimalImage().systreKey
-
     tmp = java.io.StringWriter()
     Output.writePGR(tmp, G, G.name)
+    s = tmp.toString()
 
     if G.isConnected() and G.isLocallyStable():
-        s = tmp.toString().replace('\nEND\n', "\n  KEY %s\nEND\n" % key)
+        key = G.minimalImage().systreKey
+        s = s.replace('\nEND\n', "\n  KEY %s\nEND\n" % key)
 
     out.write(s)
     out.write('\n')
