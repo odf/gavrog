@@ -26,7 +26,7 @@ def makeCsLookup(data):
 
     for entry in data:
         symbol = entry['symbol']
-        if re.search(r'-[bcz][*0-9]*$', symbol):
+        if re.search(r'-[bcz][*0-9]*$', symbol) and symbol != 'llw-z':
             continue
 
         cs = tuple(sorted([
