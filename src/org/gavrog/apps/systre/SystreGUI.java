@@ -1,5 +1,5 @@
 /*
-Copyright 2013 Olaf Delgado-Friedrichs
+Copyright 2019 Olaf Delgado-Friedrichs
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -82,7 +82,7 @@ public class SystreGUI extends BFrame {
 	final static String mainLabel = ""
 			+ "<html><h1><font color=#202060>Gavrog Systre</font></h1>"
 			+ "<font color=#202060>Version " + Version.full + "<br>"
-			+ "by Olaf Delgado-Friedrichs, 2001-2013</font></html>";
+			+ "by Olaf Delgado-Friedrichs, 2001-2019</font></html>";
 	
 	// --- some constants used in the GUI
     final private static Color textColor = new Color(255, 250, 240);
