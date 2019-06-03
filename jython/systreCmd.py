@@ -2,6 +2,7 @@
 
 import optparse
 import os.path
+import re
 import sys
 import traceback
 
@@ -131,7 +132,11 @@ def showCoordinationSequences(G, nodeToName, writeInfo):
     cum = 0
     complete = True
 
-    for orbit in G.nodeOrbits():
+    def orbitKey(orbit):
+        s = nodeToName[orbit.iterator().next()]
+        return int(s) if re.match(r'^[1-9][0-9]*$', s) else s
+
+    for orbit in sorted(G.nodeOrbits(), key=orbitKey):
         v = orbit.iterator().next()
         cs = G.coordinationSequence(v)
         cs.next()
