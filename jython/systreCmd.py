@@ -126,7 +126,7 @@ def checkGraph(graph, writeInfo):
     return True
 
 
-def showCoordinationSequences(G, nodeToName, writeInfo):
+def showCoordinationSequences(G, nodeToName, options, writeInfo):
     writeInfo("   Coordination sequences:")
 
     cum = 0
@@ -143,15 +143,16 @@ def showCoordinationSequences(G, nodeToName, writeInfo):
         s = 1
         out = ["      Node %s:   " % nodeToName[v]]
 
-        for i in range(10):
-            if s > 100000:
+        for i in range(options.coordinationSequenceLength):
+            x = cs.next()
+            out.append(x)
+            if i < 10:
+                s += x
+
+            if x > 10000000:
                 complete = False
                 out.append('...')
                 break
-
-            x = cs.next()
-            out.append(x)
-            s += x
 
         cum += orbit.size() * s
 
@@ -159,7 +160,7 @@ def showCoordinationSequences(G, nodeToName, writeInfo):
 
     writeInfo()
 
-    if complete:
+    if complete and options.coordinationSequenceLength >= 10:
         td10 = float(cum) / G.numberOfNodes()
         writeInfo("   TD10 = %s" % int(td10 + 0.5))
     else:
@@ -376,7 +377,7 @@ def processGraph(
             writeInfo("      %s --> %s" % (old, new))
         writeInfo()
 
-    showCoordinationSequences(G, nodeToName, writeInfo)
+    showCoordinationSequences(G, nodeToName, options, writeInfo)
 
     if options.computePointSymbols and G.dimension >= 3:
         showPointSymbols(G, nodeToName, writeInfo)
@@ -510,6 +511,10 @@ def parseOptions():
                       dest='useBuiltinArchive',
                       default=True, action='store_false',
                       help='do not use the builtin Systre archive')
+    parser.add_option('-m', '--coordination-sequence-length',
+                      dest='coordinationSequenceLength',
+                      type='int', default=10,
+                      help='length of coordination sequence to compute')
     parser.add_option('-o', '--use-original-embedding',
                       dest='useOriginalEmbedding',
                       default=False, action='store_true',
