@@ -56,47 +56,36 @@ def process_net(net, writeln):
     if not net.isMinimal():
         warnings.append("reduced from supercell")
 
-    minmap = net.minimalImageMap()
-    net = minmap.imageGraph
-    name_for_node, merged_names = node_name_mapping(minmap)
+    net = net.minimalImage()
 
     finder = org.gavrog.joss.geometry.SpaceGroupFinder(net.getSpaceGroup())
     writeln('  "spacegroup_name": "%s",' % finder.groupName)
-
     if finder.extension:
         writeln('  "spacegroup_extension": "%s",' % finder.extension)
+
+    orbit_reps = [list(orb)[0] for orb in net.nodeOrbits()]
+    seqs = [coordination_sequence(net, v, 10) for v in orbit_reps]
+
+    writeln('  "net_nodes_unitcell": %s,' % net.numberOfNodes())
+    writeln('  "net_nodes_asym": %s,' % len(orbit_reps))
+
+    writeln('  "net_valency": %s,' % json.dumps([s[0] for s in seqs]))
+    writeln('  "net_coordination_seqs": [')
+    writeln('      %s' % ',\n      '.join(json.dumps(s) for s in seqs))
+    writeln('    ],')
 
     return warnings, errors
 
 
-def node_name_mapping(phi):
-    orbit_for_image_node = {}
-    for orbit in phi.imageGraph.nodeOrbits():
-        orbit = frozenset(orbit)
-        for v in orbit:
-            orbit_for_image_node[v] = orbit
+def coordination_sequence(net, v, n):
+    cs = net.coordinationSequence(v)
+    cs.next()
 
-    name_for_orbit = {}
-    name_for_node = {}
-    merged_names = []
-    merged_names_seen = set()
+    out = []
+    for i in range(n):
+        out.append(cs.next())
 
-    for v in phi.sourceGraph.nodes():
-        name = phi.sourceGraph.getNodeName(v)
-        w = phi.getImage(v)
-        orbit = orbit_for_image_node[w]
-
-        if name != name_for_orbit.get(orbit, name):
-            pair = (name, name_for_orbit[orbit])
-            if pair not in merged_names_seen:
-                merged_names.append(pair)
-                merged_names_seen.add(pair)
-        else:
-            name_for_orbit[orbit] = name
-
-        name_for_node[w] = name_for_orbit[orbit]
-
-    return name_for_node, merged_names
+    return out
 
 
 if __name__ == "__main__":
