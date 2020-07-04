@@ -1,4 +1,5 @@
 #!/bin/env jython
+import math
 import json
 import sys
 
@@ -76,7 +77,56 @@ def process_net(net, writeln):
 
     writeln('  "net_systre_key": "%s",' % net.systreKey)
 
+    write_embedding_data(net, 'net', True, writeln)
+    write_embedding_data(net, 'net_barycentric', False, writeln)
+
     return warnings, errors
+
+
+def write_embedding_data(net, prefix, relaxPositions, writeln):
+    embedder = org.gavrog.joss.pgraphs.embed.Embedder(net, None, False)
+
+    embedder.setRelaxPositions(False)
+    embedder.setPasses(0)
+    embedder.go(500)
+    embedder.normalize()
+
+    embedder.setRelaxPositions(relaxPositions)
+    embedder.setPasses(3)
+    embedder.go(10000)
+    embedder.normalize()
+
+    # TODO convert to conventional unit cell
+
+    gram = embedder.gramMatrix
+    a = math.sqrt(gram.get(0, 0))
+    b = math.sqrt(gram.get(1, 1))
+    c = math.sqrt(gram.get(2, 2))
+    alpha = acosdeg(gram.get(1, 2) / b / c)
+    beta = acosdeg(gram.get(0, 2) / a / c)
+    gamma = acosdeg(gram.get(0, 1) / a / b)
+
+    writeln('  "%s_unitcell_a": %s,' % (prefix, a))
+    writeln('  "%s_unitcell_b": %s,' % (prefix, b))
+    writeln('  "%s_unitcell_b": %s,' % (prefix, c))
+    writeln('  "%s_unitcell_alpha": %s,' % (prefix, alpha))
+    writeln('  "%s_unitcell_beta": %s,' % (prefix, beta))
+    writeln('  "%s_unitcell_gamma": %s,' % (prefix, gamma))
+
+    pos = dict((v, point_as_list(p)) for v, p in embedder.positions.items())
+    orbit_reps = [list(orb)[0] for orb in net.nodeOrbits()]
+
+    writeln('  "%s_atoms": %s,' % (prefix, [pos[v] for v in orbit_reps]))
+
+    return pos, gram
+
+
+def acosdeg(x):
+    return math.acos(x) / math.pi * 180.0
+
+
+def point_as_list(p):
+    return [p.get(i) for i in range(p.dimension)]
 
 
 def coordination_sequence(net, v, n):
