@@ -74,6 +74,8 @@ def process_net(net, writeln):
     writeln('      %s' % ',\n      '.join(json.dumps(s) for s in seqs))
     writeln('    ],')
 
+    writeln('  "net_systre_key": "%s",' % net.systreKey)
+
     return warnings, errors
 
 
