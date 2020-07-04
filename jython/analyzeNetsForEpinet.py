@@ -53,7 +53,50 @@ def process_net(net, writeln):
     if errors:
         return warnings, errors
 
+    if not net.isMinimal():
+        warnings.append("reduced from supercell")
+
+    minmap = net.minimalImageMap()
+    net = minmap.imageGraph
+    name_for_node, merged_names = node_name_mapping(minmap)
+
+    finder = org.gavrog.joss.geometry.SpaceGroupFinder(net.getSpaceGroup())
+    writeln('  "spacegroup_name": "%s",' % finder.groupName)
+
+    if finder.extension:
+        writeln('  "spacegroup_extension": "%s",' % finder.extension)
+
     return warnings, errors
+
+
+def node_name_mapping(phi):
+    orbit_for_image_node = {}
+    for orbit in phi.imageGraph.nodeOrbits():
+        orbit = frozenset(orbit)
+        for v in orbit:
+            orbit_for_image_node[v] = orbit
+
+    name_for_orbit = {}
+    name_for_node = {}
+    merged_names = []
+    merged_names_seen = set()
+
+    for v in phi.sourceGraph.nodes():
+        name = phi.sourceGraph.getNodeName(v)
+        w = phi.getImage(v)
+        orbit = orbit_for_image_node[w]
+
+        if name != name_for_orbit.get(orbit, name):
+            pair = (name, name_for_orbit[orbit])
+            if pair not in merged_names_seen:
+                merged_names.append(pair)
+                merged_names_seen.add(pair)
+        else:
+            name_for_orbit[orbit] = name
+
+        name_for_node[w] = name_for_orbit[orbit]
+
+    return name_for_node, merged_names
 
 
 if __name__ == "__main__":
