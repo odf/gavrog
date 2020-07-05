@@ -78,13 +78,13 @@ def process_net(net, writeln):
 
     writeln('  "net_systre_key": "%s",' % net.systreKey)
 
-    write_embedding_data(net, 'net_barycentric', False, writeln)
-    write_embedding_data(net, 'net_relaxed', True, writeln)
+    write_embedding_data(net, 'net_barycentric', finder, False, writeln)
+    write_embedding_data(net, 'net_relaxed', finder, True, writeln)
 
     return warnings, errors
 
 
-def write_embedding_data(net, prefix, relaxPositions, writeln):
+def write_embedding_data(net, prefix, finder, relaxPositions, writeln):
     embedder = pgraphs.embed.Embedder(net, None, False)
 
     embedder.setRelaxPositions(False)
@@ -97,9 +97,10 @@ def write_embedding_data(net, prefix, relaxPositions, writeln):
     embedder.go(10000)
     embedder.normalize()
 
-    # TODO convert to conventional unit cell
+    gram_primitive = embedder.gramMatrix
+    to_std = finder.toStd.basis
+    gram = to_std.times(gram_primitive).times(to_std.transposed())
 
-    gram = embedder.gramMatrix
     a = math.sqrt(gram.get(0, 0))
     b = math.sqrt(gram.get(1, 1))
     c = math.sqrt(gram.get(2, 2))
@@ -109,12 +110,15 @@ def write_embedding_data(net, prefix, relaxPositions, writeln):
 
     writeln('  "%s_unitcell_a": %s,' % (prefix, a))
     writeln('  "%s_unitcell_b": %s,' % (prefix, b))
-    writeln('  "%s_unitcell_b": %s,' % (prefix, c))
+    writeln('  "%s_unitcell_c": %s,' % (prefix, c))
     writeln('  "%s_unitcell_alpha": %s,' % (prefix, alpha))
     writeln('  "%s_unitcell_beta": %s,' % (prefix, beta))
     writeln('  "%s_unitcell_gamma": %s,' % (prefix, gamma))
 
-    pos = dict((v, point_as_list(p)) for v, p in embedder.positions.items())
+    pos = dict(
+        (v, point_as_list(p.times(finder.toStd)))
+        for v, p in embedder.positions.items()
+    )
     orbit_reps = [list(orb)[0] for orb in net.nodeOrbits()]
 
     writeln('  "%s_atoms": %s,' % (prefix, [pos[v] for v in orbit_reps]))
