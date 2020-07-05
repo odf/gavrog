@@ -3,7 +3,8 @@ import math
 import json
 import sys
 
-import org.gavrog
+import org.gavrog.joss.pgraphs as pgraphs
+import org.gavrog.joss.geometry as geometry
 
 
 def run():
@@ -13,7 +14,7 @@ def run():
     for source_path in sys.argv[1:]:
         index_in_source = 0
 
-        for net in org.gavrog.joss.pgraphs.io.Net.iterator(source_path):
+        for net in pgraphs.io.Net.iterator(source_path):
             index_in_source += 1
 
             writeln('{')
@@ -59,7 +60,7 @@ def process_net(net, writeln):
 
     net = net.minimalImage()
 
-    finder = org.gavrog.joss.geometry.SpaceGroupFinder(net.getSpaceGroup())
+    finder = geometry.SpaceGroupFinder(net.getSpaceGroup())
     writeln('  "spacegroup_name": "%s",' % finder.groupName)
     if finder.extension:
         writeln('  "spacegroup_extension": "%s",' % finder.extension)
@@ -77,14 +78,14 @@ def process_net(net, writeln):
 
     writeln('  "net_systre_key": "%s",' % net.systreKey)
 
-    write_embedding_data(net, 'net', True, writeln)
     write_embedding_data(net, 'net_barycentric', False, writeln)
+    write_embedding_data(net, 'net_relaxed', True, writeln)
 
     return warnings, errors
 
 
 def write_embedding_data(net, prefix, relaxPositions, writeln):
-    embedder = org.gavrog.joss.pgraphs.embed.Embedder(net, None, False)
+    embedder = pgraphs.embed.Embedder(net, None, False)
 
     embedder.setRelaxPositions(False)
     embedder.setPasses(0)
