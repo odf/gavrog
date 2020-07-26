@@ -67,6 +67,7 @@ def process_net(net, writeln):
 
     orbit_reps = [list(orb)[0] for orb in net.nodeOrbits()]
     seqs = [coordination_sequence(net, v, 10) for v in orbit_reps]
+    psyms = [net.pointSymbol(v) for v in orbit_reps]
 
     writeln('  "net_nodes_unitcell": %s,' % net.numberOfNodes())
     writeln('  "net_nodes_asym": %s,' % len(orbit_reps))
@@ -75,6 +76,7 @@ def process_net(net, writeln):
     writeln('  "net_coordination_seqs": [')
     writeln('      %s' % ',\n      '.join(json.dumps(s) for s in seqs))
     writeln('    ],')
+    writeln('  "net_wells_point_symbols": %s,' % json.dumps(psyms))
 
     writeln('  "net_systre_key": "%s",' % net.systreKey)
 
