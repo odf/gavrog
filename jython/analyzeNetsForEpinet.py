@@ -125,6 +125,13 @@ def write_embedding_data(net, prefix, finder, relaxPositions, writeln):
 
     writeln('  "%s_atoms": %s,' % (prefix, [pos[v] for v in orbit_reps]))
 
+    minEdge = embedder.minimalEdgeLength()
+    maxEdge = embedder.maximalEdgeLength()
+    avgEdge = embedder.averageEdgeLength()
+    writeln('  "%s_shortest_edge_length": %s,' % (prefix, minEdge))
+    writeln('  "%s_average_edge_length": %s,' % (prefix, avgEdge))
+    writeln('  "%s_longest_edge_length": %s,' % (prefix, maxEdge))
+
     return pos, gram
 
 
