@@ -697,7 +697,7 @@ public class ProcessedNet {
      * @param embedder  an embedding for G.
      * @return the smallest distance between nodes that are not connected.
      */
-    private double smallestNonBondedDistance(
+    public static double smallestNonBondedDistance(
             final PeriodicGraph G,
             final Map<INode, Point> pos,
             final Matrix gram) {
