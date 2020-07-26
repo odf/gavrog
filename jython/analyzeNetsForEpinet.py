@@ -132,6 +132,11 @@ def write_embedding_data(net, prefix, finder, relaxPositions, writeln):
     writeln('  "%s_average_edge_length": %s,' % (prefix, avgEdge))
     writeln('  "%s_longest_edge_length": %s,' % (prefix, maxEdge))
 
+    minSep = pgraphs.embed.ProcessedNet.smallestNonBondedDistance(
+        net, embedder.positions, embedder.gramMatrix
+    )
+    writeln('  "%s_smallest_atom_separation": %s,' % (prefix, minSep))
+
     return pos, gram
 
 
