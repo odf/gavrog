@@ -72,12 +72,10 @@ public class PeriodicGraph extends UndirectedGraph {
     final protected static Tag SYMMETRIES = new Tag();
     final protected static Tag INVARIANT = new Tag();
     final protected static Tag CONVENTIONAL_CELL = new Tag();
-    final protected static Tag TRANSLATIONAL_EQUIVALENCE_CLASSES = new Tag();
+    final protected static Tag RAW_TRANSLATIONAL_EQUIVALENCES = new Tag();
+    final protected static Tag TRANSLATIONAL_EQUIVALENCES = new Tag();
     final protected static Tag MINIMAL_IMAGE_MAP = new Tag();
     final protected static Tag HAS_SECOND_ORDER_COLLISIONS = new Tag();
-
-
-    private static final Tag TRANSLATIONAL_EQUIVALENCES = null;
 
     // --- cache for this instance
     final protected Cache<Tag, Object> cache = new Cache<Tag, Object>();
@@ -1158,20 +1156,22 @@ public class PeriodicGraph extends UndirectedGraph {
     }
     
     /**
-     * Finds all additional topological translations in this periodic graph,
-     * which must be connected and locally stable and constructs the equivalence
-     * classes of nodes defined by these. A topological translation in this case
-     * is defined as a graph automorphism which commutes with all the given
-     * translations for this periodic graph and leaves no node fixed. This
-     * includes "translations" of finite orders, as they may occur in
-     * ladder-like structures. A topological translation of finite order must
-     * correspond to an identity transformation in the barycentric placement, so
-     * it can only occur in non-stable graphs.
+     * Finds all additional topological translations of infinite order in this
+     * periodic graph, which must be connected and locally stable, and
+     * constructs the equivalence classes of nodes defined by these. A
+     * topological translation in this case is defined as a graph automorphism
+     * which commutes with all the given translations for this periodic graph
+     * and leaves no node fixed.
+     *
+     * Topological translations of finite orders may occur in ladder-like
+     * structures. These must correspond to identity transformations in the
+     * barycentric placement, so can only occur in non-stable graphs. This
+     * function excludes such translations.
      * 
-     * An iterator is returned which contains the equivalence classes as sets if
-     * additional translations are found. In the special case that none are
-     * found, the iterator, however, covers the empty set rather than the set of
-     * all single node sets.
+     * An iterator is returned which contains the equivalence classes as sets
+     * if additional translations are found. In the special case that none are
+     * found, the iterator, however, covers the empty set rather than the set
+     * of all single node sets.
      * 
      * @return an iterator over the set of equivalence classes.
      */
@@ -1186,6 +1186,90 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return the partition into translational equivalence classes.
      */
     public Partition<INode> translationalEquivalences() {
+        try {
+            @SuppressWarnings("unchecked")
+            final Partition<INode> result = (Partition<INode>)
+                this.cache.get(TRANSLATIONAL_EQUIVALENCES);
+            return result;
+        } catch (CacheMissException ex) {
+        }
+
+        final Iterator<Set<INode>> orbits =
+            rawTranslationalEquivalences().classes();
+
+        Partition<INode> P = new Partition<INode>();
+
+        if (orbits.hasNext()) {
+            final Map<INode, Point> pos = barycentricPlacement();
+            final Set<INode> orb = orbits.next();
+            final INode start = orb.iterator().next();
+            final Point pos0 = pos.get(start);
+
+            final Operator I = Operator.identity(getDimension());
+
+            for (final Vector b: extendedTranslationBasis()) {
+                for (INode v: orb) {
+                    final Point p = (Point) pos.get(v).plus(b);
+                    if (((Vector) p.minus(pos0)).modZ().isZero()) {
+                        final Morphism iso = new Morphism(start, v, I);
+                        for (final INode w: nodes()) {
+                            P.unite(w, (INode) iso.get(w));
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        this.cache.put(TRANSLATIONAL_EQUIVALENCES, P);
+        return P;
+    }
+
+    private Vector[] extendedTranslationBasis() {
+        final Map<INode, Point> pos = barycentricPlacement();
+        final List<Set<INode>> classes =
+            Iterators.asList(rawTranslationalEquivalences().classes());
+
+        // --- collect the translation vectors
+        final List<Vector> vectors = new ArrayList<Vector>();
+        {
+            final Iterator<INode> iter = classes.get(0).iterator();
+            final INode v = iter.next();
+            final Point pv = pos.get(v);
+
+            while (iter.hasNext()) {
+                final INode w = iter.next();
+                final Point pw = pos.get(w);
+                final Vector t = ((Vector) pw.minus(pv)).modZ();
+                if (t.isZero()) {
+                    final String s = "found translation of finite order";
+                    throw new UnsupportedOperationException(s);
+                } else {
+                    vectors.add(t);
+                }
+            }
+        }
+
+        // --- determine a basis for the extended translation group
+        final int d = getDimension();
+        final Matrix M = new Matrix(vectors.size() + d, d);
+        M.setSubMatrix(0, 0, Vector.toMatrix(vectors));
+        M.setSubMatrix(vectors.size(), 0, Matrix.one(d));
+        Matrix.triangulate(M, null, true, false);
+        if (M.rank() != d) {
+            throw new RuntimeException("internal error - please contact author");
+        }
+
+        return Vector.fromMatrix(M.getSubMatrix(0, 0, M.rank(), d));
+    }
+
+    /**
+     * Computes a partition object encoding the raw translational equivalence
+     * classes, allowing also for translations of finite order.
+     *
+     * @return the partition into raw translational equivalence classes.
+     */
+    public Partition<INode> rawTranslationalEquivalences() {
         // --- check prerequisites
         if (!isConnected()) {
             throw new UnsupportedOperationException("graph must be connected");
@@ -1196,8 +1280,8 @@ public class PeriodicGraph extends UndirectedGraph {
         
         try {
             @SuppressWarnings("unchecked")
-            final Partition<INode> result = (Partition<INode>) this.cache.get(
-                            TRANSLATIONAL_EQUIVALENCES);
+            final Partition<INode> result = (Partition<INode>)
+                this.cache.get(RAW_TRANSLATIONAL_EQUIVALENCES);
             return result;
         } catch (CacheMissException ex) {
         }
@@ -1221,7 +1305,7 @@ public class PeriodicGraph extends UndirectedGraph {
                 }
             }
         }
-        this.cache.put(TRANSLATIONAL_EQUIVALENCES, P);
+        this.cache.put(RAW_TRANSLATIONAL_EQUIVALENCES, P);
         return P;
     }
     
