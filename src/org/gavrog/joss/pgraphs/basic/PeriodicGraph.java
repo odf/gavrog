@@ -1225,6 +1225,29 @@ public class PeriodicGraph extends UndirectedGraph {
         return P;
     }
 
+    public List<Morphism> ladderSymmetries() {
+        if (!isConnected()) {
+            throw new UnsupportedOperationException("must be connected");
+        }
+        if (!isLocallyStable()) {
+            throw new UnsupportedOperationException("must be locally stable");
+        }
+
+        final Map<INode, Point> pos = barycentricPlacement();
+        final Set<INode> orb = rawTranslationalEquivalences().classes().next();
+        final Operator I = Operator.identity(getDimension());
+        final INode v0 = orb.iterator().next();
+
+        List<Morphism> result = new ArrayList<Morphism>();
+        for (INode v: orb) {
+            if (((Vector) pos.get(v0).minus(pos.get(v))).modZ().isZero()) {
+                result.add(new Morphism(v0, v, I));
+            }
+        }
+
+        return result;
+    }
+
     private Vector[] extendedTranslationBasis() {
         final Map<INode, Point> pos = barycentricPlacement();
         final List<Set<INode>> classes =
