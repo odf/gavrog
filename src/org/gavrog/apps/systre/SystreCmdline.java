@@ -222,14 +222,15 @@ public class SystreCmdline extends EventSource {
         }
         if (G.isLadder()) {
             final String msg = "Structure is non-crystallographic (a 'ladder')";
-            throw new SystreException(SystreException.STRUCTURE, msg);
+            out.println(msg);
+            out.println();
         }
-        if (G.hasSecondOrderCollisions()) {
-            final String msg = "Structure has second-order collisions."
-                    + " Systre does not currently support such structures.";
-            throw new SystreException(SystreException.STRUCTURE, msg);
+        else if (G.hasSecondOrderCollisions()) {
+            final String msg = "Structure is suspected to be a ladder.";
+            out.println(msg);
+            out.println();
         }
-        if (!G.isStable()) {
+        else if (!G.isStable()) {
             final String msg = "Structure has collisions.";
             out.println(msg);
             out.println();
@@ -246,8 +247,7 @@ public class SystreCmdline extends EventSource {
 
         // --- determine the ideal symmetries
     	status("Computing ideal symmetry group...");
-        final List<Operator> ops = G.symmetryOperators();
-        showSymmetryOperators(G, ops);        
+        showSymmetryOperators(G);
         quitIfCancelled();
         
         // --- name node orbits according to input names
@@ -269,9 +269,10 @@ public class SystreCmdline extends EventSource {
         
         // --- find the space group name and conventional settings
     	status("Determining and verifying the space group...");
+        final List<Operator> ops = G.symmetryOperators();
         final SpaceGroupFinder finder =
                 new SpaceGroupFinder(new SpaceGroup(d, ops));
-        showSpaceGroup(d, givenGroup, ops, finder);
+        showSpaceGroup(d, givenGroup, G.isLadder(), ops, finder);
         quitIfCancelled();
         
         // --- determine the Systre key and look it up in the archives
@@ -294,7 +295,7 @@ public class SystreCmdline extends EventSource {
         quitIfCancelled();
         
         // --- compute an embedding
-        if (getComputeEmbedding()) {
+        if (getComputeEmbedding() && !G.isLadder()) {
             if (getUseOriginalEmbedding()
                     && G.nodes().hasNext()
                     &&
@@ -421,18 +422,26 @@ public class SystreCmdline extends EventSource {
      * @param G
      * @param ops
      */
-    private void showSymmetryOperators(final PeriodicGraph G,
-            final List<Operator> ops) {
-        if (DEBUG) {
-            out.println("\t\t@@@ symmetry operators:");
-            for (Operator op: ops) {
-                out.println("\t\t@@@    " + op);
-            }
+    private void showSymmetryOperators(final PeriodicGraph G) {
+        final List<Operator> ops = G.symmetryOperators();
+        final List<Morphism> lSyms = G.ladderSymmetries();
+        final boolean isLadder = lSyms.size() > 1;
+        final int pointGroupSize = ops.size() / lSyms.size();
+
+        out.println("   Point group has " + pointGroupSize + " elements.");
+        if (isLadder) {
+            out.println("   Ladder group has " + lSyms.size() + " elements.");
         }
-        out.println("   Point group has " + ops.size() + " elements.");
         out.flush();
+
         final int k = Iterators.size(G.nodeOrbits());
         out.println("   " + k + " kind" + (k > 1 ? "s" : "") + " of node.");
+
+        if (isLadder) {
+            final int m = Iterators.size(G.edgeOrbits());
+            out.println("   " + m + " kind" + (m > 1 ? "s" : "") + " of edge.");
+        }
+
         out.println();
         out.flush();
     }
@@ -443,18 +452,30 @@ public class SystreCmdline extends EventSource {
      * @param ops
      * @param finder
      */
-    private void showSpaceGroup(final int d, final String givenGroup,
-            final List<Operator> ops, final SpaceGroupFinder finder) {
+    private void showSpaceGroup(
+        final int d, final String givenGroup, final boolean isLadder,
+        final List<Operator> ops, final SpaceGroupFinder finder
+    ) {
         final String extendedGroupName = finder.getExtendedGroupName();
         final CoordinateChange toStd = finder.getToStd();
 
         final String groupName = finder.getGroupName();
-        out.println("   Ideal space group is " + groupName + ".");
-        final String givenName = SpaceGroupCatalogue.normalizedName(givenGroup);
-        if (!givenName.equals(groupName)) {
-            out.println("   Ideal group or setting differs from given ("
-                    + groupName + " vs " + givenName + ").");
+
+        if (isLadder) {
+            out.println("   Ideal space group image is " + groupName + ".");
         }
+        else {
+            out.println("   Ideal space group is " + groupName + ".");
+
+            final String givenName =
+                SpaceGroupCatalogue.normalizedName(givenGroup);
+
+            if (!givenName.equals(groupName)) {
+                out.println("   Ideal group or setting differs from given ("
+                            + groupName + " vs " + givenName + ").");
+            }
+        }
+
         final String ext = finder.getExtension();
         if ("1".equals(ext)) {
         	out.println("     (using first origin choice)");
