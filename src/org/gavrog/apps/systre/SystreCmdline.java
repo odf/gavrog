@@ -221,17 +221,19 @@ public class SystreCmdline extends EventSource {
                     + " Systre does not currently support such structures.");
         }
         if (G.isLadder()) {
-            final String msg = "Structure is non-crystallographic (a 'ladder')";
+            final String msg =
+                "   Structure is non-crystallographic (a 'ladder').";
             out.println(msg);
             out.println();
         }
         else if (G.hasSecondOrderCollisions()) {
-            final String msg = "Structure is suspected to be a ladder.";
+            final String msg =
+                "   Structure is suspected to be a ladder.";
             out.println(msg);
             out.println();
         }
         else if (!G.isStable()) {
-            final String msg = "Structure has collisions.";
+            final String msg = "   Structure has collisions.";
             out.println(msg);
             out.println();
         }
