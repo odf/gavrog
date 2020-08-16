@@ -1234,7 +1234,18 @@ public class PeriodicGraph extends UndirectedGraph {
         }
 
         final Map<INode, Point> pos = barycentricPlacement();
-        final Set<INode> orb = rawTranslationalEquivalences().classes().next();
+        final Iterator<Set<INode>> orbs =
+            rawTranslationalEquivalences().classes();
+
+        final Set<INode> orb;
+        if (orbs.hasNext()) {
+            orb = orbs.next();
+        }
+        else {
+            orb = new HashSet<INode>();
+            orb.add(nodes().next());
+        }
+
         final Operator I = Operator.identity(getDimension());
         final INode v0 = orb.iterator().next();
 
@@ -1264,10 +1275,7 @@ public class PeriodicGraph extends UndirectedGraph {
                 final INode w = iter.next();
                 final Point pw = pos.get(w);
                 final Vector t = ((Vector) pw.minus(pv)).modZ();
-                if (t.isZero()) {
-                    final String s = "found translation of finite order";
-                    throw new UnsupportedOperationException(s);
-                } else {
+                if (!t.isZero()) {
                     vectors.add(t);
                 }
             }
