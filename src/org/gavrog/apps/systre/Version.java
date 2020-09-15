@@ -17,15 +17,15 @@
 package org.gavrog.apps.systre;
 
 public class Version {
-	final public static int major = 19;
+	final public static int major = 20;
 
-	final public static int minor = 6;
+	final public static int minor = 8;
 
 	final public static int patchLevel = 0;
 
-	final public static String maturity = "";
+	final public static String maturity = "experimental";
 
-	final public static String date = "2019/06/03";
+	final public static String date = "2020/09/15";
 
 	final public static String extension = (maturity == null ? "" : " "
             + maturity)
