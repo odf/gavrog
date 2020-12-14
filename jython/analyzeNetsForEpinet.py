@@ -138,6 +138,13 @@ def write_embedding_data(net, prefix, finder, relaxPositions, writeln):
     writeln('  "%s_average_edge_length": %s,' % (prefix, avgEdge))
     writeln('  "%s_longest_edge_length": %s,' % (prefix, maxEdge))
 
+    angles = pgraphs.embed.ProcessedNet.angleSizes(
+        net, embedder.positions, embedder.gramMatrix
+    )
+    writeln('  "%s_smallest_angle": %s,' % (prefix, min(angles)))
+    writeln('  "%s_average_angle": %s,' % (prefix, sum(angles) / len(angles)))
+    writeln('  "%s_largest_angle": %s,' % (prefix, max(angles)))
+
     minSep = pgraphs.embed.ProcessedNet.smallestNonBondedDistance(
         net, embedder.positions, embedder.gramMatrix
     )
