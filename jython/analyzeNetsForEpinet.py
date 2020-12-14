@@ -121,9 +121,15 @@ def write_embedding_data(net, prefix, finder, relaxPositions, writeln):
         (v, point_as_list(p.times(finder.toStd)))
         for v, p in embedder.positions.items()
     )
-    orbit_reps = [list(orb)[0] for orb in net.nodeOrbits()]
 
+    orbit_reps = [list(orb)[0] for orb in net.nodeOrbits()]
     writeln('  "%s_atoms": %s,' % (prefix, [pos[v] for v in orbit_reps]))
+
+    edge_reps = [list(orb)[0] for orb in net.edgeOrbits()]
+    writeln(
+        '  "%s_edges": %s,' %
+        (prefix, [[pos[e.source()], pos[e.target()]] for e in edge_reps])
+    )
 
     minEdge = embedder.minimalEdgeLength()
     maxEdge = embedder.maximalEdgeLength()
