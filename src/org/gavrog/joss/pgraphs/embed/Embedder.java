@@ -633,7 +633,10 @@ public class Embedder {
 
 	private double length(final Vector v) {
 		final Real squareLength = (Real) Vector.dot(v, v, getGramMatrix());
-		return Math.sqrt(squareLength.doubleValue());
+        if (squareLength.isNegative())
+            return 0.0;
+        else
+            return Math.sqrt(squareLength.doubleValue());
 	}
 
 	private Set<INode> nodeOrbitReps() {
