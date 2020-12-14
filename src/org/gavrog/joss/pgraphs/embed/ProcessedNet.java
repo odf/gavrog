@@ -691,6 +691,52 @@ public class ProcessedNet {
     }
 
     /**
+     * Computes angle sizes.
+     *
+     * @param G    a periodic graph.
+     * @param pos  positions for the vertices of G.
+     * @param gram a Gram matrix representing the chosen unit cell parameters
+     * @return the list of all angle sizes in degrees.
+     */
+    public static List<Double> angleSizes(
+            final PeriodicGraph G,
+            final Map<INode, Point> pos,
+            final Matrix gram) {
+
+        final List<Double> angles = new ArrayList<Double>();;
+
+		for (final INode v: G.nodes()) {
+		    final Point p = pos.get(v);
+		    final List<IEdge> incidences = G.allIncidences(v);
+		    final List<Vector> vectors = new ArrayList<Vector>();
+		    for (final IEdge e: incidences) {
+		        final INode w = e.target();
+		        final Point q = (Point) pos.get(w);
+		        vectors.add((Vector) q.plus(G.getShift(e)).minus(p));
+		    }
+		    final int m = vectors.size();
+		    for (int i = 0; i < m; ++i) {
+		        final Vector s = vectors.get(i);
+		        final double ls =
+		                ((Real) Vector.dot(s, s, gram)).sqrt().doubleValue();
+		        for (int j = i + 1; j < m; ++j) {
+		            final Vector t = vectors.get(j);
+		            final double lt = ((Real) Vector.dot(t, t, gram)).sqrt()
+		                    .doubleValue();
+		            final double dot =
+		                    ((Real) Vector.dot(s, t, gram)).doubleValue();
+		            final double arg =
+		                    Math.max(-1, Math.min(1, dot / (ls * lt)));
+
+                    angles.add(Math.acos(arg) / Math.PI * 180);
+		        }
+		    }
+		}
+
+        return angles;
+    }
+
+    /**
      * Does what it says.
      * 
      * @param G         a periodic graph.
