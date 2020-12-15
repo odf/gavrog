@@ -430,9 +430,13 @@ public class ProcessedNet {
 		final double dist = smallestNonBondedDistance(graph, pos, gram);
 		if (dist < 0) {
 			out.println("   Shortest non-bonded distance not determined.");
-		} else {
+        }
+        else if (cgdFormat) {
+            out.println("# SMALLEST_SEPARATION " + fmtReal5.format(dist));
+		}
+        else {
 			out.println("   Shortest non-bonded distance = "
-					+ fmtReal5.format(dist));
+                        + fmtReal5.format(dist));
 		}
 		
 		// --- write the degrees of freedom as found by the embedder
