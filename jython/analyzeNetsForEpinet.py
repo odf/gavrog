@@ -172,6 +172,31 @@ def write_embedding_data(
             nodes.append(map(float, fields[3:]))
         elif fields[0] == 'EDGE':
             edges.append(map(float, fields[1:]))
+        elif fields[0] == '#' and len(fields) > 1:
+            if fields[1] == 'EDGE_MIN':
+                minEdge = float(fields[2])
+                writeln('  "%s_shortest_edge_length": %s,' % (prefix, minEdge))
+            elif fields[1] == 'EDGE_AVG':
+                avgEdge = float(fields[2])
+                writeln('  "%s_average_edge_length": %s,' % (prefix, avgEdge))
+            elif fields[1] == 'EDGE_MAX':
+                maxEdge = float(fields[2])
+                writeln('  "%s_longest_edge_length": %s,' % (prefix, maxEdge))
+            if fields[1] == 'ANGLE_MIN':
+                minAngle = float(fields[2])
+                writeln('  "%s_smallest_angle": %s,' % (prefix, minAngle))
+            elif fields[1] == 'ANGLE_AVG':
+                avgAngle = float(fields[2])
+                writeln('  "%s_average_angle": %s,' % (prefix, avgAngle))
+            elif fields[1] == 'ANGLE_MAX':
+                maxAngle = float(fields[2])
+                writeln('  "%s_largest_angle": %s,' % (prefix, maxAngle))
+            elif fields[1] == 'SMALLEST_SEPARATION':
+                sep = float(fields[2])
+                writeln('  "%s_smallest_atom_separation": %s,' % (prefix, sep))
+            elif fields[1] == 'DEGREES_OF_FREEDOM':
+                dof = int(fields[2])
+                writeln('  "%s_deegrees_of_freedom": %s,' % (prefix, dof))
 
     writeln('  "%s_atoms": %s,' % (prefix, nodes))
     writeln('  "%s_edges": %s,' % (prefix, edges))
@@ -197,81 +222,6 @@ def verifyEmbedding(graph, nodeToName, finder, embedder):
     test = pgraphs.io.NetParser.stringToNet(cgd)
 
     return test.minimalImage().equals(graph)
-
-
-def _write_embedding_data(net, prefix, finder, relaxPositions, writeln):
-    embedder = pgraphs.embed.Embedder(net, None, False)
-
-    embedder.setRelaxPositions(False)
-    embedder.setPasses(0)
-    embedder.go(500)
-    embedder.normalize()
-
-    embedder.setRelaxPositions(relaxPositions)
-    embedder.setPasses(3)
-    embedder.go(10000)
-    embedder.normalize()
-
-    gram_primitive = embedder.gramMatrix
-    to_std = finder.toStd.basis
-    gram = to_std.times(gram_primitive).times(to_std.transposed())
-
-    a = math.sqrt(gram.get(0, 0))
-    b = math.sqrt(gram.get(1, 1))
-    c = math.sqrt(gram.get(2, 2))
-    alpha = acosdeg(gram.get(1, 2) / b / c)
-    beta = acosdeg(gram.get(0, 2) / a / c)
-    gamma = acosdeg(gram.get(0, 1) / a / b)
-
-    writeln('  "%s_unitcell_a": %s,' % (prefix, a))
-    writeln('  "%s_unitcell_b": %s,' % (prefix, b))
-    writeln('  "%s_unitcell_c": %s,' % (prefix, c))
-    writeln('  "%s_unitcell_alpha": %s,' % (prefix, alpha))
-    writeln('  "%s_unitcell_beta": %s,' % (prefix, beta))
-    writeln('  "%s_unitcell_gamma": %s,' % (prefix, gamma))
-
-    pos = dict(
-        (v, point_as_list(p.times(finder.toStd)))
-        for v, p in embedder.positions.items()
-    )
-
-    orbit_reps = [list(orb)[0] for orb in net.nodeOrbits()]
-    writeln('  "%s_atoms": %s,' % (prefix, [pos[v] for v in orbit_reps]))
-
-    edge_reps = [list(orb)[0] for orb in net.edgeOrbits()]
-    writeln(
-        '  "%s_edges": %s,' %
-        (prefix, [[pos[e.source()], pos[e.target()]] for e in edge_reps])
-    )
-
-    minEdge = embedder.minimalEdgeLength()
-    maxEdge = embedder.maximalEdgeLength()
-    avgEdge = embedder.averageEdgeLength()
-    writeln('  "%s_shortest_edge_length": %s,' % (prefix, minEdge))
-    writeln('  "%s_average_edge_length": %s,' % (prefix, avgEdge))
-    writeln('  "%s_longest_edge_length": %s,' % (prefix, maxEdge))
-
-    angles = pgraphs.embed.ProcessedNet.angleSizes(
-        net, embedder.positions, embedder.gramMatrix
-    )
-    writeln('  "%s_smallest_angle": %s,' % (prefix, min(angles)))
-    writeln('  "%s_average_angle": %s,' % (prefix, sum(angles) / len(angles)))
-    writeln('  "%s_largest_angle": %s,' % (prefix, max(angles)))
-
-    minSep = pgraphs.embed.ProcessedNet.smallestNonBondedDistance(
-        net, embedder.positions, embedder.gramMatrix
-    )
-    writeln('  "%s_smallest_atom_separation": %s,' % (prefix, minSep))
-
-    return pos, gram
-
-
-def acosdeg(x):
-    return math.acos(x) / math.pi * 180.0
-
-
-def point_as_list(p):
-    return [p.get(i) for i in range(p.dimension)]
 
 
 def coordination_sequence(net, v, n):
