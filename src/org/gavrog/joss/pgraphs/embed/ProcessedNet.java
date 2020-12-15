@@ -327,11 +327,10 @@ public class ProcessedNet {
         }
         
         // --- finish up
+        writeStatistics(out, gram, pos, cgdFormat);
         if (cgdFormat) {
             out.println("END");
             out.println();
-        } else {
-            writeStatistics(out, gram, pos);
         }
         out.flush();
         if (DEBUG) {
@@ -348,7 +347,8 @@ public class ProcessedNet {
 	private void writeStatistics(
 	        final PrintWriter out,
 	        final Matrix gram,
-			final Map<INode, Point> pos) {
+			final Map<INode, Point> pos,
+            final boolean cgdFormat) {
 		// --- write edge statistics
 		if (DEBUG) {
 			System.out.println("\t\t@@@ Computing edge statistics...");
@@ -357,9 +357,17 @@ public class ProcessedNet {
 		final String min = fmtReal5.format(embedder.minimalEdgeLength());
 		final String max = fmtReal5.format(embedder.maximalEdgeLength());
 		final String avg = fmtReal5.format(embedder.averageEdgeLength());
-		out.println();
-		out.println("   Edge statistics: minimum = " + min + ", maximum = "
-				+ max + ", average = " + avg);
+
+        if (cgdFormat) {
+            out.println("# EDGE_MIN " + min);
+            out.println("# EDGE_AVG " + avg);
+            out.println("# EDGE_MAX " + max);
+        }
+        else {
+            out.println();
+            out.println("   Edge statistics: minimum = " + min + ", maximum = "
+                        + max + ", average = " + avg);
+        }
 		
 		// --- compute and write angle statistics
 		if (DEBUG) {
@@ -401,10 +409,18 @@ public class ProcessedNet {
 		        }
 		    }
 		}
-		out.println("   Angle statistics: minimum = " + fmtReal5.format(minAngle)
-		        + ", maximum = " + fmtReal5.format(maxAngle) + ", average = "
-		        + fmtReal5.format(sumAngle / count));
-		out.flush();
+
+        if (cgdFormat) {
+            out.println("# ANGLE_MIN " + fmtReal5.format(minAngle));
+            out.println("# ANGLE_AVG " + fmtReal5.format(sumAngle / count));
+            out.println("# ANGLE_MAX " + fmtReal5.format(maxAngle));
+        }
+        else {
+            out.println("   Angle statistics: minimum = " + fmtReal5.format(minAngle)
+                        + ", maximum = " + fmtReal5.format(maxAngle) + ", average = "
+                        + fmtReal5.format(sumAngle / count));
+        }
+        out.flush();
 		
 		// --- write the shortest non-bonded distance
 		if (DEBUG) {
@@ -420,15 +436,18 @@ public class ProcessedNet {
 		}
 		
 		// --- write the degrees of freedom as found by the embedder
-		if (embedder instanceof Embedder) {
-			if (DEBUG) {
-				System.out.println("\t\t@@@ Computing degrees of freedom...");
-			}
-			
-		    out.println();
-		    out.println("   Degrees of freedom: "
-		            + ((Embedder) embedder).degreesOfFreedom());
-		}
+        if (DEBUG) {
+            System.out.println("\t\t@@@ Computing degrees of freedom...");
+        }
+
+        int dof = embedder.degreesOfFreedom();
+        if (cgdFormat) {
+            out.println("# DEGREES_OF_FREEDOM " + dof);
+        }
+        else {
+            out.println();
+            out.println("   Degrees of freedom: " + dof);
+        }
 	}
 
 	/**
