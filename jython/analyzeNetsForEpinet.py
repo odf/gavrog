@@ -1,4 +1,5 @@
 #!/bin/env jython
+import java
 import math
 import json
 import sys
@@ -58,6 +59,7 @@ def process_net(net, writeln):
     if not net.isMinimal():
         warnings.append("reduced from supercell")
 
+    minMap = net.minimalImageMap()
     net = net.minimalImage()
 
     finder = geometry.SpaceGroupFinder(net.getSpaceGroup())
@@ -80,13 +82,124 @@ def process_net(net, writeln):
 
     writeln('  "net_systre_key": "%s",' % net.systreKey)
 
-    write_embedding_data(net, 'net_barycentric', finder, False, writeln)
-    write_embedding_data(net, 'net_relaxed', finder, True, writeln)
+    nodeToName, mergedNames = node_name_mapping(minMap)
+
+    write_embedding_data(
+        net, 'net_barycentric', nodeToName, finder, False, writeln
+    )
+    write_embedding_data(
+        net, 'net_relaxed', nodeToName, finder, True, writeln
+    )
 
     return warnings, errors
 
 
-def write_embedding_data(net, prefix, finder, relaxPositions, writeln):
+def node_name_mapping(phi):
+    imageNode2Orbit = {}
+    for orbit in phi.imageGraph.nodeOrbits():
+        orbit = frozenset(orbit)
+        for v in orbit:
+            imageNode2Orbit[v] = orbit
+
+    orbit2name = {}
+    node2name = {}
+    mergedNames = []
+    mergedNamesSeen = set()
+
+    for v in phi.sourceGraph.nodes():
+        name = phi.sourceGraph.getNodeName(v)
+        w = phi.getImage(v)
+        orbit = imageNode2Orbit[w]
+
+        if name != orbit2name.get(orbit, name):
+            pair = (name, orbit2name[orbit])
+            if pair not in mergedNamesSeen:
+                mergedNames.append(pair)
+                mergedNamesSeen.add(pair)
+        else:
+            orbit2name[orbit] = name
+
+        node2name[w] = orbit2name[orbit]
+
+    return node2name, mergedNames
+
+
+def write_embedding_data(
+    graph, prefix, nodeToName, finder, relaxPositions, writeln
+):
+    embedder = pgraphs.embed.Embedder(graph, None, False)
+
+    try:
+        embedder.setRelaxPositions(False)
+        embedder.setPasses(0)
+        embedder.go(500)
+        embedder.normalize()
+
+        if relaxPositions:
+            embedder.setRelaxPositions(True)
+            embedder.setPasses(3)
+            embedder.go(10000)
+            embedder.normalize()
+
+        success = verifyEmbedding(graph, nodeToName, finder, embedder)
+    except:
+        success = False
+
+    if not success:
+        return False
+
+    net = pgraphs.embed.ProcessedNet(graph, 'X', nodeToName, finder, embedder)
+    cgd = serializedNet(net, asCGD=True)
+
+    nodes = []
+    edges = []
+
+    for line in cgd.split('\n'):
+        fields = line.strip().split()
+        if len(fields) == 0:
+            continue
+
+        if fields[0] == 'CELL':
+            a, b, c, alpha, beta, gamma = map(float, fields[1:])
+
+            writeln('  "%s_unitcell_a": %s,' % (prefix, a))
+            writeln('  "%s_unitcell_b": %s,' % (prefix, b))
+            writeln('  "%s_unitcell_c": %s,' % (prefix, c))
+            writeln('  "%s_unitcell_alpha": %s,' % (prefix, alpha))
+            writeln('  "%s_unitcell_beta": %s,' % (prefix, beta))
+            writeln('  "%s_unitcell_gamma": %s,' % (prefix, gamma))
+        elif fields[0] == 'NODE':
+            nodes.append(map(float, fields[3:]))
+        elif fields[0] == 'EDGE':
+            edges.append(map(float, fields[1:]))
+
+    writeln('  "%s_atoms": %s,' % (prefix, nodes))
+    writeln('  "%s_edges": %s,' % (prefix, edges))
+
+
+def serializedNet(net, asCGD=False, writeFullCell=False, prefix=''):
+    stringWriter = java.io.StringWriter()
+    writer = java.io.PrintWriter(stringWriter)
+    net.writeEmbedding(writer, asCGD, writeFullCell, prefix)
+    return stringWriter.toString()
+
+
+def verifyEmbedding(graph, nodeToName, finder, embedder):
+    det = embedder.gramMatrix.determinant()
+    if det.doubleValue < 0.001:
+        return False
+
+    if not graph.isStable():
+        return True
+
+    net = pgraphs.embed.ProcessedNet(graph, 'X', nodeToName, finder, embedder)
+    cgd = serializedNet(net, asCGD=True)
+    test = pgraphs.io.NetParser.stringToNet(cgd)
+
+    return test.minimalImage().equals(graph)
+
+
+def _write_embedding_data(net, prefix, finder, relaxPositions, writeln):
     embedder = pgraphs.embed.Embedder(net, None, False)
 
     embedder.setRelaxPositions(False)
