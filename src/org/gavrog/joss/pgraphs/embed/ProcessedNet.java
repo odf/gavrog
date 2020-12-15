@@ -19,6 +19,7 @@ package org.gavrog.joss.pgraphs.embed;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -51,9 +52,16 @@ import org.gavrog.joss.pgraphs.basic.PeriodicGraph;
  * Stores and prints a graph with its name, embedding and space group symmetry.
  */
 public class ProcessedNet {
-    private final static DecimalFormat fmtReal4 = new DecimalFormat("0.0000");
-    private final static DecimalFormat fmtReal5 = new DecimalFormat("0.00000");
-    
+    private static DecimalFormatSymbols fmt = new DecimalFormatSymbols();
+
+    static {
+        fmt.setInfinity("inf");
+        fmt.setNaN("nan");
+    }
+
+    private static DecimalFormat fmtReal4 = new DecimalFormat("0.0000", fmt);
+    private static DecimalFormat fmtReal5 = new DecimalFormat("0.00000", fmt);
+
     final static boolean DEBUG = false;
     
     /*
