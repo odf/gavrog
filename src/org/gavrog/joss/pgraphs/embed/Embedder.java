@@ -762,8 +762,12 @@ public class Embedder {
 		final int nrPasses = Math.max(1, this.passes);
 
 		for (int pass = 0; pass < nrPasses; ++pass) {
+            if (getRelaxPositions() && pass == nrPasses - 1)
+                this.penaltyFactor = 1;
+            else
+                this.penaltyFactor = 0;
+
 			this.volumeWeight = Math.pow(10, -pass);
-			this.penaltyFactor = (pass == nrPasses - 1) ? 1 : 0;
 			p = new Amoeba(energy, 1e-6, steps, 10, 1.0).go(p);
 			for (int i = 0; i < p.length; ++i) {
 				this.p[i] = p[i];
