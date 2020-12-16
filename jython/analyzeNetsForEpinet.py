@@ -210,8 +210,15 @@ def serializedNet(net, asCGD=False, writeFullCell=False, prefix=''):
 
 
 def verifyEmbedding(graph, nodeToName, finder, embedder):
-    det = embedder.gramMatrix.determinant()
-    if det.doubleValue < 0.001:
+    gram = embedder.gramMatrix
+
+    if gram.get(0, 0).doubleValue() < 0.001:
+        return False
+
+    if gram.getSubMatrix(0, 0, 2, 2).determinant().doubleValue() < 0.001:
+        return False
+
+    if gram.determinant().doubleValue() < 0.001:
         return False
 
     if not graph.isStable():
