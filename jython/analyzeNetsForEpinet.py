@@ -84,12 +84,19 @@ def process_net(net, writeln):
 
     nodeToName, mergedNames = node_name_mapping(minMap)
 
-    write_embedding_data(
-        net, 'net_barycentric', nodeToName, finder, False, writeln
-    )
-    write_embedding_data(
-        net, 'net_relaxed', nodeToName, finder, True, writeln
-    )
+    try:
+        write_embedding_data(
+            net, 'net_barycentric', nodeToName, finder, False, writeln
+        )
+    except:
+        errors.append("barycentric embedding crashed")
+
+    try:
+        write_embedding_data(
+            net, 'net_relaxed', nodeToName, finder, True, writeln
+        )
+    except:
+        errors.append("relaxed embedding crashed")
 
     return warnings, errors
 
