@@ -2306,11 +2306,6 @@ public class PeriodicGraph extends UndirectedGraph {
      * @return the covering periodic graph.
      */
     public Cover conventionalCellCover() {
-        // --- see if we can do this
-        if (!isMinimal()) {
-            throw new UnsupportedOperationException("graph not minimal");
-        }
-
         try {
             return (Cover) this.cache.get(CONVENTIONAL_CELL);
         } catch (CacheMissException ex) {
