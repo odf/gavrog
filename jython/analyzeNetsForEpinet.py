@@ -43,15 +43,15 @@ def process_net(net, writeln):
 
     if not net.isConnected():
         errors.append("disconnected net")
+    elif not net.isLocallyStable():
+        errors.append("next-nearest neighbor collisions")
     elif not net.isStable():
         warnings.append("net has collisions")
 
-        if not net.isLocallyStable():
-            errors.append("next-nearest neighbor collisions")
-        elif net.isLadder():
-            errors.append("ladder net")
+        if net.isLadder():
+            warnings.append("ladder net")
         elif net.hasSecondOrderCollisions():
-            errors.append("possible ladder net")
+            warnings.append("possible ladder net")
 
     if errors:
         return warnings, errors
