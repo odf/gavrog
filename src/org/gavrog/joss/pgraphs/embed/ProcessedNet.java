@@ -399,9 +399,12 @@ public class ProcessedNet {
 		                    .doubleValue();
 		            final double dot =
 		                    ((Real) Vector.dot(s, t, gram)).doubleValue();
-		            final double arg =
-		                    Math.max(-1, Math.min(1, dot / (ls * lt)));
-		            final double angle = Math.acos(arg) / Math.PI * 180;
+                    double angle = 0.0;
+                    if (ls * lt > 1e-8) {
+                        final double arg =
+                            Math.max(-1, Math.min(1, dot / (ls * lt)));
+                        angle = Math.acos(arg) / Math.PI * 180;
+                    }
 		            minAngle = Math.min(minAngle, angle);
 		            maxAngle = Math.max(maxAngle, angle);
 		            sumAngle += angle;
@@ -756,10 +759,13 @@ public class ProcessedNet {
 		                    .doubleValue();
 		            final double dot =
 		                    ((Real) Vector.dot(s, t, gram)).doubleValue();
-		            final double arg =
-		                    Math.max(-1, Math.min(1, dot / (ls * lt)));
-
-                    angles.add(Math.acos(arg) / Math.PI * 180);
+                    double angle = 0.0;
+                    if (ls * lt > 1e-8) {
+                        final double arg =
+                            Math.max(-1, Math.min(1, dot / (ls * lt)));
+                        angle = Math.acos(arg) / Math.PI * 180;
+                    }
+                    angles.add(angle);
 		        }
 		    }
 		}
