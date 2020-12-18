@@ -536,13 +536,18 @@ public class ProcessedNet {
 	        } else if (correctedGroupName != extendedGroupName && ! fullCell) {
 	        	out.println("   Group setting modified to " + correctedGroupName);
 	        }
-	        
+
+            final double cellVolume =
+                ((Real) Vector.volume3D(x, y, z)).doubleValue()
+                * Math.sqrt(((Real) gram.determinant()).doubleValue());
+
 	        // --- print the cell info
 			if (cgdFormat) {
 				out.println("  CELL " + fmtReal5.format(a) + " "
                         + fmtReal5.format(b) + " " + fmtReal5.format(c) + " "
                         + fmtReal4.format(alpha) + " " + fmtReal4.format(beta)
                         + " " + fmtReal4.format(gamma));
+                out.println("  CELL_VOLUME " + fmtReal5.format(cellVolume));
 			} else {
 				if (fullCell) {
 					out.println("   Coordinates below are given for a full "
@@ -555,11 +560,7 @@ public class ProcessedNet {
                 out.println("       alpha = " + fmtReal4.format(alpha)
                         + ", beta = " + fmtReal4.format(beta) + ", gamma = "
                         + fmtReal4.format(gamma));
-				out.println("   Cell volume: "
-                        + fmtReal5.format(((Real) Vector.volume3D(x, y, z))
-                                .doubleValue()
-                                * Math.sqrt(((Real) gram.determinant())
-                                        .doubleValue())));
+				out.println("   Cell volume: " + fmtReal5.format(cellVolume));
 			}
 		} else if (d == 2){
 			// --- the cell vectors in the embedder's coordinate system

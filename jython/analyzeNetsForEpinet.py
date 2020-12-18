@@ -85,16 +85,29 @@ def process_net(net, writeln):
     nodeToName, mergedNames = node_name_mapping(minMap)
 
     try:
-        write_embedding_data(
-            net, 'net_barycentric', nodeToName, finder, False, writeln
+        success = write_embedding(
+            net, 'net_barycentric', nodeToName, finder, writeln
         )
+        if success == False:
+            errors.append("barycentric embedding failed verification")
     except:
         errors.append("barycentric embedding crashed")
 
     try:
-        write_embedding_data(
-            net, 'net_relaxed', nodeToName, finder, True, writeln
+        success = write_embedding(
+            net, 'net_maximal', nodeToName, finder, writeln
         )
+        if success == False:
+            errors.append("maximal embedding failed verification")
+    except:
+        errors.append("maximal embedding crashed")
+
+    try:
+        success = write_embedding(
+            net, 'net_relaxed', nodeToName, finder, writeln
+        )
+        if success == False:
+            errors.append("relaxed embedding failed verification")
     except:
         errors.append("relaxed embedding crashed")
 
@@ -131,28 +144,29 @@ def node_name_mapping(phi):
     return node2name, mergedNames
 
 
-def write_embedding_data(
-    graph, prefix, nodeToName, finder, relaxPositions, writeln
-):
+def write_embedding(graph, prefix, nodeToName, finder, writeln):
     embedder = pgraphs.embed.Embedder(graph, None, False)
 
-    try:
+    if prefix == 'net_maximal':
+        embedder.setMaximizeVolume(True)
+        embedder.setRelaxPositions(False)
+        embedder.setPasses(0)
+        embedder.go(10000)
+        embedder.normalize()
+    else:
+        embedder.setMaximizeVolume(False)
         embedder.setRelaxPositions(False)
         embedder.setPasses(0)
         embedder.go(500)
         embedder.normalize()
 
-        if relaxPositions:
-            embedder.setRelaxPositions(True)
-            embedder.setPasses(3)
-            embedder.go(10000)
-            embedder.normalize()
+        embedder.setMaximizeVolume(False)
+        embedder.setRelaxPositions(prefix == 'net_relaxed')
+        embedder.setPasses(3)
+        embedder.go(10000)
+        embedder.normalize()
 
-        success = verifyEmbedding(graph, nodeToName, finder, embedder)
-    except:
-        success = False
-
-    if not success:
+    if not verifyEmbedding(graph, nodeToName, finder, embedder):
         return False
 
     net = pgraphs.embed.ProcessedNet(graph, 'X', nodeToName, finder, embedder)
@@ -175,6 +189,9 @@ def write_embedding_data(
             writeln('  "%s_unitcell_alpha": %s,' % (prefix, alpha))
             writeln('  "%s_unitcell_beta": %s,' % (prefix, beta))
             writeln('  "%s_unitcell_gamma": %s,' % (prefix, gamma))
+        elif fields[0] == 'CELL_VOLUME':
+            volume = float(fields[1])
+            writeln('  "%s_unitcell_volume": %s,' % (prefix, volume))
         elif fields[0] == 'NODE':
             nodes.append(map(float, fields[3:]))
         elif fields[0] == 'EDGE':
@@ -203,7 +220,7 @@ def write_embedding_data(
                 writeln('  "%s_smallest_atom_separation": %s,' % (prefix, sep))
             elif fields[1] == 'DEGREES_OF_FREEDOM':
                 dof = int(fields[2])
-                writeln('  "%s_deegrees_of_freedom": %s,' % (prefix, dof))
+                writeln('  "%s_degrees_of_freedom": %s,' % (prefix, dof))
 
     writeln('  "%s_atoms": %s,' % (prefix, nodes))
     writeln('  "%s_edges": %s,' % (prefix, edges))
@@ -235,7 +252,10 @@ def verifyEmbedding(graph, nodeToName, finder, embedder):
     cgd = serializedNet(net, asCGD=True)
     test = pgraphs.io.NetParser.stringToNet(cgd)
 
-    return test.minimalImage().equals(graph)
+    if not test.minimalImage().equals(graph):
+        return False
+
+    return True
 
 
 def coordination_sequence(net, v, n):

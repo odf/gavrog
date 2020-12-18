@@ -130,6 +130,7 @@ public class Embedder {
 	// --- Options:
 	private int passes = 3;
 	private boolean optimizePositions = true;
+    private boolean maximizeVolume = false;
 	private boolean checkPositions = false;
     private Map<INode, Point> initialPlacement;
 
@@ -599,6 +600,43 @@ public class Embedder {
 			   this.penaltyFactor * (edgePenalty + anglePenalty);
 	}
 
+	private double energyMaxVol(final double point[]) {
+		final int dim = this.dimGraph;
+
+		final Matrix gram = getGramMatrix(point);
+        final double det = ((Real) gram.determinant()).doubleValue();
+        if (det < 1e-12)
+            return 1e12;
+
+		final double g[] = gramToArray(gram);
+
+		double edgeSum = 0.0;
+
+		for (int k = 0; k < this.edges.length; ++k) {
+			final Edge e = this.edges[k];
+			if (e.type == EDGE) {
+                final double pv[] = getPosition(e.v, this.p);
+                final double pw[] = getPosition(e.w, this.p);
+                final double s[] = e.shift;
+                final double diff[] = new double[dim];
+                for (int i = 0; i < dim; ++i) {
+                    diff[i] = pw[i] + s[i] - pv[i];
+                }
+
+                double len = 0.0;
+                for (int i = 0; i < dim; ++i) {
+                    len += diff[i] * diff[i] * g[this.gramIndex[i][i]];
+                    for (int j = i + 1; j < dim; ++j) {
+                        len += 2 * diff[i] * diff[j] * g[this.gramIndex[i][j]];
+                    }
+                }
+				edgeSum += len * e.weight;
+			}
+		}
+
+        return Math.pow(edgeSum, 3) / det;
+    }
+
 	private Map<INode, Operator> nodeSymmetrizations() {
 		final Map<INode, Operator> result = new HashMap<INode, Operator>();
 		for (final INode v: this.graph.nodes()) {
@@ -703,6 +741,14 @@ public class Embedder {
 		return optimizePositions;
 	}
 
+	public void setMaximizeVolume(boolean maximizeVolume) {
+		this.maximizeVolume = maximizeVolume;
+	}
+
+	public boolean getMaximizeVolume() {
+		return maximizeVolume;
+	}
+
 	public void setGramMatrix(final Matrix gram) {
 	    final int d = this.graph.getDimension();
 		final Matrix g = (gram == null) ? Matrix.one(d) : gram;
@@ -743,7 +789,7 @@ public class Embedder {
 			return 0;
 		}
 
-		final Amoeba.Function energy = new Amoeba.Function() {
+		final Amoeba.Function cost = new Amoeba.Function() {
 			public int dim() {
 				if (getRelaxPositions()) {
 					return dimParSpace;
@@ -753,7 +799,7 @@ public class Embedder {
 			}
 
 			public double evaluate(final double[] p) {
-				return energy(p);
+				return getMaximizeVolume() ? energyMaxVol(p) : energy(p);
 			}
 		};
 
@@ -768,7 +814,7 @@ public class Embedder {
                 this.penaltyFactor = 0;
 
 			this.volumeWeight = Math.pow(10, -pass);
-			p = new Amoeba(energy, 1e-6, steps, 10, 1.0).go(p);
+			p = new Amoeba(cost, 1e-6, steps, 10, 1.0).go(p);
 			for (int i = 0; i < p.length; ++i) {
 				this.p[i] = p[i];
 			}
