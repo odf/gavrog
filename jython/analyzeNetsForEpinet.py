@@ -169,6 +169,7 @@ def write_embedding(graph, prefix, nodeToName, finder, writeln):
     if not verifyEmbedding(graph, nodeToName, finder, embedder):
         return False
 
+    dim = graph.dimension
     net = pgraphs.embed.ProcessedNet(graph, 'X', nodeToName, finder, embedder)
     cgd = serializedNet(net, asCGD=True)
 
@@ -181,14 +182,19 @@ def write_embedding(graph, prefix, nodeToName, finder, writeln):
             continue
 
         if fields[0] == 'CELL':
-            a, b, c, alpha, beta, gamma = map(float, fields[1:])
-
-            writeln('  "%s_unitcell_a": %s,' % (prefix, a))
-            writeln('  "%s_unitcell_b": %s,' % (prefix, b))
-            writeln('  "%s_unitcell_c": %s,' % (prefix, c))
-            writeln('  "%s_unitcell_alpha": %s,' % (prefix, alpha))
-            writeln('  "%s_unitcell_beta": %s,' % (prefix, beta))
-            writeln('  "%s_unitcell_gamma": %s,' % (prefix, gamma))
+            if dim == 3:
+                a, b, c, alpha, beta, gamma = map(float, fields[1:])
+                writeln('  "%s_unitcell_a": %s,' % (prefix, a))
+                writeln('  "%s_unitcell_b": %s,' % (prefix, b))
+                writeln('  "%s_unitcell_c": %s,' % (prefix, c))
+                writeln('  "%s_unitcell_alpha": %s,' % (prefix, alpha))
+                writeln('  "%s_unitcell_beta": %s,' % (prefix, beta))
+                writeln('  "%s_unitcell_gamma": %s,' % (prefix, gamma))
+            elif dim == 2:
+                a, b, gamma = map(float, fields[1:])
+                writeln('  "%s_unitcell_a": %s,' % (prefix, a))
+                writeln('  "%s_unitcell_b": %s,' % (prefix, b))
+                writeln('  "%s_unitcell_gamma": %s,' % (prefix, gamma))
         elif fields[0] == 'CELL_VOLUME':
             volume = float(fields[1])
             writeln('  "%s_unitcell_volume": %s,' % (prefix, volume))
