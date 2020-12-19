@@ -634,7 +634,7 @@ public class Embedder {
 			}
 		}
 
-        return Math.pow(edgeSum, 3) / det;
+        return Math.pow(edgeSum, dim) / det;
     }
 
 	private Map<INode, Operator> nodeSymmetrizations() {
