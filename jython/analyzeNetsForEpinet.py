@@ -1,7 +1,7 @@
 #!/bin/env jython
 import java
-import math
 import json
+import math
 import sys
 
 import org.gavrog.joss.pgraphs as pgraphs
@@ -22,7 +22,12 @@ def run():
             writeln('  "source_path": "%s",' % source_path)
             writeln('  "index_in_source": %d,' % index_in_source)
 
-            warnings, errors = process_net(net, writeln=writeln)
+            try:
+                warnings, errors = process_net(net, writeln=writeln)
+            except:
+                warnings = []
+                errors = ["exception thrown while processing"]
+
             status = "Error" if errors else "OK"
 
             writeln('  "warnings": %s,' % json.dumps(warnings))
@@ -85,18 +90,13 @@ def process_net(net, writeln):
     nodeToName, mergedNames = node_name_mapping(minMap)
 
     for kind in ['barycentric', 'maximal', 'relaxed']:
-        try:
-            e = make_embedding(net, kind)
-            try:
-                if not verify_embedding(net, nodeToName, finder, e):
-                    warnings.append("%s embedding failed verification" % kind)
-            except:
-                errors.append("%s embedding verification crashed" % kind)
+        e = make_embedding(net, kind)
 
-            pnet = pgraphs.embed.ProcessedNet(net, 'X', nodeToName, finder, e)
-            write_embedding(pnet, "net_%s" % kind, writeln)
-        except:
-            errors.append("%s embedding crashed" % kind)
+        if not is_positive_definite(e.gramMatrix):
+            warnings.append("%s embedding has collapsed unit cell" % kind)
+
+        pnet = pgraphs.embed.ProcessedNet(net, 'X', nodeToName, finder, e)
+        write_embedding(pnet, "net_%s" % kind, writeln)
 
     return warnings, errors
 
@@ -226,29 +226,15 @@ def serialized_net(net, asCGD=False, writeFullCell=False, prefix=''):
     return stringWriter.toString()
 
 
-def verify_embedding(graph, nodeToName, finder, embedder):
-    gram = embedder.gramMatrix
-
+def is_positive_definite(gram):
     if gram.get(0, 0).doubleValue() < 0.001:
         return False
-
-    if gram.getSubMatrix(0, 0, 2, 2).determinant().doubleValue() < 0.001:
+    elif gram.getSubMatrix(0, 0, 2, 2).determinant().doubleValue() < 0.001:
         return False
-
-    if gram.determinant().doubleValue() < 0.001:
+    elif gram.determinant().doubleValue() < 0.001:
         return False
-
-    if not graph.isStable():
+    else:
         return True
-
-    net = pgraphs.embed.ProcessedNet(graph, 'X', nodeToName, finder, embedder)
-    cgd = serialized_net(net, asCGD=True)
-    test = pgraphs.io.NetParser.stringToNet(cgd)
-
-    if not test.minimalImage().equals(graph):
-        return False
-
-    return True
 
 
 def coordination_sequence(net, v, n):
