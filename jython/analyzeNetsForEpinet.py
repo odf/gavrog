@@ -3,6 +3,7 @@ import java
 import json
 import math
 import sys
+import traceback
 
 import org.gavrog.joss.pgraphs as pgraphs
 import org.gavrog.joss.geometry as geometry
@@ -27,6 +28,9 @@ def run():
             except:
                 warnings = []
                 errors = ["exception thrown while processing"]
+                st = traceback.format_exc()
+                st = st.replace('\n', '\\n').replace('"', '\\"')
+                writeln('  "stack_trace": "%s",' % st)
 
             status = "Error" if errors else "OK"
 
