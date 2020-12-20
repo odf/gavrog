@@ -28,9 +28,8 @@ def run():
             except:
                 warnings = []
                 errors = ["exception thrown while processing"]
-                st = traceback.format_exc()
-                st = st.replace('\n', '\\n').replace('"', '\\"')
-                writeln('  "stack_trace": "%s",' % st)
+                stacktrace = traceback.format_exc()
+                writeln('  "stack_trace": %s,' % json.dumps(stacktrace))
 
             status = "Error" if errors else "OK"
 
