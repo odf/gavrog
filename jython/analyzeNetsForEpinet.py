@@ -40,35 +40,35 @@ def run():
             writeln()
 
 
-def process_net(net, writeln):
-    writeln('  "net_name": "%s",' % net.name)
+def process_net(netRaw, writeln):
+    writeln('  "net_name": "%s",' % netRaw.name)
 
-    warnings = list(net.warnings)
-    errors = list(net.errors)
+    warnings = list(netRaw.warnings)
+    errors = list(netRaw.errors)
 
     if errors:
         return warnings, errors
 
-    if not net.isConnected():
+    if not netRaw.isConnected():
         errors.append("disconnected net")
-    elif not net.isLocallyStable():
+    elif not netRaw.isLocallyStable():
         errors.append("next-nearest neighbor collisions")
-    elif not net.isStable():
+    elif not netRaw.isStable():
         warnings.append("net has collisions")
 
-        if net.isLadder():
+        if netRaw.isLadder():
             warnings.append("ladder net")
-        elif net.hasSecondOrderCollisions():
+        elif netRaw.hasSecondOrderCollisions():
             warnings.append("possible ladder net")
 
     if errors:
         return warnings, errors
 
-    if not net.isMinimal():
+    if not netRaw.isMinimal():
         warnings.append("reduced from supercell")
 
-    minMap = net.minimalImageMap()
-    net = net.minimalImage()
+    nodeToName, mergedNames = node_name_mapping(netRaw.minimalImageMap())
+    net = netRaw.minimalImage()
 
     finder = geometry.SpaceGroupFinder(net.getSpaceGroup())
     writeln('  "spacegroup_name": "%s",' % finder.groupName)
@@ -89,8 +89,6 @@ def process_net(net, writeln):
     writeln('  "net_wells_point_symbols": %s,' % json.dumps(psyms))
 
     writeln('  "net_systre_key": "%s",' % net.systreKey)
-
-    nodeToName, mergedNames = node_name_mapping(minMap)
 
     for kind in ['barycentric', 'maximal', 'relaxed']:
         e = make_embedding(net, kind)
