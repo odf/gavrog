@@ -93,6 +93,10 @@ def process_net(netRaw, writeln):
     for kind in ['barycentric', 'maximal', 'relaxed']:
         e = make_embedding(net, kind)
 
+        if kind == 'barycentric':
+            dof = e.degreesOfFreedom()
+            writeln('  "net_degrees_of_freedom": %s,' % dof)
+
         if not is_positive_definite(e.gramMatrix):
             warnings.append("%s embedding has collapsed unit cell" % kind)
 
@@ -212,9 +216,6 @@ def write_embedding(net, prefix, writeln):
             elif fields[1] == 'SMALLEST_SEPARATION':
                 sep = float(fields[2])
                 writeln('  "%s_smallest_atom_separation": %s,' % (prefix, sep))
-            elif fields[1] == 'DEGREES_OF_FREEDOM':
-                dof = int(fields[2])
-                writeln('  "%s_degrees_of_freedom": %s,' % (prefix, dof))
 
     writeln('  "%s_atoms": %s,' % (prefix, nodes))
     writeln('  "%s_edges": %s,' % (prefix, edges))
