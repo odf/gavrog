@@ -83,9 +83,7 @@ def process_net(netRaw, writeln):
     writeln('  "net_nodes_asym": %s,' % len(orbit_reps))
 
     writeln('  "net_valency": %s,' % json.dumps([s[0] for s in seqs]))
-    writeln('  "net_coordination_seqs": [')
-    writeln('      %s' % ',\n      '.join(json.dumps(s) for s in seqs))
-    writeln('    ],')
+    writeln('  "net_coordination_seqs": %s,' % format_list(seqs))
     writeln('  "net_wells_point_symbols": %s,' % json.dumps(psyms))
 
     writeln('  "net_systre_key": "%s",' % net.systreKey)
@@ -104,6 +102,10 @@ def process_net(netRaw, writeln):
         write_embedding(pnet, "net_%s" % kind, writeln)
 
     return warnings, errors
+
+
+def format_list(xs):
+    return '[\n      %s\n    ]' % ',\n      '.join(json.dumps(x) for x in xs)
 
 
 def node_name_mapping(phi):
@@ -217,8 +219,8 @@ def write_embedding(net, prefix, writeln):
                 sep = float(fields[2])
                 writeln('  "%s_smallest_atom_separation": %s,' % (prefix, sep))
 
-    writeln('  "%s_atoms": %s,' % (prefix, nodes))
-    writeln('  "%s_edges": %s,' % (prefix, edges))
+    writeln('  "%s_atoms": %s,' % (prefix, format_list(nodes)))
+    writeln('  "%s_edges": %s,' % (prefix, format_list(edges)))
 
 
 def serialized_net(net, asCGD=False, writeFullCell=False, prefix=''):
