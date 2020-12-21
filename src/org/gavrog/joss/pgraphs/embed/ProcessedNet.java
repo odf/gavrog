@@ -594,6 +594,10 @@ public class ProcessedNet {
 	            }
 	        }
 	        
+            final double cellVolume =
+                ((Real) Vector.area2D(x, y)).doubleValue()
+                * Math.sqrt(((Real) gram.determinant()).doubleValue());
+
 			// --- print the cell parameters
 			if (DEBUG) {
 				System.out.println("\t\t@@@ Writing cell parameters...");
@@ -602,6 +606,7 @@ public class ProcessedNet {
 			if (cgdFormat) {
 				out.println("  CELL " + fmtReal5.format(a) + " "
 						+ fmtReal5.format(b) + " " + fmtReal4.format(gamma));
+                out.println("  CELL_VOLUME " + fmtReal5.format(cellVolume));
 			} else {
 				if (fullCell) {
 					out.println("   Coordinates are for a full conventional cell.");
@@ -611,6 +616,7 @@ public class ProcessedNet {
 				out.println("       a = " + fmtReal5.format(a) + ", b = "
 						+ fmtReal5.format(b) + ", gamma = "
 						+ fmtReal4.format(gamma));
+				out.println("   Cell volume: " + fmtReal5.format(cellVolume));
 			}
 		} else if (d == 1) {
             correction = new CoordinateChange(Operator.identity(d));
