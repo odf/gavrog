@@ -1,9 +1,11 @@
 #!/bin/env jython
-import java
+import gc
 import json
 import math
 import sys
 import traceback
+
+import java
 
 import org.gavrog.joss.pgraphs as pgraphs
 import org.gavrog.joss.geometry as geometry
@@ -17,6 +19,8 @@ def run():
         index_in_source = 0
 
         for net in pgraphs.io.Net.iterator(source_path):
+            gc.collect()
+
             index_in_source += 1
 
             writeln('{')
