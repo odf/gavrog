@@ -17,7 +17,6 @@
 package org.gavrog.jane.compounds;
 
 import java.lang.ArithmeticException;
-import java.math.BigInteger;
 import java.util.Arrays;
 
 import org.gavrog.box.simple.TaskController;
@@ -170,7 +169,7 @@ public class ModularSolver {
     }
 
 
-    public static BigInteger[][]
+    public static Whole[][]
         integerMatrixProduct(final long[][] A, final long[][] B)
     {
         final int nrowsA = A.length;
@@ -181,16 +180,12 @@ public class ModularSolver {
         if (ncolsA != nrowsB)
             throw new ArithmeticException("matrix shapes do not match");
 
-        final BigInteger R[][] = new BigInteger[nrowsA][ncolsB];
+        final Whole R[][] = new Whole[nrowsA][ncolsB];
         for (int i = 0; i < nrowsA; ++i) {
             for (int j = 0; j < ncolsB; ++j) {
-                BigInteger x = BigInteger.ZERO;
-                for (int k = 0; k < ncolsA; ++k) {
-                    final BigInteger a = BigInteger.valueOf(A[i][k]);
-                    final BigInteger b = BigInteger.valueOf(B[k][j]);
-
-                    x = x.add(a.multiply(b));
-                }
+                Whole x = Whole.ZERO;
+                for (int k = 0; k < ncolsA; ++k)
+                    x = (Whole) x.plus((new Whole(A[i][k])).times(B[k][j]));
 
                 R[i][j] = x;
             }
@@ -236,32 +231,27 @@ public class ModularSolver {
     }
 
 
-    private static Rational
-        toRational(final BigInteger s, final BigInteger h)
-    {
-        BigInteger u0 = h;
-        BigInteger u1 = s;
-        BigInteger v0 = BigInteger.ZERO;
-        BigInteger v1 = BigInteger.ONE;
-        BigInteger sign = BigInteger.ONE;
+    private static Rational toRational(final Whole s, final Whole h) {
+        Whole u0 = h;
+        Whole u1 = s;
+        Whole v0 = Whole.ZERO;
+        Whole v1 = Whole.ONE;
+        int sign = 1;
 
-        while (u1.multiply(u1).compareTo(h) > 0) {
-            final BigInteger[] quotRem = u0.divideAndRemainder(u1);
+        while (u1.times(u1).compareTo(h) > 0) {
+            final Whole q = (Whole) u0.div(u1);
+            final Whole r = (Whole) u0.minus(q.times(u1));
+            final Whole t = (Whole) v0.plus(q.times(v1));
 
             u0 = u1;
-            u1 = quotRem[1];
-
-            final BigInteger t = v0;
+            u1 = r;
             v0 = v1;
-            v1 = t.add(quotRem[0].multiply(v1));
+            v1 = t;
 
-            sign = sign.negate();
+            sign = -sign;
         }
 
-        final Whole numerator = new Whole(u1.multiply(sign));
-        final Whole denominator = new Whole(v1);
-
-        return (Rational) numerator.dividedBy(denominator);
+        return (Rational) u1.times(sign).dividedBy(v1);
     }
 
 
@@ -270,7 +260,6 @@ public class ModularSolver {
     {
         final int n = A.length;
         final int m = b[0].length;
-        final BigInteger P = BigInteger.valueOf(p);
 
         if (A[0].length != n)
             throw new ArithmeticException("matrix must be quadratic");
@@ -281,33 +270,34 @@ public class ModularSolver {
         final long[][] C = modularMatrixInverse(A, p);
         final int nrSteps = pAdicStepsNeeded(A, b, p);
 
-        BigInteger pi = BigInteger.ONE;
+        Whole pi = Whole.ONE;
         long[][] bi = b;
 
-        BigInteger[][] si = new BigInteger[b.length][b[0].length];
+        Whole[][] si = new Whole[b.length][b[0].length];
         for (int i = 0; i < n; ++i)
             for (int j = 0; j < m; ++j)
-                si[i][j] = BigInteger.ZERO;
+                si[i][j] = Whole.ZERO;
 
         for (int k = 0; k < nrSteps; ++k) {
             final long[][] xi = modularMatrixProduct(C, bi, p);
 
             for (int i = 0; i < n; ++i) {
                 for (int j = 0; j < m; ++j) {
-                    final BigInteger t = BigInteger.valueOf(xi[i][j]);
-                    si[i][j] = si[i][j].add(pi.multiply(t));
+                    final Whole t = new Whole(xi[i][j]);
+                    si[i][j] = (Whole) si[i][j].plus(pi.times(t));
                 }
             }
 
-            pi = pi.multiply(P);
+            pi = (Whole) pi.times(p);
 
             if (k < nrSteps - 1) {
-                final BigInteger[][] Axi = integerMatrixProduct(A, xi);
+                final Whole[][] Axi = integerMatrixProduct(A, xi);
 
                 for (int i = 0; i < n; ++i) {
                     for (int j = 0; j < m; ++j) {
-                        final BigInteger t = BigInteger.valueOf(bi[i][j]);
-                        bi[i][j] = t.subtract(Axi[i][j]).divide(P).longValue();
+                        final Whole t = new Whole(bi[i][j]);
+                        final Whole d = (Whole) t.minus(Axi[i][j]);
+                        bi[i][j] = ((Whole) d.div(p)).longValue();
                     }
                 }
             }
