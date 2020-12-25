@@ -129,7 +129,9 @@ public class ModularSolver {
 
         final long E[][] = modularRowEchelonForm(A, m);
 
-        //TODO verify that first n columns form the identity matrix
+        for (int i = 0; i < n; ++i)
+            if (E[i][i] != 1)
+                throw new ArithmeticException("matrix is not invertible");
 
         final long R[][] = new long[n][n];
         for (int i = 0; i < n; ++i) {
