@@ -149,8 +149,9 @@ public class ModularSolver {
     }
 
 
-    public static long[][]
-        modularMatrixProduct(final long[][] A, final long[][] B, final long m)
+    public static void
+        modularMatrixProduct(final long[][] A, final long[][] B,
+                             final long[][] R, final long m)
     {
         final TaskController controller = TaskController.getInstance();
 
@@ -158,11 +159,12 @@ public class ModularSolver {
         final int ncolsA = A[0].length;
         final int nrowsB = B.length;
         final int ncolsB = B[0].length;
+        final int nrowsR = R.length;
+        final int ncolsR = R[0].length;
 
-        if (ncolsA != nrowsB)
+        if (nrowsR != nrowsA || ncolsR != ncolsB || ncolsA != nrowsB)
             throw new ArithmeticException("matrix shapes do not match");
 
-        final long R[][] = new long[nrowsA][ncolsB];
         for (int i = 0; i < nrowsA; ++i) {
             controller.bailOutIfCancelled();
 
@@ -174,13 +176,21 @@ public class ModularSolver {
                 R[i][j] = x;
             }
         }
+    }
 
+
+    public static long[][]
+        modularMatrixProduct(final long[][] A, final long[][] B, final long m)
+    {
+        final long R[][] = new long[A.length][B[0].length];
+        modularMatrixProduct(A, B, R, m);
         return R;
     }
 
 
-    public static Whole[][]
-        integerMatrixProduct(final long[][] A, final long[][] B)
+    public static void
+        integerMatrixProduct(final long[][] A, final long[][] B,
+                             final Whole[][] R)
     {
         final TaskController controller = TaskController.getInstance();
 
@@ -188,11 +198,12 @@ public class ModularSolver {
         final int ncolsA = A[0].length;
         final int nrowsB = B.length;
         final int ncolsB = B[0].length;
+        final int nrowsR = R.length;
+        final int ncolsR = R[0].length;
 
-        if (ncolsA != nrowsB)
+        if (nrowsR != nrowsA || ncolsR != ncolsB || ncolsA != nrowsB)
             throw new ArithmeticException("matrix shapes do not match");
 
-        final Whole R[][] = new Whole[nrowsA][ncolsB];
         for (int i = 0; i < nrowsA; ++i) {
             controller.bailOutIfCancelled();
 
@@ -204,7 +215,14 @@ public class ModularSolver {
                 R[i][j] = x;
             }
         }
+    }
 
+
+    public static Whole[][]
+        integerMatrixProduct(final long[][] A, final long[][] B)
+    {
+        final Whole R[][] = new Whole[A.length][B[0].length];
+        integerMatrixProduct(A, B, R);
         return R;
     }
 
@@ -287,27 +305,31 @@ public class ModularSolver {
         final int nrSteps = pAdicStepsNeeded(A, b, p);
 
         Whole pi = Whole.ONE;
-        long[][] bi = b;
 
-        Whole[][] si = new Whole[b.length][b[0].length];
+        final long[][] bi = new long[n][m];
+        for (int i = 0; i < n; ++i)
+            for (int j = 0; j < m; ++j)
+                bi[i][j] = b[i][j];
+
+        final long[][] xi = new long[n][m];
+        final Whole[][] Axi = new Whole[n][m];
+
+        final Whole[][] si = new Whole[n][m];
         for (int i = 0; i < n; ++i)
             for (int j = 0; j < m; ++j)
                 si[i][j] = Whole.ZERO;
 
         for (int k = 0; k < nrSteps; ++k) {
-            final long[][] xi = modularMatrixProduct(C, bi, p);
+            modularMatrixProduct(C, bi, xi, p);
 
-            for (int i = 0; i < n; ++i) {
-                for (int j = 0; j < m; ++j) {
-                    final Whole t = new Whole(xi[i][j]);
-                    si[i][j] = (Whole) si[i][j].plus(pi.times(t));
-                }
-            }
+            for (int i = 0; i < n; ++i)
+                for (int j = 0; j < m; ++j)
+                    si[i][j] = (Whole) si[i][j].plus(pi.times(xi[i][j]));
 
             pi = (Whole) pi.times(p);
 
             if (k < nrSteps - 1) {
-                final Whole[][] Axi = integerMatrixProduct(A, xi);
+                integerMatrixProduct(A, xi, Axi);
 
                 for (int i = 0; i < n; ++i) {
                     for (int j = 0; j < m; ++j) {
