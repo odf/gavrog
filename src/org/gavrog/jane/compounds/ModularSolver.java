@@ -58,6 +58,9 @@ public class ModularSolver {
     public static long[][]
         modularRowEchelonForm(final long[][] M, final long m)
     {
+        // --- used for answering external cancel request
+        final TaskController controller = TaskController.getInstance();
+
         final int nrows = M.length;
         final int ncols = M[0].length;
 
@@ -75,6 +78,9 @@ public class ModularSolver {
         int row = 0;
 
         for (int col = 0; col < ncols; ++col) {
+            // --- throw if the task controller received a cancel request
+            controller.bailOutIfCancelled();
+
             int r = row;
             while (r < nrows && A[r][col] == 0)
                 ++r;
@@ -146,6 +152,8 @@ public class ModularSolver {
     public static long[][]
         modularMatrixProduct(final long[][] A, final long[][] B, final long m)
     {
+        final TaskController controller = TaskController.getInstance();
+
         final int nrowsA = A.length;
         final int ncolsA = A[0].length;
         final int nrowsB = B.length;
@@ -156,6 +164,8 @@ public class ModularSolver {
 
         final long R[][] = new long[nrowsA][ncolsB];
         for (int i = 0; i < nrowsA; ++i) {
+            controller.bailOutIfCancelled();
+
             for (int j = 0; j < ncolsB; ++j) {
                 long x = 0;
                 for (int k = 0; k < ncolsA; ++k)
@@ -172,6 +182,8 @@ public class ModularSolver {
     public static Whole[][]
         integerMatrixProduct(final long[][] A, final long[][] B)
     {
+        final TaskController controller = TaskController.getInstance();
+
         final int nrowsA = A.length;
         final int ncolsA = A[0].length;
         final int nrowsB = B.length;
@@ -182,6 +194,8 @@ public class ModularSolver {
 
         final Whole R[][] = new Whole[nrowsA][ncolsB];
         for (int i = 0; i < nrowsA; ++i) {
+            controller.bailOutIfCancelled();
+
             for (int j = 0; j < ncolsB; ++j) {
                 Whole x = Whole.ZERO;
                 for (int k = 0; k < ncolsA; ++k)
@@ -258,6 +272,8 @@ public class ModularSolver {
     public static Matrix
         solve(final long[][] A, final long[][] b, final long p)
     {
+        final TaskController controller = TaskController.getInstance();
+
         final int n = A.length;
         final int m = b[0].length;
 
@@ -304,9 +320,12 @@ public class ModularSolver {
         }
 
         final Rational[][] R = new Rational[n][m];
-        for (int i = 0; i < n; ++i)
+        for (int i = 0; i < n; ++i) {
+            controller.bailOutIfCancelled();
+
             for (int j = 0; j < m; ++j)
                 R[i][j] = toRational(si[i][j], pi);
+        }
 
         return new Matrix(R);
     }
