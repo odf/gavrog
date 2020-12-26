@@ -43,6 +43,7 @@ import org.gavrog.box.simple.Tag;
 import org.gavrog.box.simple.TaskController;
 import org.gavrog.jane.compounds.LinearAlgebra;
 import org.gavrog.jane.compounds.Matrix;
+import org.gavrog.jane.compounds.ModularSolver;
 import org.gavrog.jane.numbers.Fraction;
 import org.gavrog.jane.numbers.Real;
 import org.gavrog.jane.numbers.Whole;
@@ -957,10 +958,11 @@ public class PeriodicGraph extends UndirectedGraph {
         
         // --- set up a system of equations
         final int n = indexToNode.size(); // the number of nodes
-        final int[][] M = new int[n+1][n];
-        final Matrix t = Matrix.zero(n+1, this.dimension);
-        
-        for (int i = 0; i < n; ++i) {
+        final long[][] M = new long[n][n];
+        final long[][] t = new long[n][this.dimension];
+        M[0][0] = 1;
+
+        for (int i = 1; i < n; ++i) {
             final INode v = (INode) indexToNode.get(i);
             for (final IEdge e: v.incidences()) {
                 final INode w = e.target();
@@ -973,13 +975,14 @@ public class PeriodicGraph extends UndirectedGraph {
                 final int j = nodeToIndex.get(w);
                 --M[i][j];
                 ++M[i][i];
-                t.setRow(i, (Matrix) t.getRow(i).plus(s.getCoordinates()));
+
+                for (int k = 0; k < this.dimension; ++k)
+                    t[i][k] += ((Whole) s.get(k)).longValue();
             }
         }
-        M[n][0] = 1;
         
         // --- solve the system
-        final Matrix P = Matrix.solve(new Matrix(M), t);
+        final Matrix P = ModularSolver.solve(M, t);
 
         // --- extract the positions found
         final Map<INode, Point> tmp = new HashMap<INode, Point>();
