@@ -55,23 +55,14 @@ public class ModularSolver {
     }
 
 
-    public static int[][] modularRowEchelonForm(final int[][] M, final int m) {
+    public static void modularRowEchelonFormInPlace
+        (final int[][] A, final int m)
+    {
         // --- used for answering external cancel request
         final TaskController controller = TaskController.getInstance();
 
-        final int nrows = M.length;
-        final int ncols = M[0].length;
-
-        final int A[][] = new int[nrows][ncols];
-        for (int i = 0; i < nrows; ++i) {
-            for (int j = 0; j < ncols; ++j) {
-                final int a = M[i][j] % m;
-                if (a < 0)
-                    A[i][j] = a + m;
-                else
-                    A[i][j] = a;
-            }
-        }
+        final int nrows = A.length;
+        final int ncols = A[0].length;
 
         int row = 0;
 
@@ -111,7 +102,19 @@ public class ModularSolver {
 
             ++row;
         }
+    }
 
+
+    public static int[][] modularRowEchelonForm(final int[][] M, final int m) {
+        final int nrows = M.length;
+        final int ncols = M[0].length;
+
+        final int A[][] = new int[nrows][ncols];
+        for (int i = 0; i < nrows; ++i)
+            for (int j = 0; j < ncols; ++j)
+                A[i][j] = M[i][j];
+
+        modularRowEchelonFormInPlace(A, m);
         return A;
     }
 
@@ -130,16 +133,16 @@ public class ModularSolver {
             A[i][n + i] = 1;
         }
 
-        final int E[][] = modularRowEchelonForm(A, m);
+        modularRowEchelonFormInPlace(A, m);
 
         for (int i = 0; i < n; ++i)
-            if (E[i][i] != 1)
+            if (A[i][i] != 1)
                 throw new ArithmeticException("matrix is not invertible");
 
         final int R[][] = new int[n][n];
         for (int i = 0; i < n; ++i) {
             for (int j = 0; j < n; ++j) {
-                R[i][j] = E[i][j + n];
+                R[i][j] = A[i][j + n];
             }
         }
 
