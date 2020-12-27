@@ -92,18 +92,25 @@ def process_net(netRaw, writeln):
 
     writeln('  "net_systre_key": "%s",' % net.systreKey)
 
-    for kind in ['barycentric', 'maximal', 'relaxed']:
-        e = make_embedding(net, kind)
+    dof = None
 
-        if kind == 'barycentric':
-            dof = e.degreesOfFreedom()
-            writeln('  "net_degrees_of_freedom": %s,' % dof)
+    for kind in ['maximal', 'barycentric', 'relaxed']:
+        try:
+            e = make_embedding(net, kind)
 
-        if not is_positive_definite(e.gramMatrix):
-            warnings.append("%s embedding has collapsed unit cell" % kind)
+            if dof is None:
+                dof = e.degreesOfFreedom()
+                writeln('  "net_degrees_of_freedom": %s,' % dof)
 
-        pnet = pgraphs.embed.ProcessedNet(net, 'X', nodeToName, finder, e)
-        write_embedding(pnet, "net_%s" % kind, writeln)
+            if not is_positive_definite(e.gramMatrix):
+                warnings.append("%s embedding has collapsed unit cell" % kind)
+
+            pnet = pgraphs.embed.ProcessedNet(net, 'X', nodeToName, finder, e)
+            write_embedding(pnet, "net_%s" % kind, writeln)
+        except:
+            errors.append("exception thrown in %s embedding" % kind)
+            stacktrace = traceback.format_exc()
+            writeln('  "stack_trace_%s": %s,' % (kind, json.dumps(stacktrace)))
 
     return warnings, errors
 
@@ -161,7 +168,7 @@ def make_embedding(graph, kind):
         embedder.setMaximizeVolume(False)
         embedder.setRelaxPositions(kind == 'relaxed')
         embedder.setPasses(3)
-        embedder.go(10000)
+        embedder.go(100000 if kind == 'relaxed' else 10000)
         embedder.normalize()
 
     return embedder
