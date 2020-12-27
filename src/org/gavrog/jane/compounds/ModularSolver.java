@@ -26,15 +26,15 @@ import org.gavrog.jane.numbers.Whole;
 
 public class ModularSolver {
 
-    public static long modularInverse(final long a, final long m) {
-        long t = 0;
-        long t1 = 1;
-        long r = m;
-        long r1 = a;
-        long tmp;
+    public static int modularInverse(final int a, final int m) {
+        int t = 0;
+        int t1 = 1;
+        int r = m;
+        int r1 = a;
+        int tmp;
 
         while (r1 != 0) {
-            final long q = r / r1;
+            final int q = r / r1;
 
             tmp = t1;
             t1 = t - q * t1;
@@ -55,19 +55,17 @@ public class ModularSolver {
     }
 
 
-    public static long[][]
-        modularRowEchelonForm(final long[][] M, final long m)
-    {
+    public static int[][] modularRowEchelonForm(final int[][] M, final int m) {
         // --- used for answering external cancel request
         final TaskController controller = TaskController.getInstance();
 
         final int nrows = M.length;
         final int ncols = M[0].length;
 
-        final long A[][] = new long[nrows][ncols];
+        final int A[][] = new int[nrows][ncols];
         for (int i = 0; i < nrows; ++i) {
             for (int j = 0; j < ncols; ++j) {
-                final long a = M[i][j] % m;
+                final int a = M[i][j] % m;
                 if (a < 0)
                     A[i][j] = a + m;
                 else
@@ -89,14 +87,14 @@ public class ModularSolver {
                 continue;
 
             if (r != row) {
-                final long[] tmp = A[r];
+                final int[] tmp = A[r];
                 A[r] = A[row];
                 A[row] = tmp;
             }
 
             final long f = modularInverse(A[row][col], m);
             for (int j = col; j < ncols; ++j)
-                A[row][j] = (A[row][j] * f) % m;
+                A[row][j] = (int) ((A[row][j] * f) % m);
 
             for (int i = 0; i < nrows; ++i) {
                 if (i == row || A[i][col] == 0)
@@ -104,8 +102,10 @@ public class ModularSolver {
 
                 final long g = A[i][col];
                 for (int j = col; j < ncols; ++j) {
-                    if (A[row][j] != 0)
-                        A[i][j] = (m - (A[row][j] * g) % m + A[i][j]) % m;
+                    if (A[row][j] != 0) {
+                        A[i][j] = (int)
+                            ((m - (A[row][j] * g) % m + A[i][j]) % m);
+                    }
                 }
             }
 
@@ -116,15 +116,13 @@ public class ModularSolver {
     }
 
 
-    public static long[][]
-        modularMatrixInverse(final long[][] M, final long m)
-    {
+    public static int[][] modularMatrixInverse(final int[][] M, final int m) {
         final int n = M.length;
 
         if (M[0].length != n)
             throw new ArithmeticException("matrix must be quadratic");
 
-        final long A[][] = new long[n][n+n];
+        final int A[][] = new int[n][n+n];
         for (int i = 0; i < n; ++i) {
             for (int j = 0; j < n; ++j) {
                 A[i][j] = M[i][j];
@@ -132,13 +130,13 @@ public class ModularSolver {
             A[i][n + i] = 1;
         }
 
-        final long E[][] = modularRowEchelonForm(A, m);
+        final int E[][] = modularRowEchelonForm(A, m);
 
         for (int i = 0; i < n; ++i)
             if (E[i][i] != 1)
                 throw new ArithmeticException("matrix is not invertible");
 
-        final long R[][] = new long[n][n];
+        final int R[][] = new int[n][n];
         for (int i = 0; i < n; ++i) {
             for (int j = 0; j < n; ++j) {
                 R[i][j] = E[i][j + n];
@@ -150,8 +148,8 @@ public class ModularSolver {
 
 
     public static void
-        modularMatrixProduct(final long[][] A, final long[][] B,
-                             final long[][] R, final long m)
+        modularMatrixProduct(final int[][] A, final int[][] B,
+                             final int[][] R, final int m)
     {
         final TaskController controller = TaskController.getInstance();
 
@@ -171,25 +169,25 @@ public class ModularSolver {
             for (int j = 0; j < ncolsB; ++j) {
                 long x = 0;
                 for (int k = 0; k < ncolsA; ++k)
-                    x = ((A[i][k] * B[k][j]) % m + x) % m;
+                    x = (((long) A[i][k] * B[k][j]) % m + x) % m;
 
-                R[i][j] = x;
+                R[i][j] = (int) x;
             }
         }
     }
 
 
-    public static long[][]
-        modularMatrixProduct(final long[][] A, final long[][] B, final long m)
+    public static int[][]
+        modularMatrixProduct(final int[][] A, final int[][] B, final int m)
     {
-        final long R[][] = new long[A.length][B[0].length];
+        final int R[][] = new int[A.length][B[0].length];
         modularMatrixProduct(A, B, R, m);
         return R;
     }
 
 
     public static void
-        integerMatrixProduct(final long[][] A, final long[][] B,
+        integerMatrixProduct(final int[][] A, final int[][] B,
                              final Whole[][] R)
     {
         final TaskController controller = TaskController.getInstance();
@@ -219,7 +217,7 @@ public class ModularSolver {
 
 
     public static Whole[][]
-        integerMatrixProduct(final long[][] A, final long[][] B)
+        integerMatrixProduct(final int[][] A, final int[][] B)
     {
         final Whole R[][] = new Whole[A.length][B[0].length];
         integerMatrixProduct(A, B, R);
@@ -227,17 +225,17 @@ public class ModularSolver {
     }
 
 
-    private static double columnNorm(final long[][] A, final int j) {
+    private static double columnNorm(final int[][] A, final int j) {
         double sum = 0.0;
         for (int i = 0; i < A.length; ++i)
-            sum += A[i][j] * A[i][j];
+            sum += (double) A[i][j] * A[i][j];
 
         return Math.sqrt(sum);
     }
 
 
     private static int
-        pAdicStepsNeeded(final long[][] A, final long[][] b, final long p)
+        pAdicStepsNeeded(final int[][] A, final int[][] b, final int p)
     {
         final int n = A.length;
 
@@ -288,7 +286,7 @@ public class ModularSolver {
 
 
     public static Matrix
-        solve(final long[][] A, final long[][] b, final long p)
+        solve(final int[][] A, final int[][] b, final int p)
     {
         final TaskController controller = TaskController.getInstance();
 
@@ -301,17 +299,17 @@ public class ModularSolver {
         if (b.length != n)
             throw new ArithmeticException("numbers of rows must be equal");
 
-        final long[][] C = modularMatrixInverse(A, p);
+        final int[][] C = modularMatrixInverse(A, p);
         final int nrSteps = pAdicStepsNeeded(A, b, p);
 
         Whole pi = Whole.ONE;
 
-        final long[][] bi = new long[n][m];
+        final int[][] bi = new int[n][m];
         for (int i = 0; i < n; ++i)
             for (int j = 0; j < m; ++j)
                 bi[i][j] = b[i][j];
 
-        final long[][] xi = new long[n][m];
+        final int[][] xi = new int[n][m];
         final Whole[][] Axi = new Whole[n][m];
 
         final Whole[][] si = new Whole[n][m];
@@ -335,7 +333,7 @@ public class ModularSolver {
                     for (int j = 0; j < m; ++j) {
                         final Whole t = new Whole(bi[i][j]);
                         final Whole d = (Whole) t.minus(Axi[i][j]);
-                        bi[i][j] = ((Whole) d.div(p)).longValue();
+                        bi[i][j] = ((Whole) d.div(p)).intValue();
                     }
                 }
             }
@@ -353,7 +351,7 @@ public class ModularSolver {
     }
 
 
-    public static Matrix solve(final long[][] A, final long[][] b)
+    public static Matrix solve(final int[][] A, final int[][] b)
     {
         return solve(A, b, 0x7fffffff);
     }

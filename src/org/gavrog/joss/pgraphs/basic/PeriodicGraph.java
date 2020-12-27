@@ -958,8 +958,8 @@ public class PeriodicGraph extends UndirectedGraph {
         
         // --- set up a system of equations
         final int n = indexToNode.size(); // the number of nodes
-        final long[][] M = new long[n][n];
-        final long[][] t = new long[n][this.dimension];
+        final int[][] M = new int[n][n];
+        final int[][] t = new int[n][this.dimension];
         M[0][0] = 1;
 
         for (int i = 1; i < n; ++i) {
@@ -977,7 +977,7 @@ public class PeriodicGraph extends UndirectedGraph {
                 ++M[i][i];
 
                 for (int k = 0; k < this.dimension; ++k)
-                    t[i][k] += ((Whole) s.get(k)).longValue();
+                    t[i][k] += ((Whole) s.get(k)).intValue();
             }
         }
         
