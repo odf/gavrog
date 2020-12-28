@@ -508,12 +508,16 @@ public class ProcessedNet {
 			final double c = Math.sqrt(((Real) Vector.dot(z, z, gram))
 					.doubleValue());
 			final double f = 180.0 / Math.PI;
-			final double alpha = f * Math.acos(
-					((Real) Vector.dot(y, z, gram)).doubleValue() / (b * c));
-			final double beta = f * Math.acos(
-					((Real) Vector.dot(x, z, gram)).doubleValue() / (a * c));
-			final double gamma = f * Math.acos(
-					((Real) Vector.dot(x, y, gram)).doubleValue() / (a * b));
+
+			final double alpha = b * c < 1e-8 ? 0.0 :
+                f * Math.acos(((Real) Vector.dot(y, z, gram)).doubleValue()
+                              / (b * c));
+			final double beta = a * c < 1e-8 ? 0.0 :
+                f * Math.acos(((Real) Vector.dot(x, z, gram)).doubleValue()
+                              / (a * c));
+			final double gamma = a * b < 1e-8 ? 0.0 :
+                f * Math.acos(((Real) Vector.dot(x, y, gram)).doubleValue()
+                              / (a * b));
 
 			// --- print the cell parameters
 			if (DEBUG) {
@@ -576,8 +580,9 @@ public class ProcessedNet {
 			final double b = Math.sqrt(((Real) Vector.dot(y, y, gram))
 					.doubleValue());
 			final double f = 180.0 / Math.PI;
-			final double gamma = Math.acos(((Real) Vector.dot(x, y, gram))
-					.doubleValue() / (a * b)) * f;
+			final double gamma = a * b < 1e-8 ? 0.0 :
+                f * Math.acos(((Real) Vector.dot(x, y, gram)).doubleValue()
+                              / (a * b));
 
 	        // --- print a header if necessary
 	        if (DEBUG) {
