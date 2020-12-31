@@ -16,6 +16,8 @@
 
 package org.gavrog.jane.numbers;
 
+import java.lang.Double;
+import java.math.BigInteger;
 
 
 public abstract class Rational extends Real {
@@ -87,7 +89,35 @@ public abstract class Rational extends Real {
     }
 
     public double doubleValue() {
-        return numerator().doubleValue() / denominator().doubleValue();
+        BigInteger n = numerator().val;
+        BigInteger d = denominator().val;
+
+        if (
+            !Double.isInfinite(n.doubleValue()) &&
+            !Double.isInfinite(d.doubleValue())
+        )
+            return n.doubleValue() / d.doubleValue();
+        else {
+            BigInteger t[] = n.divideAndRemainder(d);
+            double intPart = t[0].doubleValue();
+
+            if (Double.isInfinite(intPart))
+                return intPart;
+            else {
+                n = t[1];
+
+                final int m = Math.max(
+                    n.bitLength() - 53,
+                    d.bitLength() - 1024
+                );
+                if (m > 0) {
+                    n = n.shiftRight(m);
+                    d = d.shiftRight(m);
+                }
+
+                return intPart + (n.doubleValue() / d.doubleValue());
+            }
+        }
     }
 
     public long longValue() {

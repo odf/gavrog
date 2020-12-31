@@ -19,7 +19,7 @@ package org.gavrog.jane.numbers;
 import java.math.BigInteger;
 
 public class Whole extends Rational {
-    private BigInteger val;
+    protected BigInteger val;
 
     public Whole(long val) {
         this.val = BigInteger.valueOf(val);
