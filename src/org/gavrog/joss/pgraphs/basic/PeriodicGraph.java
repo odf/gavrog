@@ -1637,9 +1637,13 @@ public class PeriodicGraph extends UndirectedGraph {
             return new FilteredIterator<List<IEdge>, IEdge>(edges.iterator()) {
                 @Override
                 public List<IEdge> filter(final IEdge x) {
-                    final List<IEdge> a = new ArrayList<IEdge>();
-                    a.add(x);
-                    return a;
+                    if (differenceVector(x).isZero()) {
+                        return null;
+                    } else {
+                        final List<IEdge> a = new ArrayList<IEdge>();
+                        a.add(x);
+                        return a;
+                    }
                 }
             };
         }
