@@ -78,8 +78,18 @@ public class SpaceGroupFinder {
             this.crystalSystem = CrystalSystem.ONE_D;
             this.groupName = mirrors.size() > 0 ? "opm" : "op1";
             this.extension = null;
-            this.toStd = new CoordinateChange(Matrix.one(1));
-            this.fromStd = new CoordinateChange(Matrix.one(1));
+
+            if (mirrors.size() > 0) {
+                final Operator m = mirrors.iterator().next();
+                final Vector shift =
+                    (Vector) m.translationalPart().dividedBy(2);
+                this.toStd = new CoordinateChange(
+                    Matrix.one(1), (Point) Point.origin(1).plus(shift)
+                );
+            } else {
+                this.toStd = new CoordinateChange(Matrix.one(1));
+            }
+            this.fromStd = (CoordinateChange) this.toStd.inverse();
             return;
         case 2:
             res = analyzePointGroup2D();
