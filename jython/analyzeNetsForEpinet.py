@@ -249,7 +249,19 @@ def write_embedding(net, prefix, writeln):
             edges.append(map(float, fields[1:]))
 
     writeln('  "%s_atoms_full_cell": %s,' % (prefix, format_list(nodes)))
-    writeln('  "%s_edges_full_cell": %s,' % (prefix, format_list(edges)))
+
+    writeln('  "%s_edges_full_cell": %s,' %
+        (prefix, format_list(map(halfEdge, edges)))
+    )
+
+
+def halfEdge(coords):
+    dim = len(coords) / 2
+    p = coords[:dim]
+    q = coords[dim:]
+    h = [ (p[i] + q[i]) / 2 for i in range(dim) ]
+
+    return p + h
 
 
 def serialized_net(net, asCGD=False, writeFullCell=False, prefix=''):
