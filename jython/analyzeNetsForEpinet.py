@@ -250,7 +250,7 @@ def write_embedding(net, prefix, writeln):
 
     writeln('  "%s_atoms_full_cell": %s,' % (prefix, format_list(nodes)))
 
-    writeln('  "%s_edges_full_cell": %s,' %
+    writeln('  "%s_half_edges_full_cell": %s,' %
         (prefix, format_list(map(halfEdge, edges)))
     )
 
