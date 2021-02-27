@@ -13,7 +13,7 @@ import org.gavrog.joss.geometry as geometry
 
 def run():
     def writeln(s=''):
-        print s
+        print(s)
 
     for source_path in sys.argv[1:]:
         index_in_source = 0
@@ -71,7 +71,7 @@ def process_net(netRaw, writeln):
     if not netRaw.isMinimal():
         warnings.append("reduced from supercell")
 
-    nodeToName, mergedNames = node_name_mapping(netRaw.minimalImageMap())
+    nodeToName, _ = node_name_mapping(netRaw.minimalImageMap())
     net = netRaw.minimalImage()
 
     finder = geometry.SpaceGroupFinder(net.getSpaceGroup())
@@ -233,6 +233,24 @@ def write_embedding(net, prefix, writeln):
     writeln('  "%s_atoms": %s,' % (prefix, format_list(nodes)))
     writeln('  "%s_edges": %s,' % (prefix, format_list(edges)))
 
+    cgd = serialized_net(net, asCGD=True, writeFullCell=True)
+
+    nodes = []
+    edges = []
+
+    for line in cgd.split('\n'):
+        fields = line.strip().split()
+        if len(fields) == 0:
+            continue
+
+        elif fields[0] == 'NODE':
+            nodes.append(map(float, fields[3:]))
+        elif fields[0] == 'EDGE':
+            edges.append(map(float, fields[1:]))
+
+    writeln('  "%s_atoms_full_cell": %s,' % (prefix, format_list(nodes)))
+    writeln('  "%s_edges_full_cell": %s,' % (prefix, format_list(edges)))
+
 
 def serialized_net(net, asCGD=False, writeFullCell=False, prefix=''):
     stringWriter = java.io.StringWriter()
@@ -257,7 +275,7 @@ def coordination_sequence(net, v, n):
     cs.next()
 
     out = []
-    for i in range(n):
+    for _ in range(n):
         out.append(cs.next())
 
     return out
