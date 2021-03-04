@@ -12,7 +12,7 @@ import org.gavrog.joss.geometry as geometry
 
 
 def run():
-    def writeln(s=''):
+    def writeln(s=""):
         print(s)
 
     for source_path in sys.argv[1:]:
@@ -23,7 +23,7 @@ def run():
 
             index_in_source += 1
 
-            writeln('{')
+            writeln("{")
             writeln('  "source_path": "%s",' % source_path)
             writeln('  "index_in_source": %d,' % index_in_source)
 
@@ -40,7 +40,7 @@ def run():
             writeln('  "warnings": %s,' % json.dumps(warnings))
             writeln('  "errors": %s,' % json.dumps(errors))
             writeln('  "status": "%s"' % status)
-            writeln('}')
+            writeln("}")
             writeln()
 
 
@@ -94,7 +94,7 @@ def process_net(netRaw, writeln):
 
     dof = None
 
-    for kind in ['maximal', 'barycentric', 'relaxed']:
+    for kind in ["maximal", "barycentric", "relaxed"]:
         try:
             e = make_embedding(net, kind)
 
@@ -103,20 +103,25 @@ def process_net(netRaw, writeln):
                 writeln('  "net_degrees_of_freedom": %s,' % dof)
 
             if not is_positive_definite(e.gramMatrix):
-                warnings.append("%s embedding has collapsed unit cell" % kind)
-
-            pnet = pgraphs.embed.ProcessedNet(net, 'X', nodeToName, finder, e)
-            write_embedding(pnet, "net_%s" % kind, writeln)
+                warnings.append("%s embedding has degenerate unit cell" % kind)
+            else:
+                pnet = pgraphs.embed.ProcessedNet(
+                    net, "X", nodeToName, finder, e
+                )
+                write_embedding(pnet, "net_%s" % kind, writeln)
         except:
             errors.append("exception thrown in %s embedding" % kind)
             stacktrace = traceback.format_exc()
             writeln('  "stack_trace_%s": %s,' % (kind, json.dumps(stacktrace)))
 
+    if dof is None:
+        errors.append("no successful embedding")
+
     return warnings, errors
 
 
 def format_list(xs):
-    return '[\n      %s\n    ]' % ',\n      '.join(json.dumps(x) for x in xs)
+    return "[\n      %s\n    ]" % ",\n      ".join(json.dumps(x) for x in xs)
 
 
 def node_name_mapping(phi):
@@ -152,7 +157,7 @@ def node_name_mapping(phi):
 def make_embedding(graph, kind):
     embedder = pgraphs.embed.Embedder(graph, None, False)
 
-    if kind == 'maximal':
+    if kind == "maximal":
         embedder.setMaximizeVolume(True)
         embedder.setRelaxPositions(False)
         embedder.setPasses(0)
@@ -166,9 +171,9 @@ def make_embedding(graph, kind):
         embedder.normalize()
 
         embedder.setMaximizeVolume(False)
-        embedder.setRelaxPositions(kind == 'relaxed')
+        embedder.setRelaxPositions(kind == "relaxed")
         embedder.setPasses(3)
-        embedder.go(100000 if kind == 'relaxed' else 10000)
+        embedder.go(100000 if kind == "relaxed" else 10000)
         embedder.normalize()
 
     return embedder
@@ -181,12 +186,12 @@ def write_embedding(net, prefix, writeln):
     nodes = []
     edges = []
 
-    for line in cgd.split('\n'):
+    for line in cgd.split("\n"):
         fields = line.strip().split()
         if len(fields) == 0:
             continue
 
-        if fields[0] == 'CELL':
+        if fields[0] == "CELL":
             if dim == 3:
                 a, b, c, alpha, beta, gamma = map(float, fields[1:])
                 writeln('  "%s_unitcell_a": %s,' % (prefix, a))
@@ -200,33 +205,33 @@ def write_embedding(net, prefix, writeln):
                 writeln('  "%s_unitcell_a": %s,' % (prefix, a))
                 writeln('  "%s_unitcell_b": %s,' % (prefix, b))
                 writeln('  "%s_unitcell_gamma": %s,' % (prefix, gamma))
-        elif fields[0] == 'CELL_VOLUME':
+        elif fields[0] == "CELL_VOLUME":
             volume = float(fields[1])
             writeln('  "%s_unitcell_volume": %s,' % (prefix, volume))
-        elif fields[0] == 'NODE':
+        elif fields[0] == "NODE":
             nodes.append(map(float, fields[3:]))
-        elif fields[0] == 'EDGE':
+        elif fields[0] == "EDGE":
             edges.append(map(float, fields[1:]))
-        elif fields[0] == '#' and len(fields) > 1:
-            if fields[1] == 'EDGE_MIN':
+        elif fields[0] == "#" and len(fields) > 1:
+            if fields[1] == "EDGE_MIN":
                 minEdge = float(fields[2])
                 writeln('  "%s_shortest_edge_length": %s,' % (prefix, minEdge))
-            elif fields[1] == 'EDGE_AVG':
+            elif fields[1] == "EDGE_AVG":
                 avgEdge = float(fields[2])
                 writeln('  "%s_average_edge_length": %s,' % (prefix, avgEdge))
-            elif fields[1] == 'EDGE_MAX':
+            elif fields[1] == "EDGE_MAX":
                 maxEdge = float(fields[2])
                 writeln('  "%s_longest_edge_length": %s,' % (prefix, maxEdge))
-            if fields[1] == 'ANGLE_MIN':
+            if fields[1] == "ANGLE_MIN":
                 minAngle = float(fields[2])
                 writeln('  "%s_smallest_angle": %s,' % (prefix, minAngle))
-            elif fields[1] == 'ANGLE_AVG':
+            elif fields[1] == "ANGLE_AVG":
                 avgAngle = float(fields[2])
                 writeln('  "%s_average_angle": %s,' % (prefix, avgAngle))
-            elif fields[1] == 'ANGLE_MAX':
+            elif fields[1] == "ANGLE_MAX":
                 maxAngle = float(fields[2])
                 writeln('  "%s_largest_angle": %s,' % (prefix, maxAngle))
-            elif fields[1] == 'SMALLEST_SEPARATION':
+            elif fields[1] == "SMALLEST_SEPARATION":
                 sep = float(fields[2])
                 writeln('  "%s_smallest_atom_separation": %s,' % (prefix, sep))
 
@@ -238,20 +243,21 @@ def write_embedding(net, prefix, writeln):
     nodes = []
     edges = []
 
-    for line in cgd.split('\n'):
+    for line in cgd.split("\n"):
         fields = line.strip().split()
         if len(fields) == 0:
             continue
 
-        elif fields[0] == 'NODE':
+        elif fields[0] == "NODE":
             nodes.append(map(float, fields[3:]))
-        elif fields[0] == 'EDGE':
+        elif fields[0] == "EDGE":
             edges.append(map(float, fields[1:]))
 
     writeln('  "%s_atoms_full_cell": %s,' % (prefix, format_list(nodes)))
 
-    writeln('  "%s_half_edges_full_cell": %s,' %
-        (prefix, format_list(map(halfEdge, edges)))
+    writeln(
+        '  "%s_half_edges_full_cell": %s,'
+        % (prefix, format_list(map(halfEdge, edges)))
     )
 
 
@@ -259,12 +265,12 @@ def halfEdge(coords):
     dim = len(coords) / 2
     p = coords[:dim]
     q = coords[dim:]
-    h = [ (p[i] + q[i]) / 2 for i in range(dim) ]
+    h = [(p[i] + q[i]) / 2 for i in range(dim)]
 
     return p + h
 
 
-def serialized_net(net, asCGD=False, writeFullCell=False, prefix=''):
+def serialized_net(net, asCGD=False, writeFullCell=False, prefix=""):
     stringWriter = java.io.StringWriter()
     writer = java.io.PrintWriter(stringWriter)
     net.writeEmbedding(writer, asCGD, writeFullCell, prefix)
