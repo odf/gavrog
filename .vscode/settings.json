@@ -5,5 +5,7 @@
         "**/.settings": true,
         "**/.factorypath": true
     },
-    "python.formatting.provider": "black"
+    "python.formatting.provider": "black",
+    "java.format.settings.url": ".vscode/eclipse-formatter.xml",
+    "java.format.settings.profile": "odf"
 }
