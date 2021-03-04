@@ -7,3 +7,4 @@
 /.manager/
 .settings/ccw.repl.cmdhistory.prefs
 data
+/.jython_cache/
