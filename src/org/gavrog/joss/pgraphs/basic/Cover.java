@@ -260,24 +260,28 @@ public class Cover extends PeriodicGraph {
      */
     public Iterator<Set<INode>> nodeOrbits() {
     	// --- determine node orbit representatives of the image graph
-    	final PeriodicGraph img = getImage();
-        final Partition<INode> P = new Partition<INode>();
-        for (final Morphism a: img.symmetries()) {
-            for (final INode v: img.nodes()) {
-                P.unite(v, a.getImage(v));
+        final Map<INode, Integer> orbitIndex = new HashMap<INode, Integer>();
+        int nextIndex = 0;
+        for (
+            Iterator<Set<INode>> iter = getImage().nodeOrbits();
+            iter.hasNext();
+        ) {
+            final Set<INode> orbit = iter.next();
+            for (final INode v: orbit) {
+                orbitIndex.put(v, nextIndex);
             }
+            ++nextIndex;
         }
-        final Map<INode, INode> imageToRep = P.representativeMap();
-        
+
         // --- determine preimage sets for each node orbit of the image graph
-    	final SortedMap<INode, Set<INode>> preImages =
-    	        new TreeMap<INode, Set<INode>>();
+        final SortedMap<Integer, Set<INode>> preImages =
+                new TreeMap<Integer, Set<INode>>();
     	for (final INode v: nodes()) {
-    		final INode w = imageToRep.get(image(v));
-    		if (!preImages.containsKey(w)) {
-    			preImages.put(w, new TreeSet<INode>());
+            final int k = orbitIndex.get(image(v));
+            if (!preImages.containsKey(k)) {
+                preImages.put(k, new TreeSet<INode>());
     		}
-    		preImages.get(w).add(v);
+            preImages.get(k).add(v);
     	}
     	
         return preImages.values().iterator();
