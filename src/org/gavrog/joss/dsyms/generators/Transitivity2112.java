@@ -266,7 +266,14 @@ public class Transitivity2112 extends IteratorAdapter<DSymbol> {
 						continue;
 					}
 					this.seen.add(res);
-					if (Utils.mayBecomeLocallyEuclidean3D(res)) {
+					if (
+                           res.numberOfOrbits(idcsTile3d) == 2
+                        && res.numberOfOrbits(idcsFace3d) == 1
+                        && res.numberOfOrbits(idcsEdge3d) == 1
+                        && res.numberOfOrbits(idcsVert3d) == 2
+                        && !hasTrivialVertices(res)
+                        && Utils.mayBecomeLocallyEuclidean3D(res)
+                    ) {
 						return res;
 					}
 				} else {
@@ -381,18 +388,12 @@ public class Transitivity2112 extends IteratorAdapter<DSymbol> {
                 startCaseTimer();
                 final DSymbol ds = this.preTilings.next();
                 stopCaseTimer();
-                if (
-                       ds.numberOfOrbits(idcsTile3d) == 2
-                    && ds.numberOfOrbits(idcsFace3d) == 1
-                    && ds.numberOfOrbits(idcsEdge3d) == 1
-                    && ds.numberOfOrbits(idcsVert3d) == 2
-                    && !hasTrivialVertices(ds))
-                {
-                    ++countTWO;
-                    time4Final.start();
-                    this.tilings = new DefineBranching3d(ds);
-                    time4Final.stop();
-                }
+
+                ++countTWO;
+
+                time4Final.start();
+                this.tilings = new DefineBranching3d(ds);
+                time4Final.stop();
             } else if (this.faces.hasNext()) {
                 final DSymbol face = faces.next();
                 this.preTilings = new TWO(face, this.minVert);
