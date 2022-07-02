@@ -262,18 +262,18 @@ public class Transitivity2112 extends IteratorAdapter<DSymbol> {
 						continue;
 					}
 					final DSymbol res = new DSymbol(tmp);
-					if (this.seen.contains(res)) {
+					if (
+                        this.seen.contains(res) ||
+                        res.numberOfOrbits(idcsTile3d) != 2 ||
+                        res.numberOfOrbits(idcsFace3d) != 1 ||
+                        res.numberOfOrbits(idcsEdge3d) != 1 ||
+                        res.numberOfOrbits(idcsVert3d) != 2 ||
+                        hasTrivialVertices(res)
+                    ) {
 						continue;
 					}
 					this.seen.add(res);
-					if (
-                           res.numberOfOrbits(idcsTile3d) == 2
-                        && res.numberOfOrbits(idcsFace3d) == 1
-                        && res.numberOfOrbits(idcsEdge3d) == 1
-                        && res.numberOfOrbits(idcsVert3d) == 2
-                        && !hasTrivialVertices(res)
-                        && Utils.mayBecomeLocallyEuclidean3D(res)
-                    ) {
+					if (Utils.mayBecomeLocallyEuclidean3D(res)) {
 						return res;
 					}
 				} else {
