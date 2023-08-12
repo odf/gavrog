@@ -4,6 +4,11 @@ import java
 from org.gavrog.joss.pgraphs.io import NetParser
 
 
+ignored_warnings = [
+    "No explicit edges given - using nearest nodes"
+]
+
+
 def run():
     import json
     import sys
@@ -13,6 +18,41 @@ def run():
 
     for entry in data:
         net = create_net(entry)
+        warnings, errors = check_net(net)
+
+        warnings = [w for w in warnings if not w in ignored_warnings]
+
+        if errors or warnings:
+            print("\n%4d %s" % (entry['serialNumber'], net.name))
+            for err in errors:
+                print("  Error: %s" % err)
+            for wrn in warnings:
+                print("  Warning: %s" % wrn)
+
+
+def check_net(net_raw):
+    warnings = list(net_raw.warnings)
+    errors = list(net_raw.errors)
+
+    if errors:
+        return warnings, errors
+
+    if not net_raw.isConnected():
+        errors.append("disconnected net")
+    elif not net_raw.isLocallyStable():
+        errors.append("next-nearest neighbor collisions")
+    elif not net_raw.isStable():
+        warnings.append("net has collisions")
+
+        if net_raw.isLadder():
+            warnings.append("ladder net")
+        elif net_raw.hasSecondOrderCollisions():
+            warnings.append("possible ladder net")
+
+    if errors:
+        return warnings, errors
+
+    return warnings, errors
 
 
 def create_net(entry):
