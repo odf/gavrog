@@ -267,7 +267,7 @@ public class Transitivity2112 extends IteratorAdapter<DSymbol> {
                         res.numberOfOrbits(idcsTile3d) != 2 ||
                         res.numberOfOrbits(idcsFace3d) != 1 ||
                         res.numberOfOrbits(idcsEdge3d) != 1 ||
-                        res.numberOfOrbits(idcsVert3d) != 2 ||
+                        //res.numberOfOrbits(idcsVert3d) != 2 ||
                         hasTrivialVertices(res)
                     ) {
 						continue;
