@@ -16,11 +16,19 @@ def run():
     with open(sys.argv[1]) as fp:
         data = json.load(fp)
 
+    nr_input_errors = 0
+    nr_errors = 0
+
     for entry in data:
         net = create_net(entry)
-        warnings, errors = check_net(net)
+        if len(list(net.errors)) > 0:
+            nr_input_errors += 1
 
+        warnings, errors = check_net(net)
         warnings = [w for w in warnings if not w in ignored_warnings]
+
+        if errors:
+            nr_errors += 1
 
         if errors or warnings:
             print("\n%4d %s" % (entry['serialNumber'], net.name))
@@ -28,6 +36,12 @@ def run():
                 print("  Error: %s" % err)
             for wrn in warnings:
                 print("  Warning: %s" % wrn)
+
+    print(
+        "\n%d out of %d structures had errors, %d of them input errors" % (
+            nr_errors, len(data), nr_input_errors
+        )
+    )
 
 
 def check_net(net_raw):
