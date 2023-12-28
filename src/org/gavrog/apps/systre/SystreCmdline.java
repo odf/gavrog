@@ -297,7 +297,7 @@ public class SystreCmdline extends EventSource {
         quitIfCancelled();
         
         // --- compute an embedding
-        if (getComputeEmbedding() && !G.isLadder()) {
+        if (getComputeEmbedding() /*&& !G.isLadder()*/) {
             if (getUseOriginalEmbedding()
                     && G.nodes().hasNext()
                     &&
